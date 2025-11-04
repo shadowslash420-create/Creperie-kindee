@@ -276,10 +276,6 @@ function isAdmin(){
 }
 
 function renderAdminOrders(){
-  if(!isAdmin()) {
-    window.location.href='admin.html';
-    return;
-  }
   const list = document.getElementById('orders-list');
   const statsEl = document.getElementById('stats-area');
   const orders = getOrders().slice().reverse();
@@ -328,6 +324,22 @@ function renderAdminOrders(){
   }
 }
 
+function checkAdminPage(){
+  const loginSection = document.getElementById('login-section');
+  const adminSection = document.getElementById('admin-section');
+  
+  if(loginSection && adminSection){
+    if(isAdmin()){
+      loginSection.classList.add('hidden');
+      adminSection.classList.remove('hidden');
+      renderAdminOrders();
+    } else {
+      loginSection.classList.remove('hidden');
+      adminSection.classList.add('hidden');
+    }
+  }
+}
+
 function updateOrderStatus(id, status){
   const orders = getOrders();
   const o = orders.find(x=> x.id===id);
@@ -371,7 +383,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const u = document.getElementById('adm-user').value;
       const p = document.getElementById('adm-pass').value;
       if(adminLogin(u,p)){
-        window.location.href='admin.html?view=orders';
+        checkAdminPage();
       } else {
         alert('خطأ في بيانات الدخول');
       }
@@ -379,5 +391,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
   
   // Admin orders page
-  if(document.getElementById('orders-list')) renderAdminOrders();
+  checkAdminPage();
 });

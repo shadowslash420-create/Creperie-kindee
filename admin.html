@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ar">
 <head>
@@ -17,7 +18,7 @@
   </header>
 
   <div class="container">
-    <section class="section">
+    <section class="section" id="login-section">
       <h2 class="section-title">تسجيل الدخول</h2>
       <div class="card">
         <form id="admin-login-form">
@@ -34,12 +35,12 @@
       </div>
     </section>
 
-    <section class="section">
+    <section class="section hidden" id="admin-section">
       <h2 class="section-title">لوحة الطلبات</h2>
       <div class="admin-panel">
-        <div class="orders-list" id="orders-list"></div>
         <div id="stats-area"></div>
-        <button onclick="adminLogout()" class="cta" style="background:#3A4A54">تسجيل خروج</button>
+        <div class="orders-list" id="orders-list"></div>
+        <button onclick="adminLogout()" class="cta" style="background:#3A4A54;margin-top:20px">تسجيل خروج</button>
       </div>
     </section>
 
