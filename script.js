@@ -41,7 +41,19 @@ function toggleCart(){
 }
 
 function toggleMenu(){
-  alert('قائمة التنقل:\n- الرئيسية\n- من نحن\n- تواصل معنا\n- لوحة الإدارة');
+  const navMenu = document.getElementById('nav-menu');
+  const overlay = document.getElementById('menu-overlay');
+  if(navMenu && overlay){
+    navMenu.classList.toggle('open');
+    overlay.classList.toggle('active');
+    
+    // Prevent body scroll when menu is open
+    if(navMenu.classList.contains('open')){
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
 }
 
 function switchTab(category){
