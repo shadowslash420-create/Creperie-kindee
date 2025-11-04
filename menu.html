@@ -1,0 +1,140 @@
+
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>القائمة - Creperie Kinder</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body dir="rtl">
+  <!-- Header -->
+  <header class="header">
+    <div class="menu-icon" onclick="toggleMenu()">☰</div>
+    <div class="brand">
+      <div class="site-title">CREPERIE KINDER</div>
+      <div class="site-subtitle" id="subtitle">كريب & كافيه</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn">EN</button>
+      <div class="cart-icon" onclick="toggleCart()">🛒</div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-title" id="hero-title">القائمة</div>
+  </section>
+
+  <!-- Tab Navigation -->
+  <div class="tab-nav" id="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('sweet')" id="tab-sweet">كريب حلو</button>
+    <button class="tab-btn" onclick="switchTab('savory')" id="tab-savory">كريب مالح</button>
+    <button class="tab-btn" onclick="switchTab('kids')" id="tab-kids">كريب الأطفال</button>
+    <button class="tab-btn" onclick="switchTab('drinks')" id="tab-drinks">مشروبات</button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Sweet Crepes Section -->
+    <section class="section" id="section-sweet">
+      <h2 class="section-title" id="title-sweet">كريب حلو</h2>
+      <div class="section-desc" id="desc-sweet">كريب حلو محضر بعناية مع مكونات طازجة</div>
+      <div class="menu-grid" id="menu-sweet"></div>
+    </section>
+
+    <!-- Savory Crepes Section -->
+    <section class="section hidden" id="section-savory">
+      <h2 class="section-title" id="title-savory">كريب مالح</h2>
+      <div class="section-desc" id="desc-savory">كريب مالح مع حشوات شهية</div>
+      <div class="menu-grid" id="menu-savory"></div>
+    </section>
+
+    <!-- Kids Crepes Section -->
+    <section class="section hidden" id="section-kids">
+      <h2 class="section-title" id="title-kids">كريب الأطفال</h2>
+      <div class="section-desc" id="desc-kids">كريب خاص للأطفال</div>
+      <div class="menu-grid" id="menu-kids"></div>
+    </section>
+
+    <!-- Drinks Section -->
+    <section class="section hidden" id="section-drinks">
+      <h2 class="section-title" id="title-drinks">مشروبات</h2>
+      <div class="section-desc" id="desc-drinks">مشروبات ساخنة وباردة</div>
+      <div class="menu-grid" id="menu-drinks"></div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">من نحن</a>
+        <a href="menu.html">القائمة</a>
+        <a href="contact.html">تواصل معنا</a>
+        <a href="admin.html">لوحة الإدارة</a>
+      </div>
+      <div class="footer-connect">Connect</div>
+      <div class="social-icons">
+        <a href="#" class="social-icon">📷</a>
+        <a href="#" class="social-icon">📘</a>
+        <a href="#" class="social-icon">🐦</a>
+      </div>
+      <div style="margin-top:30px;font-size:13px;color:#888">
+        © Creperie Kinder — طعم ممتع لعائلتك<br>
+        اتصل: +213 5X XXX XXXX
+      </div>
+    </footer>
+  </div>
+
+  <!-- Cart Sidebar -->
+  <div class="cart-side" id="cart-side">
+    <div class="cart-header">
+      <h3 id="cart-title">السلة</h3>
+      <button class="cart-close" onclick="toggleCart()">×</button>
+    </div>
+    <div id="cart-contents"></div>
+    <div class="cart-total-section">
+      <div class="cart-total">
+        <span id="total-label">المجموع:</span>
+        <strong id="cart-total">$0.00</strong>
+      </div>
+      <button class="cta" style="width:100%;margin-top:16px" onclick="checkoutFlow()" id="checkout-btn">إتمام الطلب</button>
+    </div>
+  </div>
+
+  <!-- Navigation Menu Sidebar -->
+  <div class="nav-menu" id="nav-menu">
+    <div class="nav-menu-header">
+      <button class="nav-menu-close" onclick="toggleMenu()">×</button>
+    </div>
+    <nav class="nav-menu-links">
+      <a href="index.html" onclick="toggleMenu()">Home</a>
+      <a href="about.html">من نحن</a>
+      <a href="menu.html">القائمة</a>
+      <a href="contact.html">تواصل معنا</a>
+      <div class="nav-divider"></div>
+      <a href="admin.html">لوحة الإدارة</a>
+    </nav>
+    <div class="nav-menu-footer">
+      <div class="footer-connect">Connect</div>
+      <div class="social-icons">
+        <a href="#" class="social-icon">📷</a>
+        <a href="#" class="social-icon">📘</a>
+        <a href="#" class="social-icon">🎵</a>
+        <a href="#" class="social-icon">💼</a>
+        <a href="#" class="social-icon">🐦</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu Overlay -->
+  <div class="menu-overlay" id="menu-overlay" onclick="toggleMenu()"></div>
+
+  <!-- Fixed Order Button -->
+  <button class="fixed-order-btn" onclick="document.getElementById('menu-sweet').scrollIntoView({behavior:'smooth'})" id="order-now-btn">
+    اطلب الآن
+  </button>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ar">
 <head>
@@ -21,46 +22,73 @@
   </header>
 
   <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-title" id="hero-title">Menu</div>
+  <section class="home-hero">
+    <div class="home-hero-content">
+      <h1 class="home-hero-title">CREPERIE KINDER</h1>
+      <p class="home-hero-subtitle">طعم الشوكولاتة الأصيلة في كل قضمة</p>
+      <p class="home-hero-desc">تجربة فاخرة مستوحاة من نكهات كيندر الشهيرة</p>
+      <button class="home-cta" onclick="window.location.href='menu.html'">استكشف القائمة</button>
+    </div>
   </section>
 
-  <!-- Tab Navigation -->
-  <div class="tab-nav" id="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('sweet')" id="tab-sweet">كريب حلو</button>
-    <button class="tab-btn" onclick="switchTab('savory')" id="tab-savory">كريب مالح</button>
-    <button class="tab-btn" onclick="switchTab('kids')" id="tab-kids">كريب الأطفال</button>
-    <button class="tab-btn" onclick="switchTab('drinks')" id="tab-drinks">مشروبات</button>
-  </div>
-
-  <!-- Main Content -->
+  <!-- Features Section -->
   <div class="container">
-    <!-- Sweet Crepes Section -->
-    <section class="section" id="section-sweet">
-      <h2 class="section-title" id="title-sweet">Sweet Crêpes</h2>
-      <div class="section-desc" id="desc-sweet">كريب حلو محضر بعناية مع مكونات طازجة</div>
-      <div class="menu-grid" id="menu-sweet"></div>
+    <section class="section">
+      <h2 class="section-title" style="text-align:center">لماذا كريبري كيندر؟</h2>
+      <div class="home-features">
+        <div class="home-feature-card">
+          <div class="home-feature-icon">🍫</div>
+          <h3>شوكولاتة كيندر الأصلية</h3>
+          <p>نستخدم أجود أنواع شوكولاتة كيندر في جميع منتجاتنا الحلوة</p>
+        </div>
+        <div class="home-feature-card">
+          <div class="home-feature-icon">👨‍🍳</div>
+          <h3>طهاة محترفون</h3>
+          <p>فريق متخصص يحضر كل كريب بعناية وإتقان</p>
+        </div>
+        <div class="home-feature-card">
+          <div class="home-feature-icon">🌟</div>
+          <h3>مكونات طازجة</h3>
+          <p>نستخدم مكونات طازجة يومياً لضمان أفضل جودة</p>
+        </div>
+        <div class="home-feature-card">
+          <div class="home-feature-icon">❤️</div>
+          <h3>مناسب للعائلات</h3>
+          <p>خيارات متنوعة للأطفال والكبار في أجواء عائلية دافئة</p>
+        </div>
+      </div>
     </section>
 
-    <!-- Savory Crepes Section -->
-    <section class="section hidden" id="section-savory">
-      <h2 class="section-title" id="title-savory">Savory Crêpes</h2>
-      <div class="section-desc" id="desc-savory">كريب مالح مع حشوات شهية</div>
-      <div class="menu-grid" id="menu-savory"></div>
+    <!-- Quick Menu Preview -->
+    <section class="section" style="background:linear-gradient(135deg, var(--kinder-pink) 0%, var(--kinder-white) 100%);padding:40px 20px;border-radius:16px;margin:40px 0">
+      <h2 class="section-title" style="text-align:center">تشكيلة متنوعة</h2>
+      <div class="home-menu-preview">
+        <div class="home-menu-card">
+          <div class="home-menu-icon">🍓</div>
+          <h4>كريب حلو</h4>
+          <p>كيندر، نوتيلا، فواكه طازجة</p>
+        </div>
+        <div class="home-menu-card">
+          <div class="home-menu-icon">🧀</div>
+          <h4>كريب مالح</h4>
+          <p>لحم، جبن، دجاج مشوي</p>
+        </div>
+        <div class="home-menu-card">
+          <div class="home-menu-icon">☕</div>
+          <h4>مشروبات</h4>
+          <p>شوكولاتة ساخنة، عصائر طبيعية</p>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:30px">
+        <button class="cta" onclick="window.location.href='menu.html'">شاهد القائمة الكاملة</button>
+      </div>
     </section>
 
-    <!-- Kids Crepes Section -->
-    <section class="section hidden" id="section-kids">
-      <h2 class="section-title" id="title-kids">Kids Crêpes</h2>
-      <div class="section-desc" id="desc-kids">كريب خاص للأطفال</div>
-      <div class="menu-grid" id="menu-kids"></div>
-    </section>
-
-    <!-- Drinks Section -->
-    <section class="section hidden" id="section-drinks">
-      <h2 class="section-title" id="title-drinks">Drinks</h2>
-      <div class="section-desc" id="desc-drinks">مشروبات ساخنة وباردة</div>
-      <div class="menu-grid" id="menu-drinks"></div>
+    <!-- Call to Action -->
+    <section class="section" style="text-align:center;padding:60px 20px">
+      <h2 class="section-title" style="margin-bottom:16px">جاهز لتجربة لا تُنسى؟</h2>
+      <p style="color:var(--kinder-brown);font-size:16px;margin-bottom:30px">اطلب الآن واستمتع بطعم كيندر الأصيل</p>
+      <button class="home-cta" onclick="window.location.href='menu.html'">اطلب الآن</button>
     </section>
 
     <!-- Footer -->
@@ -68,6 +96,7 @@
       <div class="footer-links">
         <a href="index.html">Home</a>
         <a href="about.html">من نحن</a>
+        <a href="menu.html">القائمة</a>
         <a href="contact.html">تواصل معنا</a>
         <a href="admin.html">لوحة الإدارة</a>
       </div>
@@ -84,22 +113,6 @@
     </footer>
   </div>
 
-  <!-- Cart Sidebar -->
-  <div class="cart-side" id="cart-side">
-    <div class="cart-header">
-      <h3 id="cart-title">السلة</h3>
-      <button class="cart-close" onclick="toggleCart()">×</button>
-    </div>
-    <div id="cart-contents"></div>
-    <div class="cart-total-section">
-      <div class="cart-total">
-        <span id="total-label">المجموع:</span>
-        <strong id="cart-total">$0.00</strong>
-      </div>
-      <button class="cta" style="width:100%;margin-top:16px" onclick="checkoutFlow()" id="checkout-btn">إتمام الطلب</button>
-    </div>
-  </div>
-
   <!-- Navigation Menu Sidebar -->
   <div class="nav-menu" id="nav-menu">
     <div class="nav-menu-header">
@@ -108,7 +121,7 @@
     <nav class="nav-menu-links">
       <a href="index.html" onclick="toggleMenu()">Home</a>
       <a href="about.html">من نحن</a>
-      <a href="index.html#menu" onclick="toggleMenu(); setTimeout(()=>document.getElementById('tab-nav').scrollIntoView({behavior:'smooth'}), 300)">القائمة</a>
+      <a href="menu.html">القائمة</a>
       <a href="contact.html">تواصل معنا</a>
       <div class="nav-divider"></div>
       <a href="admin.html">لوحة الإدارة</a>
@@ -128,10 +141,21 @@
   <!-- Menu Overlay -->
   <div class="menu-overlay" id="menu-overlay" onclick="toggleMenu()"></div>
 
-  <!-- Fixed Order Button -->
-  <button class="fixed-order-btn" onclick="document.getElementById('menu-sweet').scrollIntoView({behavior:'smooth'})" id="order-now-btn">
-    ORDER NOW
-  </button>
+  <!-- Cart Sidebar -->
+  <div class="cart-side" id="cart-side">
+    <div class="cart-header">
+      <h3 id="cart-title">السلة</h3>
+      <button class="cart-close" onclick="toggleCart()">×</button>
+    </div>
+    <div id="cart-contents"></div>
+    <div class="cart-total-section">
+      <div class="cart-total">
+        <span id="total-label">المجموع:</span>
+        <strong id="cart-total">$0.00</strong>
+      </div>
+      <button class="cta" style="width:100%;margin-top:16px" onclick="checkoutFlow()" id="checkout-btn">إتمام الطلب</button>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
