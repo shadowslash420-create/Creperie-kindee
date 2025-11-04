@@ -91,7 +91,7 @@ function applyTranslations(){
   const t = translations[lang];
   
   const langBtn = document.getElementById('lang-btn');
-  if(langBtn) langBtn.textContent = lang === 'ar' ? 'EN' : 'ع';
+  if(langBtn) langBtn.textContent = lang === 'ar' ? 'ع' : 'EN';
   
   const subtitle = document.getElementById('subtitle');
   if(subtitle) subtitle.textContent = t.subtitle;
