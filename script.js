@@ -38,7 +38,7 @@ const translations = {
     navAdmin: 'لوحة الإدارة',
     footerConnect: 'Connect',
     footerCopyright: '© Creperie Kinder — طعم ممتع لعائلتك',
-    
+
     // Menu page
     subtitle: 'كريب & كافيه',
     heroTitle: 'القائمة',
@@ -67,70 +67,8 @@ const translations = {
     phoneRequired: 'مطلوب رقم الهاتف',
     addressPrompt: 'العنوان:',
     addressRequired: 'مطلوب العنوان',
-    orderSuccess: '✓ تم إرسال الطلب! رقم الطلب: '
-  },
-  en: {
-    // Homepage
-    heroDesc: 'Premium experience inspired by famous Kinder flavors',
-    heroBtn: 'EXPLORE MENU',
-    featuresTitle: 'Why Creperie Kinder?',
-    feature1Title: 'Original Kinder Chocolate',
-    feature1Desc: 'We use the finest Kinder chocolate in all our sweet products',
-    feature2Title: 'Professional Chefs',
-    feature2Desc: 'Specialized team prepares each crepe with care and precision',
-    feature3Title: 'Fresh Ingredients',
-    feature3Desc: 'We use fresh ingredients daily to ensure the best quality',
-    feature4Title: 'Family Friendly',
-    feature4Desc: 'Variety of options for children and adults in a warm family atmosphere',
-    menuPreviewTitle: 'Diverse Selection',
-    menuPreview1Title: 'Sweet Crêpes',
-    menuPreview1Desc: 'Kinder, Nutella, fresh fruits',
-    menuPreview2Title: 'Savory Crêpes',
-    menuPreview2Desc: 'Meat, cheese, grilled chicken',
-    menuPreview3Title: 'Drinks',
-    menuPreview3Desc: 'Hot chocolate, fresh juices',
-    viewFullMenuBtn: 'View Full Menu',
-    ctaTitle: 'Ready for an unforgettable experience?',
-    ctaDesc: 'Order now and enjoy the authentic taste of Kinder',
-    ctaBtn: 'ORDER NOW',
-    navHome: 'Home',
-    navAbout: 'About Us',
-    navMenu: 'Menu',
-    navContact: 'Contact Us',
-    navAdmin: 'Admin Panel',
-    footerConnect: 'Connect',
-    footerCopyright: '© Creperie Kinder — Delicious taste for your family',
-    
-    // Menu page
-    subtitle: 'Crêpes & Café',
-    heroTitle: 'Menu',
-    tabSweet: 'Sweet Crêpes',
-    tabSavory: 'Savory Crêpes',
-    tabKids: 'Kids Crêpes',
-    tabDrinks: 'Drinks',
-    titleSweet: 'Sweet Crêpes',
-    descSweet: 'Carefully prepared sweet crepes with fresh ingredients',
-    titleSavory: 'Savory Crêpes',
-    descSavory: 'Savory crepes with delicious fillings',
-    titleKids: 'Kids Crêpes',
-    descKids: 'Special crepes for kids',
-    titleDrinks: 'Drinks',
-    descDrinks: 'Hot and cold beverages',
-    cartTitle: 'Cart',
-    totalLabel: 'Total:',
-    checkoutBtn: 'Checkout',
-    orderNowBtn: 'ORDER NOW',
-    emptyCart: 'Cart is empty',
-    addedToCart: '✓ Added to cart',
-    emptyCartAlert: 'Cart is empty',
-    namePrompt: 'Full name:',
-    nameRequired: 'Name is required',
-    phonePrompt: 'Phone number:',
-    phoneRequired: 'Phone number is required',
-    addressPrompt: 'Address:',
-    addressRequired: 'Address is required',
-    orderSuccess: '✓ Order sent! Order number: ',
-    
+    orderSuccess: '✓ تم إرسال الطلب! رقم الطلب: ',
+
     // FAQ & Feedback
     faqTitle: 'الأسئلة الشائعة',
     feedbackTitle: 'آراء العملاء',
@@ -142,7 +80,33 @@ const translations = {
     feedbackSubmit: 'إرسال التقييم',
     selectItem: '-- اختر منتج --',
     navFaq: 'الأسئلة الشائعة',
-    navFeedback: 'التقييمات'
+    navFeedback: 'التقييمات',
+
+    // FAQ Page
+    faqQ1: 'ما هي ساعات العمل؟',
+    faqA1: 'نحن مفتوحون يومياً من الساعة 9 صباحاً حتى 11 مساءً',
+    faqQ2: 'هل توفرون توصيل مجاني؟',
+    faqA2: 'نعم، نوفر توصيل مجاني للطلبات التي تزيد عن 15 دولار',
+    faqQ3: 'هل تستخدمون شوكولاتة كيندر الأصلية؟',
+    faqA3: 'بالتأكيد! نستخدم فقط شوكولاتة كيندر الأصلية ومكونات طازجة يومياً',
+    faqQ4: 'هل يمكنني تخصيص طلبي؟',
+    faqA4: 'نعم، يمكنك إضافة ملاحظات خاصة عند الطلب وسنقوم بتلبية طلبك حسب الإمكان',
+    faqQ5: 'هل لديكم خيارات نباتية؟',
+    faqA5: 'نعم، لدينا كريب نباتي مع التوت والكريمة النباتية',
+    faqQ6: 'كم يستغرق التحضير والتوصيل؟',
+    faqA6: 'عادة يستغرق التحضير 10-15 دقيقة، والتوصيل 20-30 دقيقة حسب موقعك',
+    feedbackFormTitle: 'شاركنا تجربتك',
+    feedbackReviewsTitle: 'تقييمات العملاء',
+    noFeedback: 'لا توجد تقييمات بعد',
+
+    // About & Contact
+    aboutTitle: 'من نحن',
+    contactTitle: 'تواصل معنا',
+    contactNameLabel: 'الاسم:',
+    contactEmailLabel: 'الإيميل:',
+    contactMessageLabel: 'الرسالة:',
+    contactSubmit: 'أرسل',
+    contactSuccess: 'شكراً {name}! تم استلام رسالتك وسنرد عليك قريباً.'
   },
   en: {
     // Homepage
@@ -175,7 +139,7 @@ const translations = {
     navAdmin: 'Admin Panel',
     footerConnect: 'Connect',
     footerCopyright: '© Creperie Kinder — Delicious taste for your family',
-    
+
     // Menu page
     subtitle: 'Crêpes & Café',
     heroTitle: 'Menu',
@@ -205,7 +169,7 @@ const translations = {
     addressPrompt: 'Address:',
     addressRequired: 'Address is required',
     orderSuccess: '✓ Order sent! Order number: ',
-    
+
     // FAQ & Feedback
     faqTitle: 'Frequently Asked Questions',
     feedbackTitle: 'Customer Reviews',
@@ -216,8 +180,32 @@ const translations = {
     feedbackCommentLabel: 'Your comment:',
     feedbackSubmit: 'Submit Review',
     selectItem: '-- Select a product --',
-    navFaq: 'FAQ',
-    navFeedback: 'Reviews'
+
+    // FAQ Page
+    faqQ1: 'What are your opening hours?',
+    faqA1: 'We are open daily from 9 AM to 11 PM',
+    faqQ2: 'Do you offer free delivery?',
+    faqA2: 'Yes, we offer free delivery for orders over $15',
+    faqQ3: 'Do you use original Kinder chocolate?',
+    faqA3: 'Absolutely! We only use original Kinder chocolate and fresh ingredients daily',
+    faqQ4: 'Can I customize my order?',
+    faqA4: 'Yes, you can add special notes when ordering and we will accommodate your request as much as possible',
+    faqQ5: 'Do you have vegan options?',
+    faqA5: 'Yes, we have vegan crepes with berries and vegan cream',
+    faqQ6: 'How long does preparation and delivery take?',
+    faqA6: 'Preparation usually takes 10-15 minutes, and delivery 20-30 minutes depending on your location',
+    feedbackFormTitle: 'Share Your Experience',
+    feedbackReviewsTitle: 'Customer Reviews',
+    noFeedback: 'No reviews yet',
+
+    // About & Contact
+    aboutTitle: 'About Us',
+    contactTitle: 'Contact Us',
+    contactNameLabel: 'Name:',
+    contactEmailLabel: 'Email:',
+    contactMessageLabel: 'Message:',
+    contactSubmit: 'Send',
+    contactSuccess: 'Thank you {name}! We received your message and will respond soon.'
   }
 };
 
@@ -242,135 +230,196 @@ function toggleLanguage(){
 function applyTranslations(){
   const lang = getCurrentLang();
   const t = translations[lang];
-  
+
   const langBtn = document.getElementById('lang-btn');
   if(langBtn) langBtn.textContent = lang === 'ar' ? 'EN' : 'ع';
-  
+
   const subtitle = document.getElementById('subtitle');
   if(subtitle) subtitle.textContent = t.subtitle;
-  
+
   // Only translate hero-title on menu.html, not on index.html
   const heroTitle = document.getElementById('hero-title');
   if(heroTitle && !document.querySelector('.home-hero')) heroTitle.textContent = t.heroTitle;
-  
+
   const tabSweet = document.getElementById('tab-sweet');
   if(tabSweet) tabSweet.textContent = t.tabSweet;
-  
+
   const tabSavory = document.getElementById('tab-savory');
   if(tabSavory) tabSavory.textContent = t.tabSavory;
-  
+
   const tabKids = document.getElementById('tab-kids');
   if(tabKids) tabKids.textContent = t.tabKids;
-  
+
   const tabDrinks = document.getElementById('tab-drinks');
   if(tabDrinks) tabDrinks.textContent = t.tabDrinks;
-  
+
   const titleSweet = document.getElementById('title-sweet');
   if(titleSweet) titleSweet.textContent = t.titleSweet;
-  
+
   const descSweet = document.getElementById('desc-sweet');
   if(descSweet) descSweet.textContent = t.descSweet;
-  
+
   const titleSavory = document.getElementById('title-savory');
   if(titleSavory) titleSavory.textContent = t.titleSavory;
-  
+
   const descSavory = document.getElementById('desc-savory');
   if(descSavory) descSavory.textContent = t.descSavory;
-  
+
   const titleKids = document.getElementById('title-kids');
   if(titleKids) titleKids.textContent = t.titleKids;
-  
+
   const descKids = document.getElementById('desc-kids');
   if(descKids) descKids.textContent = t.descKids;
-  
+
   const titleDrinks = document.getElementById('title-drinks');
   if(titleDrinks) titleDrinks.textContent = t.titleDrinks;
-  
+
   const descDrinks = document.getElementById('desc-drinks');
   if(descDrinks) descDrinks.textContent = t.descDrinks;
-  
+
   const cartTitle = document.getElementById('cart-title');
   if(cartTitle) cartTitle.textContent = t.cartTitle;
-  
+
   const totalLabel = document.getElementById('total-label');
   if(totalLabel) totalLabel.textContent = t.totalLabel;
-  
+
   const checkoutBtn = document.getElementById('checkout-btn');
   if(checkoutBtn) checkoutBtn.textContent = t.checkoutBtn;
-  
+
   const orderNowBtn = document.getElementById('order-now-btn');
   if(orderNowBtn) orderNowBtn.textContent = t.orderNowBtn;
-  
+
   // Homepage translations
   const heroDesc = document.getElementById('hero-desc');
   if(heroDesc) heroDesc.textContent = t.heroDesc;
-  
+
   const heroBtn = document.getElementById('hero-btn');
   if(heroBtn) heroBtn.textContent = t.heroBtn;
-  
+
   const featuresTitle = document.getElementById('features-title');
   if(featuresTitle) featuresTitle.textContent = t.featuresTitle;
-  
+
   const feature1Title = document.getElementById('feature1-title');
   if(feature1Title) feature1Title.textContent = t.feature1Title;
-  
+
   const feature1Desc = document.getElementById('feature1-desc');
   if(feature1Desc) feature1Desc.textContent = t.feature1Desc;
-  
+
   const feature2Title = document.getElementById('feature2-title');
   if(feature2Title) feature2Title.textContent = t.feature2Title;
-  
+
   const feature2Desc = document.getElementById('feature2-desc');
   if(feature2Desc) feature2Desc.textContent = t.feature2Desc;
-  
+
   const feature3Title = document.getElementById('feature3-title');
   if(feature3Title) feature3Title.textContent = t.feature3Title;
-  
+
   const feature3Desc = document.getElementById('feature3-desc');
   if(feature3Desc) feature3Desc.textContent = t.feature3Desc;
-  
+
   const feature4Title = document.getElementById('feature4-title');
   if(feature4Title) feature4Title.textContent = t.feature4Title;
-  
+
   const feature4Desc = document.getElementById('feature4-desc');
   if(feature4Desc) feature4Desc.textContent = t.feature4Desc;
-  
+
   const menuPreviewTitle = document.getElementById('menu-preview-title');
   if(menuPreviewTitle) menuPreviewTitle.textContent = t.menuPreviewTitle;
-  
+
   const menuPreview1Title = document.getElementById('menu-preview1-title');
   if(menuPreview1Title) menuPreview1Title.textContent = t.menuPreview1Title;
-  
+
   const menuPreview1Desc = document.getElementById('menu-preview1-desc');
   if(menuPreview1Desc) menuPreview1Desc.textContent = t.menuPreview1Desc;
-  
+
   const menuPreview2Title = document.getElementById('menu-preview2-title');
   if(menuPreview2Title) menuPreview2Title.textContent = t.menuPreview2Title;
-  
+
   const menuPreview2Desc = document.getElementById('menu-preview2-desc');
   if(menuPreview2Desc) menuPreview2Desc.textContent = t.menuPreview2Desc;
-  
+
   const menuPreview3Title = document.getElementById('menu-preview3-title');
   if(menuPreview3Title) menuPreview3Title.textContent = t.menuPreview3Title;
-  
+
   const menuPreview3Desc = document.getElementById('menu-preview3-desc');
   if(menuPreview3Desc) menuPreview3Desc.textContent = t.menuPreview3Desc;
-  
+
   const viewFullMenuBtn = document.getElementById('view-full-menu-btn');
   if(viewFullMenuBtn) viewFullMenuBtn.textContent = t.viewFullMenuBtn;
-  
+
   const ctaTitle = document.getElementById('cta-title');
   if(ctaTitle) ctaTitle.textContent = t.ctaTitle;
-  
+
   const ctaDesc = document.getElementById('cta-desc');
   if(ctaDesc) ctaDesc.textContent = t.ctaDesc;
-  
+
   const ctaBtn = document.getElementById('cta-btn');
   if(ctaBtn) ctaBtn.textContent = t.ctaBtn;
-  
+
   // Footer copyright
   const footerCopyright = document.getElementById('footer-copyright');
   if(footerCopyright) footerCopyright.innerHTML = t.footerCopyright + '<br>اتصل: +213 5X XXX XXXX';
+
+  // FAQ translations
+  const faqTitle = document.getElementById('faq-title');
+  if (faqTitle) faqTitle.textContent = t.faqTitle;
+  const faqQ1 = document.getElementById('faq-q1');
+  if (faqQ1) faqQ1.textContent = t.faqQ1;
+  const faqA1 = document.getElementById('faq-a1');
+  if (faqA1) faqA1.textContent = t.faqA1;
+  const faqQ2 = document.getElementById('faq-q2');
+  if (faqQ2) faqQ2.textContent = t.faqQ2;
+  const faqA2 = document.getElementById('faq-a2');
+  if (faqA2) faqA2.textContent = t.faqA2;
+  const faqQ3 = document.getElementById('faq-q3');
+  if (faqQ3) faqQ3.textContent = t.faqQ3;
+  const faqA3 = document.getElementById('faq-a3');
+  if (faqA3) faqA3.textContent = t.faqA3;
+  const faqQ4 = document.getElementById('faq-q4');
+  if (faqQ4) faqQ4.textContent = t.faqQ4;
+  const faqA4 = document.getElementById('faq-a4');
+  if (faqA4) faqA4.textContent = t.faqA4;
+  const faqQ5 = document.getElementById('faq-q5');
+  if (faqQ5) faqQ5.textContent = t.faqQ5;
+  const faqA5 = document.getElementById('faq-a5');
+  if (faqA5) faqA5.textContent = t.faqA5;
+  const faqQ6 = document.getElementById('faq-q6');
+  if (faqQ6) faqQ6.textContent = t.faqQ6;
+  const faqA6 = document.getElementById('faq-a6');
+  if (faqA6) faqA6.textContent = t.faqA6;
+
+  // Feedback translations
+  const feedbackFormTitle = document.getElementById('feedback-form-title');
+  if (feedbackFormTitle) feedbackFormTitle.textContent = t.feedbackFormTitle;
+  const feedbackReviewsTitle = document.getElementById('feedback-reviews-title');
+  if (feedbackReviewsTitle) feedbackReviewsTitle.textContent = t.feedbackReviewsTitle;
+  const feedbackNameLabel = document.getElementById('feedback-name-label');
+  if (feedbackNameLabel) feedbackNameLabel.textContent = t.feedbackNameLabel;
+  const feedbackItemLabel = document.getElementById('feedback-item-label');
+  if (feedbackItemLabel) feedbackItemLabel.textContent = t.feedbackItemLabel;
+  const feedbackRatingLabel = document.getElementById('feedback-rating-label');
+  if (feedbackRatingLabel) feedbackRatingLabel.textContent = t.feedbackRatingLabel;
+  const feedbackCommentLabel = document.getElementById('feedback-comment-label');
+  if (feedbackCommentLabel) feedbackCommentLabel.textContent = t.feedbackCommentLabel;
+  const feedbackSubmit = document.getElementById('feedback-submit');
+  if (feedbackSubmit) feedbackSubmit.textContent = t.feedbackSubmit;
+  const selectItem = document.getElementById('feedback-item');
+  if(selectItem) selectItem.innerHTML = '<option value="">' + t.selectItem + '</option>';
+
+  // About & Contact translations
+  const aboutTitle = document.getElementById('about-title');
+  if (aboutTitle) aboutTitle.textContent = t.aboutTitle;
+  const contactTitle = document.getElementById('contact-title');
+  if (contactTitle) contactTitle.textContent = t.contactTitle;
+  const contactNameLabel = document.getElementById('contact-name-label');
+  if (contactNameLabel) contactNameLabel.textContent = t.contactNameLabel;
+  const contactEmailLabel = document.getElementById('contact-email-label');
+  if (contactEmailLabel) contactEmailLabel.textContent = t.contactEmailLabel;
+  const contactMessageLabel = document.getElementById('contact-message-label');
+  if (contactMessageLabel) contactMessageLabel.textContent = t.contactMessageLabel;
+  const contactSubmit = document.getElementById('contact-submit');
+  if (contactSubmit) contactSubmit.textContent = t.contactSubmit;
+
 }
 
 // default menu with proper categories
@@ -416,7 +465,7 @@ function toggleMenu(){
   if(navMenu && overlay){
     navMenu.classList.toggle('open');
     overlay.classList.toggle('active');
-    
+
     // Prevent body scroll when menu is open
     if(navMenu.classList.contains('open')){
       document.body.style.overflow = 'hidden';
@@ -430,7 +479,7 @@ function switchTab(category){
   // Update tab buttons
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   event.target.classList.add('active');
-  
+
   // Show/hide sections
   const sections = ['sweet', 'savory', 'kids', 'drinks'];
   sections.forEach(sec => {
@@ -452,36 +501,36 @@ function renderMenuByCategory(category, containerId){
   if(!container) return;
   const menu = getMenu().filter(item => item.category === category);
   container.innerHTML = '';
-  
+
   menu.forEach(item=>{
     const card = document.createElement('div');
     card.className = 'menu-item';
     card.onclick = () => addToCart(item.id);
-    
+
     const img = document.createElement('img');
     img.className = 'menu-item-img';
     img.src = item.img;
     img.alt = item.name;
-    
+
     const info = document.createElement('div');
     info.className = 'menu-item-info';
-    
+
     const name = document.createElement('div');
     name.className = 'menu-item-name';
     name.textContent = item.name;
-    
+
     const desc = document.createElement('div');
     desc.className = 'menu-item-desc';
     desc.textContent = item.desc;
-    
+
     const price = document.createElement('div');
     price.className = 'menu-item-price';
     price.textContent = '$' + Number(item.price).toFixed(2);
-    
+
     info.appendChild(name);
     info.appendChild(desc);
     info.appendChild(price);
-    
+
     card.appendChild(img);
     card.appendChild(info);
     container.appendChild(card);
@@ -513,61 +562,61 @@ function renderCart(){
   const lang = getCurrentLang();
   const t = translations[lang];
   container.innerHTML = '';
-  
+
   if(cart.length===0){
     container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">' + t.emptyCart + '</div>';
     const totalEl = document.getElementById('cart-total');
     if(totalEl) totalEl.textContent = '$0.00';
     return;
   }
-  
+
   cart.forEach(it=>{
     const div = document.createElement('div');
     div.className='cart-item';
-    
+
     const details = document.createElement('div');
     details.className = 'cart-item-details';
-    
+
     const itemName = document.createElement('div');
     itemName.className = 'cart-item-name';
     itemName.textContent = it.name;
-    
+
     const itemPrice = document.createElement('div');
     itemPrice.className = 'cart-item-price';
     itemPrice.textContent = '$' + it.price.toFixed(2);
-    
+
     const controls = document.createElement('div');
     controls.className='qty';
-    
+
     const minus = document.createElement('button');
     minus.textContent='-';
     minus.onclick = ()=> updateQty(it.id, it.qty-1);
-    
+
     const q = document.createElement('span');
     q.textContent = it.qty;
-    
+
     const plus = document.createElement('button');
     plus.textContent='+';
     plus.onclick = ()=> updateQty(it.id, it.qty+1);
-    
+
     const del = document.createElement('button');
     del.textContent='×';
     del.onclick = ()=> removeFromCart(it.id);
     del.style.marginLeft='8px';
-    
+
     controls.appendChild(minus);
     controls.appendChild(q);
     controls.appendChild(plus);
     controls.appendChild(del);
-    
+
     details.appendChild(itemName);
     details.appendChild(itemPrice);
     details.appendChild(controls);
-    
+
     div.appendChild(details);
     container.appendChild(div);
   });
-  
+
   const total = cart.reduce((s,i)=>s + i.price * i.qty, 0);
   const totalEl = document.getElementById('cart-total');
   if(totalEl) totalEl.textContent = '$' + total.toFixed(2);
@@ -680,7 +729,7 @@ function renderAdminOrders(){
     el.appendChild(status);
     list.appendChild(el);
   });
-  
+
   if(statsEl){
     const totalOrders = orders.length;
     const totalSales = orders.reduce((s,o)=>s + (o.total||0),0);
@@ -703,7 +752,7 @@ function renderAdminOrders(){
 function checkAdminPage(){
   const loginSection = document.getElementById('login-section');
   const adminSection = document.getElementById('admin-section');
-  
+
   if(loginSection && adminSection){
     if(isAdmin()){
       loginSection.classList.add('hidden');
@@ -732,7 +781,9 @@ function submitContact(e){
   const name = document.getElementById('contact-name').value;
   const email = document.getElementById('contact-email').value;
   const msg = document.getElementById('contact-msg').value;
-  toast('شكراً ' + name + '! تم استلام رسالتك وسنرد عليك قريباً.');
+  const lang = getCurrentLang();
+  const t = translations[lang];
+  toast(t.contactSuccess.replace('{name}', name));
   e.target.reset();
 }
 
@@ -740,12 +791,12 @@ function submitContact(e){
 function toggleFaq(element){
   const faqItem = element.parentElement;
   const isActive = faqItem.classList.contains('active');
-  
+
   document.querySelectorAll('.faq-item').forEach(item => {
     item.classList.remove('active');
     item.querySelector('.faq-icon').textContent = '+';
   });
-  
+
   if(!isActive){
     faqItem.classList.add('active');
     element.querySelector('.faq-icon').textContent = '−';
@@ -760,19 +811,19 @@ function submitFeedback(e){
   e.preventDefault();
   const lang = getCurrentLang();
   const t = translations[lang];
-  
+
   const name = document.getElementById('feedback-name').value;
   const itemId = document.getElementById('feedback-item').value;
   const rating = parseInt(document.getElementById('feedback-rating').value);
   const comment = document.getElementById('feedback-comment').value;
-  
+
   if(!rating){
     return alert('الرجاء اختيار تقييم');
   }
-  
+
   const menu = getMenu();
   const item = menu.find(m => m.id === itemId);
-  
+
   const feedback = getFeedback();
   const newFeedback = {
     id: 'FB-' + Date.now(),
@@ -783,14 +834,14 @@ function submitFeedback(e){
     comment,
     createdAt: new Date().toISOString()
   };
-  
+
   feedback.push(newFeedback);
   saveFeedback(feedback);
-  
+
   e.target.reset();
   document.getElementById('feedback-rating').value = '';
   document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
-  
+
   toast(t.feedbackSuccess);
   renderFeedbackList();
 }
@@ -798,21 +849,24 @@ function submitFeedback(e){
 function renderFeedbackList(){
   const container = document.getElementById('feedback-list');
   if(!container) return;
-  
+
   const feedback = getFeedback().slice().reverse();
   container.innerHTML = '';
-  
+
+  const lang = getCurrentLang();
+  const t = translations[lang];
+
   if(feedback.length === 0){
-    container.innerHTML = '<div class="card"><p style="text-align:center;color:var(--warm-gray)">لا توجد تقييمات بعد</p></div>';
+    container.innerHTML = '<div class="card"><p style="text-align:center;color:var(--warm-gray)">' + t.noFeedback + '</p></div>';
     return;
   }
-  
+
   feedback.forEach(fb => {
     const card = document.createElement('div');
     card.className = 'feedback-card';
-    
+
     const stars = '★'.repeat(fb.rating) + '☆'.repeat(5 - fb.rating);
-    
+
     card.innerHTML = `
       <div class="feedback-header">
         <div>
@@ -822,9 +876,9 @@ function renderFeedbackList(){
         <div class="feedback-stars">${stars}</div>
       </div>
       <p class="feedback-comment">${fb.comment}</p>
-      <div class="feedback-date">${new Date(fb.createdAt).toLocaleDateString('ar-DZ')}</div>
+      <div class="feedback-date">${new Date(fb.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'en-US')}</div>
     `;
-    
+
     container.appendChild(card);
   });
 }
@@ -832,13 +886,13 @@ function renderFeedbackList(){
 function populateFeedbackItems(){
   const select = document.getElementById('feedback-item');
   if(!select) return;
-  
+
   const menu = getMenu();
   const lang = getCurrentLang();
   const t = translations[lang];
-  
+
   select.innerHTML = '<option value="">' + t.selectItem + '</option>';
-  
+
   menu.forEach(item => {
     const option = document.createElement('option');
     option.value = item.id;
@@ -850,14 +904,14 @@ function populateFeedbackItems(){
 function initStarRating(){
   const stars = document.querySelectorAll('.star');
   const ratingInput = document.getElementById('feedback-rating');
-  
+
   if(!stars.length || !ratingInput) return;
-  
+
   stars.forEach(star => {
     star.addEventListener('click', function(){
       const rating = parseInt(this.getAttribute('data-rating'));
       ratingInput.value = rating;
-      
+
       stars.forEach((s, index) => {
         if(index < rating){
           s.textContent = '★';
@@ -866,7 +920,7 @@ function initStarRating(){
         }
       });
     });
-    
+
     star.addEventListener('mouseenter', function(){
       const rating = parseInt(this.getAttribute('data-rating'));
       stars.forEach((s, index) => {
@@ -878,7 +932,7 @@ function initStarRating(){
       });
     });
   });
-  
+
   const starRating = document.getElementById('star-rating');
   if(starRating){
     starRating.addEventListener('mouseleave', function(){
@@ -900,20 +954,20 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const lang = getCurrentLang();
   setLanguage(lang);
   applyTranslations();
-  
+
   // Update menu if needed
   const currentMenu = getMenu();
   if(currentMenu.length > 0 && (!currentMenu[0].category || currentMenu[0].img.includes('.jpg'))){
     localStorage.setItem(MENU_KEY, JSON.stringify(defaultMenu));
   }
-  
+
   // Render all category menus
   renderMenuByCategory('sweet', 'menu-sweet');
   renderMenuByCategory('savory', 'menu-savory');
   renderMenuByCategory('kids', 'menu-kids');
   renderMenuByCategory('drinks', 'menu-drinks');
   renderCart();
-  
+
   // Admin login
   const adminForm = document.getElementById('admin-login-form');
   if(adminForm){
@@ -928,10 +982,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
       }
     });
   }
-  
+
   // Admin orders page
   checkAdminPage();
-  
+
   // Feedback page
   populateFeedbackItems();
   renderFeedbackList();
