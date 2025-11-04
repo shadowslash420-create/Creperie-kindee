@@ -3,6 +3,7 @@ const MENU_KEY = 'kc_menu';
 const CART_KEY = 'kc_cart';
 const ORDERS_KEY = 'kc_orders';
 const LANG_KEY = 'kc_lang';
+const FEEDBACK_KEY = 'kc_feedback';
 
 // Translations
 const translations = {
@@ -128,7 +129,95 @@ const translations = {
     phoneRequired: 'Phone number is required',
     addressPrompt: 'Address:',
     addressRequired: 'Address is required',
-    orderSuccess: '✓ Order sent! Order number: '
+    orderSuccess: '✓ Order sent! Order number: ',
+    
+    // FAQ & Feedback
+    faqTitle: 'الأسئلة الشائعة',
+    feedbackTitle: 'آراء العملاء',
+    feedbackSuccess: '✓ شكراً لتقييمك!',
+    feedbackNameLabel: 'اسمك:',
+    feedbackItemLabel: 'اختر المنتج:',
+    feedbackRatingLabel: 'التقييم:',
+    feedbackCommentLabel: 'تعليقك:',
+    feedbackSubmit: 'إرسال التقييم',
+    selectItem: '-- اختر منتج --',
+    navFaq: 'الأسئلة الشائعة',
+    navFeedback: 'التقييمات'
+  },
+  en: {
+    // Homepage
+    heroDesc: 'Premium experience inspired by famous Kinder flavors',
+    heroBtn: 'EXPLORE MENU',
+    featuresTitle: 'Why Creperie Kinder?',
+    feature1Title: 'Original Kinder Chocolate',
+    feature1Desc: 'We use the finest Kinder chocolate in all our sweet products',
+    feature2Title: 'Professional Chefs',
+    feature2Desc: 'Specialized team prepares each crepe with care and precision',
+    feature3Title: 'Fresh Ingredients',
+    feature3Desc: 'We use fresh ingredients daily to ensure the best quality',
+    feature4Title: 'Family Friendly',
+    feature4Desc: 'Variety of options for children and adults in a warm family atmosphere',
+    menuPreviewTitle: 'Diverse Selection',
+    menuPreview1Title: 'Sweet Crêpes',
+    menuPreview1Desc: 'Kinder, Nutella, fresh fruits',
+    menuPreview2Title: 'Savory Crêpes',
+    menuPreview2Desc: 'Meat, cheese, grilled chicken',
+    menuPreview3Title: 'Drinks',
+    menuPreview3Desc: 'Hot chocolate, fresh juices',
+    viewFullMenuBtn: 'View Full Menu',
+    ctaTitle: 'Ready for an unforgettable experience?',
+    ctaDesc: 'Order now and enjoy the authentic taste of Kinder',
+    ctaBtn: 'ORDER NOW',
+    navHome: 'Home',
+    navAbout: 'About Us',
+    navMenu: 'Menu',
+    navContact: 'Contact Us',
+    navAdmin: 'Admin Panel',
+    footerConnect: 'Connect',
+    footerCopyright: '© Creperie Kinder — Delicious taste for your family',
+    
+    // Menu page
+    subtitle: 'Crêpes & Café',
+    heroTitle: 'Menu',
+    tabSweet: 'Sweet Crêpes',
+    tabSavory: 'Savory Crêpes',
+    tabKids: 'Kids Crêpes',
+    tabDrinks: 'Drinks',
+    titleSweet: 'Sweet Crêpes',
+    descSweet: 'Carefully prepared sweet crepes with fresh ingredients',
+    titleSavory: 'Savory Crêpes',
+    descSavory: 'Savory crepes with delicious fillings',
+    titleKids: 'Kids Crêpes',
+    descKids: 'Special crepes for kids',
+    titleDrinks: 'Drinks',
+    descDrinks: 'Hot and cold beverages',
+    cartTitle: 'Cart',
+    totalLabel: 'Total:',
+    checkoutBtn: 'Checkout',
+    orderNowBtn: 'ORDER NOW',
+    emptyCart: 'Cart is empty',
+    addedToCart: '✓ Added to cart',
+    emptyCartAlert: 'Cart is empty',
+    namePrompt: 'Full name:',
+    nameRequired: 'Name is required',
+    phonePrompt: 'Phone number:',
+    phoneRequired: 'Phone number is required',
+    addressPrompt: 'Address:',
+    addressRequired: 'Address is required',
+    orderSuccess: '✓ Order sent! Order number: ',
+    
+    // FAQ & Feedback
+    faqTitle: 'Frequently Asked Questions',
+    feedbackTitle: 'Customer Reviews',
+    feedbackSuccess: '✓ Thank you for your feedback!',
+    feedbackNameLabel: 'Your name:',
+    feedbackItemLabel: 'Select product:',
+    feedbackRatingLabel: 'Rating:',
+    feedbackCommentLabel: 'Your comment:',
+    feedbackSubmit: 'Submit Review',
+    selectItem: '-- Select a product --',
+    navFaq: 'FAQ',
+    navFeedback: 'Reviews'
   }
 };
 
@@ -647,6 +736,164 @@ function submitContact(e){
   e.target.reset();
 }
 
+/* ====== FAQ Functions ====== */
+function toggleFaq(element){
+  const faqItem = element.parentElement;
+  const isActive = faqItem.classList.contains('active');
+  
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.classList.remove('active');
+    item.querySelector('.faq-icon').textContent = '+';
+  });
+  
+  if(!isActive){
+    faqItem.classList.add('active');
+    element.querySelector('.faq-icon').textContent = '−';
+  }
+}
+
+/* ====== Feedback Functions ====== */
+function getFeedback(){ return JSON.parse(localStorage.getItem(FEEDBACK_KEY) || '[]'); }
+function saveFeedback(f){ localStorage.setItem(FEEDBACK_KEY, JSON.stringify(f)); }
+
+function submitFeedback(e){
+  e.preventDefault();
+  const lang = getCurrentLang();
+  const t = translations[lang];
+  
+  const name = document.getElementById('feedback-name').value;
+  const itemId = document.getElementById('feedback-item').value;
+  const rating = parseInt(document.getElementById('feedback-rating').value);
+  const comment = document.getElementById('feedback-comment').value;
+  
+  if(!rating){
+    return alert('الرجاء اختيار تقييم');
+  }
+  
+  const menu = getMenu();
+  const item = menu.find(m => m.id === itemId);
+  
+  const feedback = getFeedback();
+  const newFeedback = {
+    id: 'FB-' + Date.now(),
+    name,
+    itemId,
+    itemName: item ? item.name : '',
+    rating,
+    comment,
+    createdAt: new Date().toISOString()
+  };
+  
+  feedback.push(newFeedback);
+  saveFeedback(feedback);
+  
+  e.target.reset();
+  document.getElementById('feedback-rating').value = '';
+  document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
+  
+  toast(t.feedbackSuccess);
+  renderFeedbackList();
+}
+
+function renderFeedbackList(){
+  const container = document.getElementById('feedback-list');
+  if(!container) return;
+  
+  const feedback = getFeedback().slice().reverse();
+  container.innerHTML = '';
+  
+  if(feedback.length === 0){
+    container.innerHTML = '<div class="card"><p style="text-align:center;color:var(--warm-gray)">لا توجد تقييمات بعد</p></div>';
+    return;
+  }
+  
+  feedback.forEach(fb => {
+    const card = document.createElement('div');
+    card.className = 'feedback-card';
+    
+    const stars = '★'.repeat(fb.rating) + '☆'.repeat(5 - fb.rating);
+    
+    card.innerHTML = `
+      <div class="feedback-header">
+        <div>
+          <strong>${fb.name}</strong>
+          <div class="feedback-item-name">${fb.itemName}</div>
+        </div>
+        <div class="feedback-stars">${stars}</div>
+      </div>
+      <p class="feedback-comment">${fb.comment}</p>
+      <div class="feedback-date">${new Date(fb.createdAt).toLocaleDateString('ar-DZ')}</div>
+    `;
+    
+    container.appendChild(card);
+  });
+}
+
+function populateFeedbackItems(){
+  const select = document.getElementById('feedback-item');
+  if(!select) return;
+  
+  const menu = getMenu();
+  const lang = getCurrentLang();
+  const t = translations[lang];
+  
+  select.innerHTML = '<option value="">' + t.selectItem + '</option>';
+  
+  menu.forEach(item => {
+    const option = document.createElement('option');
+    option.value = item.id;
+    option.textContent = item.name;
+    select.appendChild(option);
+  });
+}
+
+function initStarRating(){
+  const stars = document.querySelectorAll('.star');
+  const ratingInput = document.getElementById('feedback-rating');
+  
+  if(!stars.length || !ratingInput) return;
+  
+  stars.forEach(star => {
+    star.addEventListener('click', function(){
+      const rating = parseInt(this.getAttribute('data-rating'));
+      ratingInput.value = rating;
+      
+      stars.forEach((s, index) => {
+        if(index < rating){
+          s.textContent = '★';
+        } else {
+          s.textContent = '☆';
+        }
+      });
+    });
+    
+    star.addEventListener('mouseenter', function(){
+      const rating = parseInt(this.getAttribute('data-rating'));
+      stars.forEach((s, index) => {
+        if(index < rating){
+          s.textContent = '★';
+        } else {
+          s.textContent = '☆';
+        }
+      });
+    });
+  });
+  
+  const starRating = document.getElementById('star-rating');
+  if(starRating){
+    starRating.addEventListener('mouseleave', function(){
+      const currentRating = parseInt(ratingInput.value) || 0;
+      stars.forEach((s, index) => {
+        if(index < currentRating){
+          s.textContent = '★';
+        } else {
+          s.textContent = '☆';
+        }
+      });
+    });
+  }
+}
+
 /* On load hooks */
 document.addEventListener('DOMContentLoaded', ()=>{
   // Set language
@@ -684,4 +931,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
   
   // Admin orders page
   checkAdminPage();
+  
+  // Feedback page
+  populateFeedbackItems();
+  renderFeedbackList();
+  initStarRating();
 });
