@@ -7,6 +7,13 @@ const LANG_KEY = 'kc_lang';
 // Translations
 const translations = {
   ar: {
+    // Navigation
+    navHome: 'الرئيسية',
+    navAbout: 'من نحن',
+    navMenu: 'القائمة',
+    navContact: 'تواصل معنا',
+    navAdmin: 'لوحة الإدارة',
+    
     // Homepage
     heroDesc: 'تجربة فاخرة مستوحاة من نكهات كيندر الشهيرة',
     heroBtn: 'استكشف القائمة',
@@ -139,7 +146,8 @@ function getCurrentLang(){
 function setLanguage(lang){
   localStorage.setItem(LANG_KEY, lang);
   document.documentElement.lang = lang;
-  document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  // Keep RTL direction for both languages
+  document.body.dir = 'rtl';
 }
 
 function toggleLanguage(){
@@ -278,6 +286,13 @@ function applyTranslations(){
   
   const ctaBtn = document.getElementById('cta-btn');
   if(ctaBtn) ctaBtn.textContent = t.ctaBtn;
+  
+  // Navigation links
+  document.querySelectorAll('.nav-home').forEach(el => el.textContent = t.navHome);
+  document.querySelectorAll('.nav-about').forEach(el => el.textContent = t.navAbout);
+  document.querySelectorAll('.nav-menu').forEach(el => el.textContent = t.navMenu);
+  document.querySelectorAll('.nav-contact').forEach(el => el.textContent = t.navContact);
+  document.querySelectorAll('.nav-admin').forEach(el => el.textContent = t.navAdmin);
   
   // Footer copyright
   const footerCopyright = document.getElementById('footer-copyright');
