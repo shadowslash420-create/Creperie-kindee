@@ -7,6 +7,38 @@ const LANG_KEY = 'kc_lang';
 // Translations
 const translations = {
   ar: {
+    // Homepage
+    heroDesc: 'تجربة فاخرة مستوحاة من نكهات كيندر الشهيرة',
+    heroBtn: 'استكشف القائمة',
+    featuresTitle: 'لماذا كريبري كيندر؟',
+    feature1Title: 'شوكولاتة كيندر الأصلية',
+    feature1Desc: 'نستخدم أجود أنواع شوكولاتة كيندر في جميع منتجاتنا الحلوة',
+    feature2Title: 'طهاة محترفون',
+    feature2Desc: 'فريق متخصص يحضر كل كريب بعناية وإتقان',
+    feature3Title: 'مكونات طازجة',
+    feature3Desc: 'نستخدم مكونات طازجة يومياً لضمان أفضل جودة',
+    feature4Title: 'مناسب للعائلات',
+    feature4Desc: 'خيارات متنوعة للأطفال والكبار في أجواء عائلية دافئة',
+    menuPreviewTitle: 'تشكيلة متنوعة',
+    menuPreview1Title: 'كريب حلو',
+    menuPreview1Desc: 'كيندر، نوتيلا، فواكه طازجة',
+    menuPreview2Title: 'كريب مالح',
+    menuPreview2Desc: 'لحم، جبن، دجاج مشوي',
+    menuPreview3Title: 'مشروبات',
+    menuPreview3Desc: 'شوكولاتة ساخنة، عصائر طبيعية',
+    viewFullMenuBtn: 'شاهد القائمة الكاملة',
+    ctaTitle: 'جاهز لتجربة لا تُنسى؟',
+    ctaDesc: 'اطلب الآن واستمتع بطعم كيندر الأصيل',
+    ctaBtn: 'اطلب الآن',
+    navHome: 'Home',
+    navAbout: 'من نحن',
+    navMenu: 'القائمة',
+    navContact: 'تواصل معنا',
+    navAdmin: 'لوحة الإدارة',
+    footerConnect: 'Connect',
+    footerCopyright: '© Creperie Kinder — طعم ممتع لعائلتك',
+    
+    // Menu page
     subtitle: 'كريب & كافيه',
     heroTitle: 'القائمة',
     tabSweet: 'كريب حلو',
@@ -37,6 +69,38 @@ const translations = {
     orderSuccess: '✓ تم إرسال الطلب! رقم الطلب: '
   },
   en: {
+    // Homepage
+    heroDesc: 'Premium experience inspired by famous Kinder flavors',
+    heroBtn: 'EXPLORE MENU',
+    featuresTitle: 'Why Creperie Kinder?',
+    feature1Title: 'Original Kinder Chocolate',
+    feature1Desc: 'We use the finest Kinder chocolate in all our sweet products',
+    feature2Title: 'Professional Chefs',
+    feature2Desc: 'Specialized team prepares each crepe with care and precision',
+    feature3Title: 'Fresh Ingredients',
+    feature3Desc: 'We use fresh ingredients daily to ensure the best quality',
+    feature4Title: 'Family Friendly',
+    feature4Desc: 'Variety of options for children and adults in a warm family atmosphere',
+    menuPreviewTitle: 'Diverse Selection',
+    menuPreview1Title: 'Sweet Crêpes',
+    menuPreview1Desc: 'Kinder, Nutella, fresh fruits',
+    menuPreview2Title: 'Savory Crêpes',
+    menuPreview2Desc: 'Meat, cheese, grilled chicken',
+    menuPreview3Title: 'Drinks',
+    menuPreview3Desc: 'Hot chocolate, fresh juices',
+    viewFullMenuBtn: 'View Full Menu',
+    ctaTitle: 'Ready for an unforgettable experience?',
+    ctaDesc: 'Order now and enjoy the authentic taste of Kinder',
+    ctaBtn: 'ORDER NOW',
+    navHome: 'Home',
+    navAbout: 'About Us',
+    navMenu: 'Menu',
+    navContact: 'Contact Us',
+    navAdmin: 'Admin Panel',
+    footerConnect: 'Connect',
+    footerCopyright: '© Creperie Kinder — Delicious taste for your family',
+    
+    // Menu page
     subtitle: 'Crêpes & Café',
     heroTitle: 'Menu',
     tabSweet: 'Sweet Crêpes',
@@ -146,6 +210,84 @@ function applyTranslations(){
   
   const orderNowBtn = document.getElementById('order-now-btn');
   if(orderNowBtn) orderNowBtn.textContent = t.orderNowBtn;
+  
+  // Homepage translations
+  const heroDesc = document.getElementById('hero-desc');
+  if(heroDesc) heroDesc.textContent = t.heroDesc;
+  
+  const heroBtn = document.getElementById('hero-btn');
+  if(heroBtn) heroBtn.textContent = t.heroBtn;
+  
+  const featuresTitle = document.getElementById('features-title');
+  if(featuresTitle) featuresTitle.textContent = t.featuresTitle;
+  
+  const feature1Title = document.getElementById('feature1-title');
+  if(feature1Title) feature1Title.textContent = t.feature1Title;
+  
+  const feature1Desc = document.getElementById('feature1-desc');
+  if(feature1Desc) feature1Desc.textContent = t.feature1Desc;
+  
+  const feature2Title = document.getElementById('feature2-title');
+  if(feature2Title) feature2Title.textContent = t.feature2Title;
+  
+  const feature2Desc = document.getElementById('feature2-desc');
+  if(feature2Desc) feature2Desc.textContent = t.feature2Desc;
+  
+  const feature3Title = document.getElementById('feature3-title');
+  if(feature3Title) feature3Title.textContent = t.feature3Title;
+  
+  const feature3Desc = document.getElementById('feature3-desc');
+  if(feature3Desc) feature3Desc.textContent = t.feature3Desc;
+  
+  const feature4Title = document.getElementById('feature4-title');
+  if(feature4Title) feature4Title.textContent = t.feature4Title;
+  
+  const feature4Desc = document.getElementById('feature4-desc');
+  if(feature4Desc) feature4Desc.textContent = t.feature4Desc;
+  
+  const menuPreviewTitle = document.getElementById('menu-preview-title');
+  if(menuPreviewTitle) menuPreviewTitle.textContent = t.menuPreviewTitle;
+  
+  const menuPreview1Title = document.getElementById('menu-preview1-title');
+  if(menuPreview1Title) menuPreview1Title.textContent = t.menuPreview1Title;
+  
+  const menuPreview1Desc = document.getElementById('menu-preview1-desc');
+  if(menuPreview1Desc) menuPreview1Desc.textContent = t.menuPreview1Desc;
+  
+  const menuPreview2Title = document.getElementById('menu-preview2-title');
+  if(menuPreview2Title) menuPreview2Title.textContent = t.menuPreview2Title;
+  
+  const menuPreview2Desc = document.getElementById('menu-preview2-desc');
+  if(menuPreview2Desc) menuPreview2Desc.textContent = t.menuPreview2Desc;
+  
+  const menuPreview3Title = document.getElementById('menu-preview3-title');
+  if(menuPreview3Title) menuPreview3Title.textContent = t.menuPreview3Title;
+  
+  const menuPreview3Desc = document.getElementById('menu-preview3-desc');
+  if(menuPreview3Desc) menuPreview3Desc.textContent = t.menuPreview3Desc;
+  
+  const viewFullMenuBtn = document.getElementById('view-full-menu-btn');
+  if(viewFullMenuBtn) viewFullMenuBtn.textContent = t.viewFullMenuBtn;
+  
+  const ctaTitle = document.getElementById('cta-title');
+  if(ctaTitle) ctaTitle.textContent = t.ctaTitle;
+  
+  const ctaDesc = document.getElementById('cta-desc');
+  if(ctaDesc) ctaDesc.textContent = t.ctaDesc;
+  
+  const ctaBtn = document.getElementById('cta-btn');
+  if(ctaBtn) ctaBtn.textContent = t.ctaBtn;
+  
+  // Navigation and footer
+  document.querySelectorAll('.nav-home').forEach(el => el.textContent = t.navHome);
+  document.querySelectorAll('.nav-about').forEach(el => el.textContent = t.navAbout);
+  document.querySelectorAll('.nav-menu').forEach(el => el.textContent = t.navMenu);
+  document.querySelectorAll('.nav-contact').forEach(el => el.textContent = t.navContact);
+  document.querySelectorAll('.nav-admin').forEach(el => el.textContent = t.navAdmin);
+  document.querySelectorAll('.footer-connect').forEach(el => el.textContent = t.footerConnect);
+  
+  const footerCopyright = document.getElementById('footer-copyright');
+  if(footerCopyright) footerCopyright.innerHTML = t.footerCopyright + '<br>اتصل: +213 5X XXX XXXX';
 }
 
 // default menu with proper categories
