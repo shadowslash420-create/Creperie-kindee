@@ -6,12 +6,12 @@ const ORDERS_KEY = 'kc_orders';
 
 // default menu (Kinder-inspired)
 const defaultMenu = [
-  {id:'c1', name:'Kinder Nutella Crepe', desc:'Nutella, banana, whipped cream', price:5.5, img:'images/crepe1.jpg', category:'Sweet'},
-  {id:'c2', name:'Strawberry Kinder', desc:'Fresh strawberries & Kinder flakes', price:6.0, img:'images/crepe2.jpg', category:'Sweet'},
-  {id:'c3', name:'Ham & Cheese', desc:'Savory ham, melted cheese', price:6.5, img:'images/crepe3.jpg', category:'Savory'},
-  {id:'c4', name:'Banoffee Delight', desc:'Banana, caramel, Kinder pieces', price:6.8, img:'images/crepe4.jpg', category:'Sweet'},
-  {id:'c5', name:'Hot Chocolate Drink', desc:'Creamy hot chocolate with Kinder touch', price:3.5, img:'images/drink1.jpg', category:'Drinks'},
-  {id:'c6', name:'Vegan Berry', desc:'Mixed berries, vegan cream', price:6.2, img:'images/crepe5.jpg', category:'Vegan'}
+  {id:'c1', name:'Kinder Nutella Crepe', desc:'Nutella, banana, whipped cream', price:5.5, img:'images/crepe1.svg', category:'Sweet'},
+  {id:'c2', name:'Strawberry Kinder', desc:'Fresh strawberries & Kinder flakes', price:6.0, img:'images/crepe2.svg', category:'Sweet'},
+  {id:'c3', name:'Ham & Cheese', desc:'Savory ham, melted cheese', price:6.5, img:'images/crepe3.svg', category:'Savory'},
+  {id:'c4', name:'Banoffee Delight', desc:'Banana, caramel, Kinder pieces', price:6.8, img:'images/crepe4.svg', category:'Sweet'},
+  {id:'c5', name:'Hot Chocolate Drink', desc:'Creamy hot chocolate with Kinder touch', price:3.5, img:'images/drink1.svg', category:'Drinks'},
+  {id:'c6', name:'Vegan Berry', desc:'Mixed berries, vegan cream', price:6.2, img:'images/crepe5.svg', category:'Vegan'}
 ];
 
 // init menu in localStorage if not present
@@ -173,8 +173,24 @@ function updateOrderStatus(id, status){
   toast('تم تحديث حالة الطلب ' + id);
 }
 
+/* Contact form */
+function submitContact(e){
+  e.preventDefault();
+  const name = document.getElementById('contact-name').value;
+  const email = document.getElementById('contact-email').value;
+  const msg = document.getElementById('contact-msg').value;
+  toast('شكراً ' + name + '! تم استلام رسالتك وسنرد عليك قريباً.');
+  e.target.reset();
+}
+
 /* On load hooks for pages */
 document.addEventListener('DOMContentLoaded', ()=>{
+  // Check if menu needs update (for SVG migration)
+  const currentMenu = getMenu();
+  if(currentMenu.length > 0 && currentMenu[0].img && currentMenu[0].img.includes('.jpg')){
+    localStorage.setItem(MENU_KEY, JSON.stringify(defaultMenu));
+  }
+  
   // Menu grid
   renderMenuGrid('menu-grid');
   renderCart();

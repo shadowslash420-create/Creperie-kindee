@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <rect width="300" height="200" fill="#fff5e6"/>
+  <ellipse cx="150" cy="100" rx="120" ry="60" fill="#d4a574"/>
+  <ellipse cx="150" cy="95" rx="110" ry="50" fill="#e6c79c"/>
+  <ellipse cx="130" cy="90" rx="25" ry="15" fill="#ffeb3b" opacity="0.9"/>
+  <ellipse cx="170" cy="92" rx="22" ry="13" fill="#ffeb3b" opacity="0.9"/>
+  <path d="M 85 100 Q 150 90, 215 100" fill="#d2691e" opacity="0.6"/>
+  <text x="150" y="170" font-size="18" text-anchor="middle" fill="#d2691e" font-family="Arial">Banoffee</text>
+</svg>
