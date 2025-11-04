@@ -106,20 +106,12 @@
       <button class="nav-menu-close" onclick="toggleMenu()">×</button>
     </div>
     <nav class="nav-menu-links">
-      <a href="index.html">Home</a>
-      <a href="about.html">Our Story</a>
-      <a href="index.html#menu">Menu</a>
-      <a href="contact.html">Locations</a>
-      <a href="contact.html">Rewards</a>
-      <a href="contact.html">Gift Cards</a>
+      <a href="index.html" onclick="toggleMenu()">Home</a>
+      <a href="about.html">من نحن</a>
+      <a href="index.html#menu" onclick="toggleMenu(); setTimeout(()=>document.getElementById('tab-nav').scrollIntoView({behavior:'smooth'}), 300)">القائمة</a>
+      <a href="contact.html">تواصل معنا</a>
       <div class="nav-divider"></div>
-      <a href="contact.html">Your Impact</a>
-      <a href="contact.html">Press</a>
-      <a href="contact.html">Franchise</a>
-      <a href="contact.html">Private Rooms & Events</a>
-      <a href="contact.html">Catering</a>
-      <a href="admin.html">Careers</a>
-      <a href="contact.html">FAQ</a>
+      <a href="admin.html">لوحة الإدارة</a>
     </nav>
     <div class="nav-menu-footer">
       <div class="footer-connect">Connect</div>
