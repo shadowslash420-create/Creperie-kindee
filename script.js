@@ -31,14 +31,12 @@ const translations = {
     ctaTitle: 'جاهز لتجربة لا تُنسى؟',
     ctaDesc: 'اطلب الآن واستمتع بطعم كيندر الأصيل',
     ctaBtn: 'اطلب الآن',
-    navHome: 'الرئيسية',
+    navHome: 'Home',
     navAbout: 'من نحن',
     navMenu: 'القائمة',
     navContact: 'تواصل معنا',
     navAdmin: 'لوحة الإدارة',
-    navFaq: 'الأسئلة الشائعة',
-    navFeedback: 'التقييمات',
-    footerConnect: 'تواصل معنا',
+    footerConnect: 'Connect',
     footerCopyright: '© Creperie Kinder — طعم ممتع لعائلتك',
 
     // Menu page
@@ -139,8 +137,6 @@ const translations = {
     navMenu: 'Menu',
     navContact: 'Contact Us',
     navAdmin: 'Admin Panel',
-    navFaq: 'FAQ',
-    navFeedback: 'Reviews',
     footerConnect: 'Connect',
     footerCopyright: '© Creperie Kinder — Delicious taste for your family',
 
@@ -365,16 +361,6 @@ function applyTranslations(){
   // Footer copyright
   const footerCopyright = document.getElementById('footer-copyright');
   if(footerCopyright) footerCopyright.innerHTML = t.footerCopyright + '<br>اتصل: +213 5X XXX XXXX';
-
-  // Navigation links translation
-  document.querySelectorAll('.nav-home').forEach(el => el.textContent = t.navHome);
-  document.querySelectorAll('.nav-about').forEach(el => el.textContent = t.navAbout);
-  document.querySelectorAll('.nav-menu').forEach(el => el.textContent = t.navMenu);
-  document.querySelectorAll('.nav-contact').forEach(el => el.textContent = t.navContact);
-  document.querySelectorAll('.nav-admin').forEach(el => el.textContent = t.navAdmin);
-  document.querySelectorAll('.nav-faq').forEach(el => el.textContent = t.navFaq);
-  document.querySelectorAll('.nav-feedback').forEach(el => el.textContent = t.navFeedback);
-  document.querySelectorAll('.footer-connect').forEach(el => el.textContent = t.footerConnect);
 
   // FAQ translations
   const faqTitle = document.getElementById('faq-title');
