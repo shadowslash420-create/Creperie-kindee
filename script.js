@@ -155,13 +155,14 @@ function applyTranslations(){
   const t = translations[lang];
   
   const langBtn = document.getElementById('lang-btn');
-  if(langBtn) langBtn.textContent = lang === 'ar' ? 'ع' : 'EN';
+  if(langBtn) langBtn.textContent = lang === 'ar' ? 'EN' : 'ع';
   
   const subtitle = document.getElementById('subtitle');
   if(subtitle) subtitle.textContent = t.subtitle;
   
+  // Only translate hero-title on menu.html, not on index.html
   const heroTitle = document.getElementById('hero-title');
-  if(heroTitle) heroTitle.textContent = t.heroTitle;
+  if(heroTitle && !document.querySelector('.home-hero')) heroTitle.textContent = t.heroTitle;
   
   const tabSweet = document.getElementById('tab-sweet');
   if(tabSweet) tabSweet.textContent = t.tabSweet;
@@ -278,14 +279,7 @@ function applyTranslations(){
   const ctaBtn = document.getElementById('cta-btn');
   if(ctaBtn) ctaBtn.textContent = t.ctaBtn;
   
-  // Navigation and footer
-  document.querySelectorAll('.nav-home').forEach(el => el.textContent = t.navHome);
-  document.querySelectorAll('.nav-about').forEach(el => el.textContent = t.navAbout);
-  document.querySelectorAll('.nav-menu').forEach(el => el.textContent = t.navMenu);
-  document.querySelectorAll('.nav-contact').forEach(el => el.textContent = t.navContact);
-  document.querySelectorAll('.nav-admin').forEach(el => el.textContent = t.navAdmin);
-  document.querySelectorAll('.footer-connect').forEach(el => el.textContent = t.footerConnect);
-  
+  // Footer copyright
   const footerCopyright = document.getElementById('footer-copyright');
   if(footerCopyright) footerCopyright.innerHTML = t.footerCopyright + '<br>اتصل: +213 5X XXX XXXX';
 }
