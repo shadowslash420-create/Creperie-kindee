@@ -2,6 +2,151 @@
 const MENU_KEY = 'kc_menu';
 const CART_KEY = 'kc_cart';
 const ORDERS_KEY = 'kc_orders';
+const LANG_KEY = 'kc_lang';
+
+// Translations
+const translations = {
+  ar: {
+    subtitle: 'كريب & كافيه',
+    heroTitle: 'القائمة',
+    tabSweet: 'كريب حلو',
+    tabSavory: 'كريب مالح',
+    tabKids: 'كريب الأطفال',
+    tabDrinks: 'مشروبات',
+    titleSweet: 'كريب حلو',
+    descSweet: 'كريب حلو محضر بعناية مع مكونات طازجة',
+    titleSavory: 'كريب مالح',
+    descSavory: 'كريب مالح مع حشوات شهية',
+    titleKids: 'كريب الأطفال',
+    descKids: 'كريب خاص للأطفال',
+    titleDrinks: 'مشروبات',
+    descDrinks: 'مشروبات ساخنة وباردة',
+    cartTitle: 'السلة',
+    totalLabel: 'المجموع:',
+    checkoutBtn: 'إتمام الطلب',
+    orderNowBtn: 'اطلب الآن',
+    emptyCart: 'السلة فارغة',
+    addedToCart: '✓ أضيف إلى السلة',
+    emptyCartAlert: 'السلة فارغة',
+    namePrompt: 'الاسم الكامل:',
+    nameRequired: 'مطلوب الاسم',
+    phonePrompt: 'رقم الهاتف:',
+    phoneRequired: 'مطلوب رقم الهاتف',
+    addressPrompt: 'العنوان:',
+    addressRequired: 'مطلوب العنوان',
+    orderSuccess: '✓ تم إرسال الطلب! رقم الطلب: '
+  },
+  en: {
+    subtitle: 'Crêpes & Café',
+    heroTitle: 'Menu',
+    tabSweet: 'Sweet Crêpes',
+    tabSavory: 'Savory Crêpes',
+    tabKids: 'Kids Crêpes',
+    tabDrinks: 'Drinks',
+    titleSweet: 'Sweet Crêpes',
+    descSweet: 'Carefully prepared sweet crepes with fresh ingredients',
+    titleSavory: 'Savory Crêpes',
+    descSavory: 'Savory crepes with delicious fillings',
+    titleKids: 'Kids Crêpes',
+    descKids: 'Special crepes for kids',
+    titleDrinks: 'Drinks',
+    descDrinks: 'Hot and cold beverages',
+    cartTitle: 'Cart',
+    totalLabel: 'Total:',
+    checkoutBtn: 'Checkout',
+    orderNowBtn: 'ORDER NOW',
+    emptyCart: 'Cart is empty',
+    addedToCart: '✓ Added to cart',
+    emptyCartAlert: 'Cart is empty',
+    namePrompt: 'Full name:',
+    nameRequired: 'Name is required',
+    phonePrompt: 'Phone number:',
+    phoneRequired: 'Phone number is required',
+    addressPrompt: 'Address:',
+    addressRequired: 'Address is required',
+    orderSuccess: '✓ Order sent! Order number: '
+  }
+};
+
+function getCurrentLang(){
+  return localStorage.getItem(LANG_KEY) || 'ar';
+}
+
+function setLanguage(lang){
+  localStorage.setItem(LANG_KEY, lang);
+  document.documentElement.lang = lang;
+  document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+}
+
+function toggleLanguage(){
+  const currentLang = getCurrentLang();
+  const newLang = currentLang === 'ar' ? 'en' : 'ar';
+  setLanguage(newLang);
+  applyTranslations();
+  renderCart();
+}
+
+function applyTranslations(){
+  const lang = getCurrentLang();
+  const t = translations[lang];
+  
+  const langBtn = document.getElementById('lang-btn');
+  if(langBtn) langBtn.textContent = lang === 'ar' ? 'EN' : 'ع';
+  
+  const subtitle = document.getElementById('subtitle');
+  if(subtitle) subtitle.textContent = t.subtitle;
+  
+  const heroTitle = document.getElementById('hero-title');
+  if(heroTitle) heroTitle.textContent = t.heroTitle;
+  
+  const tabSweet = document.getElementById('tab-sweet');
+  if(tabSweet) tabSweet.textContent = t.tabSweet;
+  
+  const tabSavory = document.getElementById('tab-savory');
+  if(tabSavory) tabSavory.textContent = t.tabSavory;
+  
+  const tabKids = document.getElementById('tab-kids');
+  if(tabKids) tabKids.textContent = t.tabKids;
+  
+  const tabDrinks = document.getElementById('tab-drinks');
+  if(tabDrinks) tabDrinks.textContent = t.tabDrinks;
+  
+  const titleSweet = document.getElementById('title-sweet');
+  if(titleSweet) titleSweet.textContent = t.titleSweet;
+  
+  const descSweet = document.getElementById('desc-sweet');
+  if(descSweet) descSweet.textContent = t.descSweet;
+  
+  const titleSavory = document.getElementById('title-savory');
+  if(titleSavory) titleSavory.textContent = t.titleSavory;
+  
+  const descSavory = document.getElementById('desc-savory');
+  if(descSavory) descSavory.textContent = t.descSavory;
+  
+  const titleKids = document.getElementById('title-kids');
+  if(titleKids) titleKids.textContent = t.titleKids;
+  
+  const descKids = document.getElementById('desc-kids');
+  if(descKids) descKids.textContent = t.descKids;
+  
+  const titleDrinks = document.getElementById('title-drinks');
+  if(titleDrinks) titleDrinks.textContent = t.titleDrinks;
+  
+  const descDrinks = document.getElementById('desc-drinks');
+  if(descDrinks) descDrinks.textContent = t.descDrinks;
+  
+  const cartTitle = document.getElementById('cart-title');
+  if(cartTitle) cartTitle.textContent = t.cartTitle;
+  
+  const totalLabel = document.getElementById('total-label');
+  if(totalLabel) totalLabel.textContent = t.totalLabel;
+  
+  const checkoutBtn = document.getElementById('checkout-btn');
+  if(checkoutBtn) checkoutBtn.textContent = t.checkoutBtn;
+  
+  const orderNowBtn = document.getElementById('order-now-btn');
+  if(orderNowBtn) orderNowBtn.textContent = t.orderNowBtn;
+}
 
 // default menu with proper categories
 const defaultMenu = [
@@ -130,7 +275,9 @@ function addToCart(id){
     cart.push({id:item.id, name:item.name, price:item.price, qty:1});
   }
   saveCart(cart);
-  toast('✓ أضيف إلى السلة');
+  const lang = getCurrentLang();
+  const t = translations[lang];
+  toast(t.addedToCart);
   toggleCart();
 }
 
@@ -138,10 +285,12 @@ function renderCart(){
   const container = document.getElementById('cart-contents');
   if(!container) return;
   const cart = getCart();
+  const lang = getCurrentLang();
+  const t = translations[lang];
   container.innerHTML = '';
   
   if(cart.length===0){
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">السلة فارغة</div>';
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">' + t.emptyCart + '</div>';
     const totalEl = document.getElementById('cart-total');
     if(totalEl) totalEl.textContent = '$0.00';
     return;
@@ -212,14 +361,16 @@ function removeFromCart(id){
 }
 
 function checkoutFlow(){
+  const lang = getCurrentLang();
+  const t = translations[lang];
   const cart = getCart();
-  if(cart.length===0) return alert('السلة فارغة');
-  const name = prompt('الاسم الكامل:');
-  if(!name) return alert('مطلوب الاسم');
-  const phone = prompt('رقم الهاتف:');
-  if(!phone) return alert('مطلوب رقم الهاتف');
-  const address = prompt('العنوان:');
-  if(!address) return alert('مطلوب العنوان');
+  if(cart.length===0) return alert(t.emptyCartAlert);
+  const name = prompt(t.namePrompt);
+  if(!name) return alert(t.nameRequired);
+  const phone = prompt(t.phonePrompt);
+  if(!phone) return alert(t.phoneRequired);
+  const address = prompt(t.addressPrompt);
+  if(!address) return alert(t.addressRequired);
   const total = cart.reduce((s,i)=>s + i.price * i.qty, 0);
   const orders = getOrders();
   const id = 'ORD-' + Date.now();
@@ -234,7 +385,7 @@ function checkoutFlow(){
   saveOrders(orders);
   saveCart([]);
   toggleCart();
-  toast('✓ تم إرسال الطلب! رقم الطلب: ' + id);
+  toast(t.orderSuccess + id);
 }
 
 /* Toast notification */
@@ -362,6 +513,11 @@ function submitContact(e){
 
 /* On load hooks */
 document.addEventListener('DOMContentLoaded', ()=>{
+  // Set language
+  const lang = getCurrentLang();
+  setLanguage(lang);
+  applyTranslations();
+  
   // Update menu if needed
   const currentMenu = getMenu();
   if(currentMenu.length > 0 && (!currentMenu[0].category || currentMenu[0].img.includes('.jpg'))){

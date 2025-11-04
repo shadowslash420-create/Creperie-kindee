@@ -47,6 +47,24 @@ body{
   flex-shrink:0;
 }
 
+.lang-btn{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  background:var(--turquoise);
+  border:none;
+  color:white;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  flex-shrink:0;
+  transition:transform 0.2s;
+}
+
+.lang-btn:active{
+  transform:scale(0.95);
+}
+
 .menu-icon{
   background:var(--turquoise);
 }
