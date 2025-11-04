@@ -27,22 +27,22 @@
       <h2 class="section-title" id="feedback-title">آراء العملاء</h2>
       
       <div class="card">
-        <h3 style="margin-bottom:20px">شاركنا تجربتك</h3>
+        <h3 style="margin-bottom:20px" id="feedback-form-title">شاركنا تجربتك</h3>
         <form id="feedback-form" onsubmit="submitFeedback(event)">
           <label>
-            اسمك:
+            <span id="feedback-name-label">اسمك:</span>
             <input id="feedback-name" required />
           </label>
           
           <label>
-            اختر المنتج:
+            <span id="feedback-item-label">اختر المنتج:</span>
             <select id="feedback-item" required>
               <option value="">-- اختر منتج --</option>
             </select>
           </label>
           
           <label>
-            التقييم:
+            <span id="feedback-rating-label">التقييم:</span>
             <div class="star-rating" id="star-rating">
               <span class="star" data-rating="1">☆</span>
               <span class="star" data-rating="2">☆</span>
@@ -54,17 +54,17 @@
           </label>
           
           <label>
-            تعليقك:
+            <span id="feedback-comment-label">تعليقك:</span>
             <textarea id="feedback-comment" required rows="4" placeholder="شاركنا رأيك في المنتج..."></textarea>
           </label>
           
-          <button class="cta" type="submit">إرسال التقييم</button>
+          <button class="cta" type="submit" id="feedback-submit">إرسال التقييم</button>
         </form>
       </div>
     </section>
 
     <section class="section">
-      <h2 class="section-title">تقييمات العملاء</h2>
+      <h2 class="section-title" id="feedback-reviews-title">تقييمات العملاء</h2>
       <div id="feedback-list" class="feedback-list"></div>
     </section>
 

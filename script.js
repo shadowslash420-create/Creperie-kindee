@@ -180,6 +180,8 @@ const translations = {
     feedbackCommentLabel: 'Your comment:',
     feedbackSubmit: 'Submit Review',
     selectItem: '-- Select a product --',
+    navFaq: 'FAQ',
+    navFeedback: 'Reviews',
 
     // FAQ Page
     faqQ1: 'What are your opening hours?',

@@ -24,18 +24,18 @@
       <div class="card">
         <form id="contact-form" onsubmit="submitContact(event)">
           <label>
-            الاسم:
+            <span id="contact-name-label">الاسم:</span>
             <input id="contact-name" required />
           </label>
           <label>
-            الإيميل:
+            <span id="contact-email-label">الإيميل:</span>
             <input id="contact-email" type="email" required />
           </label>
           <label>
-            الرسالة:
+            <span id="contact-message-label">الرسالة:</span>
             <textarea id="contact-msg" required rows="5"></textarea>
           </label>
-          <button class="cta" type="submit">أرسل</button>
+          <button class="cta" type="submit" id="contact-submit">أرسل</button>
         </form>
       </div>
     </section>
