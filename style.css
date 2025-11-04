@@ -488,7 +488,7 @@ body{
 /* Cart Sidebar */
 .cart-side{
   position:fixed;
-  right:-100%;
+  inset-inline-end:-100%;
   top:0;
   width:100%;
   max-width:420px;
@@ -497,12 +497,12 @@ body{
   box-shadow:-6px 0 32px rgba(0,0,0,0.12);
   padding:24px;
   z-index:1000;
-  transition:right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y:auto;
 }
 
 .cart-side.open{
-  right:0;
+  inset-inline-end:0;
 }
 
 .cart-header{
@@ -1002,7 +1002,7 @@ label{
   }
 
   .cart-side{
-    right:0;
+    inset-inline-end:0;
     max-width:420px;
   }
 }
