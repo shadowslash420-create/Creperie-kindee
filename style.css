@@ -185,6 +185,7 @@ body{
   align-items:center;
   justify-content:center;
   overflow:hidden;
+  margin:0;
 }
 
 .hero-title{
