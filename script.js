@@ -1139,13 +1139,11 @@ function updatePageIndicator(){
 function initScrollButton(){
   // Create scroll button
   const scrollBtn = document.createElement('button');
-  scrollBtn.className = 'scroll-btn';
+  scrollBtn.className = 'scroll-btn visible';
   scrollBtn.id = 'scroll-btn';
-  scrollBtn.innerHTML = '↑';
-  scrollBtn.setAttribute('aria-label', 'Scroll to top');
+  scrollBtn.innerHTML = '↓';
+  scrollBtn.setAttribute('aria-label', 'Scroll to bottom');
   document.body.appendChild(scrollBtn);
-
-  let isAtBottom = false;
 
   // Handle scroll
   window.addEventListener('scroll', () => {
@@ -1153,40 +1151,35 @@ function initScrollButton(){
     if(!scrollBtn) return;
 
     const scrolled = window.scrollY;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
 
-    // Show button after scrolling 300px
-    if(scrolled > 300){
+    // Show button initially, or after scrolling
+    if(scrolled === 0){
+      // At top - show down arrow
       scrollBtn.classList.add('visible');
-    } else {
-      scrollBtn.classList.remove('visible');
-    }
-
-    // Check if near bottom (within 100px)
-    if(scrolled + windowHeight >= documentHeight - 100){
-      isAtBottom = true;
-      scrollBtn.innerHTML = '↑';
-      scrollBtn.setAttribute('aria-label', 'Scroll to top');
-    } else {
-      isAtBottom = false;
       scrollBtn.innerHTML = '↓';
       scrollBtn.setAttribute('aria-label', 'Scroll to bottom');
+    } else if(scrolled > 50){
+      // Scrolled down - show up arrow
+      scrollBtn.classList.add('visible');
+      scrollBtn.innerHTML = '↑';
+      scrollBtn.setAttribute('aria-label', 'Scroll to top');
     }
   });
 
   // Handle click
   scrollBtn.addEventListener('click', () => {
-    if(isAtBottom || window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 100){
-      // Scroll to top
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    } else {
+    const scrolled = window.scrollY;
+    
+    if(scrolled === 0 || scrollBtn.innerHTML === '↓'){
       // Scroll to bottom
       window.scrollTo({
         top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    } else {
+      // Scroll to top
+      window.scrollTo({
+        top: 0,
         behavior: 'smooth'
       });
     }
