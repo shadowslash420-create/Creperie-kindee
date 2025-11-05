@@ -1111,6 +1111,28 @@ function updatePageIndicator(){
   if(pageIndicator && pageNames[currentPage]){
     pageIndicator.textContent = pageNames[currentPage][lang];
   }
+  
+  // Apply translations to all navigation links
+  const navHomeLinks = document.querySelectorAll('.nav-link-home');
+  navHomeLinks.forEach(link => link.textContent = t.navHome);
+  
+  const navAboutLinks = document.querySelectorAll('.nav-link-about');
+  navAboutLinks.forEach(link => link.textContent = t.navAbout);
+  
+  const navMenuLinks = document.querySelectorAll('.nav-link-menu');
+  navMenuLinks.forEach(link => link.textContent = t.navMenu);
+  
+  const navContactLinks = document.querySelectorAll('.nav-link-contact');
+  navContactLinks.forEach(link => link.textContent = t.navContact);
+  
+  const navAdminLinks = document.querySelectorAll('.nav-link-admin');
+  navAdminLinks.forEach(link => link.textContent = t.navAdmin);
+  
+  const navFaqLinks = document.querySelectorAll('.nav-link-faq');
+  navFaqLinks.forEach(link => link.textContent = t.navFaq);
+  
+  const navFeedbackLinks = document.querySelectorAll('.nav-link-feedback');
+  navFeedbackLinks.forEach(link => link.textContent = t.navFeedback);
 }
 
 /* On load hooks */
