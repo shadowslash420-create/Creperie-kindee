@@ -994,23 +994,27 @@ function initStarRating(){
 
 /* On load hooks */
 document.addEventListener('DOMContentLoaded', ()=>{
-  // Set language
-  const lang = getCurrentLang();
-  setLanguage(lang);
-  applyTranslations();
+  try {
+    // Set language
+    const lang = getCurrentLang();
+    setLanguage(lang);
+    applyTranslations();
 
-  // Update menu if needed
-  const currentMenu = getMenu();
-  if(currentMenu.length > 0 && (!currentMenu[0].category || currentMenu[0].img.includes('.jpg'))){
-    localStorage.setItem(MENU_KEY, JSON.stringify(defaultMenu));
+    // Update menu if needed
+    const currentMenu = getMenu();
+    if(currentMenu.length === 0 || !currentMenu[0].category || currentMenu[0].img.includes('.jpg')){
+      localStorage.setItem(MENU_KEY, JSON.stringify(defaultMenu));
+    }
+
+    // Render all category menus
+    renderMenuByCategory('sweet', 'menu-sweet');
+    renderMenuByCategory('savory', 'menu-savory');
+    renderMenuByCategory('kids', 'menu-kids');
+    renderMenuByCategory('drinks', 'menu-drinks');
+    renderCart();
+  } catch(error) {
+    console.error('خطأ في تهيئة التطبيق:', error);
   }
-
-  // Render all category menus
-  renderMenuByCategory('sweet', 'menu-sweet');
-  renderMenuByCategory('savory', 'menu-savory');
-  renderMenuByCategory('kids', 'menu-kids');
-  renderMenuByCategory('drinks', 'menu-drinks');
-  renderCart();
 
   // Admin login
   const adminForm = document.getElementById('admin-login-form');
