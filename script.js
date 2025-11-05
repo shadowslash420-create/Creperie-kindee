@@ -81,6 +81,7 @@ const translations = {
     selectItem: '-- اختر منتج --',
     navFaq: 'الأسئلة الشائعة',
     navFeedback: 'التقييمات',
+    navDelivery: 'التوصيل',
 
     // FAQ Page
     faqQ1: 'ما هي ساعات العمل؟',
@@ -197,6 +198,7 @@ const translations = {
     selectItem: '-- Select a product --',
     navFaq: 'FAQ',
     navFeedback: 'Reviews',
+    navDelivery: 'Delivery',
 
     // FAQ Page
     faqQ1: 'What are your opening hours?',
@@ -503,6 +505,9 @@ function applyTranslations(){
   
   const navFeedbackLinks = document.querySelectorAll('.nav-link-feedback');
   navFeedbackLinks.forEach(link => link.textContent = t.navFeedback);
+  
+  const navDeliveryLinks = document.querySelectorAll('.nav-link-delivery');
+  navDeliveryLinks.forEach(link => link.textContent = t.navDelivery);
 
 }
 
@@ -1133,6 +1138,9 @@ function updatePageIndicator(){
   
   const navFeedbackLinks = document.querySelectorAll('.nav-link-feedback');
   navFeedbackLinks.forEach(link => link.textContent = t.navFeedback);
+  
+  const navDeliveryLinks = document.querySelectorAll('.nav-link-delivery');
+  navDeliveryLinks.forEach(link => link.textContent = t.navDelivery);
 }
 
 /* Scroll Button Functions */
