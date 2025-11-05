@@ -482,25 +482,25 @@ function applyTranslations(){
   if (adminLogoutBtn) adminLogoutBtn.textContent = t.adminLogoutBtn;
 
   // Navigation links translations
-  const navHomeLinks = document.querySelectorAll('.nav-home');
+  const navHomeLinks = document.querySelectorAll('.nav-link-home');
   navHomeLinks.forEach(link => link.textContent = t.navHome);
   
-  const navAboutLinks = document.querySelectorAll('.nav-about');
+  const navAboutLinks = document.querySelectorAll('.nav-link-about');
   navAboutLinks.forEach(link => link.textContent = t.navAbout);
   
-  const navMenuLinks = document.querySelectorAll('.nav-menu');
+  const navMenuLinks = document.querySelectorAll('.nav-link-menu');
   navMenuLinks.forEach(link => link.textContent = t.navMenu);
   
-  const navContactLinks = document.querySelectorAll('.nav-contact');
+  const navContactLinks = document.querySelectorAll('.nav-link-contact');
   navContactLinks.forEach(link => link.textContent = t.navContact);
   
-  const navAdminLinks = document.querySelectorAll('.nav-admin');
+  const navAdminLinks = document.querySelectorAll('.nav-link-admin');
   navAdminLinks.forEach(link => link.textContent = t.navAdmin);
   
-  const navFaqLinks = document.querySelectorAll('.nav-faq');
+  const navFaqLinks = document.querySelectorAll('.nav-link-faq');
   navFaqLinks.forEach(link => link.textContent = t.navFaq);
   
-  const navFeedbackLinks = document.querySelectorAll('.nav-feedback');
+  const navFeedbackLinks = document.querySelectorAll('.nav-link-feedback');
   navFeedbackLinks.forEach(link => link.textContent = t.navFeedback);
 
 }
