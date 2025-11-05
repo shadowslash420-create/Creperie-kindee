@@ -1073,6 +1073,19 @@ function initStarRating(){
   }
 }
 
+/* Highlight active page in navigation */
+function highlightActivePage(){
+  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  const navLinks = document.querySelectorAll('.nav-menu-links a, .footer-links a');
+  
+  navLinks.forEach(link => {
+    const linkPage = link.getAttribute('href');
+    if(linkPage === currentPage || (currentPage === '' && linkPage === 'index.html')){
+      link.classList.add('active-page');
+    }
+  });
+}
+
 /* On load hooks */
 document.addEventListener('DOMContentLoaded', ()=>{
   try {
@@ -1093,6 +1106,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
     renderMenuByCategory('kids', 'menu-kids');
     renderMenuByCategory('drinks', 'menu-drinks');
     renderCart();
+    
+    // Highlight active page
+    highlightActivePage();
   } catch(error) {
     console.error('خطأ في تهيئة التطبيق:', error);
   }

@@ -772,6 +772,14 @@ body{
   color:var(--primary);
 }
 
+.nav-menu-links a.active-page{
+  color:var(--primary);
+  font-weight:700;
+  border-left:3px solid var(--primary);
+  padding-inline-start:12px;
+  background:var(--light-peach);
+}
+
 .nav-divider{
   height:1px;
   background:var(--border);
@@ -890,6 +898,12 @@ body{
 
 .footer-links a:hover{
   color:var(--secondary);
+}
+
+.footer-links a.active-page{
+  color:var(--secondary);
+  font-weight:700;
+  text-decoration:underline;
 }
 
 .footer-connect{
