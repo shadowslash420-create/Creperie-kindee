@@ -1211,7 +1211,7 @@ function initSecretAdminAccess(){
     }
   });
 
-  // Admin: 5 rapid taps on copyright text
+  // Admin: 7 rapid taps on copyright text
   const copyrightElement = document.getElementById('footer-copyright');
   if(copyrightElement) {
     let adminTapCount = 0;
@@ -1223,8 +1223,8 @@ function initSecretAdminAccess(){
       // Clear previous timer
       if(adminTapTimer) clearTimeout(adminTapTimer);
       
-      // If 5 taps within 2 seconds, go to admin
-      if(adminTapCount >= 5) {
+      // If 7 taps within 2 seconds, go to admin
+      if(adminTapCount >= 7) {
         window.location.href = 'admin.html';
         adminTapCount = 0;
         return;
