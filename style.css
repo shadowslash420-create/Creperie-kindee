@@ -5,29 +5,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&display=swap');
 
 :root{
-  --primary:#c9a050;
-  --primary-dark:#a67c00;
+  --primary:#d4a574;
+  --primary-dark:#b37b49;
   --secondary:#f4e8d0;
   --accent:#8b7355;
   --success:#52C41A;
-  --background:#0a0908;
+  --background:#fff9f3;
   --surface:#ffffff;
   --cream:#faf8f5;
-  --text-primary:#1a1a1a;
-  --text-secondary:#4a4a4a;
-  --text-light:#8a8a8a;
-  --border:#e8e0d5;
-  --warm-gold:#c9a050;
-  --light-cream:#faf8f5;
-  --charcoal:#1a1a1a;
+  --text-primary:#3b2b26;
+  --text-secondary:#705c53;
+  --text-light:#8d7a6f;
+  --border:#e8ddd1;
+  --warm-gold:#d4a574;
+  --light-cream:#fff9f3;
+  --charcoal:#3b2b26;
   --burgundy:#5c1f1f;
-  --deep-gold:#a67c00;
+  --deep-gold:#b37b49;
   --soft-shadow: 0 2px 20px rgba(0,0,0,0.08);
   --medium-shadow: 0 8px 30px rgba(0,0,0,0.12);
   --strong-shadow: 0 12px 40px rgba(0,0,0,0.18);
-  --gradient-primary:linear-gradient(135deg, #c9a050 0%, #a67c00 100%);
-  --gradient-warm:linear-gradient(135deg, #f4e8d0 0%, #c9a050 100%);
-  --gradient-luxury:linear-gradient(135deg, #0a0908 0%, #1a1a1a 50%, #2a2a2a 100%);
+  --gradient-primary:linear-gradient(135deg, #d4a574 0%, #b37b49 100%);
+  --gradient-warm:linear-gradient(135deg, #f4e8d0 0%, #d4a574 100%);
+  --gradient-luxury:linear-gradient(135deg, #d4a574 0%, #b37b49 100%);
 }
 
 *{box-sizing:border-box; margin:0; padding:0}
@@ -35,7 +35,7 @@
 body{
   font-family:'Cormorant Garamond', 'Georgia', serif;
   margin:0;
-  background:#faf8f5;
+  background:#fff9f3;
   color:var(--text-primary);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
@@ -175,7 +175,7 @@ body{
 .hero{
   position:relative;
   height:400px;
-  background:var(--gradient-luxury);
+  background:var(--gradient-primary);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -195,7 +195,7 @@ body{
 .home-hero{
   position:relative;
   min-height:85vh;
-  background:var(--gradient-luxury);
+  background:var(--gradient-primary);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -718,7 +718,7 @@ body{
 .cart-total-section{
   margin-top:32px;
   padding:28px;
-  background:var(--gradient-luxury);
+  background:var(--gradient-primary);
   border-radius:2px;
   box-shadow:var(--medium-shadow);
 }
@@ -892,7 +892,7 @@ body{
   right:32px;
   max-width:640px;
   margin:0 auto;
-  background:var(--gradient-luxury);
+  background:var(--gradient-primary);
   color:#fff;
   border:none;
   padding:20px;
@@ -925,7 +925,7 @@ body{
   width:60px;
   height:60px;
   border-radius:4px;
-  background:var(--gradient-luxury);
+  background:var(--gradient-primary);
   color:#fff;
   border:none;
   font-size:26px;
@@ -956,7 +956,7 @@ body{
 
 /* Footer */
 .footer{
-  background:var(--gradient-luxury);
+  background:var(--gradient-primary);
   color:rgba(255,255,255,0.85);
   padding:64px 32px;
   text-align:center;
@@ -1097,7 +1097,7 @@ label{
 }
 
 .cta{
-  background:var(--gradient-luxury);
+  background:var(--gradient-primary);
   color:#fff;
   padding:18px 40px;
   border-radius:4px;
