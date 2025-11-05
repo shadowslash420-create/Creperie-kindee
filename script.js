@@ -218,7 +218,7 @@ function getCurrentLang(){
 function setLanguage(lang){
   localStorage.setItem(LANG_KEY, lang);
   document.documentElement.lang = lang;
-  document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.body.dir = 'ltr';
 }
 
 function toggleLanguage(){
