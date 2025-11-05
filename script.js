@@ -1195,38 +1195,71 @@ function initScrollButton(){
   });
 }
 
-/* Hidden Admin Access - Secret Keyboard Shortcut */
+/* Hidden Admin & Delivery Access - Secret Keyboard Shortcuts */
 function initSecretAdminAccess(){
-  // Secret keyboard shortcut: Ctrl + Shift + K
+  // Secret keyboard shortcuts
   document.addEventListener('keydown', (e) => {
+    // Admin: Ctrl + Shift + K
     if (e.ctrlKey && e.shiftKey && e.key === 'K') {
       e.preventDefault();
       window.location.href = 'admin.html';
     }
+    // Delivery: Ctrl + Shift + D
+    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+      e.preventDefault();
+      window.location.href = 'delivery.html';
+    }
   });
 
-  // Secret tap sequence for mobile: 5 rapid taps on copyright text
+  // Admin: 5 rapid taps on copyright text
   const copyrightElement = document.getElementById('footer-copyright');
   if(copyrightElement) {
-    let tapCount = 0;
-    let tapTimer = null;
+    let adminTapCount = 0;
+    let adminTapTimer = null;
 
     copyrightElement.addEventListener('click', () => {
-      tapCount++;
+      adminTapCount++;
       
       // Clear previous timer
-      if(tapTimer) clearTimeout(tapTimer);
+      if(adminTapTimer) clearTimeout(adminTapTimer);
       
       // If 5 taps within 2 seconds, go to admin
-      if(tapCount >= 5) {
+      if(adminTapCount >= 5) {
         window.location.href = 'admin.html';
-        tapCount = 0;
+        adminTapCount = 0;
         return;
       }
       
       // Reset tap count after 2 seconds
-      tapTimer = setTimeout(() => {
-        tapCount = 0;
+      adminTapTimer = setTimeout(() => {
+        adminTapCount = 0;
+      }, 2000);
+    });
+  }
+
+  // Delivery: 3 rapid taps on social icons
+  const socialIcons = document.querySelector('.social-icons');
+  if(socialIcons) {
+    let deliveryTapCount = 0;
+    let deliveryTapTimer = null;
+
+    socialIcons.addEventListener('click', (e) => {
+      e.preventDefault();
+      deliveryTapCount++;
+      
+      // Clear previous timer
+      if(deliveryTapTimer) clearTimeout(deliveryTapTimer);
+      
+      // If 3 taps within 2 seconds, go to delivery
+      if(deliveryTapCount >= 3) {
+        window.location.href = 'delivery.html';
+        deliveryTapCount = 0;
+        return;
+      }
+      
+      // Reset tap count after 2 seconds
+      deliveryTapTimer = setTimeout(() => {
+        deliveryTapCount = 0;
       }, 2000);
     });
   }
