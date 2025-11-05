@@ -1195,44 +1195,41 @@ function initScrollButton(){
   });
 }
 
-/* Logo Press Functions */
-function initLogoPress(){
-  const logo = document.querySelector('#page-indicator');
-  if(!logo) return;
-
-  let pressTimer = null;
-  let pressStartTime = null;
-  
-  const startPress = () => {
-    pressStartTime = Date.now();
-    pressTimer = setTimeout(() => {
-      // After 7 seconds, redirect to admin
+/* Hidden Admin Access - Secret Keyboard Shortcut */
+function initSecretAdminAccess(){
+  // Secret keyboard shortcut: Ctrl + Shift + K
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'K') {
+      e.preventDefault();
       window.location.href = 'admin.html';
-    }, 7000);
-  };
-
-  const cancelPress = () => {
-    if(pressTimer) {
-      clearTimeout(pressTimer);
-      pressTimer = null;
-      pressStartTime = null;
     }
-  };
-
-  // Mouse events
-  logo.addEventListener('mousedown', startPress);
-  logo.addEventListener('mouseup', cancelPress);
-  logo.addEventListener('mouseleave', cancelPress);
-
-  // Touch events for mobile
-  logo.addEventListener('touchstart', (e) => {
-    startPress();
   });
-  logo.addEventListener('touchend', cancelPress);
-  logo.addEventListener('touchcancel', cancelPress);
 
-  // Add cursor pointer to indicate it's clickable
-  logo.style.cursor = 'pointer';
+  // Secret tap sequence for mobile: 5 rapid taps on copyright text
+  const copyrightElement = document.getElementById('footer-copyright');
+  if(copyrightElement) {
+    let tapCount = 0;
+    let tapTimer = null;
+
+    copyrightElement.addEventListener('click', () => {
+      tapCount++;
+      
+      // Clear previous timer
+      if(tapTimer) clearTimeout(tapTimer);
+      
+      // If 5 taps within 2 seconds, go to admin
+      if(tapCount >= 5) {
+        window.location.href = 'admin.html';
+        tapCount = 0;
+        return;
+      }
+      
+      // Reset tap count after 2 seconds
+      tapTimer = setTimeout(() => {
+        tapCount = 0;
+      }, 2000);
+    });
+  }
 }
 
 /* On load hooks */
@@ -1268,8 +1265,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
     // Initialize scroll button
     initScrollButton();
 
-    // Initialize logo press for admin access
-    initLogoPress();
+    // Initialize secret admin access
+    initSecretAdminAccess();
   } catch(error) {
     console.error('خطأ في تهيئة التطبيق:', error);
   }
