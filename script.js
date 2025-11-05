@@ -1135,6 +1135,64 @@ function updatePageIndicator(){
   navFeedbackLinks.forEach(link => link.textContent = t.navFeedback);
 }
 
+/* Scroll Button Functions */
+function initScrollButton(){
+  // Create scroll button
+  const scrollBtn = document.createElement('button');
+  scrollBtn.className = 'scroll-btn';
+  scrollBtn.id = 'scroll-btn';
+  scrollBtn.innerHTML = '↑';
+  scrollBtn.setAttribute('aria-label', 'Scroll to top');
+  document.body.appendChild(scrollBtn);
+
+  let isAtBottom = false;
+
+  // Handle scroll
+  window.addEventListener('scroll', () => {
+    const scrollBtn = document.getElementById('scroll-btn');
+    if(!scrollBtn) return;
+
+    const scrolled = window.scrollY;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+
+    // Show button after scrolling 300px
+    if(scrolled > 300){
+      scrollBtn.classList.add('visible');
+    } else {
+      scrollBtn.classList.remove('visible');
+    }
+
+    // Check if near bottom (within 100px)
+    if(scrolled + windowHeight >= documentHeight - 100){
+      isAtBottom = true;
+      scrollBtn.innerHTML = '↑';
+      scrollBtn.setAttribute('aria-label', 'Scroll to top');
+    } else {
+      isAtBottom = false;
+      scrollBtn.innerHTML = '↓';
+      scrollBtn.setAttribute('aria-label', 'Scroll to bottom');
+    }
+  });
+
+  // Handle click
+  scrollBtn.addEventListener('click', () => {
+    if(isAtBottom || window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 100){
+      // Scroll to top
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    } else {
+      // Scroll to bottom
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  });
+}
+
 /* On load hooks */
 document.addEventListener('DOMContentLoaded', ()=>{
   try {
@@ -1158,6 +1216,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
     
     // Highlight active page
     highlightActivePage();
+
+    // Initialize scroll button
+    initScrollButton();
   } catch(error) {
     console.error('خطأ في تهيئة التطبيق:', error);
   }
