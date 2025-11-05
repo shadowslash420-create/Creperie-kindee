@@ -1,79 +1,223 @@
-
 <!doctype html>
-<html lang="ar">
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Admin - Creperie Kinder</title>
+  <title>Admin Dashboard - Creperie Kinder</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="admin-dashboard.css" />
 </head>
-<body dir="ltr">
-  <header class="header">
-    <div style="display:flex;gap:8px;align-items:center">
-      <div class="menu-icon" onclick="window.location.href='index.html'">←</div>
-      <div class="cart-icon" onclick="toggleCart()">🛒</div>
-    </div>
-    <div class="brand">
-      <div class="brand-text">
-        <div class="site-title">ADMIN PANEL</div>
+<body dir="ltr" class="admin-body">
+  
+  <!-- Login Section -->
+  <div class="admin-login-page" id="login-section">
+    <div class="login-card">
+      <div class="login-header">
+        <h1>CREPERIE KINDER</h1>
+        <p>Admin Dashboard</p>
       </div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn">EN</button>
-    </div>
-  </header>
-
-  <div class="container">
-    <section class="section" id="login-section">
-      <h2 class="section-title" id="admin-login-title">تسجيل الدخول</h2>
-      <div class="card">
-        <form id="admin-login-form">
-          <label>
-            <span id="admin-username-label">اسم المستخدم:</span>
-            <input id="adm-user" required />
-          </label>
-          <label>
-            <span id="admin-password-label">كلمة المرور:</span>
-            <input id="adm-pass" type="password" required />
-          </label>
-          <button class="cta" type="submit" id="admin-login-btn">دخول</button>
-        </form>
-      </div>
-    </section>
-
-    <section class="section hidden" id="admin-section">
-      <h2 class="section-title" id="admin-panel-title">لوحة الطلبات</h2>
-      <div class="admin-panel">
-        <div id="stats-area"></div>
-        <div class="orders-list" id="orders-list"></div>
-        <button onclick="adminLogout()" class="cta" style="background:#3A4A54;margin-top:20px" id="admin-logout-btn">تسجيل خروج</button>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <div style="margin-top:20px;font-size:13px;color:#888">
-        © Creperie Kinder — Admin Panel
-      </div>
-    </footer>
-  </div>
-
-  <div class="cart-side" id="cart-side">
-    <div class="cart-header">
-      <h3 id="cart-title">السلة</h3>
-      <button class="cart-close" onclick="toggleCart()">×</button>
-    </div>
-    <div id="cart-contents"></div>
-    <div class="cart-total-section">
-      <div class="cart-total">
-        <span id="total-label">المجموع:</span>
-        <strong id="cart-total">$0.00</strong>
-      </div>
-      <button class="cta" style="width:100%;margin-top:16px" onclick="checkoutFlow()" id="checkout-btn">إتمام الطلب</button>
+      <form id="admin-login-form" class="login-form">
+        <div class="form-group">
+          <label id="admin-username-label">Username</label>
+          <input type="text" id="adm-user" placeholder="Enter username" required />
+        </div>
+        <div class="form-group">
+          <label id="admin-password-label">Password</label>
+          <input type="password" id="adm-pass" placeholder="Enter password" required />
+        </div>
+        <button class="login-btn" type="submit" id="admin-login-btn">Login</button>
+      </form>
     </div>
   </div>
 
-  <div class="menu-overlay" id="menu-overlay" onclick="closeAllSidebars()"></div>
+  <!-- Dashboard Section -->
+  <div class="admin-dashboard hidden" id="admin-section">
+    
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar" id="dashboard-sidebar">
+      <div class="sidebar-header">
+        <h2>CREPERIE<br>KINDER</h2>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" onclick="showSection('dashboard', event)">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('orders', event)">
+          <span class="nav-icon">📦</span>
+          <span class="nav-text">Orders</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('menu', event)">
+          <span class="nav-icon">🍽️</span>
+          <span class="nav-text">Menu</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('analytics', event)">
+          <span class="nav-icon">📈</span>
+          <span class="nav-text">Analytics</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button onclick="adminLogout()" class="logout-btn" id="admin-logout-btn">
+          <span>🚪</span> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      
+      <!-- Top Header -->
+      <header class="dashboard-header">
+        <div class="header-left">
+          <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+          <h1 id="page-title">Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <div class="admin-profile">
+            <span class="admin-avatar">👤</span>
+            <span class="admin-name">Admin</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard Overview Section -->
+      <section class="content-section active" id="section-dashboard">
+        
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">💰</div>
+            <div class="stat-info">
+              <p class="stat-label">Today's Revenue</p>
+              <h3 class="stat-value" id="stat-revenue">$0.00</h3>
+              <span class="stat-change positive">+12% from yesterday</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">📦</div>
+            <div class="stat-info">
+              <p class="stat-label">Total Orders</p>
+              <h3 class="stat-value" id="stat-total-orders">0</h3>
+              <span class="stat-change positive">+5 new orders</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">⏳</div>
+            <div class="stat-info">
+              <p class="stat-label">Pending Orders</p>
+              <h3 class="stat-value" id="stat-pending">0</h3>
+              <span class="stat-change">Needs attention</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">✅</div>
+            <div class="stat-info">
+              <p class="stat-label">Completed Today</p>
+              <h3 class="stat-value" id="stat-completed">0</h3>
+              <span class="stat-change positive">Great job!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="card-header">
+              <h3>Sales Trend (Last 7 Days)</h3>
+              <select class="chart-filter">
+                <option>Last 7 Days</option>
+                <option>Last 30 Days</option>
+                <option>Last 90 Days</option>
+              </select>
+            </div>
+            <div class="chart-container">
+              <canvas id="sales-chart"></canvas>
+            </div>
+          </div>
+          
+          <div class="chart-card">
+            <div class="card-header">
+              <h3>Order Status</h3>
+            </div>
+            <div class="chart-container">
+              <canvas id="status-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Orders & Best Sellers -->
+        <div class="dashboard-row">
+          <div class="table-card">
+            <div class="card-header">
+              <h3>Recent Orders</h3>
+              <a href="#" onclick="showSection('orders', event)" class="view-all-link">View All →</a>
+            </div>
+            <div class="table-container" id="recent-orders-table"></div>
+          </div>
+          
+          <div class="best-sellers-card">
+            <div class="card-header">
+              <h3>Best Sellers</h3>
+            </div>
+            <div id="best-sellers-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Orders Section -->
+      <section class="content-section" id="section-orders">
+        <div class="orders-header">
+          <div class="search-box">
+            <input type="text" id="order-search" placeholder="Search by customer name or order ID..." onkeyup="filterOrders()">
+          </div>
+          <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterOrdersByStatus('all', event)">All</button>
+            <button class="filter-tab" onclick="filterOrdersByStatus('pending', event)">Pending</button>
+            <button class="filter-tab" onclick="filterOrdersByStatus('in-progress', event)">In Progress</button>
+            <button class="filter-tab" onclick="filterOrdersByStatus('delivered', event)">Delivered</button>
+          </div>
+          <button class="export-btn" onclick="exportOrdersToCSV()">📥 Export CSV</button>
+        </div>
+        <div class="orders-table-container" id="orders-table"></div>
+      </section>
+
+      <!-- Menu Section -->
+      <section class="content-section" id="section-menu">
+        <div class="menu-manager">
+          <h2>Menu Management</h2>
+          <div class="menu-grid" id="menu-items-grid"></div>
+        </div>
+      </section>
+
+      <!-- Analytics Section -->
+      <section class="content-section" id="section-analytics">
+        <div class="analytics-container">
+          <h2>Analytics & Reports</h2>
+          <div class="analytics-grid">
+            <div class="analytics-card">
+              <h3>Revenue Analytics</h3>
+              <div class="analytics-content">
+                <p>Total Revenue: <strong id="total-revenue">$0.00</strong></p>
+                <p>Average Order Value: <strong id="avg-order">$0.00</strong></p>
+                <p>Best Day: <strong id="best-day">-</strong></p>
+              </div>
+            </div>
+            <div class="analytics-card">
+              <h3>Popular Items</h3>
+              <div class="analytics-content" id="popular-items"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
 
   <script src="script.js"></script>
+  <script src="admin-dashboard.js"></script>
 </body>
 </html>
