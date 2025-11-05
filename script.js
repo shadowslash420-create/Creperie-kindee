@@ -1197,7 +1197,7 @@ function initScrollButton(){
 
 /* Logo Press Functions */
 function initLogoPress(){
-  const logo = document.querySelector('.brand-text');
+  const logo = document.querySelector('#page-indicator');
   if(!logo) return;
 
   let pressTimer = null;
