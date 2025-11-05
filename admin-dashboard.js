@@ -401,6 +401,13 @@ function updateOrderStatus(orderId) {
   
   if (currentIndex < statusFlow.length - 1) {
     order.status = statusFlow[currentIndex + 1];
+    
+    // Add timestamp when order moves to in-progress (accepted for delivery)
+    if (order.status === 'in-progress') {
+      order.acceptedForDelivery = new Date().toISOString();
+      order.acceptedBy = 'Admin';
+    }
+    
     localStorage.setItem('kc_orders', JSON.stringify(orders));
     
     if (currentSection === 'orders') {
@@ -409,7 +416,11 @@ function updateOrderStatus(orderId) {
       loadDashboard();
     }
     
-    alert('Order #' + orderId + ' status updated to: ' + order.status);
+    const statusMessage = order.status === 'in-progress' 
+      ? 'Order #' + orderId + ' accepted and sent to delivery!'
+      : 'Order #' + orderId + ' status updated to: ' + order.status;
+    
+    alert(statusMessage);
   } else {
     alert('Order is already delivered!');
   }

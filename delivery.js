@@ -36,6 +36,10 @@ function loadDeliveryOrders() {
     filteredOrders = orders.filter(o => o.status === currentDeliveryFilter);
   }
   
+  // Count new orders accepted for delivery
+  const newOrders = orders.filter(o => o.status === 'in-progress' && o.acceptedForDelivery).length;
+  updateNewOrdersBadge(newOrders);
+  
   let html = '<table class="orders-table"><thead><tr>';
   html += '<th>Order ID</th><th>Customer</th><th>Phone</th><th>Address</th>';
   html += '<th>Items</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
@@ -44,8 +48,10 @@ function loadDeliveryOrders() {
     html += '<tr><td colspan="8" style="text-align:center;color:#999;padding:40px;">No orders found</td></tr>';
   } else {
     filteredOrders.reverse().forEach(order => {
-      html += '<tr>';
-      html += '<td class="order-id">#' + order.id + '</td>';
+      const isNew = order.status === 'in-progress' && order.acceptedForDelivery;
+      const rowStyle = isNew ? ' style="background-color:#fff3e0;"' : '';
+      html += '<tr' + rowStyle + '>';
+      html += '<td class="order-id">#' + order.id + (isNew ? ' <span style="color:#FF6B35;font-weight:bold;">NEW</span>' : '') + '</td>';
       html += '<td>' + order.name + '</td>';
       html += '<td>' + order.phone + '</td>';
       html += '<td>' + order.address + '</td>';
@@ -154,6 +160,12 @@ function updateDeliveryOrderStatus(orderId) {
   
   if (currentIndex < statusFlow.length - 1) {
     order.status = statusFlow[currentIndex + 1];
+    
+    // Clear new order flag when moving to delivered
+    if (order.status === 'delivered') {
+      delete order.acceptedForDelivery;
+    }
+    
     localStorage.setItem('kc_orders', JSON.stringify(orders));
     loadDeliveryOrders();
     
@@ -195,6 +207,30 @@ function checkDeliveryPage() {
   }
 }
 
+// Update new orders badge
+function updateNewOrdersBadge(count) {
+  let badge = document.getElementById('new-orders-badge');
+  if (!badge && count > 0) {
+    badge = document.createElement('span');
+    badge.id = 'new-orders-badge';
+    badge.style.cssText = 'position:absolute;top:8px;right:8px;background:#FF6B35;color:white;border-radius:12px;padding:2px 8px;font-size:12px;font-weight:bold;';
+    const navItem = document.querySelector('.nav-item');
+    if (navItem) {
+      navItem.style.position = 'relative';
+      navItem.appendChild(badge);
+    }
+  }
+  
+  if (badge) {
+    if (count > 0) {
+      badge.textContent = count;
+      badge.style.display = 'block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+}
+
 // On load
 document.addEventListener('DOMContentLoaded', () => {
   const deliveryForm = document.getElementById('delivery-login-form');
@@ -212,4 +248,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   checkDeliveryPage();
+  
+  // Auto-refresh orders every 10 seconds when logged in
+  if (isDeliveryLoggedIn()) {
+    setInterval(() => {
+      if (document.getElementById('delivery-section') && !document.getElementById('delivery-section').classList.contains('hidden')) {
+        loadDeliveryOrders();
+      }
+    }, 10000);
+  }
 });
