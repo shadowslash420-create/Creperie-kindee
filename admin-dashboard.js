@@ -457,17 +457,192 @@ function exportOrdersToCSV() {
 function loadMenuItems() {
   const menu = JSON.parse(localStorage.getItem('kc_menu') || '[]');
   
-  let html = '';
+  let html = '<button class="add-menu-btn" onclick="showAddMenuModal()">+ Add New Item</button>';
+  html += '<div class="menu-grid">';
+  
   menu.forEach(item => {
     html += '<div class="menu-item-card">';
+    html += '<img src="' + item.img + '" alt="' + item.name + '" class="menu-item-image" />';
     html += '<h4>' + item.name + '</h4>';
     html += '<p>' + item.desc + '</p>';
     html += '<p class="price">$' + item.price.toFixed(2) + '</p>';
-    html += '<p style="font-size:12px;color:#999;text-transform:capitalize;">' + item.category + '</p>';
+    html += '<p style="font-size:12px;color:#999;text-transform:capitalize;margin:8px 0;">' + item.category + '</p>';
+    html += '<div class="menu-item-actions">';
+    html += '<button class="action-btn btn-edit" onclick="editMenuItem(\'' + item.id + '\')">Edit</button>';
+    html += '<button class="action-btn btn-delete" onclick="deleteMenuItem(\'' + item.id + '\')">Delete</button>';
+    html += '</div>';
     html += '</div>';
   });
   
+  html += '</div>';
+  
   document.getElementById('menu-items-grid').innerHTML = html;
+}
+
+// Show Add Menu Modal
+function showAddMenuModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add New Menu Item</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form id="add-menu-form" onsubmit="addMenuItem(event)">
+        <div class="form-group">
+          <label>Item Name *</label>
+          <input type="text" id="item-name" required />
+        </div>
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea id="item-desc" required rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Price ($) *</label>
+          <input type="number" id="item-price" step="0.01" min="0" required />
+        </div>
+        <div class="form-group">
+          <label>Category *</label>
+          <select id="item-category" required>
+            <option value="">Select category</option>
+            <option value="sweet">Sweet Crêpes</option>
+            <option value="savory">Savory Crêpes</option>
+            <option value="kids">Kids Crêpes</option>
+            <option value="drinks">Drinks</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Image Path *</label>
+          <input type="text" id="item-img" value="images/crepe1.svg" required />
+          <small style="color:#999;display:block;margin-top:4px;">Use existing images: crepe1.svg, crepe2.svg, crepe3.svg, crepe4.svg, crepe5.svg, drink1.svg</small>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-save">Add Item</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// Add Menu Item
+function addMenuItem(e) {
+  e.preventDefault();
+  
+  const menu = JSON.parse(localStorage.getItem('kc_menu') || '[]');
+  
+  const newItem = {
+    id: 'c' + Date.now(),
+    name: document.getElementById('item-name').value,
+    desc: document.getElementById('item-desc').value,
+    price: parseFloat(document.getElementById('item-price').value),
+    category: document.getElementById('item-category').value,
+    img: document.getElementById('item-img').value
+  };
+  
+  menu.push(newItem);
+  localStorage.setItem('kc_menu', JSON.stringify(menu));
+  
+  closeModal();
+  loadMenuItems();
+  alert('Menu item added successfully!');
+}
+
+// Edit Menu Item
+function editMenuItem(itemId) {
+  const menu = JSON.parse(localStorage.getItem('kc_menu') || '[]');
+  const item = menu.find(i => i.id === itemId);
+  
+  if (!item) return;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Menu Item</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form id="edit-menu-form" onsubmit="updateMenuItem(event, '${itemId}')">
+        <div class="form-group">
+          <label>Item Name *</label>
+          <input type="text" id="edit-item-name" value="${item.name}" required />
+        </div>
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea id="edit-item-desc" required rows="3">${item.desc}</textarea>
+        </div>
+        <div class="form-group">
+          <label>Price ($) *</label>
+          <input type="number" id="edit-item-price" step="0.01" min="0" value="${item.price}" required />
+        </div>
+        <div class="form-group">
+          <label>Category *</label>
+          <select id="edit-item-category" required>
+            <option value="sweet" ${item.category === 'sweet' ? 'selected' : ''}>Sweet Crêpes</option>
+            <option value="savory" ${item.category === 'savory' ? 'selected' : ''}>Savory Crêpes</option>
+            <option value="kids" ${item.category === 'kids' ? 'selected' : ''}>Kids Crêpes</option>
+            <option value="drinks" ${item.category === 'drinks' ? 'selected' : ''}>Drinks</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Image Path *</label>
+          <input type="text" id="edit-item-img" value="${item.img}" required />
+          <small style="color:#999;display:block;margin-top:4px;">Use existing images: crepe1.svg, crepe2.svg, crepe3.svg, crepe4.svg, crepe5.svg, drink1.svg</small>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-save">Update Item</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// Update Menu Item
+function updateMenuItem(e, itemId) {
+  e.preventDefault();
+  
+  const menu = JSON.parse(localStorage.getItem('kc_menu') || '[]');
+  const itemIndex = menu.findIndex(i => i.id === itemId);
+  
+  if (itemIndex === -1) return;
+  
+  menu[itemIndex] = {
+    ...menu[itemIndex],
+    name: document.getElementById('edit-item-name').value,
+    desc: document.getElementById('edit-item-desc').value,
+    price: parseFloat(document.getElementById('edit-item-price').value),
+    category: document.getElementById('edit-item-category').value,
+    img: document.getElementById('edit-item-img').value
+  };
+  
+  localStorage.setItem('kc_menu', JSON.stringify(menu));
+  
+  closeModal();
+  loadMenuItems();
+  alert('Menu item updated successfully!');
+}
+
+// Delete Menu Item
+function deleteMenuItem(itemId) {
+  if (!confirm('Are you sure you want to delete this menu item?')) return;
+  
+  let menu = JSON.parse(localStorage.getItem('kc_menu') || '[]');
+  menu = menu.filter(i => i.id !== itemId);
+  
+  localStorage.setItem('kc_menu', JSON.stringify(menu));
+  loadMenuItems();
+  alert('Menu item deleted successfully!');
+}
+
+// Close Modal
+function closeModal() {
+  const modal = document.querySelector('.modal-overlay');
+  if (modal) modal.remove();
 }
 
 // Load Analytics
