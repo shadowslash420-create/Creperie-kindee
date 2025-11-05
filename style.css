@@ -186,6 +186,8 @@ body{
   justify-content:center;
   overflow:hidden;
   margin:0;
+  padding:0;
+  margin-bottom:0 !important;
 }
 
 .hero-title{
@@ -428,7 +430,9 @@ body{
   z-index:99;
   scrollbar-width:none;
   box-shadow:var(--soft-shadow);
-  margin-top:0;
+  margin:0;
+  margin-top:0 !important;
+  padding:0;
 }
 
 .tab-nav::-webkit-scrollbar{display:none}
