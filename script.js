@@ -31,7 +31,7 @@ const translations = {
     ctaTitle: 'جاهز لتجربة لا تُنسى؟',
     ctaDesc: 'اطلب الآن واستمتع بطعم كيندر الأصيل',
     ctaBtn: 'اطلب الآن',
-    navHome: 'Home',
+    navHome: 'الرئيسية',
     navAbout: 'من نحن',
     navMenu: 'القائمة',
     navContact: 'تواصل معنا',
