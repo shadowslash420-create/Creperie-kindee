@@ -427,6 +427,7 @@ body{
   z-index:99;
   scrollbar-width:none;
   box-shadow:var(--soft-shadow);
+  margin-top:0;
 }
 
 .tab-nav::-webkit-scrollbar{display:none}
@@ -469,8 +470,8 @@ body{
 .section{
   padding:80px 48px;
   background:#fff;
-  margin:40px;
-  border-radius:2px;
+  margin:0;
+  border-radius:0;
   box-shadow:var(--medium-shadow);
 }
 
