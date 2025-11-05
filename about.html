@@ -9,12 +9,13 @@
 <body dir="ltr">
   <header class="header">
     <div style="display:flex;gap:8px;align-items:center">
-      <div class="menu-icon" onclick="window.location.href='index.html'">←</div>
+      <div class="menu-icon" onclick="toggleMenu()">☰</div>
       <div class="cart-icon" onclick="toggleCart()">🛒</div>
     </div>
     <div class="brand">
       <div class="brand-text">
         <div class="site-title">CREPERIE KINDER</div>
+        <div class="page-indicator" id="page-indicator">About Us</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
@@ -70,6 +71,33 @@
         <strong id="cart-total">$0.00</strong>
       </div>
       <button class="cta" style="width:100%;margin-top:16px" onclick="checkoutFlow()" id="checkout-btn">إتمام الطلب</button>
+    </div>
+  </div>
+
+  <!-- Navigation Menu Sidebar -->
+  <div class="nav-menu" id="nav-menu">
+    <div class="nav-menu-header">
+      <button class="nav-menu-close" onclick="toggleMenu()">×</button>
+    </div>
+    <nav class="nav-menu-links">
+      <a href="index.html" class="nav-link-home" onclick="toggleMenu()">Home</a>
+      <a href="about.html" class="nav-link-about">من نحن</a>
+      <a href="menu.html" class="nav-link-menu">القائمة</a>
+      <a href="faq.html" class="nav-link-faq">الأسئلة الشائعة</a>
+      <a href="feedback.html" class="nav-link-feedback">التقييمات</a>
+      <a href="contact.html" class="nav-link-contact">تواصل معنا</a>
+      <div class="nav-divider"></div>
+      <a href="admin.html" class="nav-link-admin">لوحة الإدارة</a>
+    </nav>
+    <div class="nav-menu-footer">
+      <div class="footer-connect">Connect</div>
+      <div class="social-icons">
+        <a href="#" class="social-icon">📷</a>
+        <a href="#" class="social-icon">📘</a>
+        <a href="#" class="social-icon">🎵</a>
+        <a href="#" class="social-icon">💼</a>
+        <a href="#" class="social-icon">🐦</a>
+      </div>
     </div>
   </div>
 

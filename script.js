@@ -257,6 +257,7 @@ function toggleLanguage(){
   setLanguage(newLang);
   applyTranslations();
   renderCart();
+  updatePageIndicator();
 }
 
 function applyTranslations(){
@@ -1084,6 +1085,32 @@ function highlightActivePage(){
       link.classList.add('active-page');
     }
   });
+  
+  // Update page indicator in header
+  updatePageIndicator();
+}
+
+function updatePageIndicator(){
+  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  const lang = getCurrentLang();
+  const t = translations[lang];
+  
+  const pageNames = {
+    'index.html': { ar: 'الرئيسية', en: 'Home' },
+    '': { ar: 'الرئيسية', en: 'Home' },
+    'menu.html': { ar: 'القائمة', en: 'Menu' },
+    'about.html': { ar: 'من نحن', en: 'About Us' },
+    'contact.html': { ar: 'تواصل معنا', en: 'Contact Us' },
+    'faq.html': { ar: 'الأسئلة الشائعة', en: 'FAQ' },
+    'feedback.html': { ar: 'التقييمات', en: 'Reviews' },
+    'admin.html': { ar: 'لوحة الإدارة', en: 'Admin' },
+    'delivery.html': { ar: 'التوصيل', en: 'Delivery' }
+  };
+  
+  const pageIndicator = document.getElementById('page-indicator');
+  if(pageIndicator && pageNames[currentPage]){
+    pageIndicator.textContent = pageNames[currentPage][lang];
+  }
 }
 
 /* On load hooks */
