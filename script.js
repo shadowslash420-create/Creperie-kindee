@@ -642,6 +642,7 @@ function renderMenuByCategory(category, containerId){
     img.className = 'menu-item-img';
     img.src = item.img;
     img.alt = item.name;
+    img.loading = 'lazy';
 
     const info = document.createElement('div');
     info.className = 'menu-item-info';
@@ -1208,12 +1209,18 @@ document.addEventListener('DOMContentLoaded', ()=>{
       localStorage.setItem(MENU_KEY, JSON.stringify(defaultMenu));
     }
 
-    // Render all category menus
-    renderMenuByCategory('sweet', 'menu-sweet');
-    renderMenuByCategory('savory', 'menu-savory');
-    renderMenuByCategory('kids', 'menu-kids');
-    renderMenuByCategory('drinks', 'menu-drinks');
-    renderCart();
+    // Render only visible category initially
+    requestAnimationFrame(() => {
+      renderMenuByCategory('sweet', 'menu-sweet');
+      renderCart();
+    });
+    
+    // Lazy load other categories
+    setTimeout(() => {
+      renderMenuByCategory('savory', 'menu-savory');
+      renderMenuByCategory('kids', 'menu-kids');
+      renderMenuByCategory('drinks', 'menu-drinks');
+    }, 100);
     
     // Highlight active page
     highlightActivePage();
