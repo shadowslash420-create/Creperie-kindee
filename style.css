@@ -535,12 +535,12 @@ body{
   position:fixed;
   inset-inline-end:-100%;
   top:0;
-  width:100%;
-  max-width:420px;
+  width:85%;
+  max-width:380px;
   height:100vh;
   background:var(--surface);
   box-shadow:-6px 0 32px rgba(0,0,0,0.15);
-  padding:24px;
+  padding:20px;
   z-index:1000;
   transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y:auto;
@@ -548,6 +548,14 @@ body{
 
 .cart-side.open{
   inset-inline-end:0;
+}
+
+@media(max-width:560px){
+  .cart-side{
+    width:90%;
+    max-width:340px;
+    padding:16px;
+  }
 }
 
 .cart-header{
@@ -681,8 +689,8 @@ body{
   position:fixed;
   inset-inline-start:-100%;
   top:0;
-  width:100%;
-  max-width:380px;
+  width:85%;
+  max-width:340px;
   height:100vh;
   background:var(--surface);
   box-shadow:6px 0 32px rgba(0,0,0,0.15);
@@ -696,6 +704,13 @@ body{
 
 .nav-menu.open{
   inset-inline-start:0;
+}
+
+@media(max-width:560px){
+  .nav-menu{
+    width:80%;
+    max-width:300px;
+  }
 }
 
 .nav-menu-header{
