@@ -1237,13 +1237,13 @@ function initSecretAdminAccess(){
     });
   }
 
-  // Delivery: 3 rapid taps on social icons
-  const socialIcons = document.querySelector('.social-icons');
-  if(socialIcons) {
+  // Delivery: 3 rapid taps on "Connect" text
+  const connectText = document.querySelector('.footer-connect');
+  if(connectText) {
     let deliveryTapCount = 0;
     let deliveryTapTimer = null;
 
-    socialIcons.addEventListener('click', (e) => {
+    connectText.addEventListener('click', (e) => {
       e.preventDefault();
       deliveryTapCount++;
       
