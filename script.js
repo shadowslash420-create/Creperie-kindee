@@ -1195,6 +1195,46 @@ function initScrollButton(){
   });
 }
 
+/* Logo Press Functions */
+function initLogoPress(){
+  const logo = document.querySelector('.brand-text');
+  if(!logo) return;
+
+  let pressTimer = null;
+  let pressStartTime = null;
+  
+  const startPress = () => {
+    pressStartTime = Date.now();
+    pressTimer = setTimeout(() => {
+      // After 7 seconds, redirect to admin
+      window.location.href = 'admin.html';
+    }, 7000);
+  };
+
+  const cancelPress = () => {
+    if(pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+      pressStartTime = null;
+    }
+  };
+
+  // Mouse events
+  logo.addEventListener('mousedown', startPress);
+  logo.addEventListener('mouseup', cancelPress);
+  logo.addEventListener('mouseleave', cancelPress);
+
+  // Touch events for mobile
+  logo.addEventListener('touchstart', (e) => {
+    startPress();
+  });
+  logo.addEventListener('touchend', cancelPress);
+  logo.addEventListener('touchcancel', cancelPress);
+
+  // Add cursor pointer to indicate it's clickable
+  logo.style.cursor = 'pointer';
+}
+
 /* On load hooks */
 document.addEventListener('DOMContentLoaded', ()=>{
   try {
@@ -1227,6 +1267,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
     // Initialize scroll button
     initScrollButton();
+
+    // Initialize logo press for admin access
+    initLogoPress();
   } catch(error) {
     console.error('خطأ في تهيئة التطبيق:', error);
   }
