@@ -195,7 +195,7 @@ body{
 .home-hero{
   position:relative;
   min-height:85vh;
-  background:var(--gradient-primary);
+  background:#3b2414;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -233,6 +233,22 @@ body{
   font-weight:800;
   direction:ltr;
   line-height:1.2;
+  animation:titleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow{
+  0%{
+    text-shadow:0 4px 24px rgba(0,0,0,0.4), 0 0 20px rgba(212,165,116,0.3);
+    transform:scale(1);
+  }
+  50%{
+    text-shadow:0 4px 24px rgba(0,0,0,0.4), 0 0 40px rgba(212,165,116,0.6), 0 0 60px rgba(212,165,116,0.4);
+    transform:scale(1.02);
+  }
+  100%{
+    text-shadow:0 4px 24px rgba(0,0,0,0.4), 0 0 30px rgba(212,165,116,0.5), 0 0 50px rgba(212,165,116,0.3);
+    transform:scale(1.01);
+  }
 }
 
 .wave-text{
