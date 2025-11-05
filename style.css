@@ -540,7 +540,7 @@ body{
 /* Cart Sidebar */
 .cart-side{
   position:fixed;
-  inset-inline-end:-100%;
+  right:-100%;
   top:0;
   width:85%;
   max-width:380px;
@@ -554,7 +554,7 @@ body{
 }
 
 .cart-side.open{
-  inset-inline-end:0;
+  right:0;
 }
 
 @media(max-width:560px){
