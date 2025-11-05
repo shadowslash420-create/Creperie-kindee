@@ -530,8 +530,32 @@ if(!localStorage.getItem(MENU_KEY)){
   localStorage.setItem(MENU_KEY, JSON.stringify(defaultMenu));
 }
 
-function getMenu(){ return JSON.parse(localStorage.getItem(MENU_KEY) || '[]'); }
-function saveMenu(m){ localStorage.setItem(MENU_KEY, JSON.stringify(m)); }
+// Use server API for menu data
+async function getMenu(){ 
+  try {
+    const response = await fetch('/api/menu');
+    const menu = await response.json();
+    // Also sync to localStorage for offline use
+    localStorage.setItem(MENU_KEY, JSON.stringify(menu));
+    return menu;
+  } catch(error) {
+    // Fallback to localStorage if server is unavailable
+    return JSON.parse(localStorage.getItem(MENU_KEY) || '[]');
+  }
+}
+
+async function saveMenu(m){ 
+  localStorage.setItem(MENU_KEY, JSON.stringify(m));
+  try {
+    await fetch('/api/menu', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(m)
+    });
+  } catch(error) {
+    console.error('Failed to sync menu to server:', error);
+  }
+}
 
 function getCart(){ return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); }
 function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); renderCart(); }
@@ -627,10 +651,10 @@ function switchTab(category){
 
 /* ====== Menu Rendering ====== */
 
-function renderMenuByCategory(category, containerId){
+async function renderMenuByCategory(category, containerId){
   const container = document.getElementById(containerId);
   if(!container) return;
-  const menu = getMenu().filter(item => item.category === category);
+  const menu = (await getMenu()).filter(item => item.category === category);
   container.innerHTML = '';
 
   menu.forEach(item=>{
@@ -669,8 +693,8 @@ function renderMenuByCategory(category, containerId){
   });
 }
 
-function addToCart(id){
-  const menu = getMenu();
+async function addToCart(id){
+  const menu = await getMenu();
   const item = menu.find(m=>m.id===id);
   if(!item) return;
   const cart = getCart();
@@ -939,7 +963,7 @@ function toggleFaq(element){
 function getFeedback(){ return JSON.parse(localStorage.getItem(FEEDBACK_KEY) || '[]'); }
 function saveFeedback(f){ localStorage.setItem(FEEDBACK_KEY, JSON.stringify(f)); }
 
-function submitFeedback(e){
+async function submitFeedback(e){
   e.preventDefault();
   const lang = getCurrentLang();
   const t = translations[lang];
@@ -953,7 +977,7 @@ function submitFeedback(e){
     return alert('الرجاء اختيار تقييم');
   }
 
-  const menu = getMenu();
+  const menu = await getMenu();
   const item = menu.find(m => m.id === itemId);
 
   const feedback = getFeedback();
@@ -1015,11 +1039,11 @@ function renderFeedbackList(){
   });
 }
 
-function populateFeedbackItems(){
+async function populateFeedbackItems(){
   const select = document.getElementById('feedback-item');
   if(!select) return;
 
-  const menu = getMenu();
+  const menu = await getMenu();
   const lang = getCurrentLang();
   const t = translations[lang];
 
@@ -1274,23 +1298,25 @@ document.addEventListener('DOMContentLoaded', ()=>{
     applyTranslations();
 
     // Update menu if needed
-    const currentMenu = getMenu();
-    if(currentMenu.length === 0 || !currentMenu[0].category || currentMenu[0].img.includes('.jpg')){
-      localStorage.setItem(MENU_KEY, JSON.stringify(defaultMenu));
-    }
+    getMenu().then(currentMenu => {
+      if(currentMenu.length === 0 || !currentMenu[0].category || currentMenu[0].img.includes('.jpg')){
+        localStorage.setItem(MENU_KEY, JSON.stringify(defaultMenu));
+        saveMenu(defaultMenu);
+      }
 
-    // Render only visible category initially
-    requestAnimationFrame(() => {
-      renderMenuByCategory('sweet', 'menu-sweet');
-      renderCart();
+      // Render only visible category initially
+      requestAnimationFrame(() => {
+        renderMenuByCategory('sweet', 'menu-sweet');
+        renderCart();
+      });
+      
+      // Lazy load other categories
+      setTimeout(() => {
+        renderMenuByCategory('savory', 'menu-savory');
+        renderMenuByCategory('kids', 'menu-kids');
+        renderMenuByCategory('drinks', 'menu-drinks');
+      }, 100);
     });
-    
-    // Lazy load other categories
-    setTimeout(() => {
-      renderMenuByCategory('savory', 'menu-savory');
-      renderMenuByCategory('kids', 'menu-kids');
-      renderMenuByCategory('drinks', 'menu-drinks');
-    }, 100);
     
     // Highlight active page
     highlightActivePage();

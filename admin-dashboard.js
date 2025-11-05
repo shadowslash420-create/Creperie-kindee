@@ -3,6 +3,31 @@
 let currentSection = 'dashboard';
 let currentFilter = 'all';
 
+// Server sync functions
+async function getMenuFromServer() {
+  try {
+    const response = await fetch('/api/menu');
+    const menu = await response.json();
+    localStorage.setItem('kc_menu', JSON.stringify(menu));
+    return menu;
+  } catch(error) {
+    return JSON.parse(localStorage.getItem('kc_menu') || '[]');
+  }
+}
+
+async function saveMenuToServer(menu) {
+  localStorage.setItem('kc_menu', JSON.stringify(menu));
+  try {
+    await fetch('/api/menu', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(menu)
+    });
+  } catch(error) {
+    console.error('Failed to sync menu to server:', error);
+  }
+}
+
 // Show specific section
 function showSection(section, evt) {
   currentSection = section;
@@ -454,8 +479,8 @@ function exportOrdersToCSV() {
 }
 
 // Load Menu Items
-function loadMenuItems() {
-  const menu = JSON.parse(localStorage.getItem('kc_menu') || '[]');
+async function loadMenuItems() {
+  const menu = await getMenuFromServer();
   
   let html = '<button class="add-menu-btn" onclick="showAddMenuModal()">+ Add New Item</button>';
   html += '<div class="menu-grid">';
@@ -528,10 +553,10 @@ function showAddMenuModal() {
 }
 
 // Add Menu Item
-function addMenuItem(e) {
+async function addMenuItem(e) {
   e.preventDefault();
   
-  const menu = JSON.parse(localStorage.getItem('kc_menu') || '[]');
+  const menu = await getMenuFromServer();
   
   const newItem = {
     id: 'c' + Date.now(),
@@ -543,7 +568,7 @@ function addMenuItem(e) {
   };
   
   menu.push(newItem);
-  localStorage.setItem('kc_menu', JSON.stringify(menu));
+  await saveMenuToServer(menu);
   
   closeModal();
   loadMenuItems();
@@ -551,8 +576,8 @@ function addMenuItem(e) {
 }
 
 // Edit Menu Item
-function editMenuItem(itemId) {
-  const menu = JSON.parse(localStorage.getItem('kc_menu') || '[]');
+async function editMenuItem(itemId) {
+  const menu = await getMenuFromServer();
   const item = menu.find(i => i.id === itemId);
   
   if (!item) return;
@@ -603,10 +628,10 @@ function editMenuItem(itemId) {
 }
 
 // Update Menu Item
-function updateMenuItem(e, itemId) {
+async function updateMenuItem(e, itemId) {
   e.preventDefault();
   
-  const menu = JSON.parse(localStorage.getItem('kc_menu') || '[]');
+  const menu = await getMenuFromServer();
   const itemIndex = menu.findIndex(i => i.id === itemId);
   
   if (itemIndex === -1) return;
@@ -620,7 +645,7 @@ function updateMenuItem(e, itemId) {
     img: document.getElementById('edit-item-img').value
   };
   
-  localStorage.setItem('kc_menu', JSON.stringify(menu));
+  await saveMenuToServer(menu);
   
   closeModal();
   loadMenuItems();
@@ -628,15 +653,15 @@ function updateMenuItem(e, itemId) {
 }
 
 // Delete Menu Item
-function deleteMenuItem(itemId) {
+async function deleteMenuItem(itemId) {
   if (!confirm('Are you sure you want to delete this menu item?')) return;
   
-  let menu = JSON.parse(localStorage.getItem('kc_menu') || '[]');
+  let menu = await getMenuFromServer();
   menu = menu.filter(i => i.id !== itemId);
   
-  localStorage.setItem('kc_menu', JSON.stringify(menu));
+  await saveMenuToServer(menu);
   loadMenuItems();
-  alert('Menu item deleted successfully!');
+  alert('Menu item deleted successfully for all users!');
 }
 
 // Close Modal
