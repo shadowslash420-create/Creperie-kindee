@@ -9,39 +9,44 @@
 </head>
 <body dir="ltr">
   <header class="header">
-    <div class="menu-icon" onclick="window.location.href='index.html'">←</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="menu-icon" onclick="window.location.href='index.html'">←</div>
+      <div class="cart-icon" onclick="toggleCart()">🛒</div>
+    </div>
     <div class="brand">
       <div class="brand-text">
         <div class="site-title">ADMIN PANEL</div>
       </div>
     </div>
-    <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn">EN</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn">EN</button>
+    </div>
   </header>
 
   <div class="container">
     <section class="section" id="login-section">
-      <h2 class="section-title">تسجيل الدخول</h2>
+      <h2 class="section-title" id="admin-login-title">تسجيل الدخول</h2>
       <div class="card">
         <form id="admin-login-form">
           <label>
-            اسم المستخدم:
+            <span id="admin-username-label">اسم المستخدم:</span>
             <input id="adm-user" required />
           </label>
           <label>
-            كلمة المرور:
+            <span id="admin-password-label">كلمة المرور:</span>
             <input id="adm-pass" type="password" required />
           </label>
-          <button class="cta" type="submit">دخول</button>
+          <button class="cta" type="submit" id="admin-login-btn">دخول</button>
         </form>
       </div>
     </section>
 
     <section class="section hidden" id="admin-section">
-      <h2 class="section-title">لوحة الطلبات</h2>
+      <h2 class="section-title" id="admin-panel-title">لوحة الطلبات</h2>
       <div class="admin-panel">
         <div id="stats-area"></div>
         <div class="orders-list" id="orders-list"></div>
-        <button onclick="adminLogout()" class="cta" style="background:#3A4A54;margin-top:20px">تسجيل خروج</button>
+        <button onclick="adminLogout()" class="cta" style="background:#3A4A54;margin-top:20px" id="admin-logout-btn">تسجيل خروج</button>
       </div>
     </section>
 
@@ -51,6 +56,24 @@
       </div>
     </footer>
   </div>
+
+  <div class="cart-side" id="cart-side">
+    <div class="cart-header">
+      <h3 id="cart-title">السلة</h3>
+      <button class="cart-close" onclick="toggleCart()">×</button>
+    </div>
+    <div id="cart-contents"></div>
+    <div class="cart-total-section">
+      <div class="cart-total">
+        <span id="total-label">المجموع:</span>
+        <strong id="cart-total">$0.00</strong>
+      </div>
+      <button class="cta" style="width:100%;margin-top:16px" onclick="checkoutFlow()" id="checkout-btn">إتمام الطلب</button>
+    </div>
+  </div>
+
+  <div class="menu-overlay" id="menu-overlay" onclick="closeAllSidebars()"></div>
+
   <script src="script.js"></script>
 </body>
 </html>

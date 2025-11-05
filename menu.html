@@ -10,7 +10,10 @@
 <body dir="ltr">
   <!-- Header -->
   <header class="header">
-    <div class="menu-icon" onclick="toggleMenu()">☰</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="menu-icon" onclick="toggleMenu()">☰</div>
+      <div class="cart-icon" onclick="toggleCart()">🛒</div>
+    </div>
     <div class="brand">
       <div class="brand-text">
         <div class="site-title">CREPERIE KINDER</div>
@@ -18,7 +21,6 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn">EN</button>
-      <div class="cart-icon" onclick="toggleCart()">🛒</div>
     </div>
   </header>
 

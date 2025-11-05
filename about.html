@@ -8,18 +8,23 @@
 </head>
 <body dir="ltr">
   <header class="header">
-    <div class="menu-icon" onclick="window.location.href='index.html'">←</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="menu-icon" onclick="window.location.href='index.html'">←</div>
+      <div class="cart-icon" onclick="toggleCart()">🛒</div>
+    </div>
     <div class="brand">
       <div class="brand-text">
         <div class="site-title">CREPERIE KINDER</div>
       </div>
     </div>
-    <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn">EN</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn">EN</button>
+    </div>
   </header>
 
   <div class="container">
     <section class="section">
-      <h2 class="section-title" id="about-page-title">من نحن</h2>
+      <h2 class="section-title" id="about-title">من نحن</h2>
       <div class="card">
         <p id="about-desc1">Creperie Kinder تأسست بشغف لتقديم أفضل كريب للأطفال والكبار. نختار أفضل مكونات الشوكولا ونضيف لمسة سحرية في كل لفّة.</p>
         <p id="about-desc2">رؤيتنا: سعادة كل زبون في كل قضمة.</p>
@@ -52,6 +57,24 @@
       </div>
     </footer>
   </div>
+
+  <div class="cart-side" id="cart-side">
+    <div class="cart-header">
+      <h3 id="cart-title">السلة</h3>
+      <button class="cart-close" onclick="toggleCart()">×</button>
+    </div>
+    <div id="cart-contents"></div>
+    <div class="cart-total-section">
+      <div class="cart-total">
+        <span id="total-label">المجموع:</span>
+        <strong id="cart-total">$0.00</strong>
+      </div>
+      <button class="cta" style="width:100%;margin-top:16px" onclick="checkoutFlow()" id="checkout-btn">إتمام الطلب</button>
+    </div>
+  </div>
+
+  <div class="menu-overlay" id="menu-overlay" onclick="closeAllSidebars()"></div>
+
   <script src="script.js"></script>
 </body>
 </html>

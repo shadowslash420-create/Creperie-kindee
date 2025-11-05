@@ -101,12 +101,27 @@ const translations = {
 
     // About & Contact
     aboutTitle: 'من نحن',
+    aboutDesc1: 'Creperie Kinder تأسست بشغف لتقديم أفضل كريب للأطفال والكبار. نختار أفضل مكونات الشوكولا ونضيف لمسة سحرية في كل لفّة.',
+    aboutDesc2: 'رؤيتنا: سعادة كل زبون في كل قضمة.',
+    aboutTeamTitle: 'فريقنا',
+    aboutChef: 'Chef Lina',
+    aboutChefDesc: 'خبيرة الكريب والحشوات الممتازة.',
+    aboutManager: 'Manager Adam',
+    aboutManagerDesc: 'رعاية الجودة وتجربة الزبائن.',
     contactTitle: 'تواصل معنا',
     contactNameLabel: 'الاسم:',
     contactEmailLabel: 'الإيميل:',
     contactMessageLabel: 'الرسالة:',
     contactSubmit: 'أرسل',
-    contactSuccess: 'شكراً {name}! تم استلام رسالتك وسنرد عليك قريباً.'
+    contactSuccess: 'شكراً {name}! تم استلام رسالتك وسنرد عليك قريباً.',
+    
+    // Admin
+    adminLoginTitle: 'تسجيل الدخول',
+    adminUsername: 'اسم المستخدم:',
+    adminPassword: 'كلمة المرور:',
+    adminLoginBtn: 'دخول',
+    adminPanelTitle: 'لوحة الطلبات',
+    adminLogoutBtn: 'تسجيل خروج'
   },
   en: {
     // Homepage
@@ -202,12 +217,27 @@ const translations = {
 
     // About & Contact
     aboutTitle: 'About Us',
+    aboutDesc1: 'Creperie Kinder was founded with passion to provide the best crepes for children and adults. We choose the finest chocolate ingredients and add a magical touch to every wrap.',
+    aboutDesc2: 'Our vision: Happiness for every customer in every bite.',
+    aboutTeamTitle: 'Our Team',
+    aboutChef: 'Chef Lina',
+    aboutChefDesc: 'Expert in crepes and excellent fillings.',
+    aboutManager: 'Manager Adam',
+    aboutManagerDesc: 'Quality care and customer experience.',
     contactTitle: 'Contact Us',
     contactNameLabel: 'Name:',
     contactEmailLabel: 'Email:',
     contactMessageLabel: 'Message:',
     contactSubmit: 'Send',
-    contactSuccess: 'Thank you {name}! We received your message and will respond soon.'
+    contactSuccess: 'Thank you {name}! We received your message and will respond soon.',
+    
+    // Admin
+    adminLoginTitle: 'Login',
+    adminUsername: 'Username:',
+    adminPassword: 'Password:',
+    adminLoginBtn: 'Login',
+    adminPanelTitle: 'Orders Dashboard',
+    adminLogoutBtn: 'Logout'
   }
 };
 
@@ -411,6 +441,21 @@ function applyTranslations(){
   // About & Contact translations
   const aboutTitle = document.getElementById('about-title');
   if (aboutTitle) aboutTitle.textContent = t.aboutTitle;
+  const aboutDesc1 = document.getElementById('about-desc1');
+  if (aboutDesc1) aboutDesc1.textContent = t.aboutDesc1;
+  const aboutDesc2 = document.getElementById('about-desc2');
+  if (aboutDesc2) aboutDesc2.textContent = t.aboutDesc2;
+  const aboutTeamTitle = document.getElementById('about-team-title');
+  if (aboutTeamTitle) aboutTeamTitle.textContent = t.aboutTeamTitle;
+  const aboutChef = document.getElementById('about-chef');
+  if (aboutChef) aboutChef.textContent = t.aboutChef;
+  const aboutChefDesc = document.getElementById('about-chef-desc');
+  if (aboutChefDesc) aboutChefDesc.textContent = t.aboutChefDesc;
+  const aboutManager = document.getElementById('about-manager');
+  if (aboutManager) aboutManager.textContent = t.aboutManager;
+  const aboutManagerDesc = document.getElementById('about-manager-desc');
+  if (aboutManagerDesc) aboutManagerDesc.textContent = t.aboutManagerDesc;
+  
   const contactTitle = document.getElementById('contact-title');
   if (contactTitle) contactTitle.textContent = t.contactTitle;
   const contactNameLabel = document.getElementById('contact-name-label');
@@ -421,6 +466,20 @@ function applyTranslations(){
   if (contactMessageLabel) contactMessageLabel.textContent = t.contactMessageLabel;
   const contactSubmit = document.getElementById('contact-submit');
   if (contactSubmit) contactSubmit.textContent = t.contactSubmit;
+
+  // Admin translations
+  const adminLoginTitle = document.getElementById('admin-login-title');
+  if (adminLoginTitle) adminLoginTitle.textContent = t.adminLoginTitle;
+  const adminUsername = document.getElementById('admin-username-label');
+  if (adminUsername) adminUsername.textContent = t.adminUsername;
+  const adminPassword = document.getElementById('admin-password-label');
+  if (adminPassword) adminPassword.textContent = t.adminPassword;
+  const adminLoginBtn = document.getElementById('admin-login-btn');
+  if (adminLoginBtn) adminLoginBtn.textContent = t.adminLoginBtn;
+  const adminPanelTitle = document.getElementById('admin-panel-title');
+  if (adminPanelTitle) adminPanelTitle.textContent = t.adminPanelTitle;
+  const adminLogoutBtn = document.getElementById('admin-logout-btn');
+  if (adminLogoutBtn) adminLogoutBtn.textContent = t.adminLogoutBtn;
 
 }
 

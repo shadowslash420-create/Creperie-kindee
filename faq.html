@@ -9,7 +9,10 @@
 </head>
 <body dir="ltr">
   <header class="header">
-    <div class="menu-icon" onclick="toggleMenu()">☰</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="menu-icon" onclick="toggleMenu()">☰</div>
+      <div class="cart-icon" onclick="toggleCart()">🛒</div>
+    </div>
     <div class="brand">
       <div class="brand-text">
         <div class="site-title">CREPERIE KINDER</div>
@@ -17,13 +20,12 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn">EN</button>
-      <div class="cart-icon" onclick="toggleCart()">🛒</div>
     </div>
   </header>
 
   <div class="container">
     <section class="section">
-      <h2 class="section-title" id="faq-page-title">الأسئلة الشائعة</h2>
+      <h2 class="section-title" id="faq-title">الأسئلة الشائعة</h2>
       
       <div class="faq-container">
         <div class="faq-item">
