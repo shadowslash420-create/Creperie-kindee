@@ -1237,7 +1237,7 @@ function initSecretAdminAccess(){
     });
   }
 
-  // Delivery: 3 rapid taps on "Connect" text
+  // Delivery: 7 rapid taps on "Connect" text
   const connectText = document.querySelector('.footer-connect');
   if(connectText) {
     let deliveryTapCount = 0;
@@ -1250,8 +1250,8 @@ function initSecretAdminAccess(){
       // Clear previous timer
       if(deliveryTapTimer) clearTimeout(deliveryTapTimer);
       
-      // If 3 taps within 2 seconds, go to delivery
-      if(deliveryTapCount >= 3) {
+      // If 7 taps within 2 seconds, go to delivery
+      if(deliveryTapCount >= 7) {
         window.location.href = 'delivery.html';
         deliveryTapCount = 0;
         return;
