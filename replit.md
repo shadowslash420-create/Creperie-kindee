@@ -6,11 +6,11 @@ A modern, elegant static website for "Creperie Kinder" - a crepe restaurant feat
 - Order placement with Cash on Delivery (COD)
 - Admin panel for order management
 - Responsive design with RTL (right-to-left) support for Arabic
-- Turquoise color scheme with elegant Pacifico script font
+- Modern orange color scheme with professional Shopify-like design
 
 ## Tech Stack
 - **Frontend**: Pure HTML, CSS, JavaScript (no frameworks)
-- **Fonts**: Pacifico (cursive headings), Lato (body text)
+- **Fonts**: Playfair Display (serif headings), Inter (body text)
 - **Data Storage**: Browser localStorage (client-side only)
 - **Server**: Python HTTP server for static file serving
 - **Language**: Arabic UI with English code
@@ -31,15 +31,19 @@ A modern, elegant static website for "Creperie Kinder" - a crepe restaurant feat
 
 ## Design Features
 
-### Color Scheme (Sweet Paris-inspired)
-- Primary: Turquoise `#70CFCB`
-- Dark Gray: `#3A4A54`
-- Light Gray: `#8A9BA8`
-- Background: White `#FFFFFF`
+### Color Scheme (Shopify-inspired Professional)
+- Primary Orange: `#FF6B35` (warm, appetizing coral-orange)
+- Secondary Yellow: `#FFC857` (golden yellow for accents)
+- Warm Orange: `#FF8C42` (gradient complement)
+- Light Peach: `#FFE5D9` (soft backgrounds)
+- Text Primary: `#1A1A1A` (dark text)
+- Text Secondary: `#666666` (muted text)
+- Background: `#FAFAFA` (off-white)
+- Surface: `#FFFFFF` (pure white for cards)
 
 ### Typography
-- Headings: Pacifico (cursive/script font)
-- Body: Lato (clean sans-serif)
+- Headings: Playfair Display (elegant serif)
+- Body: Inter (modern sans-serif)
 
 ### Layout
 - Sticky header with hamburger menu, brand, and cart icons
@@ -94,7 +98,18 @@ The site runs on Python's built-in HTTP server:
 Configured to deploy as an autoscale static website on Replit.
 
 ## Recent Changes
-- **2025-11-04 (Latest)**: Complete redesign to Sweet Paris aesthetic
+- **2025-11-05 (Latest)**: Professional Shopify-inspired redesign
+  - Transformed color scheme from turquoise/gray to warm orange/coral palette
+  - Updated primary color to appetizing orange (#FF6B35)
+  - Changed fonts to Playfair Display (serif) and Inter (sans-serif)
+  - Modernized all components with cleaner spacing and shadows
+  - Updated buttons to rounded pill shapes with professional hover effects
+  - Enhanced card designs with subtle borders and better shadows
+  - Improved typography hierarchy and readability
+  - Updated FAQ and feedback sections with new color variables
+  - Created cohesive design system with professional Shopify-like aesthetic
+  
+- **2025-11-04**: Complete redesign to Sweet Paris aesthetic
   - Changed color scheme from red/brown to turquoise/gray
   - Added Pacifico script font for headings
   - Implemented tab-based navigation system
