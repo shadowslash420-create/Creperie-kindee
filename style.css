@@ -803,6 +803,7 @@ body{
   z-index:999;
   display:none;
   transition:opacity 0.3s;
+  cursor:pointer;
 }
 
 .menu-overlay.active{

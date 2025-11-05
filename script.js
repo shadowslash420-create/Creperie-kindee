@@ -456,25 +456,67 @@ function saveOrders(o){ localStorage.setItem(ORDERS_KEY, JSON.stringify(o)); }
 
 function toggleCart(){
   const cartSide = document.getElementById('cart-side');
+  const navMenu = document.getElementById('nav-menu');
+  const overlay = document.getElementById('menu-overlay');
+  
   if(cartSide){
-    cartSide.classList.toggle('open');
+    const isOpen = cartSide.classList.contains('open');
+    
+    // Close nav menu if open
+    if(navMenu && navMenu.classList.contains('open')){
+      navMenu.classList.remove('open');
+      if(overlay) overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    
+    // Toggle cart
+    if(isOpen){
+      cartSide.classList.remove('open');
+      if(overlay) overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    } else {
+      cartSide.classList.add('open');
+      if(overlay) overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
   }
 }
 
 function toggleMenu(){
   const navMenu = document.getElementById('nav-menu');
+  const cartSide = document.getElementById('cart-side');
   const overlay = document.getElementById('menu-overlay');
+  
   if(navMenu && overlay){
-    navMenu.classList.toggle('open');
-    overlay.classList.toggle('active');
-
-    // Prevent body scroll when menu is open
-    if(navMenu.classList.contains('open')){
-      document.body.style.overflow = 'hidden';
-    } else {
+    const isOpen = navMenu.classList.contains('open');
+    
+    // Close cart if open
+    if(cartSide && cartSide.classList.contains('open')){
+      cartSide.classList.remove('open');
+    }
+    
+    // Toggle menu
+    if(isOpen){
+      navMenu.classList.remove('open');
+      overlay.classList.remove('active');
       document.body.style.overflow = '';
+    } else {
+      navMenu.classList.add('open');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
     }
   }
+}
+
+function closeAllSidebars(){
+  const navMenu = document.getElementById('nav-menu');
+  const cartSide = document.getElementById('cart-side');
+  const overlay = document.getElementById('menu-overlay');
+  
+  if(navMenu) navMenu.classList.remove('open');
+  if(cartSide) cartSide.classList.remove('open');
+  if(overlay) overlay.classList.remove('active');
+  document.body.style.overflow = '';
 }
 
 function switchTab(category){
