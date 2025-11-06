@@ -34,6 +34,7 @@ const translations = {
     navHome: 'الرئيسية',
     navAbout: 'من نحن',
     navMenu: 'القائمة',
+    navOrders: 'طلباتي',
     navContact: 'تواصل معنا',
     navAdmin: 'لوحة الإدارة',
     footerConnect: 'Connect',
@@ -87,7 +88,7 @@ const translations = {
     faqQ1: 'ما هي ساعات العمل؟',
     faqA1: 'نحن مفتوحون يومياً من الساعة 9 صباحاً حتى 11 مساءً',
     faqQ2: 'هل توفرون توصيل مجاني؟',
-    faqA2: 'نعم، نوفر توصيل مجاني للطلبات التي تزيد عن 15 دولار',
+    faqA2: 'نعم، نوفر توصيل مجاني للطلبات التي تزيد عن 15 دج',
     faqQ3: 'هل تستخدمون شوكولاتة كيندر الأصلية؟',
     faqA3: 'بالتأكيد! نستخدم فقط شوكولاتة كيندر الأصلية ومكونات طازجة يومياً',
     faqQ4: 'هل يمكنني تخصيص طلبي؟',
@@ -105,7 +106,7 @@ const translations = {
     aboutDesc1: 'Creperie Kinder تأسست بشغف لتقديم أفضل كريب للأطفال والكبار. نختار أفضل مكونات الشوكولا ونضيف لمسة سحرية في كل لفّة.',
     aboutDesc2: 'رؤيتنا: سعادة كل زبون في كل قضمة.',
     aboutTeamTitle: 'فريقنا',
-    aboutChef: 'Chef Lina',
+    aboutChef: 'Chef Silo',
     aboutChefDesc: 'خبيرة الكريب والحشوات الممتازة.',
     aboutManager: 'Manager Adam',
     aboutManagerDesc: 'رعاية الجودة وتجربة الزبائن.',
@@ -151,6 +152,7 @@ const translations = {
     navHome: 'Home',
     navAbout: 'About Us',
     navMenu: 'Menu',
+    navOrders: 'My Orders',
     navContact: 'Contact Us',
     navAdmin: 'Admin Panel',
     footerConnect: 'Connect',
@@ -204,7 +206,7 @@ const translations = {
     faqQ1: 'What are your opening hours?',
     faqA1: 'We are open daily from 9 AM to 11 PM',
     faqQ2: 'Do you offer free delivery?',
-    faqA2: 'Yes, we offer free delivery for orders over $15',
+    faqA2: 'Yes, we offer free delivery for orders over 15 DZD',
     faqQ3: 'Do you use original Kinder chocolate?',
     faqA3: 'Absolutely! We only use original Kinder chocolate and fresh ingredients daily',
     faqQ4: 'Can I customize my order?',
@@ -222,7 +224,7 @@ const translations = {
     aboutDesc1: 'Creperie Kinder was founded with passion to provide the best crepes for children and adults. We choose the finest chocolate ingredients and add a magical touch to every wrap.',
     aboutDesc2: 'Our vision: Happiness for every customer in every bite.',
     aboutTeamTitle: 'Our Team',
-    aboutChef: 'Chef Lina',
+    aboutChef: 'Chef Silo',
     aboutChefDesc: 'Expert in crepes and excellent fillings.',
     aboutManager: 'Manager Adam',
     aboutManagerDesc: 'Quality care and customer experience.',
@@ -722,7 +724,7 @@ function renderCart(){
   if(cart.length===0){
     container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">' + t.emptyCart + '</div>';
     const totalEl = document.getElementById('cart-total');
-    if(totalEl) totalEl.textContent = '$0.00';
+    if(totalEl) totalEl.textContent = '0.00 DZD';
     return;
   }
 
@@ -739,7 +741,7 @@ function renderCart(){
 
     const itemPrice = document.createElement('div');
     itemPrice.className = 'cart-item-price';
-    itemPrice.textContent = '$' + it.price.toFixed(2);
+    itemPrice.textContent = it.price.toFixed(2) + ' DZD';
 
     const controls = document.createElement('div');
     controls.className='qty';
@@ -773,9 +775,17 @@ function renderCart(){
     container.appendChild(div);
   });
 
-  const total = cart.reduce((s,i)=>s + i.price * i.qty, 0);
+  const subtotal = cart.reduce((s,i)=>s + i.price * i.qty, 0);
+  const deliveryFee = calculateDeliveryFee(subtotal);
+  const total = subtotal + deliveryFee;
   const totalEl = document.getElementById('cart-total');
-  if(totalEl) totalEl.textContent = '$' + total.toFixed(2);
+  if(totalEl) {
+    if(deliveryFee > 0 && subtotal > 0) {
+      totalEl.innerHTML = `<div style="font-size:12px;color:#999;margin-bottom:4px;">Subtotal: ${subtotal.toFixed(2)} DZD</div><div style="font-size:12px;color:#999;margin-bottom:4px;">Delivery: ${deliveryFee.toFixed(2)} DZD</div><div>${total.toFixed(2)} DZD</div>`;
+    } else {
+      totalEl.textContent = total.toFixed(2) + ' DZD';
+    }
+  }
 }
 
 function updateQty(id, qty){
@@ -790,32 +800,231 @@ function removeFromCart(id){
   saveCart(cart);
 }
 
+// Constants
+const MIN_ORDER_AMOUNT = 5.0; // Minimum order in DZD
+const FREE_DELIVERY_THRESHOLD = 15.0; // Free delivery over this amount
+const DELIVERY_FEE = 2.0; // Delivery fee in DZD
+
+// Validate Algerian phone number
+function validatePhone(phone){
+  // Remove spaces and special characters
+  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  // Check if it matches Algerian format: +213XXXXXXXXX or 0XXXXXXXXX or 213XXXXXXXXX
+  return /^(\+213|213|0)[5-7][0-9]{8}$/.test(cleaned);
+}
+
+// Format phone number
+function formatPhone(phone){
+  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  if(cleaned.startsWith('+213')) return cleaned;
+  if(cleaned.startsWith('213')) return '+' + cleaned;
+  if(cleaned.startsWith('0')) return '+213' + cleaned.substring(1);
+  return '+213' + cleaned;
+}
+
+// Calculate delivery fee
+function calculateDeliveryFee(subtotal){
+  return subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+}
+
+// Get saved customer info
+function getSavedCustomerInfo(){
+  const saved = localStorage.getItem('kc_customer_info');
+  return saved ? JSON.parse(saved) : {name: '', phone: '', address: ''};
+}
+
+// Save customer info
+function saveCustomerInfo(name, phone, address){
+  localStorage.setItem('kc_customer_info', JSON.stringify({name, phone, address}));
+}
+
 function checkoutFlow(){
   const lang = getCurrentLang();
   const t = translations[lang];
   const cart = getCart();
   if(cart.length===0) return alert(t.emptyCartAlert);
-  const name = prompt(t.namePrompt);
-  if(!name) return alert(t.nameRequired);
-  const phone = prompt(t.phonePrompt);
-  if(!phone) return alert(t.phoneRequired);
-  const address = prompt(t.addressPrompt);
-  if(!address) return alert(t.addressRequired);
-  const total = cart.reduce((s,i)=>s + i.price * i.qty, 0);
-  const orders = getOrders();
-  const id = 'ORD-' + Date.now();
-  const order = {
-    id, name, phone, address,
-    items: cart,
-    total,
-    status:'Pending',
-    createdAt: new Date().toISOString()
+  
+  // Calculate totals
+  const subtotal = cart.reduce((s,i)=>s + i.price * i.qty, 0);
+  
+  // Check minimum order
+  if(subtotal < MIN_ORDER_AMOUNT){
+    const minOrderMsg = lang === 'ar' 
+      ? `الحد الأدنى للطلب هو ${MIN_ORDER_AMOUNT} دج`
+      : `Minimum order amount is ${MIN_ORDER_AMOUNT} DZD`;
+    return alert(minOrderMsg);
+  }
+  
+  const deliveryFee = calculateDeliveryFee(subtotal);
+  const total = subtotal + deliveryFee;
+  
+  // Get saved customer info
+  const savedInfo = getSavedCustomerInfo();
+  
+  // Create checkout modal
+  const modal = document.createElement('div');
+  modal.className = 'checkout-modal-overlay';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.onclick = (e) => {
+    if(e.target === modal) closeCheckoutModal();
   };
-  orders.push(order);
-  saveOrders(orders);
-  saveCart([]);
-  toggleCart();
-  toast(t.orderSuccess + id);
+  
+  const savedNameLabel = lang === 'ar' ? 'الاسم الكامل' : 'Full Name';
+  const savedPhoneLabel = lang === 'ar' ? 'رقم الهاتف' : 'Phone Number';
+  const savedAddressLabel = lang === 'ar' ? 'العنوان' : 'Address';
+  const savedInstructionsLabel = lang === 'ar' ? 'تعليمات خاصة (اختياري)' : 'Special Instructions (Optional)';
+  const savedSubtotalLabel = lang === 'ar' ? 'المجموع الفرعي' : 'Subtotal';
+  const savedDeliveryLabel = lang === 'ar' ? 'رسوم التوصيل' : 'Delivery Fee';
+  const savedTotalLabel = lang === 'ar' ? 'المجموع الكلي' : 'Total';
+  const savedFreeDeliveryLabel = lang === 'ar' ? 'توصيل مجاني!' : 'Free Delivery!';
+  const savedPlaceOrderLabel = lang === 'ar' ? 'تأكيد الطلب' : 'Place Order';
+  const savedCancelLabel = lang === 'ar' ? 'إلغاء' : 'Cancel';
+  const savedPhoneErrorLabel = lang === 'ar' ? 'رقم الهاتف غير صحيح. استخدم التنسيق: +213 5XX XXX XXX' : 'Invalid phone number. Use format: +213 5XX XXX XXX';
+  
+  modal.innerHTML = `
+    <div class="checkout-modal" style="background:#fff;border-radius:12px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="padding:24px;border-bottom:1px solid #e8ddd1;">
+        <h2 style="margin:0;font-family:'Playfair Display',serif;color:var(--text-primary);">${lang === 'ar' ? 'إتمام الطلب' : 'Checkout'}</h2>
+      </div>
+      <form id="checkout-form" style="padding:24px;">
+        <div style="margin-bottom:20px;">
+          <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-primary);">${savedNameLabel} *</label>
+          <input type="text" id="checkout-name" value="${savedInfo.name}" required style="width:100%;padding:12px;border:1px solid var(--border);border-radius:4px;font-size:16px;">
+        </div>
+        <div style="margin-bottom:20px;">
+          <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-primary);">${savedPhoneLabel} *</label>
+          <input type="tel" id="checkout-phone" value="${savedInfo.phone}" required placeholder="+213 5XX XXX XXX" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:4px;font-size:16px;">
+          <small style="color:#999;font-size:12px;display:block;margin-top:4px;">${lang === 'ar' ? 'مثال: +213 555 123 456' : 'Example: +213 555 123 456'}</small>
+        </div>
+        <div style="margin-bottom:20px;">
+          <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-primary);">${savedAddressLabel} *</label>
+          <textarea id="checkout-address" required rows="3" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:4px;font-size:16px;resize:vertical;">${savedInfo.address}</textarea>
+        </div>
+        <div style="margin-bottom:20px;">
+          <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-primary);">${savedInstructionsLabel}</label>
+          <textarea id="checkout-notes" rows="2" placeholder="${lang === 'ar' ? 'أي تعليمات خاصة للطلب...' : 'Any special instructions for your order...'}" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:4px;font-size:16px;resize:vertical;"></textarea>
+        </div>
+        <div style="background:#f9f9f9;padding:16px;border-radius:8px;margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span>${savedSubtotalLabel}:</span>
+            <strong>${subtotal.toFixed(2)} DZD</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span>${savedDeliveryLabel}:</span>
+            <strong style="color:${deliveryFee === 0 ? 'var(--success)' : 'var(--text-primary)'};">${deliveryFee === 0 ? savedFreeDeliveryLabel : deliveryFee.toFixed(2) + ' DZD'}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:2px solid var(--border);font-size:18px;">
+            <span style="font-weight:700;">${savedTotalLabel}:</span>
+            <strong style="color:var(--warm-gold);font-size:20px;">${total.toFixed(2)} DZD</strong>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button type="button" onclick="closeCheckoutModal()" style="flex:1;padding:14px;border:1px solid var(--border);background:#fff;border-radius:4px;cursor:pointer;font-weight:600;transition:all 0.3s;">${savedCancelLabel}</button>
+          <button type="submit" style="flex:1;padding:14px;border:none;background:var(--gradient-primary);color:#fff;border-radius:4px;cursor:pointer;font-weight:700;transition:all 0.3s;">${savedPlaceOrderLabel}</button>
+        </div>
+      </form>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Handle form submission
+  document.getElementById('checkout-form').onsubmit = (e) => {
+    e.preventDefault();
+    const name = document.getElementById('checkout-name').value.trim();
+    const phone = document.getElementById('checkout-phone').value.trim();
+    const address = document.getElementById('checkout-address').value.trim();
+    const notes = document.getElementById('checkout-notes').value.trim();
+    
+    if(!name) return alert(t.nameRequired);
+    if(!phone) return alert(t.phoneRequired);
+    if(!validatePhone(phone)){
+      alert(savedPhoneErrorLabel);
+      return;
+    }
+    if(!address) return alert(t.addressRequired);
+    
+    // Format phone
+    const formattedPhone = formatPhone(phone);
+    
+    // Save customer info
+    saveCustomerInfo(name, formattedPhone, address);
+    
+    // Create order
+    const orders = getOrders();
+    const id = 'ORD-' + Date.now();
+    const order = {
+      id, 
+      name, 
+      phone: formattedPhone, 
+      address,
+      items: cart,
+      subtotal,
+      deliveryFee,
+      total,
+      specialInstructions: notes,
+      status:'pending',
+      timestamp: new Date().toISOString()
+    };
+    orders.push(order);
+    saveOrders(orders);
+    saveCart([]);
+    closeCheckoutModal();
+    toggleCart();
+    
+    // Show order confirmation
+    showOrderConfirmation(id, order, lang);
+  };
+}
+
+function closeCheckoutModal(){
+  const modal = document.querySelector('.checkout-modal-overlay');
+  if(modal) modal.remove();
+}
+
+function showOrderConfirmation(orderId, order, lang){
+  const t = translations[lang];
+  const confirmModal = document.createElement('div');
+  confirmModal.className = 'checkout-modal-overlay';
+  confirmModal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  confirmModal.onclick = (e) => {
+    if(e.target === confirmModal) confirmModal.remove();
+  };
+  
+  const itemsList = order.items.map(item => 
+    `${item.qty}x ${item.name} - ${item.price.toFixed(2)} DZD`
+  ).join('\n');
+  
+  const successTitle = lang === 'ar' ? 'تم إرسال الطلب بنجاح!' : 'Order Placed Successfully!';
+  const orderNumberLabel = lang === 'ar' ? 'رقم الطلب' : 'Order Number';
+  const trackOrderLabel = lang === 'ar' ? 'تتبع الطلب' : 'Track Order';
+  const closeLabel = lang === 'ar' ? 'إغلاق' : 'Close';
+  
+  confirmModal.innerHTML = `
+    <div class="checkout-modal" style="background:#fff;border-radius:12px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="padding:24px;text-align:center;border-bottom:1px solid #e8ddd1;">
+        <div style="width:60px;height:60px;background:var(--success);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;">✓</div>
+        <h2 style="margin:0;font-family:'Playfair Display',serif;color:var(--text-primary);">${successTitle}</h2>
+      </div>
+      <div style="padding:24px;">
+        <div style="background:#f9f9f9;padding:16px;border-radius:8px;margin-bottom:20px;">
+          <div style="margin-bottom:12px;">
+            <strong>${orderNumberLabel}:</strong>
+            <div style="font-size:20px;color:var(--warm-gold);font-weight:700;margin-top:4px;">${orderId}</div>
+          </div>
+          <div style="margin-bottom:8px;"><strong>${lang === 'ar' ? 'المجموع' : 'Total'}:</strong> ${order.total.toFixed(2)} DZD</div>
+          <div style="margin-bottom:8px;"><strong>${lang === 'ar' ? 'الحالة' : 'Status'}:</strong> ${lang === 'ar' ? 'قيد الانتظار' : 'Pending'}</div>
+        </div>
+        <div style="margin-bottom:20px;">
+          <button onclick="window.location.href='my-orders.html?order=${orderId}'" style="width:100%;padding:14px;border:none;background:var(--gradient-primary);color:#fff;border-radius:4px;cursor:pointer;font-weight:700;margin-bottom:12px;">${trackOrderLabel}</button>
+          <button onclick="this.closest('.checkout-modal-overlay').remove()" style="width:100%;padding:14px;border:1px solid var(--border);background:#fff;border-radius:4px;cursor:pointer;font-weight:600;">${closeLabel}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(confirmModal);
+  toast(t.orderSuccess + orderId);
 }
 
 /* Toast notification */
@@ -865,18 +1074,19 @@ function renderAdminOrders(){
   orders.forEach(o=>{
     const el = document.createElement('div');
     el.className='order';
-    el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${o.id}</strong> <div class="text-sm">${o.name} • ${o.phone}</div></div><div><small>${new Date(o.createdAt).toLocaleString()}</small></div></div>`;
+    el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${o.id}</strong> <div class="text-sm">${o.name} • ${o.phone}</div></div><div><small>${new Date(o.timestamp || o.createdAt).toLocaleString()}</small></div></div>`;
     const items = document.createElement('div');
     items.className='text-sm';
     items.textContent = o.items.map(i=> i.name + ' x' + i.qty).join(', ');
     const status = document.createElement('div');
     status.style.marginTop='6px';
     const sel = document.createElement('select');
-    ['Pending','In Progress','Delivered'].forEach(s=>{
+    const statusMap = {'pending': 'Pending', 'in-progress': 'In Progress', 'delivered': 'Delivered'};
+    Object.keys(statusMap).forEach(key=>{
       const opt = document.createElement('option');
-      opt.value=s;
-      opt.textContent=s;
-      if(o.status===s) opt.selected=true;
+      opt.value=key;
+      opt.textContent=statusMap[key];
+      if(o.status===key || o.status===statusMap[key]) opt.selected=true;
       sel.appendChild(opt);
     });
     sel.onchange = ()=> updateOrderStatus(o.id, sel.value);
@@ -898,9 +1108,9 @@ function renderAdminOrders(){
       popular[it.name] = (popular[it.name]||0) + it.qty;
     }));
     const top = Object.entries(popular).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    statsEl.innerHTML = '<div class="stat-card"><strong>المبيعات الإجمالية</strong><div style="font-size:20px;margin-top:6px">$'+ totalSales.toFixed(2) +'</div></div>';
+    statsEl.innerHTML = '<div class="stat-card"><strong>المبيعات الإجمالية</strong><div style="font-size:20px;margin-top:6px">'+ totalSales.toFixed(2) +' DZD</div></div>';
     statsEl.innerHTML += '<div class="stat-card"><strong>عدد الطلبات</strong><div style="font-size:18px;margin-top:6px">'+ totalOrders +'</div></div>';
-    statsEl.innerHTML += '<div class="stat-card"><strong>حسب الحالة</strong><div style="margin-top:6px">Pending: '+(byStatus.Pending||0)+' • In Progress: '+(byStatus['In Progress']||0)+' • Delivered: '+(byStatus.Delivered||0)+'</div></div>';
+    statsEl.innerHTML += '<div class="stat-card"><strong>حسب الحالة</strong><div style="margin-top:6px">Pending: '+(byStatus.pending||byStatus.Pending||0)+' • In Progress: '+(byStatus['in-progress']||byStatus['In Progress']||0)+' • Delivered: '+(byStatus.delivered||byStatus.Delivered||0)+'</div></div>';
     statsEl.innerHTML += '<div class="stat-card"><strong>الأكثر مبيعًا</strong><ul>' + top.map(t=>'<li>'+t[0]+' — '+t[1]+'</li>').join('') + '</ul></div>';
   }
 }
@@ -925,7 +1135,9 @@ function updateOrderStatus(id, status){
   const orders = getOrders();
   const o = orders.find(x=> x.id===id);
   if(!o) return;
-  o.status = status;
+  // Normalize status to lowercase
+  const statusMap = {'Pending': 'pending', 'In Progress': 'in-progress', 'Delivered': 'delivered'};
+  o.status = statusMap[status] || status.toLowerCase();
   saveOrders(orders);
   renderAdminOrders();
   toast('تم تحديث حالة الطلب ' + id);
@@ -1130,6 +1342,7 @@ function updatePageIndicator(){
     '': { ar: 'الرئيسية', en: 'Home' },
     'menu.html': { ar: 'القائمة', en: 'Menu' },
     'about.html': { ar: 'من نحن', en: 'About Us' },
+    'my-orders.html': { ar: 'طلباتي', en: 'My Orders' },
     'contact.html': { ar: 'تواصل معنا', en: 'Contact Us' },
     'faq.html': { ar: 'الأسئلة الشائعة', en: 'FAQ' },
     'feedback.html': { ar: 'التقييمات', en: 'Reviews' },
@@ -1151,6 +1364,9 @@ function updatePageIndicator(){
   
   const navMenuLinks = document.querySelectorAll('.nav-link-menu');
   navMenuLinks.forEach(link => link.textContent = t.navMenu);
+  
+  const navOrdersLinks = document.querySelectorAll('.nav-link-orders');
+  navOrdersLinks.forEach(link => link.textContent = t.navOrders);
   
   const navContactLinks = document.querySelectorAll('.nav-link-contact');
   navContactLinks.forEach(link => link.textContent = t.navContact);
@@ -1290,7 +1506,17 @@ function initSecretAdminAccess(){
 }
 
 /* On load hooks */
+/* Page loading animation */
+function initPageLoad(){
+  document.body.classList.add('page-loading');
+  setTimeout(() => {
+    document.body.classList.remove('page-loading');
+    document.body.classList.add('page-loaded');
+  }, 100);
+}
+
 document.addEventListener('DOMContentLoaded', ()=>{
+  initPageLoad();
   try {
     // Set language
     const lang = getCurrentLang();

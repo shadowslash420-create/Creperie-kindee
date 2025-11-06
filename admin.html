@@ -90,7 +90,7 @@
             <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">💰</div>
             <div class="stat-info">
               <p class="stat-label">Today's Revenue</p>
-              <h3 class="stat-value" id="stat-revenue">$0.00</h3>
+              <h3 class="stat-value" id="stat-revenue">0.00 DZD</h3>
               <span class="stat-change positive">+12% from yesterday</span>
             </div>
           </div>
@@ -180,7 +180,6 @@
             <button class="filter-tab" onclick="filterOrdersByStatus('in-progress', event)">In Progress</button>
             <button class="filter-tab" onclick="filterOrdersByStatus('delivered', event)">Delivered</button>
           </div>
-          <button class="export-btn" onclick="exportOrdersToCSV()">📥 Export CSV</button>
         </div>
         <div class="orders-table-container" id="orders-table"></div>
       </section>
@@ -200,8 +199,8 @@
             <div class="analytics-card">
               <h3>Revenue Analytics</h3>
               <div class="analytics-content">
-                <p>Total Revenue: <strong id="total-revenue">$0.00</strong></p>
-                <p>Average Order Value: <strong id="avg-order">$0.00</strong></p>
+                <p>Total Revenue: <strong id="total-revenue">0.00 DZD</strong></p>
+                <p>Average Order Value: <strong id="avg-order">0.00 DZD</strong></p>
                 <p>Best Day: <strong id="best-day">-</strong></p>
               </div>
             </div>

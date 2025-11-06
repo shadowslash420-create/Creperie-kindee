@@ -46,6 +46,47 @@ body{
   font-size:17px;
   font-weight:400;
   overflow-x:hidden;
+  transition:opacity 0.3s ease-in-out;
+}
+
+/* Page transition animation */
+body.page-loading{
+  opacity:0.7;
+}
+
+body.page-loaded{
+  opacity:1;
+}
+
+/* Smooth scroll */
+html{
+  scroll-behavior:smooth;
+}
+
+/* Fade in animation for content */
+@keyframes fadeIn{
+  from{
+    opacity:0;
+    transform:translateY(20px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+.section{
+  animation:fadeIn 0.6s ease-out;
+}
+
+.card{
+  animation:fadeIn 0.5s ease-out;
+  transition:transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:var(--medium-shadow);
 }
 
 /* Header */
@@ -530,7 +571,14 @@ body{
 .container{
   max-width:1200px;
   margin:0 auto;
-  padding:0;
+  padding:48px 24px;
+  animation:fadeIn 0.6s ease-out;
+}
+
+@media(max-width:768px){
+  .container{
+    padding:32px 16px;
+  }
 }
 
 /* Section */
@@ -540,6 +588,13 @@ body{
   margin:0;
   border-radius:0;
   box-shadow:var(--medium-shadow);
+  animation:fadeIn 0.6s ease-out;
+}
+
+@media(max-width:768px){
+  .section{
+    padding:48px 24px;
+  }
 }
 
 .section-title{
@@ -564,6 +619,11 @@ body{
   border-radius:0;
 }
 
+#menu-preview-title{
+  color:#fff;
+  text-shadow:0 2px 8px rgba(0,0,0,0.3);
+}
+
 .section-desc{
   color:var(--text-secondary);
   font-size:17px;
@@ -577,6 +637,13 @@ body{
   display:grid;
   grid-template-columns:repeat(2,1fr);
   gap:32px;
+}
+
+@media(max-width:768px){
+  .menu-grid{
+    grid-template-columns:1fr;
+    gap:24px;
+  }
 }
 
 .menu-item{
@@ -1020,7 +1087,7 @@ body{
 /* Footer */
 .footer{
   background:#3b2414;
-  color:rgba(255,255,255,0.85);
+  color:#fff;
   padding:64px 32px;
   text-align:center;
   box-shadow:var(--strong-shadow);
@@ -1034,7 +1101,7 @@ body{
 }
 
 .footer-links a{
-  color:rgba(255,255,255,0.85);
+  color:#fff;
   text-decoration:none;
   font-size:16px;
   transition:all 0.3s;
@@ -1055,11 +1122,15 @@ body{
 .footer-connect{
   margin-top:32px;
   font-size:13px;
-  color:rgba(255,255,255,0.7);
+  color:#fff;
   font-weight:600;
   text-transform:uppercase;
   letter-spacing:2px;
   font-family:'Inter', sans-serif;
+}
+
+#footer-copyright{
+  color:#fff !important;
 }
 
 .social-icons{

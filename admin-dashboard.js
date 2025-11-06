@@ -35,26 +35,22 @@ function showSection(section, evt) {
   // Save current section to localStorage
   localStorage.setItem('kc_current_section', section);
   
-  // Update navigation
-  document.querySelectorAll('.nav-item').forEach(item => {
+  // Update active state for navigation items
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(item => {
     item.classList.remove('active');
-  });
-  
-  // Only update active state if event is provided
-  if (evt && evt.target) {
-    const navItem = evt.target.closest('.nav-item');
-    if (navItem) {
-      navItem.classList.add('active');
+    // Check if this nav item corresponds to the current section
+    const navText = item.textContent.trim().toLowerCase();
+    const sectionMap = {
+      'dashboard': ['dashboard', '📊'],
+      'orders': ['orders', '📦'],
+      'menu': ['menu', '🍽️'],
+      'analytics': ['analytics', '📈']
+    };
+    if (sectionMap[section] && sectionMap[section].some(keyword => navText.includes(keyword))) {
+      item.classList.add('active');
     }
-  } else {
-    // Programmatically set active based on section
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-      if (item.textContent.trim().toLowerCase().includes(section)) {
-        item.classList.add('active');
-      }
-    });
-  }
+  });
   
   // Update content sections
   document.querySelectorAll('.content-section').forEach(sec => {
@@ -75,6 +71,21 @@ function showSection(section, evt) {
   if (section === 'dashboard') {
     loadDashboard();
   } else if (section === 'orders') {
+    // Restore filter state if available
+    const savedFilter = localStorage.getItem('kc_current_filter');
+    if (savedFilter) {
+      currentFilter = savedFilter;
+      // Update filter tab active state
+      setTimeout(() => {
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+          tab.classList.remove('active');
+          if (tab.textContent.trim().toLowerCase().includes(savedFilter) || 
+              (savedFilter === 'all' && tab.textContent.trim().toLowerCase() === 'all')) {
+            tab.classList.add('active');
+          }
+        });
+      }, 100);
+    }
     loadAllOrders();
   } else if (section === 'menu') {
     loadMenuItems();
@@ -119,14 +130,14 @@ function loadDashboard() {
   
   // Calculate stats
   const today = new Date().toDateString();
-  const todayOrders = orders.filter(o => new Date(o.timestamp).toDateString() === today);
+  const todayOrders = orders.filter(o => new Date(o.timestamp || o.createdAt).toDateString() === today);
   const pendingOrders = orders.filter(o => o.status === 'pending');
   const completedToday = todayOrders.filter(o => o.status === 'delivered');
   
   const todayRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
   
   // Update stat cards
-  document.getElementById('stat-revenue').textContent = '$' + todayRevenue.toFixed(2);
+  document.getElementById('stat-revenue').textContent = todayRevenue.toFixed(2) + ' DZD';
   document.getElementById('stat-total-orders').textContent = orders.length;
   document.getElementById('stat-pending').textContent = pendingOrders.length;
   document.getElementById('stat-completed').textContent = completedToday.length;
@@ -157,7 +168,7 @@ function loadRecentOrders() {
       html += '<tr>';
       html += '<td class="order-id">#' + order.id + '</td>';
       html += '<td>' + order.name + '</td>';
-      html += '<td>$' + order.total.toFixed(2) + '</td>';
+      html += '<td>' + order.total.toFixed(2) + ' DZD</td>';
       html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
       html += '</tr>';
     });
@@ -196,7 +207,7 @@ function loadBestSellers() {
       html += '<p class="item-name">' + item.name + '</p>';
       html += '<p class="item-sales">' + item.count + ' sold</p>';
       html += '</div>';
-      html += '<div class="item-revenue">$' + item.revenue.toFixed(2) + '</div>';
+      html += '<div class="item-revenue">' + item.revenue.toFixed(2) + ' DZD</div>';
       html += '</div>';
     });
   }
@@ -222,7 +233,7 @@ function loadSalesChart() {
     last7Days.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
     
     const daySales = orders
-      .filter(o => new Date(o.timestamp).toDateString() === dateStr)
+      .filter(o => new Date(o.timestamp || o.createdAt).toDateString() === dateStr)
       .reduce((sum, o) => sum + o.total, 0);
     salesData.push(daySales);
   }
@@ -249,7 +260,7 @@ function loadSalesChart() {
     ctx.fillStyle = '#2d3748';
     ctx.font = '12px Inter';
     ctx.textAlign = 'center';
-    ctx.fillText('$' + sale.toFixed(0), x + barWidth / 2, y - 5);
+    ctx.fillText(sale.toFixed(0) + ' DZD', x + barWidth / 2, y - 5);
     
     // Draw label
     ctx.fillStyle = '#718096';
@@ -342,8 +353,8 @@ function loadAllOrders() {
       html += '<td>' + order.name + '</td>';
       html += '<td>' + order.phone + '</td>';
       html += '<td>' + order.address + '</td>';
-      html += '<td>' + order.items.length + ' items</td>';
-      html += '<td>$' + order.total.toFixed(2) + '</td>';
+      html += '<td>' + order.items.length + ' items' + (order.specialInstructions ? ' <span style="color:#e67e22;" title="Has special instructions">📝</span>' : '') + '</td>';
+      html += '<td>' + order.total.toFixed(2) + ' DZD</td>';
       html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
       html += '<td class="order-actions">';
       html += '<button class="action-btn btn-view" onclick="viewOrder(\'' + order.id + '\')">View</button>';
@@ -360,6 +371,7 @@ function loadAllOrders() {
 // Filter Orders by Status
 function filterOrdersByStatus(status, evt) {
   currentFilter = status;
+  localStorage.setItem('kc_current_filter', status);
   
   document.querySelectorAll('.filter-tab').forEach(tab => {
     tab.classList.remove('active');
@@ -367,6 +379,14 @@ function filterOrdersByStatus(status, evt) {
   
   if (evt && evt.target) {
     evt.target.classList.add('active');
+  } else {
+    // Restore filter tab active state
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      if (tab.textContent.trim().toLowerCase().includes(status) || 
+          (status === 'all' && tab.textContent.trim().toLowerCase() === 'all')) {
+        tab.classList.add('active');
+      }
+    });
   }
   
   loadAllOrders();
@@ -400,8 +420,8 @@ function filterOrders() {
       html += '<td>' + order.name + '</td>';
       html += '<td>' + order.phone + '</td>';
       html += '<td>' + order.address + '</td>';
-      html += '<td>' + order.items.length + ' items</td>';
-      html += '<td>$' + order.total.toFixed(2) + '</td>';
+      html += '<td>' + order.items.length + ' items' + (order.specialInstructions ? ' <span style="color:#e67e22;" title="Has special instructions">📝</span>' : '') + '</td>';
+      html += '<td>' + order.total.toFixed(2) + ' DZD</td>';
       html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
       html += '<td class="order-actions">';
       html += '<button class="action-btn btn-view" onclick="viewOrder(\'' + order.id + '\')">View</button>';
@@ -423,16 +443,27 @@ function viewOrder(orderId) {
   if (!order) return;
   
   let itemsList = order.items.map(item => 
-    item.qty + 'x ' + item.name + ' ($' + item.price.toFixed(2) + ')'
+    item.qty + 'x ' + item.name + ' (' + item.price.toFixed(2) + ' DZD)'
   ).join('\n');
   
-  alert('Order #' + order.id + '\n\n' +
+  let message = 'Order #' + order.id + '\n\n' +
     'Customer: ' + order.name + '\n' +
     'Phone: ' + order.phone + '\n' +
     'Address: ' + order.address + '\n' +
     'Status: ' + order.status + '\n\n' +
-    'Items:\n' + itemsList + '\n\n' +
-    'Total: $' + order.total.toFixed(2));
+    'Items:\n' + itemsList + '\n\n';
+  
+  if(order.subtotal !== undefined){
+    message += 'Subtotal: ' + order.subtotal.toFixed(2) + ' DZD\n';
+    message += 'Delivery Fee: ' + (order.deliveryFee || 0).toFixed(2) + ' DZD\n';
+  }
+  message += 'Total: ' + order.total.toFixed(2) + ' DZD';
+  
+  if(order.specialInstructions){
+    message += '\n\nSpecial Instructions:\n' + order.specialInstructions;
+  }
+  
+  alert(message);
 }
 
 // Update Order Status
@@ -473,33 +504,6 @@ function updateOrderStatus(orderId) {
   }
 }
 
-// Export Orders to CSV
-function exportOrdersToCSV() {
-  const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  
-  if (orders.length === 0) {
-    alert('No orders to export');
-    return;
-  }
-  
-  let csv = 'Order ID,Customer,Phone,Address,Items,Total,Status,Date\n';
-  
-  orders.forEach(order => {
-    const items = order.items.map(i => i.qty + 'x ' + i.name).join('; ');
-    const date = new Date(order.timestamp).toLocaleString();
-    csv += '"' + order.id + '","' + order.name + '","' + order.phone + '","' + 
-           order.address + '","' + items + '",' + order.total + ',"' + 
-           order.status + '","' + date + '"\n';
-  });
-  
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'orders_' + new Date().toISOString().split('T')[0] + '.csv';
-  a.click();
-}
-
 // Load Menu Items
 async function loadMenuItems() {
   const menu = await getMenuFromServer();
@@ -512,7 +516,7 @@ async function loadMenuItems() {
     html += '<img src="' + item.img + '" alt="' + item.name + '" class="menu-item-image" />';
     html += '<h4>' + item.name + '</h4>';
     html += '<p>' + item.desc + '</p>';
-    html += '<p class="price">$' + item.price.toFixed(2) + '</p>';
+    html += '<p class="price">' + item.price.toFixed(2) + ' DZD</p>';
     html += '<p style="font-size:12px;color:#999;text-transform:capitalize;margin:8px 0;">' + item.category + '</p>';
     html += '<div class="menu-item-actions">';
     html += '<button class="action-btn btn-edit" onclick="editMenuItem(\'' + item.id + '\')">Edit</button>';
@@ -546,7 +550,7 @@ function showAddMenuModal() {
           <textarea id="item-desc" required rows="3"></textarea>
         </div>
         <div class="form-group">
-          <label>Price ($) *</label>
+          <label>Price (DZD) *</label>
           <input type="number" id="item-price" step="0.01" min="0" required />
         </div>
         <div class="form-group">
@@ -622,7 +626,7 @@ async function editMenuItem(itemId) {
           <textarea id="edit-item-desc" required rows="3">${item.desc}</textarea>
         </div>
         <div class="form-group">
-          <label>Price ($) *</label>
+          <label>Price (DZD) *</label>
           <input type="number" id="edit-item-price" step="0.01" min="0" value="${item.price}" required />
         </div>
         <div class="form-group">
@@ -702,7 +706,7 @@ function loadAnalytics() {
   // Find best day
   const dayRevenue = {};
   orders.forEach(order => {
-    const day = new Date(order.timestamp).toDateString();
+    const day = new Date(order.timestamp || order.createdAt).toDateString();
     dayRevenue[day] = (dayRevenue[day] || 0) + order.total;
   });
   
@@ -710,8 +714,8 @@ function loadAnalytics() {
     dayRevenue[a] > dayRevenue[b] ? a : b, '-'
   );
   
-  document.getElementById('total-revenue').textContent = '$' + totalRevenue.toFixed(2);
-  document.getElementById('avg-order').textContent = '$' + avgOrder.toFixed(2);
+  document.getElementById('total-revenue').textContent = totalRevenue.toFixed(2) + ' DZD';
+  document.getElementById('avg-order').textContent = avgOrder.toFixed(2) + ' DZD';
   document.getElementById('best-day').textContent = bestDay !== '-' ? new Date(bestDay).toLocaleDateString() : '-';
   
   // Popular items

@@ -74,8 +74,8 @@ function loadDeliveryOrders() {
       html += '<td>' + order.name + '</td>';
       html += '<td>' + order.phone + '</td>';
       html += '<td>' + order.address + '</td>';
-      html += '<td>' + order.items.length + ' items</td>';
-      html += '<td>$' + order.total.toFixed(2) + '</td>';
+      html += '<td>' + order.items.length + ' items' + (order.specialInstructions ? ' <span style="color:#e67e22;" title="Has special instructions">📝</span>' : '') + '</td>';
+      html += '<td>' + order.total.toFixed(2) + ' DZD</td>';
       html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
       html += '<td class="order-actions">';
       html += '<button class="action-btn btn-view" onclick="viewDeliveryOrder(\'' + order.id + '\')">View</button>';
@@ -131,8 +131,8 @@ function filterDeliveryOrders() {
       html += '<td>' + order.name + '</td>';
       html += '<td>' + order.phone + '</td>';
       html += '<td>' + order.address + '</td>';
-      html += '<td>' + order.items.length + ' items</td>';
-      html += '<td>$' + order.total.toFixed(2) + '</td>';
+      html += '<td>' + order.items.length + ' items' + (order.specialInstructions ? ' <span style="color:#e67e22;" title="Has special instructions">📝</span>' : '') + '</td>';
+      html += '<td>' + order.total.toFixed(2) + ' DZD</td>';
       html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
       html += '<td class="order-actions">';
       html += '<button class="action-btn btn-view" onclick="viewDeliveryOrder(\'' + order.id + '\')">View</button>';
@@ -154,16 +154,27 @@ function viewDeliveryOrder(orderId) {
   if (!order) return;
   
   let itemsList = order.items.map(item => 
-    item.qty + 'x ' + item.name + ' ($' + item.price.toFixed(2) + ')'
+    item.qty + 'x ' + item.name + ' (' + item.price.toFixed(2) + ' DZD)'
   ).join('\n');
   
-  alert('Order #' + order.id + '\n\n' +
+  let message = 'Order #' + order.id + '\n\n' +
     'Customer: ' + order.name + '\n' +
     'Phone: ' + order.phone + '\n' +
     'Address: ' + order.address + '\n' +
     'Status: ' + order.status + '\n\n' +
-    'Items:\n' + itemsList + '\n\n' +
-    'Total: $' + order.total.toFixed(2));
+    'Items:\n' + itemsList + '\n\n';
+  
+  if(order.subtotal !== undefined){
+    message += 'Subtotal: ' + order.subtotal.toFixed(2) + ' DZD\n';
+    message += 'Delivery Fee: ' + (order.deliveryFee || 0).toFixed(2) + ' DZD\n';
+  }
+  message += 'Total: ' + order.total.toFixed(2) + ' DZD';
+  
+  if(order.specialInstructions){
+    message += '\n\nSpecial Instructions:\n' + order.specialInstructions;
+  }
+  
+  alert(message);
 }
 
 // Update Order Status

@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>My Orders - Creperie Kinder</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body dir="ltr">
+  <header class="header">
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="menu-icon" onclick="toggleMenu()">☰</div>
+      <div class="cart-icon" onclick="toggleCart()">🛒</div>
+    </div>
+    <div class="brand">
+      <div class="brand-text">
+        <div class="site-title">CREPERIE KINDER</div>
+        <div class="page-indicator" id="page-indicator">My Orders</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn">EN</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <section class="section">
+      <h2 class="section-title" id="orders-title" style="text-align:center">تتبع طلباتك</h2>
+      
+      <!-- Search Form -->
+      <div class="card" style="margin-bottom:24px;padding:24px;">
+        <h3 id="search-title" style="margin-bottom:16px;">ابحث عن طلبك</h3>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <input type="text" id="order-search" placeholder="رقم الطلب (مثال: ORD-1234567890)" style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
+          <input type="tel" id="phone-search" placeholder="رقم الهاتف" style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
+          <button class="cta" onclick="searchOrders()" id="search-btn" style="padding:12px 24px;">بحث</button>
+        </div>
+      </div>
+
+      <!-- Orders List -->
+      <div id="orders-list"></div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-links">
+        <a href="index.html" class="nav-link-home">Home</a>
+        <a href="about.html" class="nav-link-about">من نحن</a>
+        <a href="menu.html" class="nav-link-menu">القائمة</a>
+        <a href="my-orders.html" class="nav-link-orders">طلباتي</a>
+        <a href="faq.html" class="nav-link-faq">الأسئلة الشائعة</a>
+        <a href="feedback.html" class="nav-link-feedback">التقييمات</a>
+        <a href="contact.html" class="nav-link-contact">تواصل معنا</a>
+      </div>
+      <div class="footer-connect">Connect</div>
+      <div class="social-icons">
+        <a href="https://instagram.com/creperiekinder" target="_blank" class="social-icon" aria-label="Instagram">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+        </a>
+        <a href="https://facebook.com/creperiekinder" target="_blank" class="social-icon" aria-label="Facebook">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+        </a>
+        <a href="https://twitter.com/creperiekinder" target="_blank" class="social-icon" aria-label="Twitter">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+        </a>
+      </div>
+      <div id="footer-copyright" style="margin-top:30px;font-size:13px;color:#fff">
+        © Creperie Kinder — طعم ممتع لعائلتك<br>
+        اتصل: +213 5X XXX XXXX
+      </div>
+    </footer>
+  </div>
+
+  <div class="cart-side" id="cart-side">
+    <div class="cart-header">
+      <h3 id="cart-title">السلة</h3>
+      <button class="cart-close" onclick="toggleCart()">×</button>
+    </div>
+    <div id="cart-contents"></div>
+    <div class="cart-total-section">
+      <div class="cart-total">
+        <span id="total-label">المجموع:</span>
+        <strong id="cart-total">0.00 DZD</strong>
+      </div>
+      <button class="cta" style="width:100%;margin-top:16px" onclick="checkoutFlow()" id="checkout-btn">إتمام الطلب</button>
+    </div>
+  </div>
+
+  <div class="nav-menu" id="nav-menu">
+    <div class="nav-menu-header">
+      <button class="nav-menu-close" onclick="toggleMenu()">×</button>
+    </div>
+    <nav class="nav-menu-links">
+      <a href="index.html" class="nav-link-home" onclick="toggleMenu()">Home</a>
+      <a href="about.html" class="nav-link-about">من نحن</a>
+      <a href="menu.html" class="nav-link-menu">القائمة</a>
+      <a href="my-orders.html" class="nav-link-orders">طلباتي</a>
+      <a href="faq.html" class="nav-link-faq">الأسئلة الشائعة</a>
+      <a href="feedback.html" class="nav-link-feedback">التقييمات</a>
+      <a href="contact.html" class="nav-link-contact">تواصل معنا</a>
+    </nav>
+  </div>
+
+  <div class="menu-overlay" id="menu-overlay" onclick="closeAllSidebars()"></div>
+
+  <script src="script.js"></script>
+  <script>
+    // Translations for my-orders page
+    const orderTranslations = {
+      ar: {
+        ordersTitle: 'تتبع طلباتك',
+        searchTitle: 'ابحث عن طلبك',
+        orderNumber: 'رقم الطلب',
+        customer: 'العميل',
+        phone: 'الهاتف',
+        address: 'العنوان',
+        items: 'المنتجات',
+        subtotal: 'المجموع الفرعي',
+        deliveryFee: 'رسوم التوصيل',
+        total: 'المجموع',
+        status: 'الحالة',
+        pending: 'قيد الانتظار',
+        'in-progress': 'قيد التوصيل',
+        delivered: 'تم التسليم',
+        specialInstructions: 'تعليمات خاصة',
+        noInstructions: 'لا توجد تعليمات خاصة',
+        noOrders: 'لم يتم العثور على طلبات',
+        searchPlaceholder: 'رقم الطلب أو رقم الهاتف',
+        date: 'التاريخ',
+        viewDetails: 'عرض التفاصيل'
+      },
+      en: {
+        ordersTitle: 'Track Your Orders',
+        searchTitle: 'Search for Your Order',
+        orderNumber: 'Order Number',
+        customer: 'Customer',
+        phone: 'Phone',
+        address: 'Address',
+        items: 'Items',
+        subtotal: 'Subtotal',
+        deliveryFee: 'Delivery Fee',
+        total: 'Total',
+        status: 'Status',
+        pending: 'Pending',
+        'in-progress': 'In Progress',
+        delivered: 'Delivered',
+        specialInstructions: 'Special Instructions',
+        noInstructions: 'No special instructions',
+        noOrders: 'No orders found',
+        searchPlaceholder: 'Order number or phone number',
+        date: 'Date',
+        viewDetails: 'View Details'
+      }
+    };
+
+    function getOrderTranslations(){
+      const lang = getCurrentLang();
+      return orderTranslations[lang] || orderTranslations.en;
+    }
+
+    function searchOrders(){
+      const orderId = document.getElementById('order-search').value.trim();
+      const phone = document.getElementById('phone-search').value.trim();
+      const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
+      const t = getOrderTranslations();
+      
+      let filtered = [];
+      
+      if(orderId){
+        filtered = orders.filter(o => o.id.toLowerCase().includes(orderId.toLowerCase()));
+      } else if(phone){
+        const cleanedPhone = phone.replace(/[\s\-\(\)]/g, '');
+        filtered = orders.filter(o => {
+          const orderPhone = (o.phone || '').replace(/[\s\-\(\)]/g, '');
+          return orderPhone.includes(cleanedPhone) || cleanedPhone.includes(orderPhone);
+        });
+      } else {
+        // Show all orders if no search
+        filtered = orders;
+      }
+      
+      displayOrders(filtered.reverse());
+    }
+
+    function displayOrders(orders){
+      const container = document.getElementById('orders-list');
+      const t = getOrderTranslations();
+      const lang = getCurrentLang();
+      
+      container.innerHTML = '';
+      
+      if(orders.length === 0){
+        container.innerHTML = `<div class="card" style="text-align:center;padding:40px;color:#999;"><p>${t.noOrders}</p></div>`;
+        return;
+      }
+      
+      orders.forEach(order => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.marginBottom = '20px';
+        
+        const statusColors = {
+          'pending': '#e67e22',
+          'in-progress': '#3498db',
+          'delivered': '#27ae60'
+        };
+        
+        const statusLabels = {
+          'pending': t.pending,
+          'in-progress': t['in-progress'],
+          'delivered': t.delivered
+        };
+        
+        const status = order.status || 'pending';
+        const statusColor = statusColors[status] || statusColors.pending;
+        const statusLabel = statusLabels[status] || t.pending;
+        
+        const itemsList = order.items.map(item => 
+          `${item.qty}x ${item.name} - ${item.price.toFixed(2)} DZD`
+        ).join('<br>');
+        
+        const date = new Date(order.timestamp || order.createdAt).toLocaleString(lang === 'ar' ? 'ar-DZ' : 'en-US');
+        
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h3 style="margin:0 0 8px 0;color:var(--warm-gold);">${order.id}</h3>
+              <div style="font-size:14px;color:#999;">${date}</div>
+            </div>
+            <div style="background:${statusColor};color:#fff;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;">
+              ${statusLabel}
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-bottom:16px;">
+            <div>
+              <strong>${t.customer}:</strong><br>
+              ${order.name}
+            </div>
+            <div>
+              <strong>${t.phone}:</strong><br>
+              ${order.phone}
+            </div>
+            <div>
+              <strong>${t.address}:</strong><br>
+              ${order.address}
+            </div>
+          </div>
+          <div style="margin-bottom:16px;">
+            <strong>${t.items}:</strong><br>
+            <div style="margin-top:8px;padding:12px;background:#f9f9f9;border-radius:4px;">
+              ${itemsList}
+            </div>
+          </div>
+          ${order.specialInstructions ? `
+          <div style="margin-bottom:16px;">
+            <strong>${t.specialInstructions}:</strong><br>
+            <div style="margin-top:8px;padding:12px;background:#fff3e0;border-radius:4px;font-style:italic;">
+              ${order.specialInstructions}
+            </div>
+          </div>
+          ` : ''}
+          <div style="background:#f9f9f9;padding:16px;border-radius:8px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+              <span>${t.subtotal}:</span>
+              <strong>${(order.subtotal || order.total || 0).toFixed(2)} DZD</strong>
+            </div>
+            ${order.deliveryFee !== undefined ? `
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+              <span>${t.deliveryFee}:</span>
+              <strong>${order.deliveryFee === 0 ? (lang === 'ar' ? 'توصيل مجاني!' : 'Free Delivery!') : order.deliveryFee.toFixed(2) + ' DZD'}</strong>
+            </div>
+            ` : ''}
+            <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:2px solid var(--border);font-size:18px;">
+              <span style="font-weight:700;">${t.total}:</span>
+              <strong style="color:var(--warm-gold);font-size:20px;">${order.total.toFixed(2)} DZD</strong>
+            </div>
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+
+    // Check for order ID in URL
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get('order');
+      
+      if(orderId){
+        document.getElementById('order-search').value = orderId;
+        searchOrders();
+      } else {
+        // Try to load from saved customer info
+        const savedInfo = JSON.parse(localStorage.getItem('kc_customer_info') || '{}');
+        if(savedInfo.phone){
+          document.getElementById('phone-search').value = savedInfo.phone;
+          searchOrders();
+        }
+      }
+      
+      applyTranslations();
+      renderCart();
+      updatePageIndicator();
+    });
+  </script>
+</body>
+</html>
+
