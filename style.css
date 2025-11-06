@@ -1352,8 +1352,8 @@ label{
 
 .menu-preview{
   padding:80px 20px;
-  background:#ffffff;
-  color:#3b2b26;
+  background:#3b2414;
+  color:#ffffff;
 }
 
 .menu-preview-title{
@@ -1366,11 +1366,11 @@ label{
 }
 
 .menu-preview-card{
-  background:#fff9f3;
+  background:rgba(255,255,255,0.1);
   border-radius:16px;
   padding:40px 30px;
   text-align:center;
-  border:1px solid #e8ddd1;
+  border:1px solid rgba(255,255,255,0.2);
   transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 
@@ -1378,19 +1378,19 @@ label{
   transform:translateY(-8px);
   box-shadow:0 12px 28px rgba(212,165,116,0.3);
   border-color:#d4a574;
-  background:#ffffff;
+  background:rgba(255,255,255,0.15);
 }
 
 .menu-preview-card h3{
   font-family:'Playfair Display',serif;
   font-size:24px;
   margin:24px 0 12px;
-  color:#3b2b26;
+  color:#ffffff;
   font-weight:700;
 }
 
 .menu-preview-card p{
-  color:#8d7a6f;
+  color:rgba(255,255,255,0.9);
   font-size:15px;
   line-height:1.6;
 }
