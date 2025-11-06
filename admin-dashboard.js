@@ -32,6 +32,9 @@ async function saveMenuToServer(menu) {
 function showSection(section, evt) {
   currentSection = section;
   
+  // Save current section to localStorage
+  localStorage.setItem('kc_current_section', section);
+  
   // Update navigation
   document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.remove('active');
@@ -741,6 +744,9 @@ window.addEventListener('DOMContentLoaded', () => {
   if (isAdminLoggedIn && document.getElementById('admin-section')) {
     document.getElementById('login-section').classList.add('hidden');
     document.getElementById('admin-section').classList.remove('hidden');
-    loadDashboard();
+    
+    // Restore last visited section or default to dashboard
+    const lastSection = localStorage.getItem('kc_current_section') || 'dashboard';
+    showSection(lastSection);
   }
 });
