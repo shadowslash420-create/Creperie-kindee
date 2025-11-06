@@ -81,7 +81,7 @@ function showSection(section, evt) {
   
   // Close sidebar on mobile
   if (window.innerWidth <= 768) {
-    toggleSidebar();
+    closeSidebar();
   }
 }
 
@@ -89,6 +89,25 @@ function showSection(section, evt) {
 function toggleSidebar() {
   const sidebar = document.getElementById('dashboard-sidebar');
   sidebar.classList.toggle('active');
+  
+  // Toggle overlay on mobile
+  let overlay = document.getElementById('sidebar-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'sidebar-overlay';
+    overlay.className = 'sidebar-overlay';
+    overlay.onclick = closeSidebar;
+    document.body.appendChild(overlay);
+  }
+  overlay.classList.toggle('active');
+}
+
+// Close sidebar
+function closeSidebar() {
+  const sidebar = document.getElementById('dashboard-sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar) sidebar.classList.remove('active');
+  if (overlay) overlay.classList.remove('active');
 }
 
 // Load Dashboard
