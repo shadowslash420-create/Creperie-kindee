@@ -235,11 +235,71 @@ body{
   color:#fff;
   margin-bottom:24px;
   letter-spacing:6px;
-  text-shadow:0 4px 24px rgba(0,0,0,0.4);
+  text-shadow:
+    1px 1px 0 #d4a574,
+    2px 2px 0 #c99850,
+    3px 3px 0 #b8894a,
+    4px 4px 0 #a77a44,
+    5px 5px 0 #966b3e,
+    6px 6px 0 #855c38,
+    7px 7px 0 #744d32,
+    8px 8px 10px rgba(0,0,0,0.5),
+    10px 10px 20px rgba(0,0,0,0.4),
+    12px 12px 30px rgba(0,0,0,0.3);
   font-weight:800;
   direction:ltr;
   line-height:1.2;
-  animation:titleGlow 3s ease-in-out infinite alternate;
+  animation:title3DFloat 4s ease-in-out infinite;
+  position:relative;
+  transform:perspective(800px) rotateX(5deg) rotateY(-2deg);
+  transform-style:preserve-3d;
+}
+
+.home-hero-title::before{
+  content:'CRÊPERIE KINDER 5';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  color:transparent;
+  background:linear-gradient(180deg, 
+    rgba(88,44,15,0) 0%,
+    rgba(88,44,15,0.2) 25%,
+    rgba(101,67,33,0.5) 45%,
+    rgba(112,71,35,0.7) 65%,
+    rgba(123,75,37,0.85) 80%,
+    rgba(139,69,19,1) 100%
+  );
+  -webkit-background-clip:text;
+  background-clip:text;
+  animation:chocolateDrip 5s ease-in-out infinite;
+  overflow:hidden;
+  white-space:nowrap;
+  pointer-events:none;
+  z-index:2;
+  filter:drop-shadow(0 2px 4px rgba(88,44,15,0.4));
+  transform:translateZ(10px);
+}
+
+.home-hero-title::after{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 2px,
+    rgba(139,69,19,0.1) 2px,
+    rgba(139,69,19,0.1) 4px
+  );
+  animation:chocolateDrip 5s ease-in-out infinite;
+  pointer-events:none;
+  z-index:3;
+  opacity:0.6;
+  transform:translateZ(5px);
 }
 
 @keyframes titleGlow{
@@ -248,6 +308,52 @@ body{
   }
   50%{
     text-shadow:0 4px 24px rgba(0,0,0,0.4), 0 0 30px rgba(212,165,116,0.5);
+  }
+}
+
+@keyframes title3DFloat{
+  0%, 100%{
+    transform:perspective(800px) rotateX(5deg) rotateY(-2deg) translateZ(0);
+    text-shadow:
+      1px 1px 0 #d4a574,
+      2px 2px 0 #c99850,
+      3px 3px 0 #b8894a,
+      4px 4px 0 #a77a44,
+      5px 5px 0 #966b3e,
+      6px 6px 0 #855c38,
+      7px 7px 0 #744d32,
+      8px 8px 10px rgba(0,0,0,0.5),
+      10px 10px 20px rgba(0,0,0,0.4),
+      12px 12px 30px rgba(0,0,0,0.3);
+  }
+  50%{
+    transform:perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(15px);
+    text-shadow:
+      2px 2px 0 #d4a574,
+      4px 4px 0 #c99850,
+      6px 6px 0 #b8894a,
+      8px 8px 0 #a77a44,
+      10px 10px 0 #966b3e,
+      12px 12px 0 #855c38,
+      14px 14px 0 #744d32,
+      16px 16px 20px rgba(0,0,0,0.6),
+      20px 20px 30px rgba(0,0,0,0.5),
+      24px 24px 40px rgba(0,0,0,0.4);
+  }
+}
+
+@keyframes chocolateDrip{
+  0%{
+    transform:translateY(-20px);
+    opacity:0.4;
+  }
+  50%{
+    transform:translateY(0);
+    opacity:0.7;
+  }
+  100%{
+    transform:translateY(20px);
+    opacity:0.4;
   }
 }
 
@@ -1363,7 +1469,7 @@ label{
   .cart-side{
     max-width:460px;
   }
-  
+
   .cart-side.open{
     inset-inline-end:0;
   }
