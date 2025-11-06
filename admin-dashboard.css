@@ -669,15 +669,19 @@
 .orders-table {
   width: 100%;
   border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .orders-table th {
   text-align: left;
-  padding: 12px;
+  padding: 16px 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #8d7a6f;
-  border-bottom: 2px solid #e8ddd1;
+  color: #ffffff;
+  background: linear-gradient(135deg, #3b2b26 0%, #4a3a33 100%);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -686,6 +690,11 @@
   padding: 16px 12px;
   border-bottom: 1px solid #e8ddd1;
   color: #3b2b26;
+  background: #ffffff;
+}
+
+.orders-table tr:hover td {
+  background: #fff9f3;
 }
 
 .order-actions {
