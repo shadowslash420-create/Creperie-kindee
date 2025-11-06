@@ -1,0 +1,23 @@
+{
+  "name": "creperie-kinder",
+  "version": "1.0.0",
+  "description": "Modern website for Creperie Kinder - a crepe restaurant with Sweet Paris-inspired design",
+  "main": "server.py",
+  "scripts": {
+    "dev": "npx http-server -p 5000 -c-1 --cors",
+    "start": "npx http-server -p 5000 -c-1 --cors",
+    "preview": "npx live-server --port=5000 --no-browser"
+  },
+  "keywords": [
+    "creperie",
+    "restaurant",
+    "website",
+    "static"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  }
+}
