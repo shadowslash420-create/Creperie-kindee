@@ -108,6 +108,14 @@ The site runs on Python's built-in HTTP server:
 Configured to deploy as an autoscale static website on Replit.
 
 ## Recent Changes
+- **2025-11-06**: Upgraded social media icons
+  - Replaced emoji icons with professional SVG icons
+  - Added Instagram, Facebook, Twitter, TikTok, and WhatsApp icons
+  - Implemented proper href links for all social platforms
+  - Added aria-label attributes for accessibility
+  - Applied consistent styling across all pages (index, menu, about, contact, faq, feedback)
+  - Icons appear in both footer and navigation menu sidebar
+  
 - **2025-11-05 (Latest v2)**: Built professional admin dashboard
   - Created comprehensive dashboard with sidebar navigation
   - Implemented 4 key stat cards (Revenue, Orders, Pending, Completed)
