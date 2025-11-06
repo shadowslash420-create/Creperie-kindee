@@ -152,6 +152,14 @@ body{
   line-height:1.1;
   max-width:140px;
   text-align:center;
+  text-shadow:
+    1px 1px 0 #b37b49,
+    2px 2px 0 #a77044,
+    3px 3px 0 #9b653f,
+    4px 4px 0 #8f5a3a,
+    5px 5px 8px rgba(0,0,0,0.3);
+  transform:perspective(300px) rotateX(8deg);
+  transform-style:preserve-3d;
 }
 
 .site-subtitle{
@@ -236,22 +244,22 @@ body{
   margin-bottom:24px;
   letter-spacing:6px;
   text-shadow:
-    1px 1px 0 #d4a574,
-    2px 2px 0 #c99850,
-    3px 3px 0 #b8894a,
-    4px 4px 0 #a77a44,
-    5px 5px 0 #966b3e,
-    6px 6px 0 #855c38,
-    7px 7px 0 #744d32,
-    8px 8px 10px rgba(0,0,0,0.5),
-    10px 10px 20px rgba(0,0,0,0.4),
-    12px 12px 30px rgba(0,0,0,0.3);
+    0 1px 0 #d4a574,
+    0 2px 0 #c99850,
+    0 3px 0 #b8894a,
+    0 4px 0 #a77a44,
+    0 5px 0 #966b3e,
+    0 6px 0 #855c38,
+    0 7px 0 #744d32,
+    0 10px 15px rgba(0,0,0,0.4),
+    0 15px 25px rgba(0,0,0,0.3),
+    0 20px 35px rgba(0,0,0,0.2);
   font-weight:800;
   direction:ltr;
   line-height:1.2;
-  animation:title3DFloat 4s ease-in-out infinite;
+  animation:title3DBounce 3s ease-in-out infinite;
   position:relative;
-  transform:perspective(800px) rotateX(5deg) rotateY(-2deg);
+  transform:perspective(600px) rotateX(15deg);
   transform-style:preserve-3d;
 }
 
@@ -266,34 +274,34 @@ body{
   }
 }
 
-@keyframes title3DFloat{
+@keyframes title3DBounce{
   0%, 100%{
-    transform:perspective(800px) rotateX(5deg) rotateY(-2deg) translateZ(0);
+    transform:perspective(600px) rotateX(15deg) translateY(0);
     text-shadow:
-      1px 1px 0 #d4a574,
-      2px 2px 0 #c99850,
-      3px 3px 0 #b8894a,
-      4px 4px 0 #a77a44,
-      5px 5px 0 #966b3e,
-      6px 6px 0 #855c38,
-      7px 7px 0 #744d32,
-      8px 8px 10px rgba(0,0,0,0.5),
-      10px 10px 20px rgba(0,0,0,0.4),
-      12px 12px 30px rgba(0,0,0,0.3);
+      0 1px 0 #d4a574,
+      0 2px 0 #c99850,
+      0 3px 0 #b8894a,
+      0 4px 0 #a77a44,
+      0 5px 0 #966b3e,
+      0 6px 0 #855c38,
+      0 7px 0 #744d32,
+      0 10px 15px rgba(0,0,0,0.4),
+      0 15px 25px rgba(0,0,0,0.3),
+      0 20px 35px rgba(0,0,0,0.2);
   }
   50%{
-    transform:perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(15px);
+    transform:perspective(600px) rotateX(10deg) translateY(-10px);
     text-shadow:
-      2px 2px 0 #d4a574,
-      4px 4px 0 #c99850,
-      6px 6px 0 #b8894a,
-      8px 8px 0 #a77a44,
-      10px 10px 0 #966b3e,
-      12px 12px 0 #855c38,
-      14px 14px 0 #744d32,
-      16px 16px 20px rgba(0,0,0,0.6),
-      20px 20px 30px rgba(0,0,0,0.5),
-      24px 24px 40px rgba(0,0,0,0.4);
+      0 2px 0 #d4a574,
+      0 4px 0 #c99850,
+      0 6px 0 #b8894a,
+      0 8px 0 #a77a44,
+      0 10px 0 #966b3e,
+      0 12px 0 #855c38,
+      0 14px 0 #744d32,
+      0 18px 20px rgba(0,0,0,0.5),
+      0 25px 35px rgba(0,0,0,0.4),
+      0 30px 45px rgba(0,0,0,0.3);
   }
 }
 
