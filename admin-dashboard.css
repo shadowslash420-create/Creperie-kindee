@@ -663,11 +663,53 @@
   padding: 24px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
+  overflow-y: visible;
   border: 1px solid #e8ddd1;
+  position: relative;
+}
+
+.orders-table-container::after {
+  content: '← Scroll for more →';
+  position: sticky;
+  right: 0;
+  bottom: 10px;
+  background: linear-gradient(135deg, #d4a574 0%, #b37b49 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.8;
+  pointer-events: none;
+  display: inline-block;
+  float: right;
+  margin-top: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* Better scrollbar styling */
+.orders-table-container::-webkit-scrollbar {
+  height: 12px;
+}
+
+.orders-table-container::-webkit-scrollbar-track {
+  background: #fff9f3;
+  border-radius: 10px;
+}
+
+.orders-table-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #d4a574 0%, #b37b49 100%);
+  border-radius: 10px;
+  border: 2px solid #fff9f3;
+}
+
+.orders-table-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #b37b49 0%, #8f5a30 100%);
 }
 
 .orders-table {
   width: 100%;
+  min-width: 900px;
   border-collapse: collapse;
   background: #ffffff;
   border-radius: 12px;
@@ -684,6 +726,10 @@
   background: linear-gradient(135deg, #3b2b26 0%, #4a3a33 100%);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .orders-table td {
@@ -691,6 +737,10 @@
   border-bottom: 1px solid #e8ddd1;
   color: #3b2b26;
   background: #ffffff;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .orders-table tr:hover td {
@@ -700,6 +750,14 @@
 .order-actions {
   display: flex;
   gap: 8px;
+  min-width: 160px;
+}
+
+/* Allow address to wrap in table */
+.orders-table td:nth-child(4) {
+  white-space: normal;
+  max-width: 250px;
+  word-wrap: break-word;
 }
 
 .action-btn {
