@@ -37,7 +37,22 @@ class MyHandler(SimpleHTTPRequestHandler):
         parsed_path = urlparse(self.path)
 
         # API endpoints
-        if parsed_path.path == '/api/menu':
+        if parsed_path.path == '/api/firebase-config':
+            # Serve Firebase config from environment variables
+            config = {
+                'apiKey': os.environ.get('FIREBASE_API_KEY', ''),
+                'authDomain': os.environ.get('FIREBASE_AUTH_DOMAIN', ''),
+                'projectId': os.environ.get('FIREBASE_PROJECT_ID', ''),
+                'storageBucket': os.environ.get('FIREBASE_STORAGE_BUCKET', ''),
+                'messagingSenderId': os.environ.get('FIREBASE_MESSAGING_SENDER_ID', ''),
+                'appId': os.environ.get('FIREBASE_APP_ID', '')
+            }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(config).encode())
+            return
+        elif parsed_path.path == '/api/menu':
             menu = load_json_file(MENU_FILE, [])
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
