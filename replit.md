@@ -108,6 +108,18 @@ The site runs on Python's built-in HTTP server:
 Configured to deploy as an autoscale static website on Replit.
 
 ## Recent Changes
+- **2025-11-17**: Added Google Firebase Authentication
+  - Implemented secure Google sign-in/sign-out functionality
+  - Added login button to all pages (next to EN language button)
+  - Created beautiful login page matching website theme (brown/cream colors)
+  - Firebase credentials loaded securely from server environment variables
+  - Proper async initialization with error handling
+  - Auth state management: shows login icon when logged out, user profile icon when logged in
+  - Click profile icon when logged in to sign out
+  - All pages include auth.js module for authentication UI
+  - Firebase config endpoint: /api/firebase-config
+  - Required secrets: FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET, FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID
+  
 - **2025-11-06**: Upgraded social media icons
   - Replaced emoji icons with professional SVG icons
   - Added Instagram, Facebook, Twitter, TikTok, and WhatsApp icons
