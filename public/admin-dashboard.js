@@ -1,7 +1,7 @@
 /* Admin Dashboard JavaScript */
 
 import { getAuthInstance } from './firebase-config.js';
-import { signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import {signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 let currentSection = 'dashboard';
 let currentFilter = 'all';
@@ -42,10 +42,10 @@ async function saveMenuToServer(menu) {
 // Show specific section
 function showSection(section, evt) {
   currentSection = section;
-  
+
   // Save current section to localStorage
   localStorage.setItem('kc_current_section', section);
-  
+
   // Update active state for navigation items
   const navItems = document.querySelectorAll('.nav-item');
   navItems.forEach(item => {
@@ -62,13 +62,13 @@ function showSection(section, evt) {
       item.classList.add('active');
     }
   });
-  
+
   // Update content sections
   document.querySelectorAll('.content-section').forEach(sec => {
     sec.classList.remove('active');
   });
   document.getElementById('section-' + section).classList.add('active');
-  
+
   // Update page title
   const titles = {
     dashboard: 'Dashboard',
@@ -77,7 +77,7 @@ function showSection(section, evt) {
     analytics: 'Analytics & Reports'
   };
   document.getElementById('page-title').textContent = titles[section];
-  
+
   // Load section data
   if (section === 'dashboard') {
     loadDashboard();
@@ -103,7 +103,7 @@ function showSection(section, evt) {
   } else if (section === 'analytics') {
     loadAnalytics();
   }
-  
+
   // Close sidebar on mobile
   if (window.innerWidth <= 768) {
     closeSidebar();
@@ -114,7 +114,7 @@ function showSection(section, evt) {
 function toggleSidebar() {
   const sidebar = document.getElementById('dashboard-sidebar');
   sidebar.classList.toggle('active');
-  
+
   // Toggle overlay on mobile
   let overlay = document.getElementById('sidebar-overlay');
   if (!overlay) {
@@ -140,13 +140,13 @@ async function loadDashboard() {
   try {
     const dbService = (await import('./db-service.js')).default;
     const orders = await dbService.getAllOrders();
-    
+
     updateDashboardStatsFromOrders(orders);
     loadRecentOrdersFromOrders(orders);
     loadBestSellersFromOrders(orders);
     loadSalesChartFromOrders(orders);
     loadStatusChartFromOrders(orders);
-    
+
     dbService.listenToOrderChanges((updatedOrders) => {
       updateDashboardStatsFromOrders(updatedOrders);
       loadRecentOrdersFromOrders(updatedOrders);
@@ -172,17 +172,17 @@ function loadDashboardFallback() {
 function updateDashboardStatsFromOrders(orders) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const todayOrders = orders.filter(o => {
     const orderDate = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.timestamp || o.createdAt);
     orderDate.setHours(0, 0, 0, 0);
     return orderDate.getTime() === today.getTime();
   });
-  
+
   const pendingOrders = orders.filter(o => o.status === 'pending');
   const completedToday = todayOrders.filter(o => o.status === 'delivered');
   const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-  
+
   document.getElementById('stat-revenue').textContent = todayRevenue.toFixed(2) + ' DZD';
   document.getElementById('stat-total-orders').textContent = orders.length;
   document.getElementById('stat-pending').textContent = pendingOrders.length;
@@ -197,10 +197,10 @@ function loadRecentOrders() {
 
 function loadRecentOrdersFromOrders(orders) {
   const recentOrders = orders.slice(0, 5);
-  
+
   let html = '<table class="simple-table"><thead><tr>';
   html += '<th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>';
-  
+
   if (recentOrders.length === 0) {
     html += '<tr><td colspan="4" style="text-align:center;color:#999;padding:40px;">No orders yet</td></tr>';
   } else {
@@ -213,7 +213,7 @@ function loadRecentOrdersFromOrders(orders) {
       html += '</tr>';
     });
   }
-  
+
   html += '</tbody></table>';
   document.getElementById('recent-orders-table').innerHTML = html;
 }
@@ -227,7 +227,7 @@ function loadBestSellers() {
 function loadBestSellersFromOrders(orders) {
   const itemCounts = {};
   const itemRevenue = {};
-  
+
   orders.forEach(order => {
     if (order.items) {
       order.items.forEach(item => {
@@ -237,12 +237,12 @@ function loadBestSellersFromOrders(orders) {
       });
     }
   });
-  
+
   const sortedItems = Object.keys(itemCounts)
     .map(name => ({ name, count: itemCounts[name], revenue: itemRevenue[name] }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
-  
+
   let html = '';
   if (sortedItems.length === 0) {
     html = '<p style="text-align:center;color:#999;padding:40px 0;">No sales data yet</p>';
@@ -257,7 +257,7 @@ function loadBestSellersFromOrders(orders) {
       html += '</div>';
     });
   }
-  
+
   document.getElementById('best-sellers-list').innerHTML = html;
 }
 
@@ -267,47 +267,47 @@ function loadSalesChart() {
   const ctx = canvas.getContext('2d');
   canvas.width = canvas.offsetWidth;
   canvas.height = 280;
-  
+
   const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
   const last7Days = [];
   const salesData = [];
-  
+
   for (let i = 6; i >= 0; i--) {
     const date = new Date();
     date.setDate(date.getDate() - i);
     const dateStr = date.toDateString();
     last7Days.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-    
+
     const daySales = orders
       .filter(o => new Date(o.timestamp || o.createdAt).toDateString() === dateStr)
       .reduce((sum, o) => sum + o.total, 0);
     salesData.push(daySales);
   }
-  
+
   // Draw simple bar chart
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const maxSale = Math.max(...salesData, 100);
   const barWidth = canvas.width / 7 - 20;
   const chartHeight = 220;
-  
+
   salesData.forEach((sale, i) => {
     const barHeight = (sale / maxSale) * chartHeight;
     const x = i * (barWidth + 20) + 10;
     const y = chartHeight - barHeight + 20;
-    
+
     // Draw bar
     const gradient = ctx.createLinearGradient(0, y, 0, chartHeight + 20);
     gradient.addColorStop(0, '#FF6B35');
     gradient.addColorStop(1, '#FF8C42');
     ctx.fillStyle = gradient;
     ctx.fillRect(x, y, barWidth, barHeight);
-    
+
     // Draw value
     ctx.fillStyle = '#2d3748';
     ctx.font = '12px Inter';
     ctx.textAlign = 'center';
     ctx.fillText(sale.toFixed(0) + ' DZD', x + barWidth / 2, y - 5);
-    
+
     // Draw label
     ctx.fillStyle = '#718096';
     ctx.font = '11px Inter';
@@ -321,16 +321,16 @@ function loadStatusChart() {
   const ctx = canvas.getContext('2d');
   canvas.width = canvas.offsetWidth;
   canvas.height = 280;
-  
+
   const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
   const statusCounts = {
     pending: orders.filter(o => o.status === 'pending').length,
     'in-progress': orders.filter(o => o.status === 'in-progress').length,
     delivered: orders.filter(o => o.status === 'delivered').length
   };
-  
+
   const total = Object.values(statusCounts).reduce((a, b) => a + b, 0);
-  
+
   if (total === 0) {
     ctx.fillStyle = '#999';
     ctx.font = '14px Inter';
@@ -338,32 +338,32 @@ function loadStatusChart() {
     ctx.fillText('No orders yet', canvas.width / 2, canvas.height / 2);
     return;
   }
-  
+
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2 - 20;
   const radius = Math.min(centerX, centerY) - 20;
-  
+
   const colors = {
     pending: '#e67e22',
     'in-progress': '#3498db',
     delivered: '#27ae60'
   };
-  
+
   let currentAngle = -Math.PI / 2;
-  
+
   Object.keys(statusCounts).forEach(status => {
     const count = statusCounts[status];
     const sliceAngle = (count / total) * 2 * Math.PI;
-    
+
     ctx.fillStyle = colors[status];
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
     ctx.lineTo(centerX, centerY);
     ctx.fill();
-    
+
     currentAngle += sliceAngle;
   });
-  
+
   // Draw legend
   let legendY = canvas.height - 40;
   Object.keys(statusCounts).forEach(status => {
@@ -382,9 +382,9 @@ async function loadAllOrders() {
   try {
     const dbService = (await import('./db-service.js')).default;
     const orders = await dbService.getAllOrders();
-    
+
     renderOrdersTable(orders);
-    
+
     dbService.listenToOrderChanges((updatedOrders) => {
       renderOrdersTable(updatedOrders);
       updateDashboardStats(updatedOrders);
@@ -405,11 +405,11 @@ async function loadAllOrders() {
 function filterOrdersByStatus(status, evt) {
   currentFilter = status;
   localStorage.setItem('kc_current_filter', status);
-  
+
   document.querySelectorAll('.filter-tab').forEach(tab => {
     tab.classList.remove('active');
   });
-  
+
   if (evt && evt.target) {
     evt.target.classList.add('active');
   } else {
@@ -421,7 +421,7 @@ function filterOrdersByStatus(status, evt) {
       }
     });
   }
-  
+
   loadAllOrders();
 }
 
@@ -429,21 +429,21 @@ function filterOrdersByStatus(status, evt) {
 function filterOrders() {
   const searchText = document.getElementById('order-search').value.toLowerCase();
   const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  
+
   let filtered = orders.filter(o => 
     o.name.toLowerCase().includes(searchText) || 
     o.id.toString().includes(searchText)
   );
-  
+
   if (currentFilter !== 'all') {
     filtered = filtered.filter(o => o.status === currentFilter);
   }
-  
+
   // Render filtered orders (reuse the table rendering logic)
   let html = '<table class="orders-table"><thead><tr>';
   html += '<th>Order ID</th><th>Customer</th><th>Phone</th><th>Address</th>';
   html += '<th>Items</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-  
+
   if (filtered.length === 0) {
     html += '<tr><td colspan="8" style="text-align:center;color:#999;padding:40px;">No orders found</td></tr>';
   } else {
@@ -463,7 +463,7 @@ function filterOrders() {
       html += '</tr>';
     });
   }
-  
+
   html += '</tbody></table>';
   document.getElementById('orders-table').innerHTML = html;
 }
@@ -472,30 +472,30 @@ function filterOrders() {
 function viewOrder(orderId) {
   const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
   const order = orders.find(o => o.id === orderId);
-  
+
   if (!order) return;
-  
+
   let itemsList = order.items.map(item => 
     item.qty + 'x ' + item.name + ' (' + item.price.toFixed(2) + ' DZD)'
   ).join('\n');
-  
+
   let message = 'Order #' + order.id + '\n\n' +
     'Customer: ' + order.name + '\n' +
     'Phone: ' + order.phone + '\n' +
     'Address: ' + order.address + '\n' +
     'Status: ' + order.status + '\n\n' +
     'Items:\n' + itemsList + '\n\n';
-  
+
   if(order.subtotal !== undefined){
     message += 'Subtotal: ' + order.subtotal.toFixed(2) + ' DZD\n';
     message += 'Delivery Fee: ' + (order.deliveryFee || 0).toFixed(2) + ' DZD\n';
   }
   message += 'Total: ' + order.total.toFixed(2) + ' DZD';
-  
+
   if(order.specialInstructions){
     message += '\n\nSpecial Instructions:\n' + order.specialInstructions;
   }
-  
+
   alert(message);
 }
 
@@ -503,34 +503,34 @@ function viewOrder(orderId) {
 function updateOrderStatus(orderId) {
   const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
   const orderIndex = orders.findIndex(o => o.id === orderId);
-  
+
   if (orderIndex === -1) return;
-  
+
   const order = orders[orderIndex];
   const statusFlow = ['pending', 'in-progress', 'delivered'];
   const currentIndex = statusFlow.indexOf(order.status);
-  
+
   if (currentIndex < statusFlow.length - 1) {
     order.status = statusFlow[currentIndex + 1];
-    
+
     // Add timestamp when order moves to in-progress (accepted for delivery)
     if (order.status === 'in-progress') {
       order.acceptedForDelivery = new Date().toISOString();
       order.acceptedBy = 'Admin';
     }
-    
+
     localStorage.setItem('kc_orders', JSON.stringify(orders));
-    
+
     if (currentSection === 'orders') {
       loadAllOrders();
     } else {
       loadDashboard();
     }
-    
+
     const statusMessage = order.status === 'in-progress' 
       ? 'Order #' + orderId + ' accepted and sent to delivery!'
       : 'Order #' + orderId + ' status updated to: ' + order.status;
-    
+
     alert(statusMessage);
   } else {
     alert('Order is already delivered!');
@@ -542,9 +542,9 @@ async function loadMenuItems() {
   try {
     const dbService = (await import('./db-service.js')).default;
     const menu = await dbService.getAllMenuItems();
-    
+
     renderMenuItems(menu);
-    
+
     dbService.listenToMenuChanges((updatedMenu) => {
       renderMenuItems(updatedMenu);
     });
@@ -611,9 +611,9 @@ function showAddMenuModal() {
 // Add Menu Item
 async function addMenuItem(e) {
   e.preventDefault();
-  
+
   const menu = await getMenuFromServer();
-  
+
   const newItem = {
     id: 'c' + Date.now(),
     name: document.getElementById('item-name').value,
@@ -622,10 +622,10 @@ async function addMenuItem(e) {
     category: document.getElementById('item-category').value,
     img: document.getElementById('item-img').value
   };
-  
+
   menu.push(newItem);
   await saveMenuToServer(menu);
-  
+
   closeModal();
   loadMenuItems();
   alert('Menu item added successfully!');
@@ -635,9 +635,9 @@ async function addMenuItem(e) {
 async function editMenuItem(itemId) {
   const menu = await getMenuFromServer();
   const item = menu.find(i => i.id === itemId);
-  
+
   if (!item) return;
-  
+
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
   modal.innerHTML = `
@@ -686,12 +686,12 @@ async function editMenuItem(itemId) {
 // Update Menu Item
 async function updateMenuItem(e, itemId) {
   e.preventDefault();
-  
+
   const menu = await getMenuFromServer();
   const itemIndex = menu.findIndex(i => i.id === itemId);
-  
+
   if (itemIndex === -1) return;
-  
+
   menu[itemIndex] = {
     ...menu[itemIndex],
     name: document.getElementById('edit-item-name').value,
@@ -700,9 +700,9 @@ async function updateMenuItem(e, itemId) {
     category: document.getElementById('edit-item-category').value,
     img: document.getElementById('edit-item-img').value
   };
-  
+
   await saveMenuToServer(menu);
-  
+
   closeModal();
   loadMenuItems();
   alert('Menu item updated successfully!');
@@ -711,10 +711,10 @@ async function updateMenuItem(e, itemId) {
 // Delete Menu Item
 async function deleteMenuItem(itemId) {
   if (!confirm('Are you sure you want to delete this menu item?')) return;
-  
+
   let menu = await getMenuFromServer();
   menu = menu.filter(i => i.id !== itemId);
-  
+
   await saveMenuToServer(menu);
   loadMenuItems();
   alert('Menu item deleted successfully for all users!');
@@ -729,25 +729,25 @@ function closeModal() {
 // Load Analytics
 function loadAnalytics() {
   const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  
+
   const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
   const avgOrder = orders.length > 0 ? totalRevenue / orders.length : 0;
-  
+
   // Find best day
   const dayRevenue = {};
   orders.forEach(order => {
     const day = new Date(order.timestamp || order.createdAt).toDateString();
     dayRevenue[day] = (dayRevenue[day] || 0) + order.total;
   });
-  
+
   const bestDay = Object.keys(dayRevenue).reduce((a, b) => 
     dayRevenue[a] > dayRevenue[b] ? a : b, '-'
   );
-  
+
   document.getElementById('total-revenue').textContent = totalRevenue.toFixed(2) + ' DZD';
   document.getElementById('avg-order').textContent = avgOrder.toFixed(2) + ' DZD';
   document.getElementById('best-day').textContent = bestDay !== '-' ? new Date(bestDay).toLocaleDateString() : '-';
-  
+
   // Popular items
   const itemCounts = {};
   orders.forEach(order => {
@@ -755,52 +755,52 @@ function loadAnalytics() {
       itemCounts[item.name] = (itemCounts[item.name] || 0) + item.qty;
     });
   });
-  
+
   const sortedItems = Object.keys(itemCounts)
     .map(name => ({ name, count: itemCounts[name] }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
-  
+
   let html = '<ol style="margin:0;padding-left:20px;">';
   sortedItems.forEach(item => {
     html += '<li style="margin:8px 0;">' + item.name + ' (' + item.count + ' sold)</li>';
   });
   html += '</ol>';
-  
+
   document.getElementById('popular-items').innerHTML = html;
 }
 
 // Admin login with Firebase
 async function adminLogin(event) {
   event.preventDefault();
-  
+
   const email = document.getElementById('adm-user').value;
   const password = document.getElementById('adm-pass').value;
   const loginBtn = document.getElementById('admin-login-btn');
   const errorDiv = document.getElementById('login-error');
-  
+
   loginBtn.disabled = true;
   loginBtn.textContent = 'Logging in...';
   errorDiv.style.display = 'none';
-  
+
   try {
     const auth = await getAuthInstance();
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     currentUser = userCredential.user;
-    
+
     // Check if user has admin privileges (you should set custom claims in Firebase)
     const token = await currentUser.getIdTokenResult();
-    
+
     // For now, accept any authenticated user as admin
     // Later, you should check: if (!token.claims.admin) throw new Error('Not an admin');
-    
+
     localStorage.setItem('kc_admin', 'true');
     document.getElementById('login-section').classList.add('hidden');
     document.getElementById('admin-section').classList.remove('hidden');
-    
+
     const lastSection = localStorage.getItem('kc_current_section') || 'dashboard';
     showSection(lastSection);
-    
+
   } catch (error) {
     console.error('Login failed:', error);
     errorDiv.textContent = getErrorMessage(error.code);
@@ -830,7 +830,7 @@ async function adminLogout() {
     localStorage.removeItem('kc_admin');
     localStorage.removeItem('kc_current_section');
     localStorage.removeItem('kc_current_filter');
-    
+
     window.location.href = 'index.html';
   } catch (error) {
     console.error('Logout failed:', error);
@@ -864,7 +864,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (loginForm) {
     loginForm.addEventListener('submit', adminLogin);
   }
-  
+
   // Check if already logged in with Firebase
   try {
     const auth = await getAuthInstance();
@@ -872,18 +872,18 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (user) {
         currentUser = user;
         localStorage.setItem('kc_admin', 'true');
-        
+
         if (document.getElementById('admin-section')) {
           document.getElementById('login-section').classList.add('hidden');
           document.getElementById('admin-section').classList.remove('hidden');
-          
+
           const lastSection = localStorage.getItem('kc_current_section') || 'dashboard';
           showSection(lastSection);
         }
       } else {
         currentUser = null;
         localStorage.removeItem('kc_admin');
-        
+
         if (document.getElementById('login-section')) {
           document.getElementById('login-section').classList.remove('hidden');
           document.getElementById('admin-section').classList.add('hidden');
@@ -901,7 +901,7 @@ async function renderMenuItems(menu) {
   const filtered = currentMenuFilter === 'all' 
     ? menu 
     : menu.filter(item => item.category === currentMenuFilter);
-  
+
   if (filtered.length === 0) {
     document.getElementById('menu-items-grid').innerHTML = `
       <div style="grid-column:1/-1;padding:60px 20px;text-align:center;color:#999;">
@@ -911,15 +911,15 @@ async function renderMenuItems(menu) {
     `;
     return;
   }
-  
+
   const categories = await loadCategories();
-  
+
   let html = '';
   filtered.forEach(item => {
     const category = categories.find(cat => cat.id === item.category);
     const categoryName = category ? category.name : item.category;
     const imgSrc = item.img || '';
-    
+
     html += `
       <div class="menu-item-card">
         ${imgSrc ? `<img src="${imgSrc}" alt="${item.name}" class="menu-item-image" />` : `<div class="menu-item-placeholder">${item.name.charAt(0)}</div>`}
@@ -942,7 +942,7 @@ async function renderMenuItems(menu) {
       </div>
     `;
   });
-  
+
   document.getElementById('menu-items-grid').innerHTML = html;
 }
 
@@ -953,7 +953,7 @@ function filterMenuByCategory(category, event) {
     });
     event.target.classList.add('active');
   }
-  
+
   currentMenuFilter = category;
   loadMenuItems();
 }
@@ -962,14 +962,14 @@ async function openMenuItemModal() {
   currentEditingItem = null;
   selectedImageFile = null;
   uploadedImageUrl = null;
-  
+
   document.getElementById('modal-title').textContent = '➕ Add New Menu Item';
   document.getElementById('menu-item-form').reset();
   document.getElementById('item-id').value = '';
-  
+
   // Reset image upload UI
   clearImage();
-  
+
   await updateCategoryUI();
   document.getElementById('menu-item-modal').classList.add('active');
 }
@@ -978,27 +978,27 @@ async function openEditMenuItemModal(itemId) {
   try {
     const dbService = (await import('./db-service.js')).default;
     const item = await dbService.getMenuItem(itemId);
-    
+
     if (!item) {
       alert('Item not found');
       return;
     }
-    
+
     currentEditingItem = item;
     selectedImageFile = null;
     uploadedImageUrl = null;
-    
+
     document.getElementById('modal-title').textContent = '✏️ Edit Menu Item';
     document.getElementById('item-id').value = item.id;
     document.getElementById('item-name').value = item.name;
     document.getElementById('item-price').value = item.price;
     document.getElementById('item-desc').value = item.desc;
     document.getElementById('item-category').value = item.category;
-    
+
     // Reset upload UI
     document.getElementById('upload-placeholder').style.display = 'block';
     document.getElementById('image-preview-container').style.display = 'none';
-    
+
     // Show current image if exists
     if (item.img) {
       document.getElementById('upload-placeholder').innerHTML = `
@@ -1009,7 +1009,13 @@ async function openEditMenuItemModal(itemId) {
         <p style="color: #FF6B35; font-size: 12px;">✨ Or keep the current image</p>
       `;
     }
-    
+
+    // Attach event listener to file input
+    const fileInput = document.getElementById('item-image');
+    if (fileInput) {
+      fileInput.onchange = handleImageSelect;
+    }
+
     await updateCategoryUI();
     document.getElementById('menu-item-modal').classList.add('active');
   } catch (error) {
@@ -1023,10 +1029,10 @@ function closeMenuItemModal() {
   currentEditingItem = null;
   selectedImageFile = null;
   uploadedImageUrl = null;
-  
+
   // Reset all image upload UI elements
   clearImage();
-  
+
   // Reset upload placeholder to default
   document.getElementById('upload-placeholder').innerHTML = `
     <div style="font-size: 48px; margin-bottom: 12px;">📸</div>
@@ -1044,12 +1050,12 @@ function closeMenuItemModal() {
 async function handleImageSelect(event) {
   const file = event.target.files[0];
   console.log('📸 Image selected:', file ? file.name : 'None');
-  
+
   if (!file) {
     clearImage();
     return;
   }
-  
+
   // Validate file type
   if (!file.type.startsWith('image/')) {
     alert('❌ الرجاء اختيار ملف صورة فقط (JPG, PNG, WebP)');
@@ -1057,7 +1063,7 @@ async function handleImageSelect(event) {
     clearImage();
     return;
   }
-  
+
   // Validate file size (max 5MB)
   const MAX_SIZE = 5 * 1024 * 1024; // 5MB
   if (file.size > MAX_SIZE) {
@@ -1066,19 +1072,19 @@ async function handleImageSelect(event) {
     clearImage();
     return;
   }
-  
+
   selectedImageFile = file;
   console.log('✅ File validated, showing preview...');
-  
+
   // Show local preview first
   const reader = new FileReader();
   reader.onload = async (e) => {
     console.log('✅ File read successfully, updating UI...');
-    
+
     const previewPlaceholder = document.getElementById('upload-placeholder');
     const previewContainer = document.getElementById('image-preview-container');
     const previewImg = document.getElementById('image-preview-img');
-    
+
     if (previewPlaceholder) {
       previewPlaceholder.style.display = 'none';
       console.log('✅ Placeholder hidden');
@@ -1091,12 +1097,12 @@ async function handleImageSelect(event) {
       previewImg.src = e.target.result;
       console.log('✅ Preview image set');
     }
-    
+
     const uploadArea = document.getElementById('image-upload-area');
     if (uploadArea) {
       uploadArea.style.borderColor = '#48bb78';
     }
-    
+
     // Auto-upload to ImgBB after preview is shown
     try {
       console.log('🚀 Starting upload to ImgBB...');
@@ -1106,13 +1112,13 @@ async function handleImageSelect(event) {
       alert('⚠️ فشل رفع الصورة، لكن يمكنك المتابعة والحفظ');
     }
   };
-  
+
   reader.onerror = (error) => {
     console.error('❌ Error reading file:', error);
     alert('❌ فشل في قراءة الملف');
     clearImage();
   };
-  
+
   console.log('📖 Starting to read file...');
   reader.readAsDataURL(file);
 }
@@ -1125,29 +1131,29 @@ async function uploadImageToImgBB() {
     console.log('⚠️ No file selected for upload');
     return false;
   }
-  
+
   const uploadProgress = document.getElementById('upload-progress');
   const uploadSuccess = document.getElementById('upload-success');
   const progressBar = document.getElementById('progress-bar');
   const uploadText = document.getElementById('upload-text');
-  
+
   try {
     // Show progress UI
     if (uploadProgress) uploadProgress.style.display = 'block';
     if (uploadSuccess) uploadSuccess.style.display = 'none';
     if (progressBar) progressBar.style.width = '10%';
     if (uploadText) uploadText.textContent = '📤 جاري التحضير...';
-    
+
     console.log('📤 Starting upload to ImgBB...', {
       fileName: selectedImageFile.name,
       fileSize: selectedImageFile.size,
       fileType: selectedImageFile.type
     });
-    
+
     // Convert file to base64
     if (progressBar) progressBar.style.width = '30%';
     if (uploadText) uploadText.textContent = '📤 جاري تحويل الصورة...';
-    
+
     const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -1161,61 +1167,61 @@ async function uploadImageToImgBB() {
       };
       reader.readAsDataURL(selectedImageFile);
     });
-    
+
     // Upload to server (which forwards to ImgBB)
     if (progressBar) progressBar.style.width = '50%';
     if (uploadText) uploadText.textContent = '📤 جاري رفع الصورة إلى ImgBB...';
-    
+
     const formData = new FormData();
     formData.append('image', base64);
     formData.append('folder', 'menu');
     formData.append('filename', selectedImageFile.name.replace(/\.[^/.]+$/, ''));
-    
+
     console.log('📤 Sending request to /api/upload-image...');
-    
+
     const response = await fetch('/api/upload-image', {
       method: 'POST',
       body: formData
     });
-    
+
     if (progressBar) progressBar.style.width = '80%';
-    
+
     console.log('📡 Response received:', {
       status: response.status,
       statusText: response.statusText,
       ok: response.ok
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Server error response:', errorText);
       throw new Error(`فشل الرفع (${response.status})`);
     }
-    
+
     const result = await response.json();
     console.log('📦 Response data:', result);
-    
+
     if (!result.success) {
       throw new Error(result.error || 'فشل الرفع');
     }
-    
+
     // Success!
     if (progressBar) progressBar.style.width = '100%';
     uploadedImageUrl = result.url;
-    
+
     console.log('✅ Image uploaded successfully:', uploadedImageUrl);
-    
+
     // Show success message
     setTimeout(() => {
       if (uploadProgress) uploadProgress.style.display = 'none';
       if (uploadSuccess) uploadSuccess.style.display = 'block';
     }, 500);
-    
+
     return true;
-    
+
   } catch (error) {
     console.error('❌ Upload failed:', error);
-    
+
     // Hide progress, show error in UI
     if (uploadProgress) uploadProgress.style.display = 'none';
     if (uploadSuccess) {
@@ -1223,7 +1229,7 @@ async function uploadImageToImgBB() {
       uploadSuccess.style.color = '#e53e3e';
       uploadSuccess.textContent = '⚠️ فشل الرفع - يمكنك المتابعة والحفظ';
     }
-    
+
     // Don't throw - allow user to continue
     console.log('⚠️ Upload failed but allowing user to continue with local preview');
     return false;
@@ -1236,27 +1242,27 @@ async function uploadImageToImgBB() {
 function clearImage() {
   selectedImageFile = null;
   uploadedImageUrl = null;
-  
+
   const fileInput = document.getElementById('item-image');
   if (fileInput) fileInput.value = '';
-  
+
   const uploadPlaceholder = document.getElementById('upload-placeholder');
   const previewContainer = document.getElementById('image-preview-container');
   const previewImg = document.getElementById('image-preview-img');
   const uploadProgress = document.getElementById('upload-progress');
   const uploadSuccess = document.getElementById('upload-success');
   const progressBar = document.getElementById('progress-bar');
-  
+
   if (uploadPlaceholder) uploadPlaceholder.style.display = 'block';
   if (previewContainer) previewContainer.style.display = 'none';
   if (previewImg) previewImg.src = '';
   if (uploadProgress) uploadProgress.style.display = 'none';
   if (uploadSuccess) uploadSuccess.style.display = 'none';
   if (progressBar) progressBar.style.width = '0%';
-  
+
   const uploadArea = document.getElementById('image-upload-area');
   if (uploadArea) uploadArea.style.borderColor = '#cbd5e0';
-  
+
   // Reset placeholder to default text
   if (uploadPlaceholder) {
     uploadPlaceholder.innerHTML = `
@@ -1273,21 +1279,21 @@ function clearImage() {
  */
 async function saveMenuItem(event) {
   event.preventDefault();
-  
+
   const saveBtn = document.getElementById('save-item-btn');
   const originalText = saveBtn.textContent;
   saveBtn.disabled = true;
   saveBtn.textContent = '💾 Saving...';
-  
+
   try {
     const dbService = (await import('./db-service.js')).default;
-    
+
     const itemId = document.getElementById('item-id').value;
     const itemName = document.getElementById('item-name').value.trim();
     const itemPrice = parseFloat(document.getElementById('item-price').value);
     const itemDesc = document.getElementById('item-desc').value.trim();
     const itemCategory = document.getElementById('item-category').value;
-    
+
     // Validate inputs
     if (!itemName || !itemDesc || !itemCategory || isNaN(itemPrice) || itemPrice <= 0) {
       alert('❌ Please fill all fields correctly');
@@ -1295,10 +1301,10 @@ async function saveMenuItem(event) {
       saveBtn.textContent = originalText;
       return;
     }
-    
+
     // Determine which image URL to use
     let imageUrl = '';
-    
+
     if (uploadedImageUrl) {
       // New image was uploaded
       console.log('✅ Using newly uploaded image:', uploadedImageUrl);
@@ -1309,7 +1315,7 @@ async function saveMenuItem(event) {
       imageUrl = currentEditingItem.img;
     }
     // else: new item without image, leave empty
-    
+
     // Prepare item data
     const itemData = {
       name: itemName,
@@ -1318,12 +1324,12 @@ async function saveMenuItem(event) {
       category: itemCategory,
       img: imageUrl
     };
-    
+
     console.log('Saving item:', itemData);
-    
+
     // Save to Firebase
     saveBtn.textContent = '💾 Saving to database...';
-    
+
     if (itemId) {
       await dbService.updateMenuItem(itemId, itemData);
       alert('✅ Menu item updated successfully!');
@@ -1331,14 +1337,14 @@ async function saveMenuItem(event) {
       await dbService.addMenuItem(itemData);
       alert('✅ Menu item added successfully!');
     }
-    
+
     // Reset and close
     selectedImageFile = null;
     uploadedImageUrl = null;
     currentEditingItem = null;
     closeMenuItemModal();
     loadMenuItems();
-    
+
   } catch (error) {
     console.error('Failed to save item:', error);
     alert('❌ Failed to save menu item: ' + error.message);
@@ -1375,15 +1381,15 @@ async function deleteMenuItemById(itemId) {
 async function migrateCategoriesFromLocalStorage() {
   const localCategories = localStorage.getItem('kc_categories');
   if (!localCategories) return;
-  
+
   try {
     const dbService = (await import('./db-service.js')).default;
     const categories = JSON.parse(localCategories);
-    
+
     for (const category of categories) {
       await dbService.addCategory(category);
     }
-    
+
     // Clear localStorage after successful migration
     localStorage.removeItem('kc_categories');
     console.log('Categories migrated to Firebase successfully');
@@ -1402,13 +1408,13 @@ function renderOrdersTable(orders) {
   const filtered = currentFilter === 'all' 
     ? orders 
     : orders.filter(order => order.status === currentFilter);
-  
+
   const searchTerm = document.getElementById('order-search')?.value?.toLowerCase() || '';
   const searchFiltered = filtered.filter(order => 
     order.customerName?.toLowerCase().includes(searchTerm) ||
     order.id?.toLowerCase().includes(searchTerm)
   );
-  
+
   if (searchFiltered.length === 0) {
     document.getElementById('orders-table').innerHTML = `
       <div style="padding:60px 20px;text-align:center;color:#999;">
@@ -1418,16 +1424,16 @@ function renderOrdersTable(orders) {
     `;
     return;
   }
-  
+
   let html = '<table class="orders-table">';
   html += '<thead><tr>';
   html += '<th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th>';
   html += '</tr></thead><tbody>';
-  
+
   searchFiltered.forEach(order => {
     const date = order.createdAt?.toDate ? order.createdAt.toDate() : new Date();
     const statusClass = order.status || 'pending';
-    
+
     html += '<tr>';
     html += `<td><strong>${order.id.substring(0, 8)}</strong></td>`;
     html += `<td>${order.customerName || 'N/A'}</td>`;
@@ -1445,7 +1451,7 @@ function renderOrdersTable(orders) {
     </td>`;
     html += '</tr>';
   });
-  
+
   html += '</tbody></table>';
   document.getElementById('orders-table').innerHTML = html;
 }
@@ -1463,17 +1469,17 @@ async function updateOrderStatusQuick(orderId, newStatus) {
 function updateDashboardStats(orders) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const todayOrders = orders.filter(order => {
     const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date();
     orderDate.setHours(0, 0, 0, 0);
     return orderDate.getTime() === today.getTime();
   });
-  
+
   const todayRevenue = todayOrders.reduce((sum, order) => sum + (order.total || 0), 0);
   const pendingCount = orders.filter(o => o.status === 'pending').length;
   const todayCompleted = todayOrders.filter(o => o.status === 'delivered').length;
-  
+
   document.getElementById('stat-revenue').textContent = todayRevenue.toFixed(2) + ' DZD';
   document.getElementById('stat-total-orders').textContent = orders.length;
   document.getElementById('stat-pending').textContent = pendingCount;
@@ -1486,13 +1492,13 @@ async function loadDashboardFromFirebase() {
   try {
     const dbService = (await import('./db-service.js')).default;
     const orders = await dbService.getAllOrders();
-    
+
     updateDashboardStats(orders);
     loadRecentOrdersFromFirebase(orders);
     loadBestSellersFromFirebase(orders);
     loadSalesChartFromFirebase(orders);
     loadStatusChartFromFirebase(orders);
-    
+
     dbService.listenToOrderChanges((updatedOrders) => {
       updateDashboardStats(updatedOrders);
       loadRecentOrdersFromFirebase(updatedOrders);
@@ -1506,10 +1512,10 @@ async function loadDashboardFromFirebase() {
 
 function loadRecentOrdersFromFirebase(orders) {
   const recentOrders = orders.slice(0, 5);
-  
+
   let html = '<table class="simple-table"><thead><tr>';
   html += '<th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>';
-  
+
   if (recentOrders.length === 0) {
     html += '<tr><td colspan="4" style="text-align:center;color:#999;padding:40px;">No orders yet</td></tr>';
   } else {
@@ -1522,14 +1528,14 @@ function loadRecentOrdersFromFirebase(orders) {
       html += '</tr>';
     });
   }
-  
+
   html += '</tbody></table>';
   document.getElementById('recent-orders-table').innerHTML = html;
 }
 
 async function loadBestSellersFromFirebase(orders) {
   const itemCounts = {};
-  
+
   orders.forEach(order => {
     if (order.items) {
       order.items.forEach(item => {
@@ -1541,9 +1547,9 @@ async function loadBestSellersFromFirebase(orders) {
       });
     }
   });
-  
+
   const sorted = Object.values(itemCounts).sort((a, b) => b.count - a.count).slice(0, 5);
-  
+
   let html = '';
   if (sorted.length === 0) {
     html = '<div style="text-align:center;color:#999;padding:20px;">No sales data yet</div>';
@@ -1560,7 +1566,7 @@ async function loadBestSellersFromFirebase(orders) {
       `;
     });
   }
-  
+
   document.getElementById('best-sellers-list').innerHTML = html;
 }
 
@@ -1580,13 +1586,13 @@ async function loadCategories() {
   try {
     const dbService = (await import('./db-service.js')).default;
     categoriesCache = await dbService.getAllCategories();
-    
+
     // If no categories in Firebase, initialize defaults
     if (categoriesCache.length === 0) {
       await dbService.initializeDefaultCategories();
       categoriesCache = await dbService.getAllCategories();
     }
-    
+
     return categoriesCache;
   } catch (error) {
     console.error('Failed to load categories from Firebase:', error);
@@ -1596,7 +1602,7 @@ async function loadCategories() {
 
 async function updateCategoryUI() {
   const categories = await loadCategories();
-  
+
   const categorySelect = document.getElementById('item-category');
   if (categorySelect) {
     const currentValue = categorySelect.value;
@@ -1611,7 +1617,7 @@ async function updateCategoryUI() {
       categorySelect.value = currentValue;
     }
   }
-  
+
   const filtersContainer = document.getElementById('menu-category-filters');
   if (filtersContainer) {
     filtersContainer.innerHTML = '<button class="filter-btn active" onclick="filterMenuByCategory(\'all\', event)">All</button>';
@@ -1623,21 +1629,21 @@ async function updateCategoryUI() {
       filtersContainer.appendChild(btn);
     });
   }
-  
+
   loadCategoriesList();
 }
 
 async function loadCategoriesList() {
   const categories = await loadCategories();
   const listContainer = document.getElementById('categories-list');
-  
+
   if (!listContainer) return;
-  
+
   if (categories.length === 0) {
     listContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">No categories yet</p>';
     return;
   }
-  
+
   listContainer.innerHTML = categories.map(cat => `
     <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f7fafc; border-radius: 8px;">
       <div>
@@ -1654,7 +1660,7 @@ async function loadCategoriesList() {
 async function openCategoryModal() {
   document.getElementById('category-modal').classList.add('active');
   await loadCategoriesList();
-  
+
   // Listen to real-time category changes
   try {
     const dbService = (await import('./db-service.js')).default;
@@ -1677,31 +1683,31 @@ function closeCategoryModal() {
 async function addCategory() {
   const id = document.getElementById('new-category-id').value.trim().toLowerCase();
   const name = document.getElementById('new-category-name').value.trim();
-  
+
   if (!id || !name) {
     alert('Please fill in both Category ID and Category Name');
     return;
   }
-  
+
   if (!/^[a-z0-9-]+$/.test(id)) {
     alert('Category ID must be lowercase letters, numbers, and hyphens only (no spaces)');
     return;
   }
-  
+
   try {
     const dbService = (await import('./db-service.js')).default;
     const categories = await loadCategories();
-    
+
     if (categories.find(cat => cat.id === id)) {
       alert('A category with this ID already exists');
       return;
     }
-    
+
     await dbService.addCategory({ id, name });
-    
+
     document.getElementById('new-category-id').value = '';
     document.getElementById('new-category-name').value = '';
-    
+
     alert('✅ Category added successfully!');
     await loadCategoriesList();
     await updateCategoryUI();
@@ -1716,15 +1722,15 @@ async function deleteCategory(categoryId) {
     const dbService = (await import('./db-service.js')).default;
     const categories = await loadCategories();
     const category = categories.find(cat => cat.id === categoryId);
-    
+
     if (!category) return;
-    
+
     if (!confirm(`Are you sure you want to delete "${category.name}"?\n\nNote: Menu items in this category will still exist but may need their category updated.`)) {
       return;
     }
-    
+
     await dbService.deleteCategory(categoryId);
-    
+
     alert('✅ Category deleted successfully!');
     await loadCategoriesList();
     await updateCategoryUI();
@@ -1743,17 +1749,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.handleImageSelect = handleImageSelect;
   window.clearImage = clearImage;
   window.saveMenuItem = saveMenuItem;
-  
+
   try {
     await updateCategoryUI();
-    
+
     // Listen to real-time category changes
     const dbService = (await import('./db-service.js')).default;
     const unsubscribe = await dbService.listenToCategoryChanges((categories) => {
       categoriesCache = categories;
       updateCategoryUI();
     });
-    
+
     // Store unsubscribe function for cleanup if needed
     window.categoryListener = unsubscribe;
   } catch (error) {
@@ -1761,4 +1767,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     alert('Failed to load categories from Firebase. Please check your connection and try again.');
   }
 });
-
