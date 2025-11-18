@@ -1022,33 +1022,34 @@ let selectedImageFile = null;
 function previewImage(event) {
   const file = event.target.files[0];
   console.log('previewImage called with file:', file ? file.name : 'No file');
-  console.log('File object:', file);
-  console.log('Event target:', event.target);
-  console.log('Files array:', event.target.files);
   
   if (file) {
+    // Store the file object
     selectedImageFile = file;
     console.log('✅ File stored for upload:', selectedImageFile.name, 'Size:', selectedImageFile.size, 'bytes');
     
     const reader = new FileReader();
     reader.onload = function(e) {
       const preview = document.getElementById('image-preview');
-      preview.innerHTML = `
-        <div style="text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px; border: 2px solid #48bb78;">
-          <div style="color: #48bb78; font-size: 14px; font-weight: 600; margin-bottom: 12px;">✅ Image Selected: ${file.name}</div>
-          <img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 8px;" />
-          <p style="color: #718096; font-size: 12px; margin: 0;">This image will be uploaded to ImgBB when you click "Save Item"</p>
-        </div>
-      `;
-      preview.classList.add('active');
-      preview.style.display = 'block';
+      if (preview) {
+        preview.innerHTML = `
+          <div style="text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px; border: 2px solid #48bb78;">
+            <div style="color: #48bb78; font-size: 14px; font-weight: 600; margin-bottom: 12px;">✅ صورة محددة: ${file.name}</div>
+            <img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 8px;" />
+            <p style="color: #718096; font-size: 12px; margin: 0;">سيتم رفع هذه الصورة إلى ImgBB عند النقر على "حفظ"</p>
+          </div>
+        `;
+        preview.style.display = 'block';
+      }
     };
     reader.readAsDataURL(file);
   } else {
     console.log('❌ No file selected from input');
     selectedImageFile = null;
     const preview = document.getElementById('image-preview');
-    preview.style.display = 'none';
+    if (preview) {
+      preview.style.display = 'none';
+    }
   }
 }
 
@@ -1059,56 +1060,61 @@ async function saveMenuItem(event) {
   const saveBtn = document.getElementById('save-item-btn');
   const originalText = saveBtn.textContent;
   saveBtn.disabled = true;
-  saveBtn.textContent = 'Saving...';
+  saveBtn.textContent = 'جاري الحفظ...';
   
   try {
     console.log('Importing db-service...');
     const dbService = (await import('./db-service.js')).default;
     
     const itemId = document.getElementById('item-id').value;
-    
     const itemData = {
       name: document.getElementById('item-name').value,
       price: parseFloat(document.getElementById('item-price').value),
       desc: document.getElementById('item-desc').value,
       category: document.getElementById('item-category').value,
-      img: ''
+      img: currentEditingItem?.img || ''
     };
     
+    console.log('Selected image file:', selectedImageFile);
+    
     // Check if there's a file to upload
-    if (selectedImageFile) {
-      console.log('Uploading image to ImgBB...');
-      saveBtn.textContent = 'Uploading image...';
+    if (selectedImageFile && selectedImageFile instanceof File) {
+      console.log('✅ Valid file found, uploading to ImgBB...', selectedImageFile.name);
+      saveBtn.textContent = 'جاري رفع الصورة...';
       
       try {
         const imageUrl = await dbService.uploadImage(selectedImageFile, 'menu');
         console.log('✅ Image uploaded successfully:', imageUrl);
         itemData.img = imageUrl;
-        selectedImageFile = null; // Clear the selected file
       } catch (uploadError) {
-        console.error('Image upload failed:', uploadError);
-        if (!confirm('Image upload failed. Do you want to save the item without an image?')) {
-          throw new Error('Image upload failed: ' + uploadError.message);
+        console.error('❌ Image upload failed:', uploadError);
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
+        if (!confirm('فشل رفع الصورة. هل تريد حفظ العنصر بدون صورة؟')) {
+          return;
         }
       }
+    } else {
+      console.log('ℹ️ No new image file selected');
     }
     
-    saveBtn.textContent = 'Saving item...';
+    saveBtn.textContent = 'جاري حفظ البيانات...';
     
     if (itemId) {
       await dbService.updateMenuItem(itemId, itemData);
-      alert('✅ Menu item updated successfully!');
+      alert('✅ تم تحديث العنصر بنجاح!');
     } else {
       await dbService.addMenuItem(itemData);
-      alert('✅ Menu item added successfully' + (itemData.img ? ' with ImgBB image!' : '!'));
+      alert('✅ تم إضافة العنصر بنجاح' + (itemData.img ? ' مع الصورة!' : '!'));
     }
     
+    selectedImageFile = null;
     closeMenuItemModal();
     loadMenuItems();
     
   } catch (error) {
     console.error('Failed to save item:', error);
-    alert('❌ Failed to save menu item: ' + error.message);
+    alert('❌ فشل في حفظ العنصر: ' + error.message);
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = originalText;
