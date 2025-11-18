@@ -236,9 +236,11 @@
             </div>
             <div class="form-group">
               <label for="item-image">Product Image *</label>
-              <input type="file" id="item-image" accept="image/*" onchange="previewImage(event)" style="width: 100%; padding: 12px; border: 2px dashed #d4a574; border-radius: 8px; cursor: pointer; background: white;" />
-              <small style="color:#718096;display:block;margin-top:4px;">Upload an image - it will be stored on ImgBB</small>
-              <div id="image-preview" class="image-preview" style="margin-top: 12px;"></div>
+              <div style="position: relative;">
+                <input type="file" id="item-image" accept="image/*" onchange="previewImage(event)" style="width: 100%; padding: 12px; border: 2px dashed #d4a574; border-radius: 8px; cursor: pointer; background: white; font-size: 14px;" />
+              </div>
+              <small style="color:#718096;display:block;margin-top:8px;">Click to select an image - it will be uploaded to ImgBB when you save</small>
+              <div id="image-preview" class="image-preview" style="margin-top: 12px; display: none;"></div>
               <input type="hidden" id="current-image-url" />
             </div>
             <div class="form-actions">

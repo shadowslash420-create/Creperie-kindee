@@ -1021,18 +1021,22 @@ let selectedImageFile = null;
 function previewImage(event) {
   const file = event.target.files[0];
   console.log('previewImage called with file:', file ? file.name : 'No file');
+  console.log('File object:', file);
+  console.log('Event target:', event.target);
+  console.log('Files array:', event.target.files);
   
   if (file) {
     selectedImageFile = file;
-    console.log('File stored for upload:', selectedImageFile.name);
+    console.log('✅ File stored for upload:', selectedImageFile.name, 'Size:', selectedImageFile.size, 'bytes');
     
     const reader = new FileReader();
     reader.onload = function(e) {
       const preview = document.getElementById('image-preview');
       preview.innerHTML = `
-        <div style="text-align: center;">
+        <div style="text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px; border: 2px solid #48bb78;">
+          <div style="color: #48bb78; font-size: 14px; font-weight: 600; margin-bottom: 12px;">✅ Image Selected: ${file.name}</div>
           <img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 8px;" />
-          <p style="color: #718096; font-size: 12px; margin: 0;">Image will be uploaded to ImgBB when you save</p>
+          <p style="color: #718096; font-size: 12px; margin: 0;">This image will be uploaded to ImgBB when you click "Save Item"</p>
         </div>
       `;
       preview.classList.add('active');
@@ -1040,8 +1044,10 @@ function previewImage(event) {
     };
     reader.readAsDataURL(file);
   } else {
-    console.log('No file selected');
+    console.log('❌ No file selected from input');
     selectedImageFile = null;
+    const preview = document.getElementById('image-preview');
+    preview.style.display = 'none';
   }
 }
 
@@ -1079,23 +1085,35 @@ async function saveMenuItem(event) {
     console.log('Item data prepared:', itemData);
     
     console.log('Checking for selected image file...');
-    console.log('selectedImageFile:', selectedImageFile ? selectedImageFile.name : 'No file');
+    console.log('selectedImageFile:', selectedImageFile);
+    console.log('selectedImageFile details:', selectedImageFile ? {
+      name: selectedImageFile.name,
+      size: selectedImageFile.size,
+      type: selectedImageFile.type
+    } : 'No file');
+    
+    // Check the file input directly as a backup
+    const fileInput = document.getElementById('item-image');
+    console.log('File input element:', fileInput);
+    console.log('File input files:', fileInput ? fileInput.files : 'No input');
     
     if (selectedImageFile) {
-      console.log('File detected, starting upload to ImgBB...');
+      console.log('✅ File detected, starting upload to ImgBB...');
       saveBtn.textContent = 'Uploading to ImgBB...';
       try {
         const imageUrl = await dbService.uploadImage(selectedImageFile, 'menu');
-        console.log('Upload complete, ImgBB URL:', imageUrl);
+        console.log('✅ Upload complete, ImgBB URL:', imageUrl);
         itemData.img = imageUrl;
         selectedImageFile = null;
       } catch (uploadError) {
-        console.error('Image upload failed:', uploadError);
+        console.error('❌ Image upload failed:', uploadError);
         alert('❌ Image upload failed: ' + uploadError.message);
         saveBtn.disabled = false;
         saveBtn.textContent = originalText;
         return;
       }
+    } else {
+      console.log('⚠️ No selectedImageFile found');
     }
     
     if (itemId) {
