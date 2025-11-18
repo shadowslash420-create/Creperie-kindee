@@ -956,9 +956,15 @@ function filterMenuByCategory(category, event) {
 
 async function openMenuItemModal() {
   currentEditingItem = null;
+  selectedImageFile = null;
   document.getElementById('modal-title').textContent = 'Add New Menu Item';
   document.getElementById('menu-item-form').reset();
   document.getElementById('item-id').value = '';
+  const preview = document.getElementById('image-preview');
+  if (preview) {
+    preview.style.display = 'none';
+    preview.innerHTML = '';
+  }
   await updateCategoryUI();
   document.getElementById('menu-item-modal').classList.add('active');
 }
@@ -974,12 +980,28 @@ async function openEditMenuItemModal(itemId) {
     }
     
     currentEditingItem = item;
+    selectedImageFile = null;
     document.getElementById('modal-title').textContent = 'Edit Menu Item';
     document.getElementById('item-id').value = item.id;
     document.getElementById('item-name').value = item.name;
     document.getElementById('item-price').value = item.price;
     document.getElementById('item-desc').value = item.desc;
     document.getElementById('item-category').value = item.category;
+    
+    // Show current image if exists
+    const preview = document.getElementById('image-preview');
+    if (item.img && preview) {
+      preview.innerHTML = `
+        <div style="text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px; border: 2px solid #cbd5e0;">
+          <div style="color: #4a5568; font-size: 14px; font-weight: 600; margin-bottom: 12px;">📷 Current Image</div>
+          <img src="${item.img}" alt="Current" style="max-width: 100%; max-height: 200px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 8px;" />
+          <p style="color: #718096; font-size: 12px; margin: 0;">Upload a new image to replace this one</p>
+        </div>
+      `;
+      preview.style.display = 'block';
+    } else if (preview) {
+      preview.style.display = 'none';
+    }
     
     await updateCategoryUI();
     document.getElementById('menu-item-modal').classList.add('active');
@@ -1053,12 +1075,32 @@ async function saveMenuItem(event) {
       img: ''
     };
     
+    // Check if there's a file to upload
+    if (selectedImageFile) {
+      console.log('Uploading image to ImgBB...');
+      saveBtn.textContent = 'Uploading image...';
+      
+      try {
+        const imageUrl = await dbService.uploadImage(selectedImageFile, 'menu');
+        console.log('✅ Image uploaded successfully:', imageUrl);
+        itemData.img = imageUrl;
+        selectedImageFile = null; // Clear the selected file
+      } catch (uploadError) {
+        console.error('Image upload failed:', uploadError);
+        if (!confirm('Image upload failed. Do you want to save the item without an image?')) {
+          throw new Error('Image upload failed: ' + uploadError.message);
+        }
+      }
+    }
+    
+    saveBtn.textContent = 'Saving item...';
+    
     if (itemId) {
       await dbService.updateMenuItem(itemId, itemData);
       alert('✅ Menu item updated successfully!');
     } else {
       await dbService.addMenuItem(itemData);
-      alert('✅ Menu item added successfully with ImgBB image!');
+      alert('✅ Menu item added successfully' + (itemData.img ? ' with ImgBB image!' : '!'));
     }
     
     closeMenuItemModal();
