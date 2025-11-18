@@ -2,7 +2,10 @@
 import { getAuthInstance } from './firebase-config.js';
 import { 
   GoogleAuthProvider, 
-  signInWithPopup, 
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
   signOut, 
   onAuthStateChanged 
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
@@ -24,6 +27,48 @@ export async function signInWithGoogle() {
   } catch (error) {
     console.error('Error signing in:', error.message);
     alert('تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى.\n' + error.message);
+    throw error;
+  }
+}
+
+// Sign in with Email/Password
+export async function signInWithEmail(email, password) {
+  try {
+    const auth = await getAuthInstance();
+    if (!auth) {
+      throw new Error('Firebase authentication not initialized');
+    }
+    
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    const user = result.user;
+    console.log('User signed in with email:', user.email);
+    return user;
+  } catch (error) {
+    console.error('Error signing in with email:', error.message);
+    throw error;
+  }
+}
+
+// Sign up with Email/Password
+export async function signUpWithEmail(email, password, displayName) {
+  try {
+    const auth = await getAuthInstance();
+    if (!auth) {
+      throw new Error('Firebase authentication not initialized');
+    }
+    
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    const user = result.user;
+    
+    // Update user profile with display name
+    if (displayName) {
+      await updateProfile(user, { displayName });
+    }
+    
+    console.log('User signed up with email:', user.email);
+    return user;
+  } catch (error) {
+    console.error('Error signing up with email:', error.message);
     throw error;
   }
 }

@@ -8,9 +8,9 @@ service cloud.firestore {
     // HELPER FUNCTIONS
     // ============================================
     
-    // Check if user is authenticated
+    // Check if user is authenticated (works with both Google and Email auth)
     function isAuthenticated() {
-      return request.auth != null;
+      return request.auth != null && request.auth.uid != null;
     }
     
     // Check if user is admin
@@ -82,7 +82,8 @@ service cloud.firestore {
       allow read: if isAdmin() || 
                      isDelivery() ||
                      (isAuthenticated() && resource.data.createdBy == request.auth.uid) ||
-                     (isAuthenticated() && resource.data.customerEmail == request.auth.token.email);
+                     (isAuthenticated() && resource.data.customerEmail == request.auth.token.email) ||
+                     (isAuthenticated() && resource.data.customerEmail == request.auth.token.firebase.identities['email'][0]);
       
       // Create permissions (authenticated users + guests via special token)
       allow create: if (isAuthenticated() || request.auth == null) && 
