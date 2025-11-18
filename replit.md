@@ -112,12 +112,12 @@ A modern, elegant cloud-powered website for "Creperie Kinder" - a crepe restaura
 - `menu` collection: Product menu items with categories, images, prices
 - `orders` collection: Customer orders with status tracking and timestamps
 - `customers` collection: Auto-generated customer analytics
+- `categories` collection: Dynamic menu categories with real-time sync
 
 **Local Storage** (Browser - Fallback & Cache):
 - `kc_cart`: Customer shopping cart (temporary)
 - `kc_menu`: Menu cache for offline access
 - `kc_admin`: Admin login session
-- `kc_categories`: Dynamic menu categories (synced across admin sessions)
 
 **File Storage** (Firebase Storage):
 - `/menu/*`: Product images uploaded by admins
@@ -133,6 +133,14 @@ The site runs on Python's built-in HTTP server:
 Configured to deploy as an autoscale static website on Replit.
 
 ## Recent Changes
+- **2025-11-18 (v3)**: Migrated Category Management to Firebase
+  - **Firebase Storage**: Categories now stored in Firestore `categories` collection
+    - Real-time synchronization across all devices and admin sessions
+    - Persistent cloud storage with automatic backup
+    - Falls back to default categories if collection is empty
+  - **Auto-initialization**: System automatically creates default categories on first load
+  - **Real-time Updates**: Category changes instantly reflected across all admin panels
+  
 - **2025-11-18 (v2)**: Added Dynamic Category Management System
   - **Category Management UI**: New "Manage Categories" button in admin menu section
     - Modal interface for adding and deleting menu categories
@@ -143,9 +151,6 @@ Configured to deploy as an autoscale static website on Replit.
     - Item category dropdown dynamically populated from categories
     - Category names displayed in menu item cards
     - Default categories: Sweet Crêpes, Savory Crêpes, Kids Crêpes, Drinks
-  - **localStorage-based**: Categories stored in browser localStorage (`kc_categories`)
-    - Persists across admin sessions on same device
-    - Falls back to default categories if not initialized
   - **Bug Fixes**: Fixed dashboard fallback error (loadSalesChartFromOrders)
   
 - **2025-11-18 (v1)**: Complete Firebase Firestore & Storage Integration
