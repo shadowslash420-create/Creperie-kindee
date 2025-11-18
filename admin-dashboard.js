@@ -1067,14 +1067,6 @@ async function saveMenuItem(event) {
     const itemId = document.getElementById('item-id').value;
     const currentImageUrl = document.getElementById('current-image-url').value;
     
-    // For new items, require image upload
-    if (!itemId && !selectedImageFile) {
-      alert('⚠️ Please select an image for the menu item');
-      saveBtn.disabled = false;
-      saveBtn.textContent = originalText;
-      return;
-    }
-    
     const itemData = {
       name: document.getElementById('item-name').value,
       price: parseFloat(document.getElementById('item-price').value),
