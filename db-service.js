@@ -186,41 +186,52 @@ class DatabaseService {
   // ==================== END CATEGORY MANAGEMENT ====================
 
   async uploadImage(file, folder = 'menu') {
+    console.log('uploadImage called with file:', file.name, 'size:', file.size);
     await this.init();
     
     // Convert file to base64
+    console.log('Converting image to base64...');
     const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
         const base64String = reader.result.split(',')[1];
+        console.log('Base64 conversion successful, length:', base64String.length);
         resolve(base64String);
       };
-      reader.onerror = reject;
+      reader.onerror = (error) => {
+        console.error('FileReader error:', error);
+        reject(error);
+      };
       reader.readAsDataURL(file);
     });
 
     // Send to server for secure upload to ImgBB
+    console.log('Preparing upload to server...');
     const formData = new FormData();
     formData.append('image', base64);
     formData.append('folder', folder);
     formData.append('filename', file.name);
 
     try {
+      console.log('Sending POST request to /api/upload-image...');
       const response = await fetch('/api/upload-image', {
         method: 'POST',
         body: formData
       });
 
+      console.log('Server response status:', response.status);
       const result = await response.json();
+      console.log('Server response:', result);
       
       if (result.success) {
-        // Return the direct display URL from ImgBB
+        console.log('✅ Image uploaded successfully to ImgBB:', result.url);
         return result.url;
       } else {
+        console.error('❌ Upload failed:', result.error);
         throw new Error(result.error || 'Upload failed');
       }
     } catch (error) {
-      console.error('Image upload error:', error);
+      console.error('❌ Image upload error:', error);
       throw new Error('Image upload failed: ' + error.message);
     }
   }
