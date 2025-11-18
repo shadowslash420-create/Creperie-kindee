@@ -956,13 +956,9 @@ function filterMenuByCategory(category, event) {
 
 async function openMenuItemModal() {
   currentEditingItem = null;
-  selectedImageFile = null;
   document.getElementById('modal-title').textContent = 'Add New Menu Item';
   document.getElementById('menu-item-form').reset();
   document.getElementById('item-id').value = '';
-  document.getElementById('current-image-url').value = '';
-  document.getElementById('image-preview').classList.remove('active');
-  document.getElementById('image-preview').innerHTML = '';
   await updateCategoryUI();
   document.getElementById('menu-item-modal').classList.add('active');
 }
@@ -978,28 +974,12 @@ async function openEditMenuItemModal(itemId) {
     }
     
     currentEditingItem = item;
-    selectedImageFile = null;
     document.getElementById('modal-title').textContent = 'Edit Menu Item';
     document.getElementById('item-id').value = item.id;
     document.getElementById('item-name').value = item.name;
     document.getElementById('item-price').value = item.price;
     document.getElementById('item-desc').value = item.desc;
     document.getElementById('item-category').value = item.category;
-    document.getElementById('current-image-url').value = item.img || '';
-    
-    const preview = document.getElementById('image-preview');
-    if (item.img) {
-      preview.innerHTML = `
-        <div style="text-align: center;">
-          <img src="${item.img}" alt="${item.name}" style="max-width: 100%; max-height: 200px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 8px;" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 200 200\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'200\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23999\\' font-size=\\'16\\'%3ENo Image%3C/text%3E%3C/svg%3E'" />
-          <p style="color: #718096; font-size: 12px; margin: 0;">Current image from ImgBB</p>
-        </div>
-      `;
-      preview.classList.add('active');
-    } else {
-      preview.innerHTML = '';
-      preview.classList.remove('active');
-    }
     
     await updateCategoryUI();
     document.getElementById('menu-item-modal').classList.add('active');
@@ -1012,7 +992,6 @@ async function openEditMenuItemModal(itemId) {
 function closeMenuItemModal() {
   document.getElementById('menu-item-modal').classList.remove('active');
   currentEditingItem = null;
-  selectedImageFile = null; // Clear file when closing
 }
 
 // Store the selected file globally so it doesn't get lost
@@ -1065,48 +1044,14 @@ async function saveMenuItem(event) {
     const dbService = (await import('./db-service.js')).default;
     
     const itemId = document.getElementById('item-id').value;
-    const currentImageUrl = document.getElementById('current-image-url').value;
     
     const itemData = {
       name: document.getElementById('item-name').value,
       price: parseFloat(document.getElementById('item-price').value),
       desc: document.getElementById('item-desc').value,
       category: document.getElementById('item-category').value,
-      img: currentImageUrl || ''
+      img: 'images/crepe1.svg'
     };
-    console.log('Item data prepared:', itemData);
-    
-    console.log('Checking for selected image file...');
-    console.log('selectedImageFile:', selectedImageFile);
-    console.log('selectedImageFile details:', selectedImageFile ? {
-      name: selectedImageFile.name,
-      size: selectedImageFile.size,
-      type: selectedImageFile.type
-    } : 'No file');
-    
-    // Check the file input directly as a backup
-    const fileInput = document.getElementById('item-image');
-    console.log('File input element:', fileInput);
-    console.log('File input files:', fileInput ? fileInput.files : 'No input');
-    
-    if (selectedImageFile) {
-      console.log('✅ File detected, starting upload to ImgBB...');
-      saveBtn.textContent = 'Uploading to ImgBB...';
-      try {
-        const imageUrl = await dbService.uploadImage(selectedImageFile, 'menu');
-        console.log('✅ Upload complete, ImgBB URL:', imageUrl);
-        itemData.img = imageUrl;
-        selectedImageFile = null;
-      } catch (uploadError) {
-        console.error('❌ Image upload failed:', uploadError);
-        alert('❌ Image upload failed: ' + uploadError.message);
-        saveBtn.disabled = false;
-        saveBtn.textContent = originalText;
-        return;
-      }
-    } else {
-      console.log('⚠️ No selectedImageFile found');
-    }
     
     if (itemId) {
       await dbService.updateMenuItem(itemId, itemData);
