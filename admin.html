@@ -236,7 +236,9 @@
             </div>
             <div class="form-group">
               <label for="item-image" style="font-weight: 600; color: #2d3748; margin-bottom: 8px; display: block;">صورة المنتج</label>
-              <input type="file" id="item-image" accept="image/*" onchange="previewImage(event)" style="padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; width: 100%; font-size: 14px; cursor: pointer; background: white;" />
+              <div style="position: relative;">
+                <input type="file" id="item-image" accept="image/*" onchange="previewImage(event)" style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; cursor: pointer; background: white; box-sizing: border-box;" />
+              </div>
               <small style="color:#4a5568; display:block; margin-top:8px; font-weight: 500;">📁 اختر صورة من جهازك (سيتم رفعها تلقائياً إلى ImgBB)</small>
             </div>
             <div id="image-preview" style="display: none; margin-top: 12px;"></div>
