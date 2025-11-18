@@ -1,37 +1,36 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // ============================================
     // HELPER FUNCTIONS
     // ============================================
-    
+
     // Check if user is authenticated (works with both Google and Email auth)
     function isAuthenticated() {
       return request.auth != null && request.auth.uid != null;
     }
-    
+
     // Check if user is admin
     function isAdmin() {
       return isAuthenticated() && 
              (request.auth.token.admin == true || 
               request.auth.token.email in ['oussamaanis2005@gmail.com']);
     }
-    
+
     // Check if user is delivery personnel
     function isDelivery() {
       return isAuthenticated() && 
              (request.auth.token.delivery == true ||
               request.auth.token.email in ['delivery@creperie-kinder.com']);
     }
-    
+
     // Check if user owns the resource
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-    
+
     // Validate order data structure
     function isValidOrder() {
       let data = request.resource.data;
@@ -45,7 +44,7 @@ service cloud.firestore {
              data.status in ['pending', 'in-progress', 'delivered'] &&
              data.createdAt is timestamp;
     }
-    
+
     // Validate menu item data structure
     function isValidMenuItem() {
       let data = request.resource.data;
@@ -57,7 +56,7 @@ service cloud.firestore {
              data.category in ['sweet', 'savory', 'kids', 'drinks'] &&
              data.img is string;
     }
-    
+
     // ============================================
     // MENU COLLECTION RULES
     // ============================================
@@ -69,7 +68,7 @@ service cloud.firestore {
       allow update: if isAdmin() && isValidMenuItem();
       allow delete: if isAdmin();
     }
-    
+
     // ============================================
     // ORDERS COLLECTION RULES
     // ============================================
@@ -84,22 +83,22 @@ service cloud.firestore {
                      (isAuthenticated() && resource.data.createdBy == request.auth.uid) ||
                      (isAuthenticated() && resource.data.customerEmail == request.auth.token.email) ||
                      (isAuthenticated() && resource.data.customerEmail == request.auth.token.firebase.identities['email'][0]);
-      
+
       // Create permissions (authenticated users + guests via special token)
       allow create: if (isAuthenticated() || request.auth == null) && 
                        isValidOrder() &&
                        request.resource.data.status == 'pending';
-      
+
       // Update permissions
       allow update: if isAdmin() ||
                        (isDelivery() && 
                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedForDelivery', 'acceptedBy', 'deliveredAt']) &&
                         request.resource.data.status in ['pending', 'in-progress', 'delivered']);
-      
+
       // Delete permissions (admin only)
       allow delete: if isAdmin();
     }
-    
+
     // ============================================
     // CUSTOMERS COLLECTION RULES
     // ============================================
@@ -109,7 +108,7 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if isAdmin();
     }
-    
+
     // ============================================
     // USER PROFILES COLLECTION (Optional)
     // ============================================
@@ -121,7 +120,7 @@ service cloud.firestore {
       allow update: if isAdmin() || isOwner(userId);
       allow delete: if isAdmin() || isOwner(userId);
     }
-    
+
     // ============================================
     // DELIVERY PERSONNEL COLLECTION
     // ============================================
@@ -131,7 +130,7 @@ service cloud.firestore {
       allow read: if isAdmin() || isOwner(deliveryId) || isDelivery();
       allow write: if isAdmin();
     }
-    
+
     // ============================================
     // CATEGORIES COLLECTION
     // ============================================
@@ -143,7 +142,7 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
-    
+
     // ============================================
     // ANALYTICS COLLECTION
     // ============================================
@@ -152,7 +151,7 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if isAdmin();
     }
-    
+
     // ============================================
     // FEEDBACK COLLECTION
     // ============================================
