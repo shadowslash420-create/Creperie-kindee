@@ -914,11 +914,11 @@ async function renderMenuItems(menu) {
   filtered.forEach(item => {
     const category = categories.find(cat => cat.id === item.category);
     const categoryName = category ? category.name : item.category;
-    const imgSrc = item.img || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="16"%3ENo Image%3C/text%3E%3C/svg%3E';
+    const imgSrc = item.img || '';
     
     html += `
       <div class="menu-item-card">
-        <img src="${imgSrc}" alt="${item.name}" class="menu-item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 200 200\\'%3E%3Crect fill=\\'%23f0f0f0\\' width=\\'200\\' height=\\'200\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23999\\' font-size=\\'16\\'%3ENo Image%3C/text%3E%3C/svg%3E'" />
+        ${imgSrc ? `<img src="${imgSrc}" alt="${item.name}" class="menu-item-image" />` : `<div class="menu-item-placeholder">${item.name.charAt(0)}</div>`}
         <div class="menu-item-content">
           <div class="menu-item-header">
             <h4 class="menu-item-name">${item.name}</h4>
@@ -1050,7 +1050,7 @@ async function saveMenuItem(event) {
       price: parseFloat(document.getElementById('item-price').value),
       desc: document.getElementById('item-desc').value,
       category: document.getElementById('item-category').value,
-      img: 'images/crepe1.svg'
+      img: ''
     };
     
     if (itemId) {
