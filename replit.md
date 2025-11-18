@@ -1,294 +1,70 @@
 # Creperie Kinder
 
 ## Overview
-A modern, elegant cloud-powered website for "Creperie Kinder" - a crepe restaurant featuring Sweet Paris-inspired design with:
-- Customer-facing menu with tab navigation and shopping cart
-- Order placement with Cash on Delivery (COD)
-- Admin panel for order management
-- **Firebase Firestore integration** for real-time data synchronization
-- **ImgBB cloud image hosting** for product image management
-- Responsive design with RTL (right-to-left) support for Arabic
-- Modern orange color scheme with professional Shopify-like design
+Creperie Kinder is a modern, elegant cloud-powered website for a crepe restaurant, inspired by Sweet Paris design. Its primary purpose is to provide a seamless online experience for customers to browse menus and place orders, while offering robust order and menu management capabilities for administrators.
 
-## Tech Stack
-- **Frontend**: Pure HTML, CSS, JavaScript (no frameworks)
-- **Backend**: Firebase Firestore (NoSQL cloud database)
-- **Image Hosting**: ImgBB (free cloud image storage)
-- **Authentication**: Firebase Authentication + Google Sign-In
-- **Fonts**: Playfair Display (serif headings), Inter (body text)
-- **Server**: Python HTTP server for static file serving
-- **Language**: Arabic UI with English code
+**Key Capabilities:**
+- Customer-facing menu with category-based navigation and an interactive shopping cart.
+- Order placement with Cash on Delivery (COD) as the payment method.
+- Comprehensive admin panel for efficient order and menu management.
+- Real-time data synchronization powered by Firebase Firestore.
+- Product image hosting via ImgBB.
+- Responsive design with full Right-to-Left (RTL) support for Arabic.
+- Professional Shopify-like aesthetic with a warm orange color scheme.
 
-## Project Structure (Vercel-Ready)
-```
-.
-├── public/                      # Static files served by Vercel
-│   ├── *.html                   # All HTML pages (index, menu, admin, etc.)
-│   ├── *.css                    # Stylesheets (style.css, admin-dashboard.css)
-│   ├── *.js                     # Frontend JavaScript modules
-│   ├── *.md, *.txt, *.rules    # Documentation and Firebase rules
-│   └── attached_assets/         # Images and media files
-├── api/                         # Vercel Serverless Functions (Node.js)
-│   ├── firebase-config.js       # Returns Firebase config from environment
-│   └── upload-image.js          # Proxies image uploads to ImgBB
-├── server.py                    # Python HTTP server (Replit development only)
-├── vercel.json                  # Vercel deployment configuration
-├── package.json                 # NPM dependencies and deployment scripts
-├── VERCEL_DEPLOYMENT.md         # Complete Vercel deployment guide
-└── replit.md                    # This file
-```
+**Business Vision:** To provide Creperie Kinder with a scalable, modern online presence that enhances customer experience, streamlines operations, and supports growth in the food service industry.
 
-### Dual-Environment Setup
-- **Replit Development**: Uses `server.py` (Python) serving from `public/`
-- **Vercel Production**: Uses serverless functions in `api/` with static files from `public/`
-- API endpoints work identically in both environments
+## User Preferences
+- The agent should prioritize iterative development and clear communication.
+- Before making significant changes or architectural decisions, the agent must ask for approval.
+- The agent should provide detailed explanations for complex solutions.
+- All code should be clean, well-commented, and follow best practices.
+- Do not make changes to the `replit.md` file without explicit instructions.
+- All UI elements should be in Arabic, while code comments and variables should be in English.
 
-## Design Features
+## System Architecture
 
-### Color Scheme (Shopify-inspired Professional)
-- Primary Orange: `#FF6B35` (warm, appetizing coral-orange)
-- Secondary Yellow: `#FFC857` (golden yellow for accents)
-- Warm Orange: `#FF8C42` (gradient complement)
-- Light Peach: `#FFE5D9` (soft backgrounds)
-- Text Primary: `#1A1A1A` (dark text)
-- Text Secondary: `#666666` (muted text)
-- Background: `#FAFAFA` (off-white)
-- Surface: `#FFFFFF` (pure white for cards)
+### UI/UX Decisions
+- **Color Scheme:** Professional, Shopify-inspired palette featuring Primary Orange (`#FF6B35`), Secondary Yellow (`#FFC857`), Warm Orange (`#FF8C42`), Light Peach (`#FFE5D9`), with dark text (`#1A1A1A`, `#666666`) on off-white (`#FAFAFA`) and pure white (`#FFFFFF`) backgrounds.
+- **Typography:** Playfair Display (elegant serif) for headings and Inter (modern sans-serif) for body text.
+- **Layout:** Sticky header with hamburger menu, brand logo, and cart icon. Hero section with background imagery. Tab-based navigation for menu categories. 2-column grid for menu items. Fixed "ORDER NOW" button (mobile). Sliding cart sidebar.
+- **Admin Dashboard:** Professional design with four key stat cards, sales trend chart (7-day line), order status pie chart, recent orders table, and best sellers list. Responsive sidebar navigation.
 
-### Typography
-- Headings: Playfair Display (elegant serif)
-- Body: Inter (modern sans-serif)
+### Technical Implementations
+- **Frontend:** Pure HTML, CSS, and JavaScript, eschewing frameworks for performance and simplicity.
+- **Backend (Cloud):** Firebase Firestore serves as the primary NoSQL cloud database for all dynamic data.
+- **Image Management:** ImgBB for free cloud image hosting, with image URLs stored in Firestore. Secure server-side image upload via API to protect API keys.
+- **Authentication:** Firebase Authentication with Google Sign-In for secure admin access.
+- **Development Environment:** Python HTTP server (`server.py`) for local development, serving static files and proxying API requests.
+- **Production Environment:** Optimized for Vercel deployment, utilizing static file serving from `public/` and Node.js serverless functions in `api/`.
+- **RTL Support:** Full right-to-left language support implemented for Arabic UI.
 
-### Layout
-- Sticky header with hamburger menu, brand, and cart icons
-- Hero section with background image and "Menu" overlay
-- Tab navigation for categories (Sweet, Savory, Kids, Drinks)
-- 2-column grid layout for menu items
-- Fixed "ORDER NOW" button at bottom (mobile)
-- Sliding cart sidebar from right
+### Feature Specifications
+- **Customer Features:**
+    - Browse menu by category (Sweet, Savory, Kids, Drinks).
+    - Add items to cart, adjust quantities, and remove items.
+    - Place orders with customer details (name, phone, address) and COD payment.
+    - Shopping cart data temporarily stored in browser's `localStorage`.
+- **Admin Features:**
+    - Secure login (username `admin`, password `kinder123`).
+    - **Orders Management:** View, search, filter (by status), update status, and export orders to CSV.
+    - **Menu Management:** Full CRUD (Create, Read, Update, Delete) operations for menu items, including image uploads and dynamic category association.
+    - **Category Management:** Dynamic system to add and delete menu categories, with real-time synchronization.
+    - **Analytics & Reports:** Dashboard displays revenue metrics, order statistics, and popular items.
 
-## Features
+### System Design Choices
+- **Dual-Environment Setup:** Seamless operation in both Replit (Python server) and Vercel (serverless functions) environments with identical API endpoints.
+- **Data Storage:**
+    - **Firebase Firestore:** `menu`, `orders`, `customers`, and `categories` collections for real-time, persistent cloud storage.
+    - **Local Storage:** `kc_cart`, `kc_menu`, `kc_admin` for client-side caching and temporary data.
+- **Scalability:** Designed with Firebase and Vercel serverless functions to handle varying loads efficiently.
+- **Security:** Firebase security rules for database and storage access control, server-side image upload to protect API keys, and secure environment variable management for API keys.
 
-### Customer Features
-- Browse menu items by category with tab navigation
-- Clean 2-column grid with product images
-- Add items to shopping cart with one tap
-- Sliding cart panel from right side
-- Adjust quantities or remove items
-- Place orders with name, phone, and address (COD payment)
-- Orders stored in localStorage
-
-### Admin Features
-- **Login System**: username `admin`, password `kinder123`
-- **Professional Dashboard**:
-  - Overview with 4 stat cards: Today's Revenue, Total Orders, Pending Orders, Completed Today
-  - Sales trend chart (7-day line chart)
-  - Order status breakdown (pie chart)
-  - Recent orders table with quick view
-  - Best sellers list with product rankings
-- **Orders Management**:
-  - View all orders in detailed table
-  - Search by customer name or order ID
-  - Filter by status (All, Pending, In Progress, Delivered)
-  - Quick status updates via dropdown
-  - Export orders to CSV
-- **Menu Management**: 
-  - View all menu items with categories
-  - Add/Edit/Delete menu items with modal interface
-  - Upload product images to Firebase Storage
-  - **Category Management**: Dynamic category system with add/delete capabilities
-- **Analytics & Reports**: Revenue metrics, order statistics, popular items analysis
-- **Responsive Design**: Mobile-friendly sidebar navigation
-
-## Menu Categories
-- **Sweet Crêpes** (كريب حلو): Dessert crepes with Nutella, fruits, etc.
-- **Savory Crêpes** (كريب مالح): Savory crepes with ham, cheese, chicken, etc.
-- **Kids Crêpes** (كريب الأطفال): Simple crepes for children
-- **Drinks** (مشروبات): Hot chocolate, juices, etc.
-
-## Data Storage
-**Primary Storage** (Firebase Firestore):
-- `menu` collection: Product menu items with categories, images, prices
-- `orders` collection: Customer orders with status tracking and timestamps
-- `customers` collection: Auto-generated customer analytics
-- `categories` collection: Dynamic menu categories with real-time sync
-
-**Local Storage** (Browser - Fallback & Cache):
-- `kc_cart`: Customer shopping cart (temporary)
-- `kc_menu`: Menu cache for offline access
-- `kc_admin`: Admin login session
-
-**Image Storage** (ImgBB):
-- Product images are uploaded to ImgBB and stored as direct URLs in Firestore
-- Free cloud hosting with permanent storage
-- Secure server-side upload to protect API key
-
-## Development
-The site runs on Python's built-in HTTP server:
-- Port: 5000
-- Host: 0.0.0.0 (accessible externally)
-- Cache-Control headers disabled for development
-- Socket reuse enabled for quick restarts
-
-## Deployment
-
-### Vercel Deployment (Primary)
-The project is optimized for Vercel with:
-- Static files in `public/` directory
-- Serverless API functions in `api/` directory
-- `vercel.json` configuration for routing and headers
-- See `VERCEL_DEPLOYMENT.md` for complete deployment guide
-
-**Quick Deploy to Vercel:**
-```bash
-npm run deploy
-```
-
-### Replit Development
-- Python server serves static files from `public/`
-- All API endpoints functional for local testing
-- Workflow automatically configured
-
-## Recent Changes
-
-- **2025-11-18 (v5)**: Restructured for Vercel Deployment
-  - **Vercel-Ready Architecture**: Complete project restructure for optimal Vercel deployment
-    - Created `public/` directory for all static assets (HTML, CSS, JS, images)
-    - Created `api/` directory with Node.js serverless functions
-    - Converted Python API endpoints to Vercel-compatible serverless functions
-    - Added `vercel.json` configuration with routing and CORS headers
-  - **Dual-Environment Support**: Works seamlessly in both Replit and Vercel
-    - Python server (server.py) updated to serve from `public/` for Replit dev
-    - Serverless functions (api/*.js) for Vercel production
-    - Identical API endpoints in both environments
-  - **Package Updates**: 
-    - Added Vercel CLI to devDependencies
-    - Added formidable for multipart form parsing in serverless functions
-    - Updated package.json scripts for Vercel deployment
-  - **Documentation**: Created comprehensive `VERCEL_DEPLOYMENT.md` guide
-    - Step-by-step deployment instructions
-    - Environment variable configuration
-    - Local development with `vercel dev`
-    - Custom domain setup
-    - Cost considerations and optimization tips
-  
-
-- **2025-11-18 (v4)**: Migrated Image Hosting to ImgBB
-  - **ImgBB Integration**: Product images now upload to ImgBB instead of Firebase Storage
-    - Free cloud image hosting with permanent storage
-    - Server-side upload endpoint (`/api/upload-image`) keeps API key secure
-    - Images converted to base64 and uploaded via Python backend
-    - Direct image URLs stored in Firestore for fast loading
-    - No deletion API for free ImgBB accounts (manual deletion from dashboard)
-  - **Security Enhancement**: API key never exposed to frontend
-  - **Environment Variables**: Added `IMGBB_API_KEY` secret
-  
-- **2025-11-18 (v3)**: Migrated Category Management to Firebase
-  - **Firebase Storage**: Categories now stored in Firestore `categories` collection
-    - Real-time synchronization across all devices and admin sessions
-    - Persistent cloud storage with automatic backup
-    - Falls back to default categories if collection is empty
-  - **Auto-initialization**: System automatically creates default categories on first load
-  - **Real-time Updates**: Category changes instantly reflected across all admin panels
-  
-- **2025-11-18 (v2)**: Added Dynamic Category Management System
-  - **Category Management UI**: New "Manage Categories" button in admin menu section
-    - Modal interface for adding and deleting menu categories
-    - Dynamic category list showing all existing categories
-    - Category validation (lowercase IDs, no duplicates)
-  - **Dynamic Category Integration**: Categories are now fully dynamic
-    - Menu filter buttons automatically update based on categories
-    - Item category dropdown dynamically populated from categories
-    - Category names displayed in menu item cards
-    - Default categories: Sweet Crêpes, Savory Crêpes, Kids Crêpes, Drinks
-  - **Bug Fixes**: Fixed dashboard fallback error (loadSalesChartFromOrders)
-  
-- **2025-11-18 (v1)**: Complete Firebase Firestore & Storage Integration
-  - **Database Migration**: Implemented full cloud database with Firestore
-    - Created comprehensive database service layer (db-service.js)
-    - Migrated from localStorage to Firestore for menu and orders
-    - Built one-click data migration tool (migrate-data.html)
-  - **Admin Menu Management**: Full CRUD operations
-    - Add/Edit/Delete menu items from admin dashboard
-    - Upload product images to Firebase Storage
-    - Real-time menu synchronization across all clients
-    - Category filtering and search
-    - Modal-based editing interface with image preview
-  - **Real-time Updates**: Live data synchronization
-    - Dashboard statistics update in real-time
-    - Order status changes reflect immediately
-    - Menu changes propagate to all customers instantly
-  - **Enhanced Order System**: Cloud-based order management
-    - Orders saved to Firestore instead of localStorage
-    - Admin can edit order details and update status
-    - Customer analytics automatically generated
-  - **Security Implementation**: Firebase security rules
-    - Created firestore.rules for database access control
-    - Created storage.rules for image upload security
-    - Documentation for admin authentication setup
-  - **Comprehensive Documentation**: Setup guides and troubleshooting
-    - FIREBASE_SETUP.md with step-by-step instructions
-    - Security best practices and recommendations
-    - Migration guide and testing procedures
-  - **Backward Compatibility**: Graceful fallbacks
-    - Falls back to localStorage if Firebase unavailable
-    - Progressive enhancement approach
-    - No breaking changes for existing features
-  
-- **2025-11-17**: Added Google Firebase Authentication
-  - Implemented secure Google sign-in/sign-out functionality
-  - Added login button to all pages (next to EN language button)
-  - Created beautiful login page matching website theme (brown/cream colors)
-  - Firebase credentials loaded securely from server environment variables
-  - Proper async initialization with error handling
-  - Auth state management: shows login icon when logged out, user profile icon when logged in
-  - Click profile icon when logged in to sign out
-  - All pages include auth.js module for authentication UI
-  - Firebase config endpoint: /api/firebase-config
-  - Required secrets: FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET, FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID
-  
-- **2025-11-06**: Upgraded social media icons
-  - Replaced emoji icons with professional SVG icons
-  - Added Instagram, Facebook, Twitter, TikTok, and WhatsApp icons
-  - Implemented proper href links for all social platforms
-  - Added aria-label attributes for accessibility
-  - Applied consistent styling across all pages (index, menu, about, contact, faq, feedback)
-  - Icons appear in both footer and navigation menu sidebar
-  
-- **2025-11-05 (Latest v2)**: Built professional admin dashboard
-  - Created comprehensive dashboard with sidebar navigation
-  - Implemented 4 key stat cards (Revenue, Orders, Pending, Completed)
-  - Added canvas-based charts: sales trend (7-day), order status (pie chart)
-  - Built enhanced orders management with search, filters, and CSV export
-  - Created menu management and analytics sections
-  - Designed with professional orange theme matching main website
-  - Fully responsive with mobile sidebar toggle
-  - Fixed critical event handling bugs in navigation and filters
-  - Architect-reviewed and approved
-  
-- **2025-11-05 (v1)**: Professional Shopify-inspired redesign
-  - Transformed color scheme from turquoise/gray to warm orange/coral palette
-  - Updated primary color to appetizing orange (#FF6B35)
-  - Changed fonts to Playfair Display (serif) and Inter (sans-serif)
-  - Modernized all components with cleaner spacing and shadows
-  - Updated buttons to rounded pill shapes with professional hover effects
-  - Enhanced card designs with subtle borders and better shadows
-  - Improved typography hierarchy and readability
-  - Updated FAQ and feedback sections with new color variables
-  - Created cohesive design system with professional Shopify-like aesthetic
-  
-- **2025-11-04**: Complete redesign to Sweet Paris aesthetic
-  - Changed color scheme from red/brown to turquoise/gray
-  - Added Pacifico script font for headings
-  - Implemented tab-based navigation system
-  - Created 2-column grid layout for menu items
-  - Added sliding cart sidebar
-  - Fixed "ORDER NOW" button for mobile
-  - Updated all HTML pages with new header/footer design
-  - Reorganized menu items into proper categories
-  
-- **2025-11-04 (Initial)**: Initial setup for Replit environment
-  - Added Python HTTP server for static file serving
-  - Configured workflow for port 5000
-  - Added .gitignore for Python
-  - Created SVG placeholder images
+## External Dependencies
+- **Firebase Firestore:** Cloud NoSQL database for real-time data storage and synchronization.
+- **Firebase Authentication:** For secure user (admin) login and management.
+- **Google Sign-In:** Integrated with Firebase Authentication for user login.
+- **ImgBB:** Third-party service for free cloud hosting of product images.
+- **Vercel:** Deployment platform for hosting the application and serverless functions.
+- **Playfair Display (Google Fonts):** For display headings.
+- **Inter (Google Fonts):** For body text.
