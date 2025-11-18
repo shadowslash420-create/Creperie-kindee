@@ -17,7 +17,7 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && 
              (request.auth.token.admin == true || 
-              request.auth.token.email in ['oussamaanis2005@gmail.com']);
+              request.auth.token.email in ['oussamaanis2005@gmail.com', 'YOUR_ACTUAL_EMAIL@gmail.com']);
     }
     
     // Check if user is delivery personnel
