@@ -416,8 +416,18 @@
           user = await signInWithEmail(email, password);
         }
         
-        // Redirect all users to home page
-        window.location.href = 'index.html';
+        // Check if admin email
+        const ADMIN_EMAILS = ['oussamaanis2005@gmail.com'];
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect');
+        
+        if (ADMIN_EMAILS.includes(user.email) && redirect === 'admin') {
+          window.location.href = 'admin.html';
+        } else if (ADMIN_EMAILS.includes(user.email)) {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'index.html';
+        }
       } catch (error) {
         console.error('Auth failed:', error);
         errorDiv.textContent = getErrorMessage(error.code);
@@ -451,8 +461,18 @@
       try {
         const user = await signInWithGoogle();
         
-        // Redirect all users to home page
-        window.location.href = 'index.html';
+        // Check if admin email
+        const ADMIN_EMAILS = ['oussamaanis2005@gmail.com'];
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect');
+        
+        if (ADMIN_EMAILS.includes(user.email) && redirect === 'admin') {
+          window.location.href = 'admin.html';
+        } else if (ADMIN_EMAILS.includes(user.email)) {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'index.html';
+        }
       } catch (error) {
         console.error('Login failed:', error);
         googleSignInBtn.disabled = false;
