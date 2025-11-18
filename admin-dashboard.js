@@ -1,7 +1,11 @@
 /* Admin Dashboard JavaScript */
 
+import { getAuthInstance } from './firebase-config.js';
+import { signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
 let currentSection = 'dashboard';
 let currentFilter = 'all';
+let currentUser = null;
 
 // Server sync functions
 async function getMenuFromServer() {
@@ -775,18 +779,115 @@ function loadAnalytics() {
   document.getElementById('popular-items').innerHTML = html;
 }
 
-// Initialize dashboard on admin login
-window.addEventListener('DOMContentLoaded', () => {
-  // Check if already logged in
-  const isAdminLoggedIn = localStorage.getItem('kc_admin') === 'true';
+// Admin login with Firebase
+async function adminLogin(event) {
+  event.preventDefault();
   
-  if (isAdminLoggedIn && document.getElementById('admin-section')) {
+  const email = document.getElementById('adm-user').value;
+  const password = document.getElementById('adm-pass').value;
+  const loginBtn = document.getElementById('admin-login-btn');
+  const errorDiv = document.getElementById('login-error');
+  
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Logging in...';
+  errorDiv.style.display = 'none';
+  
+  try {
+    const auth = await getAuthInstance();
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    currentUser = userCredential.user;
+    
+    // Check if user has admin privileges (you should set custom claims in Firebase)
+    const token = await currentUser.getIdTokenResult();
+    
+    // For now, accept any authenticated user as admin
+    // Later, you should check: if (!token.claims.admin) throw new Error('Not an admin');
+    
+    localStorage.setItem('kc_admin', 'true');
     document.getElementById('login-section').classList.add('hidden');
     document.getElementById('admin-section').classList.remove('hidden');
     
-    // Restore last visited section or default to dashboard
     const lastSection = localStorage.getItem('kc_current_section') || 'dashboard';
     showSection(lastSection);
+    
+  } catch (error) {
+    console.error('Login failed:', error);
+    errorDiv.textContent = getErrorMessage(error.code);
+    errorDiv.style.display = 'block';
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Login';
+  }
+}
+
+function getErrorMessage(code) {
+  const messages = {
+    'auth/invalid-email': 'Invalid email address',
+    'auth/user-disabled': 'This account has been disabled',
+    'auth/user-not-found': 'No account found with this email',
+    'auth/wrong-password': 'Incorrect password',
+    'auth/invalid-credential': 'Invalid email or password',
+    'auth/too-many-requests': 'Too many failed attempts. Try again later.'
+  };
+  return messages[code] || 'Login failed. Please check your credentials.';
+}
+
+async function adminLogout() {
+  try {
+    const auth = await getAuthInstance();
+    await signOut(auth);
+    currentUser = null;
+    localStorage.removeItem('kc_admin');
+    localStorage.removeItem('kc_current_section');
+    localStorage.removeItem('kc_current_filter');
+    
+    document.getElementById('admin-section').classList.add('hidden');
+    document.getElementById('login-section').classList.remove('hidden');
+    
+    document.getElementById('adm-user').value = '';
+    document.getElementById('adm-pass').value = '';
+  } catch (error) {
+    console.error('Logout failed:', error);
+  }
+}
+
+// Make functions globally available
+window.adminLogin = adminLogin;
+window.adminLogout = adminLogout;
+
+// Initialize dashboard on admin login
+window.addEventListener('DOMContentLoaded', async () => {
+  const loginForm = document.getElementById('admin-login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', adminLogin);
+  }
+  
+  // Check if already logged in with Firebase
+  try {
+    const auth = await getAuthInstance();
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        currentUser = user;
+        localStorage.setItem('kc_admin', 'true');
+        
+        if (document.getElementById('admin-section')) {
+          document.getElementById('login-section').classList.add('hidden');
+          document.getElementById('admin-section').classList.remove('hidden');
+          
+          const lastSection = localStorage.getItem('kc_current_section') || 'dashboard';
+          showSection(lastSection);
+        }
+      } else {
+        currentUser = null;
+        localStorage.removeItem('kc_admin');
+        
+        if (document.getElementById('login-section')) {
+          document.getElementById('login-section').classList.remove('hidden');
+          document.getElementById('admin-section').classList.add('hidden');
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Auth initialization failed:', error);
   }
 });
 
