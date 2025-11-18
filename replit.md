@@ -6,14 +6,14 @@ A modern, elegant cloud-powered website for "Creperie Kinder" - a crepe restaura
 - Order placement with Cash on Delivery (COD)
 - Admin panel for order management
 - **Firebase Firestore integration** for real-time data synchronization
-- **Firebase Storage** for product image management
+- **ImgBB cloud image hosting** for product image management
 - Responsive design with RTL (right-to-left) support for Arabic
 - Modern orange color scheme with professional Shopify-like design
 
 ## Tech Stack
 - **Frontend**: Pure HTML, CSS, JavaScript (no frameworks)
 - **Backend**: Firebase Firestore (NoSQL cloud database)
-- **Storage**: Firebase Storage (cloud file storage)
+- **Image Hosting**: ImgBB (free cloud image storage)
 - **Authentication**: Firebase Authentication + Google Sign-In
 - **Fonts**: Playfair Display (serif headings), Inter (body text)
 - **Server**: Python HTTP server for static file serving
@@ -119,8 +119,10 @@ A modern, elegant cloud-powered website for "Creperie Kinder" - a crepe restaura
 - `kc_menu`: Menu cache for offline access
 - `kc_admin`: Admin login session
 
-**File Storage** (Firebase Storage):
-- `/menu/*`: Product images uploaded by admins
+**Image Storage** (ImgBB):
+- Product images are uploaded to ImgBB and stored as direct URLs in Firestore
+- Free cloud hosting with permanent storage
+- Secure server-side upload to protect API key
 
 ## Development
 The site runs on Python's built-in HTTP server:
@@ -133,6 +135,16 @@ The site runs on Python's built-in HTTP server:
 Configured to deploy as an autoscale static website on Replit.
 
 ## Recent Changes
+- **2025-11-18 (v4)**: Migrated Image Hosting to ImgBB
+  - **ImgBB Integration**: Product images now upload to ImgBB instead of Firebase Storage
+    - Free cloud image hosting with permanent storage
+    - Server-side upload endpoint (`/api/upload-image`) keeps API key secure
+    - Images converted to base64 and uploaded via Python backend
+    - Direct image URLs stored in Firestore for fast loading
+    - No deletion API for free ImgBB accounts (manual deletion from dashboard)
+  - **Security Enhancement**: API key never exposed to frontend
+  - **Environment Variables**: Added `IMGBB_API_KEY` secret
+  
 - **2025-11-18 (v3)**: Migrated Category Management to Firebase
   - **Firebase Storage**: Categories now stored in Firestore `categories` collection
     - Real-time synchronization across all devices and admin sessions

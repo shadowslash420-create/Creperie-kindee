@@ -187,22 +187,50 @@ class DatabaseService {
 
   async uploadImage(file, folder = 'menu') {
     await this.init();
-    const timestamp = Date.now();
-    const filename = `${folder}/${timestamp}_${file.name}`;
-    const storageRef = ref(this.storage, filename);
-    await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
+    
+    // Convert file to base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result.split(',')[1];
+        resolve(base64String);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    // Send to server for secure upload to ImgBB
+    const formData = new FormData();
+    formData.append('image', base64);
+    formData.append('folder', folder);
+    formData.append('filename', file.name);
+
+    try {
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Return the direct display URL from ImgBB
+        return result.url;
+      } else {
+        throw new Error(result.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      throw new Error('Image upload failed: ' + error.message);
+    }
   }
 
   async deleteImage(imageUrl) {
     await this.init();
-    try {
-      const imageRef = ref(this.storage, imageUrl);
-      await deleteObject(imageRef);
-    } catch (error) {
-      console.warn('Failed to delete image:', error);
-    }
+    // Note: ImgBB doesn't support API-based deletion for free accounts
+    // Images are stored permanently on ImgBB
+    // If you need to delete images, you'll need to do it manually from ImgBB dashboard
+    console.log('Image deletion not supported for ImgBB free accounts:', imageUrl);
   }
 
   async getAllOrders() {

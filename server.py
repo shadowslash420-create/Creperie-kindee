@@ -2,6 +2,8 @@
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import os
 import json
+import urllib.request
+import urllib.parse
 from urllib.parse import urlparse, parse_qs
 
 # Store menu data (in production, use a proper database)
@@ -84,7 +86,66 @@ class MyHandler(SimpleHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         parsed_path = urlparse(self.path)
 
-        if parsed_path.path == '/api/menu':
+        if parsed_path.path == '/api/upload-image':
+            # Handle image upload to ImgBB
+            try:
+                # Parse multipart form data manually to extract base64 image
+                boundary = self.headers['Content-Type'].split('boundary=')[1].encode()
+                parts = post_data.split(b'--' + boundary)
+                
+                image_base64 = None
+                folder = 'menu'
+                filename = 'image'
+                
+                for part in parts:
+                    if b'name="image"' in part:
+                        image_base64 = part.split(b'\r\n\r\n')[1].split(b'\r\n')[0].decode()
+                    elif b'name="folder"' in part:
+                        folder = part.split(b'\r\n\r\n')[1].split(b'\r\n')[0].decode()
+                    elif b'name="filename"' in part:
+                        filename = part.split(b'\r\n\r\n')[1].split(b'\r\n')[0].decode()
+                
+                if not image_base64:
+                    raise ValueError('No image data provided')
+                
+                # Get ImgBB API key from environment
+                imgbb_api_key = os.environ.get('IMGBB_API_KEY', '')
+                if not imgbb_api_key:
+                    raise ValueError('ImgBB API key not configured')
+                
+                # Prepare upload to ImgBB
+                upload_data = urllib.parse.urlencode({
+                    'key': imgbb_api_key,
+                    'image': image_base64,
+                    'name': f'{folder}_{filename}'
+                }).encode()
+                
+                # Upload to ImgBB
+                req = urllib.request.Request('https://api.imgbb.com/1/upload', data=upload_data)
+                response = urllib.request.urlopen(req)
+                result = json.loads(response.read().decode())
+                
+                if result.get('success'):
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        'success': True,
+                        'url': result['data']['display_url']
+                    }).encode())
+                else:
+                    raise ValueError('ImgBB upload failed')
+                    
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'error': str(e)
+                }).encode())
+            return
+        elif parsed_path.path == '/api/menu':
             menu = json.loads(post_data.decode())
             save_json_file(MENU_FILE, menu)
             self.send_response(200)
