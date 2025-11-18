@@ -837,6 +837,22 @@ async function adminLogout() {
 // Make functions globally available
 window.adminLogin = adminLogin;
 window.adminLogout = adminLogout;
+window.showSection = showSection;
+window.toggleSidebar = toggleSidebar;
+window.closeSidebar = closeSidebar;
+window.filterOrdersByStatus = filterOrdersByStatus;
+window.filterOrders = filterOrders;
+window.viewOrder = viewOrder;
+window.updateOrderStatus = updateOrderStatus;
+window.openMenuItemModal = openMenuItemModal;
+window.openEditMenuItemModal = openEditMenuItemModal;
+window.closeMenuItemModal = closeMenuItemModal;
+window.filterMenuByCategory = filterMenuByCategory;
+window.previewImage = previewImage;
+window.saveMenuItem = saveMenuItem;
+window.confirmDeleteMenuItem = confirmDeleteMenuItem;
+window.deleteMenuItemById = deleteMenuItemById;
+window.updateOrderStatusQuick = updateOrderStatusQuick;
 
 // Initialize dashboard on admin login
 window.addEventListener('DOMContentLoaded', async () => {
