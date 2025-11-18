@@ -1,30 +1,59 @@
+
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
     
     // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
     function isAdmin() {
-      return request.auth != null && 
-             request.auth.token.email != null &&
+      return isAuthenticated() && 
              (request.auth.token.admin == true || 
               request.auth.token.email in ['your-admin-email@example.com']);
     }
     
-    // Menu images folder
-    // - Anyone can read (public access for product images)
-    // - Only admins can upload/modify images
-    match /menu/{imageId} {
-      allow read: if true;
-      allow write: if isAdmin() && 
-                      request.resource.size < 5 * 1024 * 1024 &&  // Max 5MB
-                      request.resource.contentType.matches('image/.*');
+    function isDelivery() {
+      return isAuthenticated() && 
+             (request.auth.token.delivery == true ||
+              request.auth.token.email in ['delivery@creperie-kinder.com']);
     }
     
-    // Default rule for all other files
-    match /{allPaths=**} {
-      allow read: if request.auth != null;
+    function isValidImage() {
+      return request.resource.size < 5 * 1024 * 1024 && // 5MB limit
+             request.resource.contentType.matches('image/.*');
+    }
+    
+    // Menu images - public read, admin write
+    match /menu/{imageId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidImage();
+    }
+    
+    // Order receipts/attachments - admin and delivery read, admin write
+    match /orders/{orderId}/{fileName} {
+      allow read: if isAdmin() || isDelivery();
       allow write: if isAdmin();
+    }
+    
+    // User profile images - users can manage their own, admin can manage all
+    match /users/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+    }
+    
+    // Delivery personnel images - admin only
+    match /delivery/{deliveryId}/{fileName} {
+      allow read: if isAdmin() || isDelivery();
+      allow write: if isAdmin();
+    }
+    
+    // General uploads - admin only
+    match /uploads/{fileName} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && isValidImage();
     }
   }
 }
@@ -32,27 +61,15 @@ service firebase.storage {
 // SETUP INSTRUCTIONS:
 //
 // 1. Enable Firebase Storage:
-//    - Go to Firebase Console: https://console.firebase.google.com/
-//    - Select your project (kinder-87e7e)
-//    - Click "Storage" in the left sidebar
-//    - Click "Get Started"
-//    - Use default settings or choose production mode
+//    - Go to: https://console.firebase.google.com/project/kinder-87e7e
+//    - Click "Storage" → "Get Started"
+//    - Use production mode
 //    - Select same location as Firestore
 //
-// 2. Deploy these storage rules:
-//    - In Firebase Console, go to Storage > Rules tab
-//    - Copy and paste the rules above
+// 2. Deploy these rules:
+//    - Go to Storage → Rules tab
+//    - Copy and paste these rules
 //    - Replace 'your-admin-email@example.com' with your actual admin email
 //    - Click "Publish"
 //
-// TEMPORARY DEVELOPMENT RULES (⚠️ INSECURE - DO NOT USE IN PRODUCTION):
-// Use these ONLY for initial testing:
-//
-// rules_version = '2';
-// service firebase.storage {
-//   match /b/{bucket}/o {
-//     match /{allPaths=**} {
-//       allow read, write: if true;  // WARNING: Anyone can read/write!
-//     }
-//   }
-// }
+// 3. Test file uploads from admin dashboard
