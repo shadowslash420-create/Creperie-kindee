@@ -1052,24 +1052,26 @@ async function handleImageSelect(event) {
   
   // Validate file type
   if (!file.type.startsWith('image/')) {
-    alert('❌ Please select an image file only (JPG, PNG, WebP)');
+    alert('❌ الرجاء اختيار ملف صورة فقط (JPG, PNG, WebP)');
     event.target.value = '';
+    clearImage();
     return;
   }
   
   // Validate file size (max 5MB)
   const MAX_SIZE = 5 * 1024 * 1024; // 5MB
   if (file.size > MAX_SIZE) {
-    alert('❌ Image too large! Maximum size is 5MB');
+    alert('❌ الصورة كبيرة جداً! الحد الأقصى هو 5MB');
     event.target.value = '';
+    clearImage();
     return;
   }
   
   selectedImageFile = file;
   
-  // Show local preview
+  // Show local preview first
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     const previewPlaceholder = document.getElementById('upload-placeholder');
     const previewContainer = document.getElementById('image-preview-container');
     const previewImg = document.getElementById('image-preview-img');
@@ -1080,11 +1082,19 @@ async function handleImageSelect(event) {
     
     const uploadArea = document.getElementById('image-upload-area');
     if (uploadArea) uploadArea.style.borderColor = '#48bb78';
+    
+    // Auto-upload to ImgBB after preview is shown
+    console.log('🚀 Starting upload to ImgBB...');
+    await uploadImageToImgBB();
   };
-  reader.readAsDataURL(file);
   
-  // Auto-upload to ImgBB
-  await uploadImageToImgBB();
+  reader.onerror = (error) => {
+    console.error('❌ Error reading file:', error);
+    alert('❌ فشل في قراءة الملف');
+    clearImage();
+  };
+  
+  reader.readAsDataURL(file);
 }
 
 /**
@@ -1092,8 +1102,8 @@ async function handleImageSelect(event) {
  */
 async function uploadImageToImgBB() {
   if (!selectedImageFile) {
-    console.log('No file selected for upload');
-    return;
+    console.log('⚠️ No file selected for upload');
+    return false;
   }
   
   const uploadProgress = document.getElementById('upload-progress');
@@ -1106,32 +1116,42 @@ async function uploadImageToImgBB() {
     if (uploadProgress) uploadProgress.style.display = 'block';
     if (uploadSuccess) uploadSuccess.style.display = 'none';
     if (progressBar) progressBar.style.width = '10%';
-    if (uploadText) uploadText.textContent = '📤 Preparing upload...';
+    if (uploadText) uploadText.textContent = '📤 جاري التحضير...';
     
-    console.log('📤 Starting upload to ImgBB...');
+    console.log('📤 Starting upload to ImgBB...', {
+      fileName: selectedImageFile.name,
+      fileSize: selectedImageFile.size,
+      fileType: selectedImageFile.type
+    });
     
     // Convert file to base64
     if (progressBar) progressBar.style.width = '30%';
-    if (uploadText) uploadText.textContent = '📤 Converting image...';
+    if (uploadText) uploadText.textContent = '📤 جاري تحويل الصورة...';
     
     const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
         const base64String = reader.result.split(',')[1];
+        console.log('✅ Image converted to base64, length:', base64String.length);
         resolve(base64String);
       };
-      reader.onerror = reject;
+      reader.onerror = (error) => {
+        console.error('❌ FileReader error:', error);
+        reject(error);
+      };
       reader.readAsDataURL(selectedImageFile);
     });
     
     // Upload to server (which forwards to ImgBB)
     if (progressBar) progressBar.style.width = '50%';
-    if (uploadText) uploadText.textContent = '📤 Uploading to ImgBB...';
+    if (uploadText) uploadText.textContent = '📤 جاري رفع الصورة إلى ImgBB...';
     
     const formData = new FormData();
     formData.append('image', base64);
     formData.append('folder', 'menu');
     formData.append('filename', selectedImageFile.name.replace(/\.[^/.]+$/, ''));
+    
+    console.log('📤 Sending request to /api/upload-image...');
     
     const response = await fetch('/api/upload-image', {
       method: 'POST',
@@ -1140,15 +1160,23 @@ async function uploadImageToImgBB() {
     
     if (progressBar) progressBar.style.width = '80%';
     
+    console.log('📡 Response received:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+    
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Upload failed (${response.status}): ${errorText}`);
+      console.error('❌ Server error response:', errorText);
+      throw new Error(`فشل الرفع (${response.status}): ${errorText}`);
     }
     
     const result = await response.json();
+    console.log('📦 Response data:', result);
     
     if (!result.success) {
-      throw new Error(result.error || 'Upload failed');
+      throw new Error(result.error || 'فشل الرفع');
     }
     
     // Success!
@@ -1163,10 +1191,17 @@ async function uploadImageToImgBB() {
       if (uploadSuccess) uploadSuccess.style.display = 'block';
     }, 500);
     
+    return true;
+    
   } catch (error) {
     console.error('❌ Upload failed:', error);
-    alert('❌ Failed to upload image: ' + error.message);
-    clearImage();
+    alert('❌ فشل رفع الصورة: ' + error.message);
+    
+    // Hide progress, show error
+    if (uploadProgress) uploadProgress.style.display = 'none';
+    if (uploadSuccess) uploadSuccess.style.display = 'none';
+    
+    return false;
   }
 }
 

@@ -92,21 +92,41 @@ class MyHandler(SimpleHTTPRequestHandler):
         if parsed_path.path == '/api/upload-image':
             # Handle image upload to ImgBB
             try:
+                print('📤 Upload request received')
+                
                 # Parse multipart form data manually to extract base64 image
-                boundary = self.headers['Content-Type'].split('boundary=')[1].encode()
+                content_type = self.headers.get('Content-Type', '')
+                if 'boundary=' not in content_type:
+                    raise ValueError('No boundary found in Content-Type')
+                
+                boundary = content_type.split('boundary=')[1].encode()
                 parts = post_data.split(b'--' + boundary)
                 
                 image_base64 = None
                 folder = 'menu'
                 filename = 'image'
                 
+                print(f'📦 Processing {len(parts)} parts')
+                
                 for part in parts:
                     if b'name="image"' in part:
-                        image_base64 = part.split(b'\r\n\r\n')[1].split(b'\r\n')[0].decode()
+                        try:
+                            image_base64 = part.split(b'\r\n\r\n')[1].split(b'\r\n')[0].decode('utf-8', errors='ignore')
+                            print(f'✅ Found image data, length: {len(image_base64)}')
+                        except Exception as e:
+                            print(f'❌ Error extracting image: {e}')
                     elif b'name="folder"' in part:
-                        folder = part.split(b'\r\n\r\n')[1].split(b'\r\n')[0].decode()
+                        try:
+                            folder = part.split(b'\r\n\r\n')[1].split(b'\r\n')[0].decode('utf-8')
+                            print(f'✅ Folder: {folder}')
+                        except:
+                            pass
                     elif b'name="filename"' in part:
-                        filename = part.split(b'\r\n\r\n')[1].split(b'\r\n')[0].decode()
+                        try:
+                            filename = part.split(b'\r\n\r\n')[1].split(b'\r\n')[0].decode('utf-8')
+                            print(f'✅ Filename: {filename}')
+                        except:
+                            pass
                 
                 if not image_base64:
                     raise ValueError('No image data provided')
@@ -114,7 +134,9 @@ class MyHandler(SimpleHTTPRequestHandler):
                 # Get ImgBB API key from environment
                 imgbb_api_key = os.environ.get('IMGBB_API_KEY', '')
                 if not imgbb_api_key:
-                    raise ValueError('ImgBB API key not configured')
+                    raise ValueError('ImgBB API key not configured in environment variables')
+                
+                print(f'🔑 Using ImgBB API key: {imgbb_api_key[:10]}...')
                 
                 # Prepare upload to ImgBB
                 upload_data = urllib.parse.urlencode({
@@ -123,25 +145,49 @@ class MyHandler(SimpleHTTPRequestHandler):
                     'name': f'{folder}_{filename}'
                 }).encode()
                 
+                print('📤 Uploading to ImgBB...')
+                
                 # Upload to ImgBB
                 req = urllib.request.Request('https://api.imgbb.com/1/upload', data=upload_data)
-                response = urllib.request.urlopen(req)
-                result = json.loads(response.read().decode())
+                req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+                
+                try:
+                    response = urllib.request.urlopen(req, timeout=30)
+                    result = json.loads(response.read().decode())
+                    print(f'✅ ImgBB response: {result.get("success", False)}')
+                except urllib.error.HTTPError as e:
+                    error_body = e.read().decode()
+                    print(f'❌ ImgBB HTTP Error: {e.code} - {error_body}')
+                    raise ValueError(f'ImgBB upload failed: {e.code} - {error_body}')
+                except urllib.error.URLError as e:
+                    print(f'❌ ImgBB URL Error: {e.reason}')
+                    raise ValueError(f'ImgBB connection failed: {e.reason}')
                 
                 if result.get('success'):
+                    image_url = result['data']['display_url']
+                    print(f'✅ Upload successful: {image_url}')
+                    
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
                     self.end_headers()
                     self.wfile.write(json.dumps({
                         'success': True,
-                        'url': result['data']['display_url']
+                        'url': image_url
                     }).encode())
                 else:
-                    raise ValueError('ImgBB upload failed')
+                    error_msg = result.get('error', {}).get('message', 'Unknown error')
+                    print(f'❌ ImgBB returned error: {error_msg}')
+                    raise ValueError(f'ImgBB upload failed: {error_msg}')
                     
             except Exception as e:
+                print(f'❌ Upload error: {str(e)}')
+                import traceback
+                traceback.print_exc()
+                
                 self.send_response(500)
                 self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(json.dumps({
                     'success': False,
