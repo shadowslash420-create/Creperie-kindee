@@ -908,15 +908,20 @@ function renderMenuItems(menu) {
     return;
   }
   
+  const categories = getCategories();
+  
   let html = '';
   filtered.forEach(item => {
+    const category = categories.find(cat => cat.id === item.category);
+    const categoryName = category ? category.name : item.category;
+    
     html += `
       <div class="menu-item-card">
         <img src="${item.img}" alt="${item.name}" class="menu-item-image" onerror="this.src='images/crepe1.svg'" />
         <div class="menu-item-content">
           <div class="menu-item-header">
             <h4 class="menu-item-name">${item.name}</h4>
-            <span class="menu-item-category ${item.category}">${item.category}</span>
+            <span class="menu-item-category ${item.category}">${categoryName}</span>
           </div>
           <p class="menu-item-desc">${item.desc}</p>
           <p class="menu-item-price">${item.price.toFixed(2)} DZD</p>
@@ -956,6 +961,7 @@ function openMenuItemModal() {
   document.getElementById('current-image-url').value = '';
   document.getElementById('image-preview').classList.remove('active');
   document.getElementById('image-preview').innerHTML = '';
+  updateCategoryUI();
   document.getElementById('menu-item-modal').classList.add('active');
 }
 
@@ -1250,4 +1256,150 @@ function loadStatusChartFromFirebase(orders) {
 }
 
 window.loadDashboard = loadDashboardFromFirebase;
+
+/* ==================== CATEGORY MANAGEMENT ==================== */
+
+const DEFAULT_CATEGORIES = [
+  { id: 'sweet', name: 'Sweet Crêpes' },
+  { id: 'savory', name: 'Savory Crêpes' },
+  { id: 'kids', name: 'Kids Crêpes' },
+  { id: 'drinks', name: 'Drinks' }
+];
+
+function getCategories() {
+  const stored = localStorage.getItem('kc_categories');
+  if (!stored) {
+    localStorage.setItem('kc_categories', JSON.stringify(DEFAULT_CATEGORIES));
+    return DEFAULT_CATEGORIES;
+  }
+  return JSON.parse(stored);
+}
+
+function saveCategories(categories) {
+  localStorage.setItem('kc_categories', JSON.stringify(categories));
+  updateCategoryUI();
+}
+
+function updateCategoryUI() {
+  const categories = getCategories();
+  
+  const categorySelect = document.getElementById('item-category');
+  if (categorySelect) {
+    const currentValue = categorySelect.value;
+    categorySelect.innerHTML = '<option value="">Select category</option>';
+    categories.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat.id;
+      option.textContent = cat.name;
+      categorySelect.appendChild(option);
+    });
+    if (currentValue) {
+      categorySelect.value = currentValue;
+    }
+  }
+  
+  const filtersContainer = document.getElementById('menu-category-filters');
+  if (filtersContainer) {
+    filtersContainer.innerHTML = '<button class="filter-btn active" onclick="filterMenuByCategory(\'all\', event)">All</button>';
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.textContent = cat.name;
+      btn.onclick = (e) => filterMenuByCategory(cat.id, e);
+      filtersContainer.appendChild(btn);
+    });
+  }
+  
+  loadCategoriesList();
+}
+
+function loadCategoriesList() {
+  const categories = getCategories();
+  const listContainer = document.getElementById('categories-list');
+  
+  if (!listContainer) return;
+  
+  if (categories.length === 0) {
+    listContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">No categories yet</p>';
+    return;
+  }
+  
+  listContainer.innerHTML = categories.map(cat => `
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f7fafc; border-radius: 8px;">
+      <div>
+        <div style="font-weight: 600; color: #2d3748;">${cat.name}</div>
+        <div style="font-size: 12px; color: #718096; margin-top: 4px;">ID: ${cat.id}</div>
+      </div>
+      <button onclick="deleteCategory('${cat.id}')" style="background: #fc8181; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+        Delete
+      </button>
+    </div>
+  `).join('');
+}
+
+function openCategoryModal() {
+  document.getElementById('category-modal').classList.add('active');
+  loadCategoriesList();
+}
+
+function closeCategoryModal() {
+  document.getElementById('category-modal').classList.remove('active');
+  document.getElementById('new-category-id').value = '';
+  document.getElementById('new-category-name').value = '';
+}
+
+function addCategory() {
+  const id = document.getElementById('new-category-id').value.trim().toLowerCase();
+  const name = document.getElementById('new-category-name').value.trim();
+  
+  if (!id || !name) {
+    alert('Please fill in both Category ID and Category Name');
+    return;
+  }
+  
+  if (!/^[a-z0-9-]+$/.test(id)) {
+    alert('Category ID must be lowercase letters, numbers, and hyphens only (no spaces)');
+    return;
+  }
+  
+  const categories = getCategories();
+  
+  if (categories.find(cat => cat.id === id)) {
+    alert('A category with this ID already exists');
+    return;
+  }
+  
+  categories.push({ id, name });
+  saveCategories(categories);
+  
+  document.getElementById('new-category-id').value = '';
+  document.getElementById('new-category-name').value = '';
+  
+  alert('✅ Category added successfully!');
+}
+
+function deleteCategory(categoryId) {
+  const categories = getCategories();
+  const category = categories.find(cat => cat.id === categoryId);
+  
+  if (!category) return;
+  
+  if (!confirm(`Are you sure you want to delete "${category.name}"?\n\nNote: Menu items in this category will still exist but may need their category updated.`)) {
+    return;
+  }
+  
+  const filtered = categories.filter(cat => cat.id !== categoryId);
+  saveCategories(filtered);
+  
+  alert('✅ Category deleted successfully!');
+}
+
+window.openCategoryModal = openCategoryModal;
+window.closeCategoryModal = closeCategoryModal;
+window.addCategory = addCategory;
+window.deleteCategory = deleteCategory;
+
+document.addEventListener('DOMContentLoaded', () => {
+  updateCategoryUI();
+});
 
