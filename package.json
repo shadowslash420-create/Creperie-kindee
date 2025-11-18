@@ -24,6 +24,7 @@
     "vercel": "^latest"
   },
   "dependencies": {
-    "firebase": "^12.6.0"
+    "firebase": "^12.6.0",
+    "formidable": "^3.5.1"
   }
 }

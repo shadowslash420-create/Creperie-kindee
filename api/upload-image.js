@@ -1,3 +1,11 @@
+import formidable from 'formidable';
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -14,7 +22,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { image, folder = 'menu', filename = 'image' } = req.body;
+    const form = formidable({});
+    const [fields] = await form.parse(req);
+
+    const image = fields.image?.[0];
+    const folder = fields.folder?.[0] || 'menu';
+    const filename = fields.filename?.[0] || 'image';
 
     if (!image) {
       throw new Error('No image data provided');
