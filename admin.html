@@ -189,15 +189,16 @@
       <section class="content-section" id="section-menu">
         <div class="menu-manager">
           <div class="menu-header">
-            <button class="btn-primary" onclick="openMenuItemModal()">
-              <span>➕</span> Add New Item
-            </button>
-            <div class="menu-filters">
+            <div style="display: flex; gap: 12px;">
+              <button class="btn-primary" onclick="openMenuItemModal()">
+                <span>➕</span> Add New Item
+              </button>
+              <button class="btn-secondary" onclick="openCategoryModal()" style="background: #4a5568; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span>🏷️</span> Manage Categories
+              </button>
+            </div>
+            <div class="menu-filters" id="menu-category-filters">
               <button class="filter-btn active" onclick="filterMenuByCategory('all', event)">All</button>
-              <button class="filter-btn" onclick="filterMenuByCategory('sweet', event)">Sweet</button>
-              <button class="filter-btn" onclick="filterMenuByCategory('savory', event)">Savory</button>
-              <button class="filter-btn" onclick="filterMenuByCategory('kids', event)">Kids</button>
-              <button class="filter-btn" onclick="filterMenuByCategory('drinks', event)">Drinks</button>
             </div>
           </div>
           <div class="menu-items-grid" id="menu-items-grid"></div>
@@ -231,10 +232,6 @@
               <label for="item-category">Category *</label>
               <select id="item-category" required>
                 <option value="">Select category</option>
-                <option value="sweet">Sweet Crêpes</option>
-                <option value="savory">Savory Crêpes</option>
-                <option value="kids">Kids Crêpes</option>
-                <option value="drinks">Drinks</option>
               </select>
             </div>
             <div class="form-group">
@@ -248,6 +245,40 @@
               <button type="submit" class="btn-primary" id="save-item-btn">Save Item</button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- Category Management Modal -->
+      <div class="modal" id="category-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Manage Categories</h2>
+            <button class="modal-close" onclick="closeCategoryModal()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="new-category-id">Category ID *</label>
+              <input type="text" id="new-category-id" placeholder="e.g., desserts" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%; font-size: 14px;" />
+              <small style="color:#718096;display:block;margin-top:4px;">Lowercase, no spaces (e.g., desserts, hot-drinks)</small>
+            </div>
+            <div class="form-group" style="margin-top: 16px;">
+              <label for="new-category-name">Category Name *</label>
+              <input type="text" id="new-category-name" placeholder="e.g., Desserts" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%; font-size: 14px;" />
+              <small style="color:#718096;display:block;margin-top:4px;">Display name (e.g., Desserts, Hot Drinks)</small>
+            </div>
+            <button onclick="addCategory()" class="btn-primary" style="margin-top: 16px; width: 100%;">
+              <span>➕</span> Add Category
+            </button>
+            
+            <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+              <h3 style="margin-bottom: 16px; font-size: 16px; color: #2d3748;">Existing Categories</h3>
+              <div id="categories-list" style="display: flex; flex-direction: column; gap: 12px;">
+              </div>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top: 24px;">
+            <button type="button" class="btn-secondary" onclick="closeCategoryModal()">Close</button>
+          </div>
         </div>
       </div>
 
