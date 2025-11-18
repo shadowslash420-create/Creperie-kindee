@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -7,31 +8,15 @@ service cloud.firestore {
     // HELPER FUNCTIONS
     // ============================================
 
-    // Check if user is authenticated (works with both Google and Email auth)
     function isAuthenticated() {
       return request.auth != null && request.auth.uid != null;
     }
 
-    // Check if user is admin
     function isAdmin() {
       return isAuthenticated() && 
-             (request.auth.token.admin == true || 
-              request.auth.token.email in ['oussamaanis2005@gmail.com']);
+             request.auth.token.email in ['oussamaanis2005@gmail.com'];
     }
 
-    // Check if user is delivery personnel
-    function isDelivery() {
-      return isAuthenticated() && 
-             (request.auth.token.delivery == true ||
-              request.auth.token.email in ['delivery@creperie-kinder.com']);
-    }
-
-    // Check if user owns the resource
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    // Validate order data structure
     function isValidOrder() {
       let data = request.resource.data;
       return data.keys().hasAll(['customerName', 'customerPhone', 'items', 'total', 'status', 'createdAt']) &&
@@ -45,23 +30,25 @@ service cloud.firestore {
              data.createdAt is timestamp;
     }
 
-    // Validate menu item data structure
     function isValidMenuItem() {
       let data = request.resource.data;
-      return data.keys().hasAll(['name', 'desc', 'price', 'category', 'img']) &&
+      return data.keys().hasAll(['name', 'desc', 'price', 'category']) &&
              data.name is string &&
              data.desc is string &&
              data.price is number &&
              data.price > 0 &&
-             data.category is string &&
-             data.img is string;
+             data.category is string;
+    }
+
+    function isValidCategory() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['name']) &&
+             data.name is string;
     }
 
     // ============================================
-    // MENU COLLECTION RULES
+    // MENU COLLECTION
     // ============================================
-    // - Public read access (anyone can view menu)
-    // - Admin-only write access (create, update, delete)
     match /menu/{menuId} {
       allow read: if true;
       allow create: if isAdmin() && isValidMenuItem();
@@ -70,164 +57,40 @@ service cloud.firestore {
     }
 
     // ============================================
-    // ORDERS COLLECTION RULES
+    // CATEGORIES COLLECTION
     // ============================================
-    // - Authenticated users can create orders
-    // - Admin can read/update/delete all orders
-    // - Delivery can read and update order status
-    // - Users can read their own orders (if authenticated)
-    match /orders/{orderId} {
-      // Read permissions
-      allow read: if isAdmin() || 
-                     isDelivery() ||
-                     (isAuthenticated() && resource.data.createdBy == request.auth.uid) ||
-                     (isAuthenticated() && resource.data.customerEmail == request.auth.token.email) ||
-                     (isAuthenticated() && resource.data.customerEmail == request.auth.token.firebase.identities['email'][0]);
-
-      // Create permissions (authenticated users + guests via special token)
-      allow create: if (isAuthenticated() || request.auth == null) && 
-                       isValidOrder() &&
-                       request.resource.data.status == 'pending';
-
-      // Update permissions
-      allow update: if isAdmin() ||
-                       (isDelivery() && 
-                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedForDelivery', 'acceptedBy', 'deliveredAt']) &&
-                        request.resource.data.status in ['pending', 'in-progress', 'delivered']);
-
-      // Delete permissions (admin only)
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidCategory();
+      allow update: if isAdmin() && isValidCategory();
       allow delete: if isAdmin();
     }
 
     // ============================================
-    // CUSTOMERS COLLECTION RULES
+    // ORDERS COLLECTION
     // ============================================
-    // - Admin can read/write (for analytics)
-    // - Auto-generated from orders
+    match /orders/{orderId} {
+      allow read: if isAdmin() || 
+                     (isAuthenticated() && resource.data.createdBy == request.auth.uid);
+      allow create: if isValidOrder() && request.resource.data.status == 'pending';
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // CUSTOMERS COLLECTION
+    // ============================================
     match /customers/{customerId} {
       allow read: if isAdmin();
       allow write: if isAdmin();
     }
 
     // ============================================
-    // USER PROFILES COLLECTION (Optional)
-    // ============================================
-    // - Users can read/update their own profile
-    // - Admin can read all profiles
-    match /users/{userId} {
-      allow read: if isAdmin() || isOwner(userId);
-      allow create: if isAuthenticated() && isOwner(userId);
-      allow update: if isAdmin() || isOwner(userId);
-      allow delete: if isAdmin() || isOwner(userId);
-    }
-
-    // ============================================
-    // DELIVERY PERSONNEL COLLECTION
-    // ============================================
-    // - Admin can manage delivery personnel
-    // - Delivery personnel can read their own data
-    match /delivery_personnel/{deliveryId} {
-      allow read: if isAdmin() || isOwner(deliveryId) || isDelivery();
-      allow write: if isAdmin();
-    }
-
-    // ============================================
-    // CATEGORIES COLLECTION
-    // ============================================
-    // - Public read access (anyone can view categories)
-    // - Admin-only write access (create, update, delete)
-    match /categories/{categoryId} {
-      allow read: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // ============================================
     // ANALYTICS COLLECTION
     // ============================================
-    // - Admin-only access for business analytics
     match /analytics/{document=**} {
       allow read: if isAdmin();
       allow write: if isAdmin();
     }
-
-    // ============================================
-    // FEEDBACK COLLECTION
-    // ============================================
-    // - Authenticated users can create feedback
-    // - Admin can read all feedback
-    match /feedback/{feedbackId} {
-      allow read: if isAdmin();
-      allow create: if isAuthenticated() &&
-                       request.resource.data.keys().hasAll(['message', 'createdAt', 'userId']) &&
-                       request.resource.data.userId == request.auth.uid;
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
-    }
   }
 }
-
-// ============================================
-// SETUP INSTRUCTIONS
-// ============================================
-//
-// 1. Enable Cloud Firestore:
-//    - Go to: https://console.firebase.google.com/project/kinder-87e7e
-//    - Click "Firestore Database" → "Create database"
-//    - Choose production mode and select location
-//
-// 2. Deploy these security rules:
-//    - In Firestore Database → Rules tab
-//    - Copy and paste these rules
-//    - Replace 'your-admin-email@example.com' with your actual admin email
-//    - Click "Publish"
-//
-// 3. Set up Authentication:
-//    - Go to Authentication → Sign-in method
-//    - Enable Email/Password and Google providers
-//
-// 4. Set Custom Claims (for admin and delivery roles):
-//    Option A: Using Firebase CLI
-//    ```
-//    firebase functions:shell
-//    admin.auth().setCustomUserClaims('USER_UID', { admin: true })
-//    admin.auth().setCustomUserClaims('DELIVERY_UID', { delivery: true })
-//    ```
-//
-//    Option B: Using Firebase Console Extensions
-//    - Install "Set Custom User Claims" extension
-//    - Configure admin and delivery emails
-//
-// 5. Test the rules:
-//    - Go to Firestore Database → Rules → Rules Playground
-//    - Simulate different user roles and operations
-//
-// ============================================
-// ROLE SUMMARY
-// ============================================
-//
-// ADMIN:
-//   - Full access to menu (create, read, update, delete)
-//   - Full access to orders (read, update, delete)
-//   - Full access to customers analytics
-//   - Full access to feedback
-//   - Full access to delivery personnel management
-//
-// DELIVERY:
-//   - Read all orders
-//   - Update order status (pending → in-progress → delivered)
-//   - Read delivery personnel data
-//
-// AUTHENTICATED USERS:
-//   - Read menu items
-//   - Create orders
-//   - Read their own orders
-//   - Create feedback
-//   - Manage their own profile
-//
-// GUESTS (Unauthenticated):
-//   - Read menu items
-//   - Create orders (without user profile)
-//
-// ============================================

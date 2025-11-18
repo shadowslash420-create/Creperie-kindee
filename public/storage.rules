@@ -1,58 +1,31 @@
-
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    
-    // Helper functions
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isAdmin() {
       return isAuthenticated() && 
-             (request.auth.token.admin == true || 
-              request.auth.token.email in ['your-admin-email@example.com']);
+             request.auth.token.email in ['oussamaanis2005@gmail.com'];
     }
-    
-    function isDelivery() {
-      return isAuthenticated() && 
-             (request.auth.token.delivery == true ||
-              request.auth.token.email in ['delivery@creperie-kinder.com']);
-    }
-    
+
     function isValidImage() {
-      return request.resource.size < 5 * 1024 * 1024 && // 5MB limit
+      return request.resource.size < 5 * 1024 * 1024 && 
              request.resource.contentType.matches('image/.*');
     }
-    
+
     // Menu images - public read, admin write
     match /menu/{imageId} {
       allow read: if true;
       allow write: if isAdmin() && isValidImage();
     }
-    
-    // Order receipts/attachments - admin and delivery read, admin write
-    match /orders/{orderId}/{fileName} {
-      allow read: if isAdmin() || isDelivery();
-      allow write: if isAdmin();
-    }
-    
-    // User profile images - users can manage their own, admin can manage all
-    match /users/{userId}/{fileName} {
-      allow read: if true;
-      allow write: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
-    }
-    
-    // Delivery personnel images - admin only
-    match /delivery/{deliveryId}/{fileName} {
-      allow read: if isAdmin() || isDelivery();
-      allow write: if isAdmin();
-    }
-    
+
     // General uploads - admin only
-    match /uploads/{fileName} {
-      allow read: if isAdmin();
+    match /{allPaths=**} {
+      allow read: if true;
       allow write: if isAdmin() && isValidImage();
     }
   }
@@ -69,7 +42,8 @@ service firebase.storage {
 // 2. Deploy these rules:
 //    - Go to Storage → Rules tab
 //    - Copy and paste these rules
-//    - Replace 'your-admin-email@example.com' with your actual admin email
+//    - Replace 'oussamaanis2005@gmail.com' with your actual admin email
 //    - Click "Publish"
 //
 // 3. Test file uploads from admin dashboard
+//

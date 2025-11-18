@@ -1,64 +1,91 @@
-/* Admin Dashboard JavaScript */
+/* Admin Dashboard - Rebuilt from Scratch */
 
 import { getAuthInstance } from './firebase-config.js';
 import {signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-let currentSection = 'dashboard';
-let currentFilter = 'all';
-let currentUser = null;
+// State management
+const state = {
+  currentSection: 'dashboard',
+  currentFilter: 'all',
+  currentUser: null,
+  menuFilter: 'all',
+  editingItem: null,
+  selectedImage: null,
+  uploadedImageUrl: null,
+  categories: []
+};
 
-// Menu management variables - initialize early
-let currentMenuFilter = 'all';
-let currentEditingItem = null;
-let selectedImageFile = null;
-let uploadedImageUrl = null;
-let categoriesCache = [];
+// ==================== AUTHENTICATION ====================
 
-// Server sync functions
-async function getMenuFromServer() {
+async function adminLogin(event) {
+  event.preventDefault();
+  const email = document.getElementById('adm-user').value;
+  const password = document.getElementById('adm-pass').value;
+  const loginBtn = document.getElementById('admin-login-btn');
+  const errorDiv = document.getElementById('login-error');
+
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Logging in...';
+  errorDiv.style.display = 'none';
+
   try {
-    const response = await fetch('/api/menu');
-    const menu = await response.json();
-    localStorage.setItem('kc_menu', JSON.stringify(menu));
-    return menu;
-  } catch(error) {
-    return JSON.parse(localStorage.getItem('kc_menu') || '[]');
+    const auth = await getAuthInstance();
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    state.currentUser = userCredential.user;
+
+    localStorage.setItem('kc_admin', 'true');
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('admin-section').classList.remove('hidden');
+
+    const lastSection = localStorage.getItem('kc_current_section') || 'dashboard';
+    showSection(lastSection);
+  } catch (error) {
+    console.error('Login failed:', error);
+    errorDiv.textContent = getErrorMessage(error.code);
+    errorDiv.style.display = 'block';
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Login';
   }
 }
 
-async function saveMenuToServer(menu) {
-  localStorage.setItem('kc_menu', JSON.stringify(menu));
+function getErrorMessage(code) {
+  const messages = {
+    'auth/invalid-email': 'Invalid email address',
+    'auth/user-disabled': 'This account has been disabled',
+    'auth/user-not-found': 'No account found with this email',
+    'auth/wrong-password': 'Incorrect password',
+    'auth/invalid-credential': 'Invalid email or password',
+    'auth/too-many-requests': 'Too many failed attempts. Try again later.'
+  };
+  return messages[code] || 'Login failed. Please check your credentials.';
+}
+
+async function adminLogout() {
   try {
-    await fetch('/api/menu', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(menu)
-    });
-  } catch(error) {
-    console.error('Failed to sync menu to server:', error);
+    const auth = await getAuthInstance();
+    await signOut(auth);
+    state.currentUser = null;
+    localStorage.removeItem('kc_admin');
+    localStorage.removeItem('kc_current_section');
+    localStorage.removeItem('kc_current_filter');
+    window.location.href = 'index.html';
+  } catch (error) {
+    console.error('Logout failed:', error);
+    window.location.href = 'index.html';
   }
 }
 
-// Show specific section
-function showSection(section, evt) {
-  currentSection = section;
+// ==================== NAVIGATION ====================
 
-  // Save current section to localStorage
+function showSection(section) {
+  state.currentSection = section;
   localStorage.setItem('kc_current_section', section);
 
-  // Update active state for navigation items
-  const navItems = document.querySelectorAll('.nav-item');
-  navItems.forEach(item => {
+  // Update nav items
+  document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.remove('active');
-    // Check if this nav item corresponds to the current section
     const navText = item.textContent.trim().toLowerCase();
-    const sectionMap = {
-      'dashboard': ['dashboard', '📊'],
-      'orders': ['orders', '📦'],
-      'menu': ['menu', '🍽️'],
-      'analytics': ['analytics', '📈']
-    };
-    if (sectionMap[section] && sectionMap[section].some(keyword => navText.includes(keyword))) {
+    if (navText.includes(section.toLowerCase())) {
       item.classList.add('active');
     }
   });
@@ -67,7 +94,7 @@ function showSection(section, evt) {
   document.querySelectorAll('.content-section').forEach(sec => {
     sec.classList.remove('active');
   });
-  document.getElementById('section-' + section).classList.add('active');
+  document.getElementById('section-' + section)?.classList.add('active');
 
   // Update page title
   const titles = {
@@ -79,43 +106,19 @@ function showSection(section, evt) {
   document.getElementById('page-title').textContent = titles[section];
 
   // Load section data
-  if (section === 'dashboard') {
-    loadDashboard();
-  } else if (section === 'orders') {
-    // Restore filter state if available
-    const savedFilter = localStorage.getItem('kc_current_filter');
-    if (savedFilter) {
-      currentFilter = savedFilter;
-      // Update filter tab active state
-      setTimeout(() => {
-        document.querySelectorAll('.filter-tab').forEach(tab => {
-          tab.classList.remove('active');
-          if (tab.textContent.trim().toLowerCase().includes(savedFilter) || 
-              (savedFilter === 'all' && tab.textContent.trim().toLowerCase() === 'all')) {
-            tab.classList.add('active');
-          }
-        });
-      }, 100);
-    }
-    loadAllOrders();
-  } else if (section === 'menu') {
-    loadMenuItems();
-  } else if (section === 'analytics') {
-    loadAnalytics();
-  }
+  if (section === 'dashboard') loadDashboard();
+  else if (section === 'orders') loadOrders();
+  else if (section === 'menu') loadMenu();
+  else if (section === 'analytics') loadAnalytics();
 
   // Close sidebar on mobile
-  if (window.innerWidth <= 768) {
-    closeSidebar();
-  }
+  if (window.innerWidth <= 768) closeSidebar();
 }
 
-// Toggle sidebar on mobile
 function toggleSidebar() {
   const sidebar = document.getElementById('dashboard-sidebar');
   sidebar.classList.toggle('active');
 
-  // Toggle overlay on mobile
   let overlay = document.getElementById('sidebar-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
@@ -127,7 +130,6 @@ function toggleSidebar() {
   overlay.classList.toggle('active');
 }
 
-// Close sidebar
 function closeSidebar() {
   const sidebar = document.getElementById('dashboard-sidebar');
   const overlay = document.getElementById('sidebar-overlay');
@@ -135,41 +137,28 @@ function closeSidebar() {
   if (overlay) overlay.classList.remove('active');
 }
 
-// Load Dashboard
+// ==================== DASHBOARD ====================
+
 async function loadDashboard() {
   try {
     const dbService = (await import('./db-service.js')).default;
     const orders = await dbService.getAllOrders();
 
-    updateDashboardStatsFromOrders(orders);
-    loadRecentOrdersFromOrders(orders);
-    loadBestSellersFromOrders(orders);
-    loadSalesChartFromOrders(orders);
-    loadStatusChartFromOrders(orders);
+    updateDashboardStats(orders);
+    loadRecentOrders(orders);
+    loadBestSellers(orders);
 
     dbService.listenToOrderChanges((updatedOrders) => {
-      updateDashboardStatsFromOrders(updatedOrders);
-      loadRecentOrdersFromOrders(updatedOrders);
-      loadBestSellersFromOrders(updatedOrders);
-      loadSalesChartFromOrders(updatedOrders);
-      loadStatusChartFromOrders(updatedOrders);
+      updateDashboardStats(updatedOrders);
+      loadRecentOrders(updatedOrders);
+      loadBestSellers(updatedOrders);
     });
   } catch (error) {
-    console.error('Failed to load dashboard from Firebase, using localStorage:', error);
-    loadDashboardFallback();
+    console.error('Failed to load dashboard:', error);
   }
 }
 
-function loadDashboardFallback() {
-  const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  updateDashboardStatsFromOrders(orders);
-  loadRecentOrdersFromOrders(orders);
-  loadBestSellersFromOrders(orders);
-  loadSalesChart();
-  loadStatusChart();
-}
-
-function updateDashboardStatsFromOrders(orders) {
+function updateDashboardStats(orders) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -189,15 +178,8 @@ function updateDashboardStatsFromOrders(orders) {
   document.getElementById('stat-completed').textContent = completedToday.length;
 }
 
-// Load Recent Orders
-function loadRecentOrders() {
-  const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  loadRecentOrdersFromOrders(orders);
-}
-
-function loadRecentOrdersFromOrders(orders) {
+function loadRecentOrders(orders) {
   const recentOrders = orders.slice(0, 5);
-
   let html = '<table class="simple-table"><thead><tr>';
   html += '<th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>';
 
@@ -207,7 +189,7 @@ function loadRecentOrdersFromOrders(orders) {
     recentOrders.forEach(order => {
       html += '<tr>';
       html += '<td class="order-id">#' + (order.id ? order.id.substring(0, 8) : 'N/A') + '</td>';
-      html += '<td>' + (order.customerName || order.name || 'N/A') + '</td>';
+      html += '<td>' + (order.customerName || 'N/A') + '</td>';
       html += '<td>' + (order.total || 0).toFixed(2) + ' DZD</td>';
       html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
       html += '</tr>';
@@ -218,13 +200,7 @@ function loadRecentOrdersFromOrders(orders) {
   document.getElementById('recent-orders-table').innerHTML = html;
 }
 
-// Load Best Sellers
-function loadBestSellers() {
-  const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  loadBestSellersFromOrders(orders);
-}
-
-function loadBestSellersFromOrders(orders) {
+function loadBestSellers(orders) {
   const itemCounts = {};
   const itemRevenue = {};
 
@@ -261,124 +237,9 @@ function loadBestSellersFromOrders(orders) {
   document.getElementById('best-sellers-list').innerHTML = html;
 }
 
-// Load Sales Chart (Simple bars since we don't have Chart.js)
-function loadSalesChart() {
-  const canvas = document.getElementById('sales-chart');
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth;
-  canvas.height = 280;
+// ==================== ORDERS ====================
 
-  const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  const last7Days = [];
-  const salesData = [];
-
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    const dateStr = date.toDateString();
-    last7Days.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-
-    const daySales = orders
-      .filter(o => new Date(o.timestamp || o.createdAt).toDateString() === dateStr)
-      .reduce((sum, o) => sum + o.total, 0);
-    salesData.push(daySales);
-  }
-
-  // Draw simple bar chart
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const maxSale = Math.max(...salesData, 100);
-  const barWidth = canvas.width / 7 - 20;
-  const chartHeight = 220;
-
-  salesData.forEach((sale, i) => {
-    const barHeight = (sale / maxSale) * chartHeight;
-    const x = i * (barWidth + 20) + 10;
-    const y = chartHeight - barHeight + 20;
-
-    // Draw bar
-    const gradient = ctx.createLinearGradient(0, y, 0, chartHeight + 20);
-    gradient.addColorStop(0, '#FF6B35');
-    gradient.addColorStop(1, '#FF8C42');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(x, y, barWidth, barHeight);
-
-    // Draw value
-    ctx.fillStyle = '#2d3748';
-    ctx.font = '12px Inter';
-    ctx.textAlign = 'center';
-    ctx.fillText(sale.toFixed(0) + ' DZD', x + barWidth / 2, y - 5);
-
-    // Draw label
-    ctx.fillStyle = '#718096';
-    ctx.font = '11px Inter';
-    ctx.fillText(last7Days[i], x + barWidth / 2, chartHeight + 40);
-  });
-}
-
-// Load Status Chart (Simple pie)
-function loadStatusChart() {
-  const canvas = document.getElementById('status-chart');
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth;
-  canvas.height = 280;
-
-  const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  const statusCounts = {
-    pending: orders.filter(o => o.status === 'pending').length,
-    'in-progress': orders.filter(o => o.status === 'in-progress').length,
-    delivered: orders.filter(o => o.status === 'delivered').length
-  };
-
-  const total = Object.values(statusCounts).reduce((a, b) => a + b, 0);
-
-  if (total === 0) {
-    ctx.fillStyle = '#999';
-    ctx.font = '14px Inter';
-    ctx.textAlign = 'center';
-    ctx.fillText('No orders yet', canvas.width / 2, canvas.height / 2);
-    return;
-  }
-
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2 - 20;
-  const radius = Math.min(centerX, centerY) - 20;
-
-  const colors = {
-    pending: '#e67e22',
-    'in-progress': '#3498db',
-    delivered: '#27ae60'
-  };
-
-  let currentAngle = -Math.PI / 2;
-
-  Object.keys(statusCounts).forEach(status => {
-    const count = statusCounts[status];
-    const sliceAngle = (count / total) * 2 * Math.PI;
-
-    ctx.fillStyle = colors[status];
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
-    ctx.lineTo(centerX, centerY);
-    ctx.fill();
-
-    currentAngle += sliceAngle;
-  });
-
-  // Draw legend
-  let legendY = canvas.height - 40;
-  Object.keys(statusCounts).forEach(status => {
-    ctx.fillStyle = colors[status];
-    ctx.fillRect(20, legendY, 12, 12);
-    ctx.fillStyle = '#2d3748';
-    ctx.font = '12px Inter';
-    ctx.textAlign = 'left';
-    ctx.fillText(status + ': ' + statusCounts[status], 40, legendY + 10);
-    legendY += 20;
-  });
-}
-
-// Load All Orders (Firebase-powered)
-async function loadAllOrders() {
+async function loadOrders() {
   try {
     const dbService = (await import('./db-service.js')).default;
     const orders = await dbService.getAllOrders();
@@ -387,23 +248,75 @@ async function loadAllOrders() {
 
     dbService.listenToOrderChanges((updatedOrders) => {
       renderOrdersTable(updatedOrders);
-      updateDashboardStats(updatedOrders);
     });
   } catch (error) {
     console.error('Failed to load orders:', error);
-    document.getElementById('orders-table').innerHTML = `
-      <div style="padding:40px;text-align:center;color:#999;">
-        <p>⚠️ Failed to load orders</p>
-        <p style="font-size:0.9em;">${error.message}</p>
-        <button onclick="loadAllOrders()" style="margin-top:16px;padding:8px 16px;background:#FF6B35;color:white;border:none;border-radius:8px;cursor:pointer;">Retry</button>
-      </div>
-    `;
   }
 }
 
-// Filter Orders by Status
+function renderOrdersTable(orders) {
+  const filtered = state.currentFilter === 'all' 
+    ? orders 
+    : orders.filter(order => order.status === state.currentFilter);
+
+  const searchTerm = document.getElementById('order-search')?.value?.toLowerCase() || '';
+  const searchFiltered = filtered.filter(order => 
+    order.customerName?.toLowerCase().includes(searchTerm) ||
+    order.id?.toLowerCase().includes(searchTerm)
+  );
+
+  if (searchFiltered.length === 0) {
+    document.getElementById('orders-table').innerHTML = `
+      <div style="padding:60px 20px;text-align:center;color:#999;">
+        <h3 style="margin:0 0 8px 0;">No orders found</h3>
+        <p style="font-size:0.9em;">Try changing the filter or search term</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '<table class="orders-table"><thead><tr>';
+  html += '<th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th>';
+  html += '</tr></thead><tbody>';
+
+  searchFiltered.forEach(order => {
+    const date = order.createdAt?.toDate ? order.createdAt.toDate() : new Date();
+    const statusClass = order.status || 'pending';
+
+    html += '<tr>';
+    html += `<td><strong>${order.id.substring(0, 8)}</strong></td>`;
+    html += `<td>${order.customerName || 'N/A'}</td>`;
+    html += `<td>${order.customerPhone || 'N/A'}</td>`;
+    html += `<td>${order.items?.length || 0} items</td>`;
+    html += `<td><strong>${(order.total || 0).toFixed(2)} DZD</strong></td>`;
+    html += `<td><span class="status-badge ${statusClass}">${order.status || 'pending'}</span></td>`;
+    html += `<td>${date.toLocaleDateString()}</td>`;
+    html += `<td>
+      <select onchange="updateOrderStatus('${order.id}', this.value)" class="status-select">
+        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+        <option value="in-progress" ${order.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+      </select>
+    </td>`;
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('orders-table').innerHTML = html;
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    await dbService.updateOrderStatus(orderId, newStatus);
+  } catch (error) {
+    console.error('Failed to update order status:', error);
+    alert('❌ Failed to update order status');
+  }
+}
+
 function filterOrdersByStatus(status, evt) {
-  currentFilter = status;
+  state.currentFilter = status;
   localStorage.setItem('kc_current_filter', status);
 
   document.querySelectorAll('.filter-tab').forEach(tab => {
@@ -412,133 +325,18 @@ function filterOrdersByStatus(status, evt) {
 
   if (evt && evt.target) {
     evt.target.classList.add('active');
-  } else {
-    // Restore filter tab active state
-    document.querySelectorAll('.filter-tab').forEach(tab => {
-      if (tab.textContent.trim().toLowerCase().includes(status) || 
-          (status === 'all' && tab.textContent.trim().toLowerCase() === 'all')) {
-        tab.classList.add('active');
-      }
-    });
   }
 
-  loadAllOrders();
+  loadOrders();
 }
 
-// Filter Orders by Search
 function filterOrders() {
-  const searchText = document.getElementById('order-search').value.toLowerCase();
-  const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-
-  let filtered = orders.filter(o => 
-    o.name.toLowerCase().includes(searchText) || 
-    o.id.toString().includes(searchText)
-  );
-
-  if (currentFilter !== 'all') {
-    filtered = filtered.filter(o => o.status === currentFilter);
-  }
-
-  // Render filtered orders (reuse the table rendering logic)
-  let html = '<table class="orders-table"><thead><tr>';
-  html += '<th>Order ID</th><th>Customer</th><th>Phone</th><th>Address</th>';
-  html += '<th>Items</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-
-  if (filtered.length === 0) {
-    html += '<tr><td colspan="8" style="text-align:center;color:#999;padding:40px;">No orders found</td></tr>';
-  } else {
-    filtered.reverse().forEach(order => {
-      html += '<tr>';
-      html += '<td class="order-id">#' + order.id + '</td>';
-      html += '<td>' + order.name + '</td>';
-      html += '<td>' + order.phone + '</td>';
-      html += '<td>' + order.address + '</td>';
-      html += '<td>' + order.items.length + ' items' + (order.specialInstructions ? ' <span style="color:#e67e22;" title="Has special instructions">📝</span>' : '') + '</td>';
-      html += '<td>' + order.total.toFixed(2) + ' DZD</td>';
-      html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
-      html += '<td class="order-actions">';
-      html += '<button class="action-btn btn-view" onclick="viewOrder(\'' + order.id + '\')">View</button>';
-      html += '<button class="action-btn btn-update" onclick="updateOrderStatus(\'' + order.id + '\')">Update</button>';
-      html += '</td>';
-      html += '</tr>';
-    });
-  }
-
-  html += '</tbody></table>';
-  document.getElementById('orders-table').innerHTML = html;
+  loadOrders();
 }
 
-// View Order Details
-function viewOrder(orderId) {
-  const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  const order = orders.find(o => o.id === orderId);
+// ==================== MENU ====================
 
-  if (!order) return;
-
-  let itemsList = order.items.map(item => 
-    item.qty + 'x ' + item.name + ' (' + item.price.toFixed(2) + ' DZD)'
-  ).join('\n');
-
-  let message = 'Order #' + order.id + '\n\n' +
-    'Customer: ' + order.name + '\n' +
-    'Phone: ' + order.phone + '\n' +
-    'Address: ' + order.address + '\n' +
-    'Status: ' + order.status + '\n\n' +
-    'Items:\n' + itemsList + '\n\n';
-
-  if(order.subtotal !== undefined){
-    message += 'Subtotal: ' + order.subtotal.toFixed(2) + ' DZD\n';
-    message += 'Delivery Fee: ' + (order.deliveryFee || 0).toFixed(2) + ' DZD\n';
-  }
-  message += 'Total: ' + order.total.toFixed(2) + ' DZD';
-
-  if(order.specialInstructions){
-    message += '\n\nSpecial Instructions:\n' + order.specialInstructions;
-  }
-
-  alert(message);
-}
-
-// Update Order Status
-function updateOrderStatus(orderId) {
-  const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  const orderIndex = orders.findIndex(o => o.id === orderId);
-
-  if (orderIndex === -1) return;
-
-  const order = orders[orderIndex];
-  const statusFlow = ['pending', 'in-progress', 'delivered'];
-  const currentIndex = statusFlow.indexOf(order.status);
-
-  if (currentIndex < statusFlow.length - 1) {
-    order.status = statusFlow[currentIndex + 1];
-
-    // Add timestamp when order moves to in-progress (accepted for delivery)
-    if (order.status === 'in-progress') {
-      order.acceptedForDelivery = new Date().toISOString();
-      order.acceptedBy = 'Admin';
-    }
-
-    localStorage.setItem('kc_orders', JSON.stringify(orders));
-
-    if (currentSection === 'orders') {
-      loadAllOrders();
-    } else {
-      loadDashboard();
-    }
-
-    const statusMessage = order.status === 'in-progress' 
-      ? 'Order #' + orderId + ' accepted and sent to delivery!'
-      : 'Order #' + orderId + ' status updated to: ' + order.status;
-
-    alert(statusMessage);
-  } else {
-    alert('Order is already delivered!');
-  }
-}
-
-// Load Menu Items (Firebase-powered)
-async function loadMenuItems() {
+async function loadMenu() {
   try {
     const dbService = (await import('./db-service.js')).default;
     const menu = await dbService.getAllMenuItems();
@@ -550,357 +348,13 @@ async function loadMenuItems() {
     });
   } catch (error) {
     console.error('Failed to load menu:', error);
-    document.getElementById('menu-items-grid').innerHTML = `
-      <div style="padding:40px;text-align:center;color:#999;">
-        <p>⚠️ Failed to load menu items</p>
-        <p style="font-size:0.9em;">${error.message}</p>
-        <button onclick="loadMenuItems()" style="margin-top:16px;padding:8px 16px;background:#FF6B35;color:white;border:none;border-radius:8px;cursor:pointer;">Retry</button>
-      </div>
-    `;
   }
 }
-
-// Show Add Menu Modal
-function showAddMenuModal() {
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Add New Menu Item</h2>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
-      </div>
-      <form id="add-menu-form" onsubmit="addMenuItem(event)">
-        <div class="form-group">
-          <label>Item Name *</label>
-          <input type="text" id="item-name" required />
-        </div>
-        <div class="form-group">
-          <label>Description *</label>
-          <textarea id="item-desc" required rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Price (DZD) *</label>
-          <input type="number" id="item-price" step="0.01" min="0" required />
-        </div>
-        <div class="form-group">
-          <label>Category *</label>
-          <select id="item-category" required>
-            <option value="">Select category</option>
-            <option value="sweet">Sweet Crêpes</option>
-            <option value="savory">Savory Crêpes</option>
-            <option value="kids">Kids Crêpes</option>
-            <option value="drinks">Drinks</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Image Path *</label>
-          <input type="text" id="item-img" value="images/crepe1.svg" required />
-          <small style="color:#999;display:block;margin-top:4px;">Use existing images: crepe1.svg, crepe2.svg, crepe3.svg, crepe4.svg, crepe5.svg, drink1.svg</small>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
-          <button type="submit" class="btn-save">Add Item</button>
-        </div>
-      </form>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-// Add Menu Item
-async function addMenuItem(e) {
-  e.preventDefault();
-
-  const menu = await getMenuFromServer();
-
-  const newItem = {
-    id: 'c' + Date.now(),
-    name: document.getElementById('item-name').value,
-    desc: document.getElementById('item-desc').value,
-    price: parseFloat(document.getElementById('item-price').value),
-    category: document.getElementById('item-category').value,
-    img: document.getElementById('item-img').value
-  };
-
-  menu.push(newItem);
-  await saveMenuToServer(menu);
-
-  closeModal();
-  loadMenuItems();
-  alert('Menu item added successfully!');
-}
-
-// Edit Menu Item
-async function editMenuItem(itemId) {
-  const menu = await getMenuFromServer();
-  const item = menu.find(i => i.id === itemId);
-
-  if (!item) return;
-
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Edit Menu Item</h2>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
-      </div>
-      <form id="edit-menu-form" onsubmit="updateMenuItem(event, '${itemId}')">
-        <div class="form-group">
-          <label>Item Name *</label>
-          <input type="text" id="edit-item-name" value="${item.name}" required />
-        </div>
-        <div class="form-group">
-          <label>Description *</label>
-          <textarea id="edit-item-desc" required rows="3">${item.desc}</textarea>
-        </div>
-        <div class="form-group">
-          <label>Price (DZD) *</label>
-          <input type="number" id="edit-item-price" step="0.01" min="0" value="${item.price}" required />
-        </div>
-        <div class="form-group">
-          <label>Category *</label>
-          <select id="edit-item-category" required>
-            <option value="sweet" ${item.category === 'sweet' ? 'selected' : ''}>Sweet Crêpes</option>
-            <option value="savory" ${item.category === 'savory' ? 'selected' : ''}>Savory Crêpes</option>
-            <option value="kids" ${item.category === 'kids' ? 'selected' : ''}>Kids Crêpes</option>
-            <option value="drinks" ${item.category === 'drinks' ? 'selected' : ''}>Drinks</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Image Path *</label>
-          <input type="text" id="edit-item-img" value="${item.img}" required />
-          <small style="color:#999;display:block;margin-top:4px;">Use existing images: crepe1.svg, crepe2.svg, crepe3.svg, crepe4.svg, crepe5.svg, drink1.svg</small>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
-          <button type="submit" class="btn-save">Update Item</button>
-        </div>
-      </form>
-    </div>
-  `;
-  document.body.appendChild(modal);
-}
-
-// Update Menu Item
-async function updateMenuItem(e, itemId) {
-  e.preventDefault();
-
-  const menu = await getMenuFromServer();
-  const itemIndex = menu.findIndex(i => i.id === itemId);
-
-  if (itemIndex === -1) return;
-
-  menu[itemIndex] = {
-    ...menu[itemIndex],
-    name: document.getElementById('edit-item-name').value,
-    desc: document.getElementById('edit-item-desc').value,
-    price: parseFloat(document.getElementById('edit-item-price').value),
-    category: document.getElementById('edit-item-category').value,
-    img: document.getElementById('edit-item-img').value
-  };
-
-  await saveMenuToServer(menu);
-
-  closeModal();
-  loadMenuItems();
-  alert('Menu item updated successfully!');
-}
-
-// Delete Menu Item
-async function deleteMenuItem(itemId) {
-  if (!confirm('Are you sure you want to delete this menu item?')) return;
-
-  let menu = await getMenuFromServer();
-  menu = menu.filter(i => i.id !== itemId);
-
-  await saveMenuToServer(menu);
-  loadMenuItems();
-  alert('Menu item deleted successfully for all users!');
-}
-
-// Close Modal
-function closeModal() {
-  const modal = document.querySelector('.modal-overlay');
-  if (modal) modal.remove();
-}
-
-// Load Analytics
-function loadAnalytics() {
-  const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-
-  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
-  const avgOrder = orders.length > 0 ? totalRevenue / orders.length : 0;
-
-  // Find best day
-  const dayRevenue = {};
-  orders.forEach(order => {
-    const day = new Date(order.timestamp || order.createdAt).toDateString();
-    dayRevenue[day] = (dayRevenue[day] || 0) + order.total;
-  });
-
-  const bestDay = Object.keys(dayRevenue).reduce((a, b) => 
-    dayRevenue[a] > dayRevenue[b] ? a : b, '-'
-  );
-
-  document.getElementById('total-revenue').textContent = totalRevenue.toFixed(2) + ' DZD';
-  document.getElementById('avg-order').textContent = avgOrder.toFixed(2) + ' DZD';
-  document.getElementById('best-day').textContent = bestDay !== '-' ? new Date(bestDay).toLocaleDateString() : '-';
-
-  // Popular items
-  const itemCounts = {};
-  orders.forEach(order => {
-    order.items.forEach(item => {
-      itemCounts[item.name] = (itemCounts[item.name] || 0) + item.qty;
-    });
-  });
-
-  const sortedItems = Object.keys(itemCounts)
-    .map(name => ({ name, count: itemCounts[name] }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 10);
-
-  let html = '<ol style="margin:0;padding-left:20px;">';
-  sortedItems.forEach(item => {
-    html += '<li style="margin:8px 0;">' + item.name + ' (' + item.count + ' sold)</li>';
-  });
-  html += '</ol>';
-
-  document.getElementById('popular-items').innerHTML = html;
-}
-
-// Admin login with Firebase
-async function adminLogin(event) {
-  event.preventDefault();
-
-  const email = document.getElementById('adm-user').value;
-  const password = document.getElementById('adm-pass').value;
-  const loginBtn = document.getElementById('admin-login-btn');
-  const errorDiv = document.getElementById('login-error');
-
-  loginBtn.disabled = true;
-  loginBtn.textContent = 'Logging in...';
-  errorDiv.style.display = 'none';
-
-  try {
-    const auth = await getAuthInstance();
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    currentUser = userCredential.user;
-
-    // Check if user has admin privileges (you should set custom claims in Firebase)
-    const token = await currentUser.getIdTokenResult();
-
-    // For now, accept any authenticated user as admin
-    // Later, you should check: if (!token.claims.admin) throw new Error('Not an admin');
-
-    localStorage.setItem('kc_admin', 'true');
-    document.getElementById('login-section').classList.add('hidden');
-    document.getElementById('admin-section').classList.remove('hidden');
-
-    const lastSection = localStorage.getItem('kc_current_section') || 'dashboard';
-    showSection(lastSection);
-
-  } catch (error) {
-    console.error('Login failed:', error);
-    errorDiv.textContent = getErrorMessage(error.code);
-    errorDiv.style.display = 'block';
-    loginBtn.disabled = false;
-    loginBtn.textContent = 'Login';
-  }
-}
-
-function getErrorMessage(code) {
-  const messages = {
-    'auth/invalid-email': 'Invalid email address',
-    'auth/user-disabled': 'This account has been disabled',
-    'auth/user-not-found': 'No account found with this email',
-    'auth/wrong-password': 'Incorrect password',
-    'auth/invalid-credential': 'Invalid email or password',
-    'auth/too-many-requests': 'Too many failed attempts. Try again later.'
-  };
-  return messages[code] || 'Login failed. Please check your credentials.';
-}
-
-async function adminLogout() {
-  try {
-    const auth = await getAuthInstance();
-    await signOut(auth);
-    currentUser = null;
-    localStorage.removeItem('kc_admin');
-    localStorage.removeItem('kc_current_section');
-    localStorage.removeItem('kc_current_filter');
-
-    window.location.href = 'index.html';
-  } catch (error) {
-    console.error('Logout failed:', error);
-    window.location.href = 'index.html';
-  }
-}
-
-// Make functions globally available
-window.adminLogin = adminLogin;
-window.adminLogout = adminLogout;
-window.showSection = showSection;
-window.toggleSidebar = toggleSidebar;
-window.closeSidebar = closeSidebar;
-window.filterOrdersByStatus = filterOrdersByStatus;
-window.filterOrders = filterOrders;
-window.viewOrder = viewOrder;
-window.updateOrderStatus = updateOrderStatus;
-window.openMenuItemModal = openMenuItemModal;
-window.openEditMenuItemModal = openEditMenuItemModal;
-window.closeMenuItemModal = closeMenuItemModal;
-window.filterMenuByCategory = filterMenuByCategory;
-window.previewImage = previewImage;
-window.saveMenuItem = saveMenuItem;
-window.confirmDeleteMenuItem = confirmDeleteMenuItem;
-window.deleteMenuItemById = deleteMenuItemById;
-window.updateOrderStatusQuick = updateOrderStatusQuick;
-
-// Initialize dashboard on admin login
-window.addEventListener('DOMContentLoaded', async () => {
-  const loginForm = document.getElementById('admin-login-form');
-  if (loginForm) {
-    loginForm.addEventListener('submit', adminLogin);
-  }
-
-  // Check if already logged in with Firebase
-  try {
-    const auth = await getAuthInstance();
-    auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        currentUser = user;
-        localStorage.setItem('kc_admin', 'true');
-
-        if (document.getElementById('admin-section')) {
-          document.getElementById('login-section').classList.add('hidden');
-          document.getElementById('admin-section').classList.remove('hidden');
-
-          const lastSection = localStorage.getItem('kc_current_section') || 'dashboard';
-          showSection(lastSection);
-        }
-      } else {
-        currentUser = null;
-        localStorage.removeItem('kc_admin');
-
-        if (document.getElementById('login-section')) {
-          document.getElementById('login-section').classList.remove('hidden');
-          document.getElementById('admin-section').classList.add('hidden');
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Auth initialization failed:', error);
-  }
-});
-
-/* Firebase-Powered Menu Management */
 
 async function renderMenuItems(menu) {
-  const filtered = currentMenuFilter === 'all' 
+  const filtered = state.menuFilter === 'all' 
     ? menu 
-    : menu.filter(item => item.category === currentMenuFilter);
+    : menu.filter(item => item.category === state.menuFilter);
 
   if (filtered.length === 0) {
     document.getElementById('menu-items-grid').innerHTML = `
@@ -931,12 +385,8 @@ async function renderMenuItems(menu) {
           <p class="menu-item-desc">${item.desc}</p>
           <p class="menu-item-price">${item.price.toFixed(2)} DZD</p>
           <div class="menu-item-actions">
-            <button class="btn-edit" onclick="openEditMenuItemModal('${item.id}')">
-              ✏️ Edit
-            </button>
-            <button class="btn-delete" onclick="confirmDeleteMenuItem('${item.id}', '${item.name.replace(/'/g, "\\'")}')">
-              🗑️ Delete
-            </button>
+            <button class="btn-edit" onclick="openEditModal('${item.id}')">✏️ Edit</button>
+            <button class="btn-delete" onclick="deleteItem('${item.id}', '${item.name.replace(/'/g, "\\'")}')">🗑️ Delete</button>
           </div>
         </div>
       </div>
@@ -954,27 +404,27 @@ function filterMenuByCategory(category, event) {
     event.target.classList.add('active');
   }
 
-  currentMenuFilter = category;
-  loadMenuItems();
+  state.menuFilter = category;
+  loadMenu();
 }
 
-async function openMenuItemModal() {
-  currentEditingItem = null;
-  selectedImageFile = null;
-  uploadedImageUrl = null;
+// ==================== MENU ITEM MODAL ====================
+
+async function openAddModal() {
+  state.editingItem = null;
+  state.selectedImage = null;
+  state.uploadedImageUrl = null;
 
   document.getElementById('modal-title').textContent = '➕ Add New Menu Item';
   document.getElementById('menu-item-form').reset();
   document.getElementById('item-id').value = '';
 
-  // Reset image upload UI
-  clearImage();
-
-  await updateCategoryUI();
+  resetImageUpload();
+  await updateCategorySelect();
   document.getElementById('menu-item-modal').classList.add('active');
 }
 
-async function openEditMenuItemModal(itemId) {
+async function openEditModal(itemId) {
   try {
     const dbService = (await import('./db-service.js')).default;
     const item = await dbService.getMenuItem(itemId);
@@ -984,9 +434,9 @@ async function openEditMenuItemModal(itemId) {
       return;
     }
 
-    currentEditingItem = item;
-    selectedImageFile = null;
-    uploadedImageUrl = null;
+    state.editingItem = item;
+    state.selectedImage = null;
+    state.uploadedImageUrl = null;
 
     document.getElementById('modal-title').textContent = '✏️ Edit Menu Item';
     document.getElementById('item-id').value = item.id;
@@ -995,11 +445,8 @@ async function openEditMenuItemModal(itemId) {
     document.getElementById('item-desc').value = item.desc;
     document.getElementById('item-category').value = item.category;
 
-    // Reset upload UI
-    document.getElementById('upload-placeholder').style.display = 'block';
-    document.getElementById('image-preview-container').style.display = 'none';
+    resetImageUpload();
 
-    // Show current image if exists
     if (item.img) {
       document.getElementById('upload-placeholder').innerHTML = `
         <div style="font-size: 48px; margin-bottom: 12px;">📷</div>
@@ -1010,13 +457,7 @@ async function openEditMenuItemModal(itemId) {
       `;
     }
 
-    // Attach event listener to file input
-    const fileInput = document.getElementById('item-image');
-    if (fileInput) {
-      fileInput.onchange = handleImageSelect;
-    }
-
-    await updateCategoryUI();
+    await updateCategorySelect();
     document.getElementById('menu-item-modal').classList.add('active');
   } catch (error) {
     console.error('Failed to load item:', error);
@@ -1024,110 +465,73 @@ async function openEditMenuItemModal(itemId) {
   }
 }
 
-function closeMenuItemModal() {
+function closeModal() {
   document.getElementById('menu-item-modal').classList.remove('active');
-  currentEditingItem = null;
-  selectedImageFile = null;
-  uploadedImageUrl = null;
-
-  // Reset all image upload UI elements
-  clearImage();
-
-  // Reset upload placeholder to default
-  document.getElementById('upload-placeholder').innerHTML = `
-    <div style="font-size: 48px; margin-bottom: 12px;">📸</div>
-    <p style="color: #4a5568; font-weight: 500; margin-bottom: 8px;">Click to upload image</p>
-    <p style="color: #718096; font-size: 13px;">Supports: JPG, PNG, WebP (Max 5MB)</p>
-    <p style="color: #FF6B35; font-size: 12px; margin-top: 8px;">✨ Images uploaded to ImgBB cloud storage</p>
-  `;
+  state.editingItem = null;
+  state.selectedImage = null;
+  state.uploadedImageUrl = null;
+  resetImageUpload();
 }
 
-// ==================== IMAGE UPLOAD MANAGEMENT ====================
+// ==================== IMAGE UPLOAD ====================
 
-/**
- * Handle image file selection and show preview
- */
-async function handleImageSelect(event) {
+function handleImageSelect(event) {
   const file = event.target.files[0];
   console.log('📸 Image selected:', file ? file.name : 'None');
 
   if (!file) {
-    clearImage();
+    resetImageUpload();
     return;
   }
 
-  // Validate file type
   if (!file.type.startsWith('image/')) {
-    alert('❌ الرجاء اختيار ملف صورة فقط (JPG, PNG, WebP)');
+    alert('❌ Please select an image file (JPG, PNG, WebP)');
     event.target.value = '';
-    clearImage();
+    resetImageUpload();
     return;
   }
 
-  // Validate file size (max 5MB)
-  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+  const MAX_SIZE = 5 * 1024 * 1024;
   if (file.size > MAX_SIZE) {
-    alert('❌ الصورة كبيرة جداً! الحد الأقصى هو 5MB');
+    alert('❌ Image too large! Maximum size is 5MB');
     event.target.value = '';
-    clearImage();
+    resetImageUpload();
     return;
   }
 
-  selectedImageFile = file;
+  state.selectedImage = file;
   console.log('✅ File validated, showing preview...');
 
-  // Show local preview first
   const reader = new FileReader();
   reader.onload = async (e) => {
     console.log('✅ File read successfully, updating UI...');
 
-    const previewPlaceholder = document.getElementById('upload-placeholder');
-    const previewContainer = document.getElementById('image-preview-container');
-    const previewImg = document.getElementById('image-preview-img');
+    document.getElementById('upload-placeholder').style.display = 'none';
+    document.getElementById('image-preview-container').style.display = 'block';
+    document.getElementById('image-preview-img').src = e.target.result;
+    document.getElementById('image-upload-area').style.borderColor = '#48bb78';
 
-    if (previewPlaceholder) {
-      previewPlaceholder.style.display = 'none';
-      console.log('✅ Placeholder hidden');
-    }
-    if (previewContainer) {
-      previewContainer.style.display = 'block';
-      console.log('✅ Preview container shown');
-    }
-    if (previewImg) {
-      previewImg.src = e.target.result;
-      console.log('✅ Preview image set');
-    }
-
-    const uploadArea = document.getElementById('image-upload-area');
-    if (uploadArea) {
-      uploadArea.style.borderColor = '#48bb78';
-    }
-
-    // Auto-upload to ImgBB after preview is shown
     try {
       console.log('🚀 Starting upload to ImgBB...');
-      await uploadImageToImgBB();
+      await uploadToImgBB();
     } catch (error) {
       console.error('❌ Upload failed:', error);
-      alert('⚠️ فشل رفع الصورة، لكن يمكنك المتابعة والحفظ');
+      alert('⚠️ Failed to upload image, but you can continue and save');
     }
   };
 
   reader.onerror = (error) => {
     console.error('❌ Error reading file:', error);
-    alert('❌ فشل في قراءة الملف');
-    clearImage();
+    alert('❌ Failed to read file');
+    resetImageUpload();
   };
 
   console.log('📖 Starting to read file...');
   reader.readAsDataURL(file);
 }
 
-/**
- * Upload image to ImgBB cloud storage via server API
- */
-async function uploadImageToImgBB() {
-  if (!selectedImageFile) {
+async function uploadToImgBB() {
+  if (!state.selectedImage) {
     console.log('⚠️ No file selected for upload');
     return false;
   }
@@ -1138,21 +542,19 @@ async function uploadImageToImgBB() {
   const uploadText = document.getElementById('upload-text');
 
   try {
-    // Show progress UI
-    if (uploadProgress) uploadProgress.style.display = 'block';
-    if (uploadSuccess) uploadSuccess.style.display = 'none';
-    if (progressBar) progressBar.style.width = '10%';
-    if (uploadText) uploadText.textContent = '📤 جاري التحضير...';
+    uploadProgress.style.display = 'block';
+    uploadSuccess.style.display = 'none';
+    progressBar.style.width = '10%';
+    uploadText.textContent = '📤 Preparing...';
 
     console.log('📤 Starting upload to ImgBB...', {
-      fileName: selectedImageFile.name,
-      fileSize: selectedImageFile.size,
-      fileType: selectedImageFile.type
+      fileName: state.selectedImage.name,
+      fileSize: state.selectedImage.size,
+      fileType: state.selectedImage.type
     });
 
-    // Convert file to base64
-    if (progressBar) progressBar.style.width = '30%';
-    if (uploadText) uploadText.textContent = '📤 جاري تحويل الصورة...';
+    progressBar.style.width = '30%';
+    uploadText.textContent = '📤 Converting image...';
 
     const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -1163,19 +565,18 @@ async function uploadImageToImgBB() {
       };
       reader.onerror = (error) => {
         console.error('❌ FileReader error:', error);
-        reject(new Error('فشل في قراءة الملف'));
+        reject(new Error('Failed to read file'));
       };
-      reader.readAsDataURL(selectedImageFile);
+      reader.readAsDataURL(state.selectedImage);
     });
 
-    // Upload to server (which forwards to ImgBB)
-    if (progressBar) progressBar.style.width = '50%';
-    if (uploadText) uploadText.textContent = '📤 جاري رفع الصورة إلى ImgBB...';
+    progressBar.style.width = '50%';
+    uploadText.textContent = 'Uploading to ImgBB...';
 
     const formData = new FormData();
     formData.append('image', base64);
     formData.append('folder', 'menu');
-    formData.append('filename', selectedImageFile.name.replace(/\.[^/.]+$/, ''));
+    formData.append('filename', state.selectedImage.name.replace(/\.[^/.]+$/, ''));
 
     console.log('📤 Sending request to /api/upload-image...');
 
@@ -1184,7 +585,7 @@ async function uploadImageToImgBB() {
       body: formData
     });
 
-    if (progressBar) progressBar.style.width = '80%';
+    progressBar.style.width = '80%';
 
     console.log('📡 Response received:', {
       status: response.status,
@@ -1195,88 +596,69 @@ async function uploadImageToImgBB() {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Server error response:', errorText);
-      throw new Error(`فشل الرفع (${response.status})`);
+      throw new Error(`Upload failed (${response.status})`);
     }
 
     const result = await response.json();
     console.log('📦 Response data:', result);
 
     if (!result.success) {
-      throw new Error(result.error || 'فشل الرفع');
+      throw new Error(result.error || 'Upload failed');
     }
 
-    // Success!
-    if (progressBar) progressBar.style.width = '100%';
-    uploadedImageUrl = result.url;
+    progressBar.style.width = '100%';
+    state.uploadedImageUrl = result.url;
 
-    console.log('✅ Image uploaded successfully:', uploadedImageUrl);
+    console.log('✅ Image uploaded successfully:', state.uploadedImageUrl);
 
-    // Show success message
     setTimeout(() => {
-      if (uploadProgress) uploadProgress.style.display = 'none';
-      if (uploadSuccess) uploadSuccess.style.display = 'block';
+      uploadProgress.style.display = 'none';
+      uploadSuccess.style.display = 'block';
     }, 500);
 
     return true;
-
   } catch (error) {
     console.error('❌ Upload failed:', error);
 
-    // Hide progress, show error in UI
-    if (uploadProgress) uploadProgress.style.display = 'none';
-    if (uploadSuccess) {
-      uploadSuccess.style.display = 'block';
-      uploadSuccess.style.color = '#e53e3e';
-      uploadSuccess.textContent = '⚠️ فشل الرفع - يمكنك المتابعة والحفظ';
-    }
+    uploadProgress.style.display = 'none';
+    uploadSuccess.style.display = 'block';
+    uploadSuccess.style.color = '#e53e3e';
+    uploadSuccess.textContent = '⚠️ Upload failed - you can continue and save';
 
-    // Don't throw - allow user to continue
     console.log('⚠️ Upload failed but allowing user to continue with local preview');
     return false;
   }
 }
 
-/**
- * Clear image selection and reset UI
- */
-function clearImage() {
-  selectedImageFile = null;
-  uploadedImageUrl = null;
+function resetImageUpload() {
+  state.selectedImage = null;
+  state.uploadedImageUrl = null;
 
   const fileInput = document.getElementById('item-image');
   if (fileInput) fileInput.value = '';
 
-  const uploadPlaceholder = document.getElementById('upload-placeholder');
-  const previewContainer = document.getElementById('image-preview-container');
-  const previewImg = document.getElementById('image-preview-img');
-  const uploadProgress = document.getElementById('upload-progress');
-  const uploadSuccess = document.getElementById('upload-success');
-  const progressBar = document.getElementById('progress-bar');
+  document.getElementById('upload-placeholder').style.display = 'block';
+  document.getElementById('image-preview-container').style.display = 'none';
+  document.getElementById('image-preview-img').src = '';
+  document.getElementById('upload-progress').style.display = 'none';
+  document.getElementById('upload-success').style.display = 'none';
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('image-upload-area').style.borderColor = '#cbd5e0';
 
-  if (uploadPlaceholder) uploadPlaceholder.style.display = 'block';
-  if (previewContainer) previewContainer.style.display = 'none';
-  if (previewImg) previewImg.src = '';
-  if (uploadProgress) uploadProgress.style.display = 'none';
-  if (uploadSuccess) uploadSuccess.style.display = 'none';
-  if (progressBar) progressBar.style.width = '0%';
-
-  const uploadArea = document.getElementById('image-upload-area');
-  if (uploadArea) uploadArea.style.borderColor = '#cbd5e0';
-
-  // Reset placeholder to default text
-  if (uploadPlaceholder) {
-    uploadPlaceholder.innerHTML = `
-      <div style="font-size: 48px; margin-bottom: 12px;">📸</div>
-      <p style="color: #4a5568; font-weight: 500; margin-bottom: 8px;">Click to upload image</p>
-      <p style="color: #718096; font-size: 13px;">Supports: JPG, PNG, WebP (Max 5MB)</p>
-      <p style="color: #FF6B35; font-size: 12px; margin-top: 8px;">✨ Images uploaded to ImgBB cloud storage</p>
-    `;
-  }
+  document.getElementById('upload-placeholder').innerHTML = `
+    <div style="font-size: 48px; margin-bottom: 12px;">📸</div>
+    <p style="color: #4a5568; font-weight: 500; margin-bottom: 8px;">Click to upload image</p>
+    <p style="color: #718096; font-size: 13px;">Supports: JPG, PNG, WebP (Max 5MB)</p>
+    <p style="color: #FF6B35; font-size: 12px; margin-top: 8px;">✨ Images uploaded to ImgBB cloud storage</p>
+  `;
 }
 
-/**
- * Save menu item (add or update)
- */
+function clearImage() {
+  resetImageUpload();
+}
+
+// ==================== SAVE MENU ITEM ====================
+
 async function saveMenuItem(event) {
   event.preventDefault();
 
@@ -1294,7 +676,6 @@ async function saveMenuItem(event) {
     const itemDesc = document.getElementById('item-desc').value.trim();
     const itemCategory = document.getElementById('item-category').value;
 
-    // Validate inputs
     if (!itemName || !itemDesc || !itemCategory || isNaN(itemPrice) || itemPrice <= 0) {
       alert('❌ Please fill all fields correctly');
       saveBtn.disabled = false;
@@ -1302,21 +683,16 @@ async function saveMenuItem(event) {
       return;
     }
 
-    // Determine which image URL to use
     let imageUrl = '';
 
-    if (uploadedImageUrl) {
-      // New image was uploaded
-      console.log('✅ Using newly uploaded image:', uploadedImageUrl);
-      imageUrl = uploadedImageUrl;
-    } else if (currentEditingItem?.img) {
-      // Editing existing item, keep current image
-      console.log('✅ Keeping existing image:', currentEditingItem.img);
-      imageUrl = currentEditingItem.img;
+    if (state.uploadedImageUrl) {
+      console.log('✅ Using newly uploaded image:', state.uploadedImageUrl);
+      imageUrl = state.uploadedImageUrl;
+    } else if (state.editingItem?.img) {
+      console.log('✅ Keeping existing image:', state.editingItem.img);
+      imageUrl = state.editingItem.img;
     }
-    // else: new item without image, leave empty
 
-    // Prepare item data
     const itemData = {
       name: itemName,
       price: itemPrice,
@@ -1327,7 +703,6 @@ async function saveMenuItem(event) {
 
     console.log('Saving item:', itemData);
 
-    // Save to Firebase
     saveBtn.textContent = '💾 Saving to database...';
 
     if (itemId) {
@@ -1338,13 +713,11 @@ async function saveMenuItem(event) {
       alert('✅ Menu item added successfully!');
     }
 
-    // Reset and close
-    selectedImageFile = null;
-    uploadedImageUrl = null;
-    currentEditingItem = null;
-    closeMenuItemModal();
-    loadMenuItems();
-
+    state.selectedImage = null;
+    state.uploadedImageUrl = null;
+    state.editingItem = null;
+    closeModal();
+    loadMenu();
   } catch (error) {
     console.error('Failed to save item:', error);
     alert('❌ Failed to save menu item: ' + error.message);
@@ -1354,253 +727,40 @@ async function saveMenuItem(event) {
   }
 }
 
-async function confirmDeleteMenuItem(itemId, itemName) {
+async function deleteItem(itemId, itemName) {
   if (confirm(`Are you sure you want to delete "${itemName}"?\n\nThis action cannot be undone.`)) {
-    await deleteMenuItemById(itemId);
-  }
-}
-
-async function deleteMenuItemById(itemId) {
-  try {
-    const dbService = (await import('./db-service.js')).default;
-    await dbService.deleteMenuItem(itemId);
-    alert('✅ Menu item deleted successfully!');
-    loadMenuItems();
-  } catch (error) {
-    console.error('Failed to delete item:', error);
-    alert('❌ Failed to delete menu item: ' + error.message);
-  }
-}
-
-/* Firebase-Powered Order Management - moved to replace old loadAllOrders */
-
-
-
-/* ==================== CATEGORY MIGRATION ==================== */
-
-async function migrateCategoriesFromLocalStorage() {
-  const localCategories = localStorage.getItem('kc_categories');
-  if (!localCategories) return;
-
-  try {
-    const dbService = (await import('./db-service.js')).default;
-    const categories = JSON.parse(localCategories);
-
-    for (const category of categories) {
-      await dbService.addCategory(category);
+    try {
+      const dbService = (await import('./db-service.js')).default;
+      await dbService.deleteMenuItem(itemId);
+      alert('✅ Menu item deleted successfully!');
+      loadMenu();
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+      alert('❌ Failed to delete menu item: ' + error.message);
     }
-
-    // Clear localStorage after successful migration
-    localStorage.removeItem('kc_categories');
-    console.log('Categories migrated to Firebase successfully');
-  } catch (error) {
-    console.error('Failed to migrate categories:', error);
   }
 }
 
-// Auto-run migration on page load
-document.addEventListener('DOMContentLoaded', async () => {
-  await migrateCategoriesFromLocalStorage();
-});
-
-
-function renderOrdersTable(orders) {
-  const filtered = currentFilter === 'all' 
-    ? orders 
-    : orders.filter(order => order.status === currentFilter);
-
-  const searchTerm = document.getElementById('order-search')?.value?.toLowerCase() || '';
-  const searchFiltered = filtered.filter(order => 
-    order.customerName?.toLowerCase().includes(searchTerm) ||
-    order.id?.toLowerCase().includes(searchTerm)
-  );
-
-  if (searchFiltered.length === 0) {
-    document.getElementById('orders-table').innerHTML = `
-      <div style="padding:60px 20px;text-align:center;color:#999;">
-        <h3 style="margin:0 0 8px 0;">No orders found</h3>
-        <p style="font-size:0.9em;">Try changing the filter or search term</p>
-      </div>
-    `;
-    return;
-  }
-
-  let html = '<table class="orders-table">';
-  html += '<thead><tr>';
-  html += '<th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th>';
-  html += '</tr></thead><tbody>';
-
-  searchFiltered.forEach(order => {
-    const date = order.createdAt?.toDate ? order.createdAt.toDate() : new Date();
-    const statusClass = order.status || 'pending';
-
-    html += '<tr>';
-    html += `<td><strong>${order.id.substring(0, 8)}</strong></td>`;
-    html += `<td>${order.customerName || 'N/A'}</td>`;
-    html += `<td>${order.customerPhone || 'N/A'}</td>`;
-    html += `<td>${order.items?.length || 0} items</td>`;
-    html += `<td><strong>${(order.total || 0).toFixed(2)} DZD</strong></td>`;
-    html += `<td><span class="status-badge ${statusClass}">${order.status || 'pending'}</span></td>`;
-    html += `<td>${date.toLocaleDateString()}</td>`;
-    html += `<td>
-      <select onchange="updateOrderStatusQuick('${order.id}', this.value)" class="status-select">
-        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-        <option value="in-progress" ${order.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
-        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-      </select>
-    </td>`;
-    html += '</tr>';
-  });
-
-  html += '</tbody></table>';
-  document.getElementById('orders-table').innerHTML = html;
-}
-
-async function updateOrderStatusQuick(orderId, newStatus) {
-  try {
-    const dbService = (await import('./db-service.js')).default;
-    await dbService.updateOrderStatus(orderId, newStatus);
-  } catch (error) {
-    console.error('Failed to update order status:', error);
-    alert('❌ Failed to update order status');
-  }
-}
-
-function updateDashboardStats(orders) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const todayOrders = orders.filter(order => {
-    const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date();
-    orderDate.setHours(0, 0, 0, 0);
-    return orderDate.getTime() === today.getTime();
-  });
-
-  const todayRevenue = todayOrders.reduce((sum, order) => sum + (order.total || 0), 0);
-  const pendingCount = orders.filter(o => o.status === 'pending').length;
-  const todayCompleted = todayOrders.filter(o => o.status === 'delivered').length;
-
-  document.getElementById('stat-revenue').textContent = todayRevenue.toFixed(2) + ' DZD';
-  document.getElementById('stat-total-orders').textContent = orders.length;
-  document.getElementById('stat-pending').textContent = pendingCount;
-  document.getElementById('stat-completed').textContent = todayCompleted;
-}
-
-
-/* Override loadDashboard to use Firebase */
-async function loadDashboardFromFirebase() {
-  try {
-    const dbService = (await import('./db-service.js')).default;
-    const orders = await dbService.getAllOrders();
-
-    updateDashboardStats(orders);
-    loadRecentOrdersFromFirebase(orders);
-    loadBestSellersFromFirebase(orders);
-    loadSalesChartFromFirebase(orders);
-    loadStatusChartFromFirebase(orders);
-
-    dbService.listenToOrderChanges((updatedOrders) => {
-      updateDashboardStats(updatedOrders);
-      loadRecentOrdersFromFirebase(updatedOrders);
-      loadBestSellersFromFirebase(updatedOrders);
-    });
-  } catch (error) {
-    console.error('Failed to load dashboard from Firebase:', error);
-    loadDashboard();
-  }
-}
-
-function loadRecentOrdersFromFirebase(orders) {
-  const recentOrders = orders.slice(0, 5);
-
-  let html = '<table class="simple-table"><thead><tr>';
-  html += '<th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>';
-
-  if (recentOrders.length === 0) {
-    html += '<tr><td colspan="4" style="text-align:center;color:#999;padding:40px;">No orders yet</td></tr>';
-  } else {
-    recentOrders.forEach(order => {
-      html += '<tr>';
-      html += '<td class="order-id">#' + (order.id ? order.id.substring(0, 8) : 'N/A') + '</td>';
-      html += '<td>' + (order.customerName || order.name || 'N/A') + '</td>';
-      html += '<td>' + (order.total || 0).toFixed(2) + ' DZD</td>';
-      html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
-      html += '</tr>';
-    });
-  }
-
-  html += '</tbody></table>';
-  document.getElementById('recent-orders-table').innerHTML = html;
-}
-
-async function loadBestSellersFromFirebase(orders) {
-  const itemCounts = {};
-
-  orders.forEach(order => {
-    if (order.items) {
-      order.items.forEach(item => {
-        if (!itemCounts[item.name || item.id]) {
-          itemCounts[item.name || item.id] = { name: item.name || item.id, count: 0, revenue: 0 };
-        }
-        itemCounts[item.name || item.id].count += item.qty || 1;
-        itemCounts[item.name || item.id].revenue += (item.price || 0) * (item.qty || 1);
-      });
-    }
-  });
-
-  const sorted = Object.values(itemCounts).sort((a, b) => b.count - a.count).slice(0, 5);
-
-  let html = '';
-  if (sorted.length === 0) {
-    html = '<div style="text-align:center;color:#999;padding:20px;">No sales data yet</div>';
-  } else {
-    sorted.forEach((item, index) => {
-      html += `
-        <div class="best-seller-item">
-          <div class="best-seller-rank">${index + 1}</div>
-          <div class="best-seller-info">
-            <div class="best-seller-name">${item.name}</div>
-            <div class="best-seller-stats">${item.count} sold • ${item.revenue.toFixed(2)} DZD</div>
-          </div>
-        </div>
-      `;
-    });
-  }
-
-  document.getElementById('best-sellers-list').innerHTML = html;
-}
-
-function loadSalesChartFromFirebase(orders) {
-  loadSalesChart();
-}
-
-function loadStatusChartFromFirebase(orders) {
-  loadStatusChart();
-}
-
-window.loadDashboard = loadDashboardFromFirebase;
-
-/* ==================== CATEGORY MANAGEMENT ==================== */
+// ==================== CATEGORIES ====================
 
 async function loadCategories() {
   try {
     const dbService = (await import('./db-service.js')).default;
-    categoriesCache = await dbService.getAllCategories();
+    state.categories = await dbService.getAllCategories();
 
-    // If no categories in Firebase, initialize defaults
-    if (categoriesCache.length === 0) {
+    if (state.categories.length === 0) {
       await dbService.initializeDefaultCategories();
-      categoriesCache = await dbService.getAllCategories();
+      state.categories = await dbService.getAllCategories();
     }
 
-    return categoriesCache;
+    return state.categories;
   } catch (error) {
-    console.error('Failed to load categories from Firebase:', error);
-    throw error;
+    console.error('Failed to load categories:', error);
+    return [];
   }
 }
 
-async function updateCategoryUI() {
+async function updateCategorySelect() {
   const categories = await loadCategories();
 
   const categorySelect = document.getElementById('item-category');
@@ -1629,141 +789,74 @@ async function updateCategoryUI() {
       filtersContainer.appendChild(btn);
     });
   }
-
-  loadCategoriesList();
 }
 
-async function loadCategoriesList() {
-  const categories = await loadCategories();
-  const listContainer = document.getElementById('categories-list');
+// ==================== ANALYTICS ====================
 
-  if (!listContainer) return;
-
-  if (categories.length === 0) {
-    listContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">No categories yet</p>';
-    return;
-  }
-
-  listContainer.innerHTML = categories.map(cat => `
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f7fafc; border-radius: 8px;">
-      <div>
-        <div style="font-weight: 600; color: #2d3748;">${cat.name}</div>
-        <div style="font-size: 12px; color: #718096; margin-top: 4px;">ID: ${cat.id}</div>
-      </div>
-      <button onclick="deleteCategory('${cat.id}')" style="background: #fc8181; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
-        Delete
-      </button>
-    </div>
-  `).join('');
+function loadAnalytics() {
+  console.log('Analytics loaded');
 }
 
-async function openCategoryModal() {
-  document.getElementById('category-modal').classList.add('active');
-  await loadCategoriesList();
+// ==================== GLOBAL FUNCTIONS ====================
 
-  // Listen to real-time category changes
-  try {
-    const dbService = (await import('./db-service.js')).default;
-    dbService.listenToCategoryChanges((categories) => {
-      categoriesCache = categories;
-      loadCategoriesList();
-      updateCategoryUI();
-    });
-  } catch (error) {
-    console.error('Failed to listen to category changes:', error);
-  }
-}
+window.adminLogin = adminLogin;
+window.adminLogout = adminLogout;
+window.showSection = showSection;
+window.toggleSidebar = toggleSidebar;
+window.closeSidebar = closeSidebar;
+window.filterOrdersByStatus = filterOrdersByStatus;
+window.filterOrders = filterOrders;
+window.updateOrderStatus = updateOrderStatus;
+window.openAddModal = openAddModal;
+window.openEditModal = openEditModal;
+window.closeModal = closeModal;
+window.filterMenuByCategory = filterMenuByCategory;
+window.handleImageSelect = handleImageSelect;
+window.clearImage = clearImage;
+window.saveMenuItem = saveMenuItem;
+window.deleteItem = deleteItem;
 
-function closeCategoryModal() {
-  document.getElementById('category-modal').classList.remove('active');
-  document.getElementById('new-category-id').value = '';
-  document.getElementById('new-category-name').value = '';
-}
-
-async function addCategory() {
-  const id = document.getElementById('new-category-id').value.trim().toLowerCase();
-  const name = document.getElementById('new-category-name').value.trim();
-
-  if (!id || !name) {
-    alert('Please fill in both Category ID and Category Name');
-    return;
-  }
-
-  if (!/^[a-z0-9-]+$/.test(id)) {
-    alert('Category ID must be lowercase letters, numbers, and hyphens only (no spaces)');
-    return;
-  }
-
-  try {
-    const dbService = (await import('./db-service.js')).default;
-    const categories = await loadCategories();
-
-    if (categories.find(cat => cat.id === id)) {
-      alert('A category with this ID already exists');
-      return;
-    }
-
-    await dbService.addCategory({ id, name });
-
-    document.getElementById('new-category-id').value = '';
-    document.getElementById('new-category-name').value = '';
-
-    alert('✅ Category added successfully!');
-    await loadCategoriesList();
-    await updateCategoryUI();
-  } catch (error) {
-    console.error('Failed to add category:', error);
-    alert('❌ Failed to add category: ' + error.message);
-  }
-}
-
-async function deleteCategory(categoryId) {
-  try {
-    const dbService = (await import('./db-service.js')).default;
-    const categories = await loadCategories();
-    const category = categories.find(cat => cat.id === categoryId);
-
-    if (!category) return;
-
-    if (!confirm(`Are you sure you want to delete "${category.name}"?\n\nNote: Menu items in this category will still exist but may need their category updated.`)) {
-      return;
-    }
-
-    await dbService.deleteCategory(categoryId);
-
-    alert('✅ Category deleted successfully!');
-    await loadCategoriesList();
-    await updateCategoryUI();
-  } catch (error) {
-    console.error('Failed to delete category:', error);
-    alert('❌ Failed to delete category: ' + error.message);
-  }
-}
+// ==================== INITIALIZATION ====================
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Make all functions globally accessible
-  window.openCategoryModal = openCategoryModal;
-  window.closeCategoryModal = closeCategoryModal;
-  window.addCategory = addCategory;
-  window.deleteCategory = deleteCategory;
-  window.handleImageSelect = handleImageSelect;
-  window.clearImage = clearImage;
-  window.saveMenuItem = saveMenuItem;
+  const loginForm = document.getElementById('admin-login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', adminLogin);
+  }
+
+  // Attach image input handler
+  const imageInput = document.getElementById('item-image');
+  if (imageInput) {
+    imageInput.addEventListener('change', handleImageSelect);
+  }
 
   try {
-    await updateCategoryUI();
+    const auth = await getAuthInstance();
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        state.currentUser = user;
+        localStorage.setItem('kc_admin', 'true');
 
-    // Listen to real-time category changes
-    const dbService = (await import('./db-service.js')).default;
-    const unsubscribe = await dbService.listenToCategoryChanges((categories) => {
-      categoriesCache = categories;
-      updateCategoryUI();
+        if (document.getElementById('admin-section')) {
+          document.getElementById('login-section').classList.add('hidden');
+          document.getElementById('admin-section').classList.remove('hidden');
+
+          const lastSection = localStorage.getItem('kc_current_section') || 'dashboard';
+          showSection(lastSection);
+        }
+      } else {
+        state.currentUser = null;
+        localStorage.removeItem('kc_admin');
+
+        if (document.getElementById('login-section')) {
+          document.getElementById('login-section').classList.remove('hidden');
+          document.getElementById('admin-section').classList.add('hidden');
+        }
+      }
     });
-
-    // Store unsubscribe function for cleanup if needed
-    window.categoryListener = unsubscribe;
   } catch (error) {
-    console.error('Failed to initialize category management:', error);
-    alert('Failed to load categories from Firebase. Please check your connection and try again.');
+    console.error('Auth initialization failed:', error);
   }
+
+  await updateCategorySelect();
 });
