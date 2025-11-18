@@ -1081,6 +1081,36 @@ async function deleteMenuItemById(itemId) {
 
 /* Firebase-Powered Order Management - moved to replace old loadAllOrders */
 
+
+
+/* ==================== CATEGORY MIGRATION ==================== */
+
+async function migrateCategoriesFromLocalStorage() {
+  const localCategories = localStorage.getItem('kc_categories');
+  if (!localCategories) return;
+  
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    const categories = JSON.parse(localCategories);
+    
+    for (const category of categories) {
+      await dbService.addCategory(category);
+    }
+    
+    // Clear localStorage after successful migration
+    localStorage.removeItem('kc_categories');
+    console.log('Categories migrated to Firebase successfully');
+  } catch (error) {
+    console.error('Failed to migrate categories:', error);
+  }
+}
+
+// Auto-run migration on page load
+document.addEventListener('DOMContentLoaded', async () => {
+  await migrateCategoriesFromLocalStorage();
+});
+
+
 function renderOrdersTable(orders) {
   const filtered = currentFilter === 'all' 
     ? orders 
@@ -1265,17 +1295,17 @@ async function loadCategories() {
   try {
     const dbService = (await import('./db-service.js')).default;
     categoriesCache = await dbService.getAllCategories();
+    
+    // If no categories in Firebase, initialize defaults
+    if (categoriesCache.length === 0) {
+      await dbService.initializeDefaultCategories();
+      categoriesCache = await dbService.getAllCategories();
+    }
+    
     return categoriesCache;
   } catch (error) {
     console.error('Failed to load categories from Firebase:', error);
-    // Fallback to default categories
-    categoriesCache = [
-      { id: 'sweet', name: 'Sweet Crêpes' },
-      { id: 'savory', name: 'Savory Crêpes' },
-      { id: 'kids', name: 'Kids Crêpes' },
-      { id: 'drinks', name: 'Drinks' }
-    ];
-    return categoriesCache;
+    throw error;
   }
 }
 
@@ -1425,17 +1455,21 @@ window.addCategory = addCategory;
 window.deleteCategory = deleteCategory;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  await updateCategoryUI();
-  
-  // Listen to real-time category changes
   try {
+    await updateCategoryUI();
+    
+    // Listen to real-time category changes
     const dbService = (await import('./db-service.js')).default;
-    dbService.listenToCategoryChanges((categories) => {
+    const unsubscribe = await dbService.listenToCategoryChanges((categories) => {
       categoriesCache = categories;
       updateCategoryUI();
     });
+    
+    // Store unsubscribe function for cleanup if needed
+    window.categoryListener = unsubscribe;
   } catch (error) {
-    console.error('Failed to listen to category changes:', error);
+    console.error('Failed to initialize category management:', error);
+    alert('Failed to load categories from Firebase. Please check your connection and try again.');
   }
 });
 

@@ -171,14 +171,15 @@ class DatabaseService {
     return defaultCategories;
   }
 
-  listenToCategoryChanges(callback) {
-    this.init().then(() => {
-      const categoriesRef = collection(this.db, 'categories');
-      const q = query(categoriesRef, orderBy('order', 'asc'));
-      return onSnapshot(q, (snapshot) => {
-        const categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        callback(categories);
-      });
+  async listenToCategoryChanges(callback) {
+    await this.init();
+    const categoriesRef = collection(this.db, 'categories');
+    const q = query(categoriesRef, orderBy('order', 'asc'));
+    return onSnapshot(q, (snapshot) => {
+      const categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(categories);
+    }, (error) => {
+      console.error('Error listening to category changes:', error);
     });
   }
 
