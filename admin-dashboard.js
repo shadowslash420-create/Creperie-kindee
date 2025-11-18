@@ -1014,6 +1014,7 @@ function previewImage(event) {
 }
 
 async function saveMenuItem(event) {
+  console.log('saveMenuItem function called');
   event.preventDefault();
   
   const saveBtn = document.getElementById('save-item-btn');
@@ -1022,6 +1023,7 @@ async function saveMenuItem(event) {
   saveBtn.textContent = 'Saving...';
   
   try {
+    console.log('Importing db-service...');
     const dbService = (await import('./db-service.js')).default;
     
     const itemData = {
@@ -1031,12 +1033,19 @@ async function saveMenuItem(event) {
       category: document.getElementById('item-category').value,
       img: document.getElementById('current-image-url').value || 'images/crepe1.svg'
     };
+    console.log('Item data prepared:', itemData);
     
     const imageFile = document.getElementById('item-image').files[0];
+    console.log('Image file selected:', imageFile ? imageFile.name : 'No file selected');
+    
     if (imageFile) {
+      console.log('File detected, starting upload...');
       saveBtn.textContent = 'Uploading image...';
       const imageUrl = await dbService.uploadImage(imageFile, 'menu');
+      console.log('Upload complete, URL:', imageUrl);
       itemData.img = imageUrl;
+    } else {
+      console.log('No image file selected, using default or current image');
     }
     
     const itemId = document.getElementById('item-id').value;
