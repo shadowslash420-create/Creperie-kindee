@@ -1032,63 +1032,104 @@ function closeMenuItemModal() {
   }
 }
 
-// Store the selected file globally so it doesn't get lost
+// ==================== NEW IMAGE UPLOAD SYSTEM ====================
 let selectedImageFile = null;
+let uploadedImageUrl = null;
 
-function previewImage(event) {
+// Handle image selection and preview
+async function handleImageSelect(event) {
   const file = event.target.files[0];
-  console.log('previewImage called with file:', file ? file.name : 'No file');
+  console.log('📸 Image selected:', file ? file.name : 'None');
   
-  if (file) {
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      alert('❌ يرجى اختيار ملف صورة فقط');
-      event.target.value = '';
-      selectedImageFile = null;
-      return;
-    }
-    
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('❌ حجم الصورة كبير جداً. الحد الأقصى هو 5 ميجابايت');
-      event.target.value = '';
-      selectedImageFile = null;
-      return;
-    }
-    
-    // Store the file object
-    selectedImageFile = file;
-    console.log('✅ File stored for upload:', selectedImageFile.name, 'Size:', selectedImageFile.size, 'bytes');
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const preview = document.getElementById('image-preview');
-      if (preview) {
-        preview.innerHTML = `
-          <div style="text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px; border: 2px solid #48bb78;">
-            <div style="color: #48bb78; font-size: 14px; font-weight: 600; margin-bottom: 12px;">✅ صورة محددة: ${file.name}</div>
-            <img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 8px;" />
-            <p style="color: #718096; font-size: 12px; margin: 0;">سيتم رفع هذه الصورة إلى ImgBB عند النقر على "حفظ"</p>
-          </div>
-        `;
-        preview.style.display = 'block';
-      }
-    };
-    reader.onerror = function() {
-      console.error('❌ فشل في قراءة الملف');
-      alert('❌ فشل في قراءة الصورة. يرجى المحاولة مرة أخرى');
-      selectedImageFile = null;
-      event.target.value = '';
-    };
-    reader.readAsDataURL(file);
-  } else {
-    console.log('❌ No file selected from input');
-    selectedImageFile = null;
-    const preview = document.getElementById('image-preview');
-    if (preview) {
-      preview.style.display = 'none';
-    }
+  if (!file) {
+    clearImage();
+    return;
   }
+  
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert('❌ Please select an image file only (JPG, PNG, WebP)');
+    event.target.value = '';
+    return;
+  }
+  
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('❌ Image too large! Maximum size is 5MB');
+    event.target.value = '';
+    return;
+  }
+  
+  selectedImageFile = file;
+  
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('upload-placeholder').style.display = 'none';
+    document.getElementById('image-preview-container').style.display = 'block';
+    document.getElementById('image-preview-img').src = e.target.result;
+    const uploadArea = document.getElementById('image-upload-area');
+    if (uploadArea) uploadArea.style.borderColor = '#48bb78';
+  };
+  reader.readAsDataURL(file);
+  
+  // Auto-upload to ImgBB
+  await uploadImageToImgBB();
+}
+
+// Upload image to ImgBB
+async function uploadImageToImgBB() {
+  if (!selectedImageFile) return;
+  
+  const uploadProgress = document.getElementById('upload-progress');
+  const uploadSuccess = document.getElementById('upload-success');
+  const progressBar = document.getElementById('progress-bar');
+  
+  try {
+    uploadProgress.style.display = 'block';
+    uploadSuccess.style.display = 'none';
+    progressBar.style.width = '30%';
+    
+    console.log('📤 Uploading to ImgBB...');
+    const dbService = (await import('./db-service.js')).default;
+    
+    progressBar.style.width = '60%';
+    const imageUrl = await dbService.uploadImage(selectedImageFile, 'menu');
+    
+    progressBar.style.width = '100%';
+    uploadedImageUrl = imageUrl;
+    
+    console.log('✅ Image uploaded successfully:', imageUrl);
+    
+    setTimeout(() => {
+      uploadProgress.style.display = 'none';
+      uploadSuccess.style.display = 'block';
+    }, 500);
+    
+  } catch (error) {
+    console.error('❌ Upload failed:', error);
+    alert('❌ Failed to upload image: ' + error.message);
+    clearImage();
+  }
+}
+
+// Clear image selection
+function clearImage() {
+  selectedImageFile = null;
+  uploadedImageUrl = null;
+  
+  const fileInput = document.getElementById('item-image');
+  if (fileInput) fileInput.value = '';
+  
+  document.getElementById('upload-placeholder').style.display = 'block';
+  document.getElementById('image-preview-container').style.display = 'none';
+  document.getElementById('image-preview-img').src = '';
+  document.getElementById('upload-progress').style.display = 'none';
+  document.getElementById('upload-success').style.display = 'none';
+  document.getElementById('progress-bar').style.width = '0%';
+  
+  const uploadArea = document.getElementById('image-upload-area');
+  if (uploadArea) uploadArea.style.borderColor = '#cbd5e0';
 }
 
 async function saveMenuItem(event) {
