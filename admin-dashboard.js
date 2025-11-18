@@ -1010,16 +1010,20 @@ function previewImage(event) {
   console.log('previewImage called with file:', file ? file.name : 'No file');
   
   if (file) {
-    selectedImageFile = file; // Store the file
+    selectedImageFile = file; // Store the file globally
     console.log('File stored for upload:', selectedImageFile.name);
     
     const reader = new FileReader();
     reader.onload = function(e) {
       const preview = document.getElementById('image-preview');
-      preview.innerHTML = `<img src="${e.target.result}" alt="Preview" />`;
+      preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" />`;
       preview.classList.add('active');
+      preview.style.display = 'block';
     };
     reader.readAsDataURL(file);
+  } else {
+    console.log('No file selected');
+    selectedImageFile = null;
   }
 }
 
@@ -1052,12 +1056,17 @@ async function saveMenuItem(event) {
     if (selectedImageFile) {
       console.log('File detected, starting upload...');
       saveBtn.textContent = 'Uploading image...';
-      const imageUrl = await dbService.uploadImage(selectedImageFile, 'menu');
-      console.log('Upload complete, URL:', imageUrl);
-      itemData.img = imageUrl;
-      selectedImageFile = null; // Clear after upload
+      try {
+        const imageUrl = await dbService.uploadImage(selectedImageFile, 'menu');
+        console.log('Upload complete, URL:', imageUrl);
+        itemData.img = imageUrl;
+        selectedImageFile = null; // Clear after upload
+      } catch (uploadError) {
+        console.error('Image upload failed:', uploadError);
+        alert('⚠️ Image upload failed. Using default image.');
+      }
     } else {
-      console.log('No image file selected, using default or current image');
+      console.log('No image file selected, using current or default image');
     }
     
     const itemId = document.getElementById('item-id').value;
