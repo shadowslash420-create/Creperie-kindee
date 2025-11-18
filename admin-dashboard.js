@@ -824,13 +824,10 @@ async function adminLogout() {
     localStorage.removeItem('kc_current_section');
     localStorage.removeItem('kc_current_filter');
     
-    document.getElementById('admin-section').classList.add('hidden');
-    document.getElementById('login-section').classList.remove('hidden');
-    
-    document.getElementById('adm-user').value = '';
-    document.getElementById('adm-pass').value = '';
+    window.location.href = 'index.html';
   } catch (error) {
     console.error('Logout failed:', error);
+    window.location.href = 'index.html';
   }
 }
 
