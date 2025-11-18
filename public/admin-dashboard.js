@@ -957,19 +957,15 @@ function filterMenuByCategory(category, event) {
 async function openMenuItemModal() {
   currentEditingItem = null;
   selectedImageFile = null;
-  document.getElementById('modal-title').textContent = 'Add New Menu Item';
+  uploadedImageUrl = null;
+  
+  document.getElementById('modal-title').textContent = '➕ Add New Menu Item';
   document.getElementById('menu-item-form').reset();
   document.getElementById('item-id').value = '';
   
-  // Reset file input
-  const fileInput = document.getElementById('item-image');
-  if (fileInput) fileInput.value = '';
+  // Reset image upload UI
+  clearImage();
   
-  const preview = document.getElementById('image-preview');
-  if (preview) {
-    preview.style.display = 'none';
-    preview.innerHTML = '';
-  }
   await updateCategoryUI();
   document.getElementById('menu-item-modal').classList.add('active');
 }
@@ -986,26 +982,28 @@ async function openEditMenuItemModal(itemId) {
     
     currentEditingItem = item;
     selectedImageFile = null;
-    document.getElementById('modal-title').textContent = 'Edit Menu Item';
+    uploadedImageUrl = null;
+    
+    document.getElementById('modal-title').textContent = '✏️ Edit Menu Item';
     document.getElementById('item-id').value = item.id;
     document.getElementById('item-name').value = item.name;
     document.getElementById('item-price').value = item.price;
     document.getElementById('item-desc').value = item.desc;
     document.getElementById('item-category').value = item.category;
     
+    // Reset upload UI
+    document.getElementById('upload-placeholder').style.display = 'block';
+    document.getElementById('image-preview-container').style.display = 'none';
+    
     // Show current image if exists
-    const preview = document.getElementById('image-preview');
-    if (item.img && preview) {
-      preview.innerHTML = `
-        <div style="text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px; border: 2px solid #cbd5e0;">
-          <div style="color: #4a5568; font-size: 14px; font-weight: 600; margin-bottom: 12px;">📷 Current Image</div>
-          <img src="${item.img}" alt="Current" style="max-width: 100%; max-height: 200px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 8px;" />
-          <p style="color: #718096; font-size: 12px; margin: 0;">Upload a new image to replace this one</p>
-        </div>
+    if (item.img) {
+      document.getElementById('upload-placeholder').innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 12px;">📷</div>
+        <p style="color: #4a5568; font-weight: 500; margin-bottom: 8px;">Current Image</p>
+        <img src="${item.img}" alt="Current" style="max-width: 200px; max-height: 150px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 12px;" />
+        <p style="color: #718096; font-size: 13px; margin-bottom: 8px;">Click to upload a new image</p>
+        <p style="color: #FF6B35; font-size: 12px;">✨ Or keep the current image</p>
       `;
-      preview.style.display = 'block';
-    } else if (preview) {
-      preview.style.display = 'none';
     }
     
     await updateCategoryUI();
@@ -1020,23 +1018,27 @@ function closeMenuItemModal() {
   document.getElementById('menu-item-modal').classList.remove('active');
   currentEditingItem = null;
   selectedImageFile = null;
+  uploadedImageUrl = null;
   
-  // Reset file input
-  const fileInput = document.getElementById('item-image');
-  if (fileInput) fileInput.value = '';
+  // Reset all image upload UI elements
+  clearImage();
   
-  const preview = document.getElementById('image-preview');
-  if (preview) {
-    preview.style.display = 'none';
-    preview.innerHTML = '';
-  }
+  // Reset upload placeholder to default
+  document.getElementById('upload-placeholder').innerHTML = `
+    <div style="font-size: 48px; margin-bottom: 12px;">📸</div>
+    <p style="color: #4a5568; font-weight: 500; margin-bottom: 8px;">Click to upload image</p>
+    <p style="color: #718096; font-size: 13px;">Supports: JPG, PNG, WebP (Max 5MB)</p>
+    <p style="color: #FF6B35; font-size: 12px; margin-top: 8px;">✨ Images uploaded to ImgBB cloud storage</p>
+  `;
 }
 
-// ==================== NEW IMAGE UPLOAD SYSTEM ====================
+// ==================== IMAGE UPLOAD MANAGEMENT ====================
 let selectedImageFile = null;
 let uploadedImageUrl = null;
 
-// Handle image selection and preview
+/**
+ * Handle image file selection and show preview
+ */
 async function handleImageSelect(event) {
   const file = event.target.files[0];
   console.log('📸 Image selected:', file ? file.name : 'None');
@@ -1054,7 +1056,8 @@ async function handleImageSelect(event) {
   }
   
   // Validate file size (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+  if (file.size > MAX_SIZE) {
     alert('❌ Image too large! Maximum size is 5MB');
     event.target.value = '';
     return;
@@ -1062,12 +1065,13 @@ async function handleImageSelect(event) {
   
   selectedImageFile = file;
   
-  // Show preview
+  // Show local preview
   const reader = new FileReader();
   reader.onload = (e) => {
     document.getElementById('upload-placeholder').style.display = 'none';
     document.getElementById('image-preview-container').style.display = 'block';
     document.getElementById('image-preview-img').src = e.target.result;
+    
     const uploadArea = document.getElementById('image-upload-area');
     if (uploadArea) uploadArea.style.borderColor = '#48bb78';
   };
@@ -1077,30 +1081,76 @@ async function handleImageSelect(event) {
   await uploadImageToImgBB();
 }
 
-// Upload image to ImgBB
+/**
+ * Upload image to ImgBB cloud storage
+ */
 async function uploadImageToImgBB() {
-  if (!selectedImageFile) return;
+  if (!selectedImageFile) {
+    console.log('No file selected for upload');
+    return;
+  }
   
   const uploadProgress = document.getElementById('upload-progress');
   const uploadSuccess = document.getElementById('upload-success');
   const progressBar = document.getElementById('progress-bar');
+  const uploadText = document.getElementById('upload-text');
   
   try {
+    // Show progress UI
     uploadProgress.style.display = 'block';
     uploadSuccess.style.display = 'none';
+    progressBar.style.width = '10%';
+    uploadText.textContent = '📤 Preparing upload...';
+    
+    console.log('📤 Starting upload to ImgBB...');
+    
+    // Convert file to base64
     progressBar.style.width = '30%';
+    uploadText.textContent = '📤 Converting image...';
     
-    console.log('📤 Uploading to ImgBB...');
-    const dbService = (await import('./db-service.js')).default;
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result.split(',')[1];
+        resolve(base64String);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(selectedImageFile);
+    });
     
-    progressBar.style.width = '60%';
-    const imageUrl = await dbService.uploadImage(selectedImageFile, 'menu');
+    // Upload to server (which forwards to ImgBB)
+    progressBar.style.width = '50%';
+    uploadText.textContent = '📤 Uploading to ImgBB...';
     
+    const formData = new FormData();
+    formData.append('image', base64);
+    formData.append('folder', 'menu');
+    formData.append('filename', selectedImageFile.name.split('.')[0]);
+    
+    const response = await fetch('/api/upload-image', {
+      method: 'POST',
+      body: formData
+    });
+    
+    progressBar.style.width = '80%';
+    
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Upload failed');
+    }
+    
+    // Success!
     progressBar.style.width = '100%';
-    uploadedImageUrl = imageUrl;
+    uploadedImageUrl = result.url;
     
-    console.log('✅ Image uploaded successfully:', imageUrl);
+    console.log('✅ Image uploaded successfully:', uploadedImageUrl);
     
+    // Show success message
     setTimeout(() => {
       uploadProgress.style.display = 'none';
       uploadSuccess.style.display = 'block';
@@ -1113,7 +1163,9 @@ async function uploadImageToImgBB() {
   }
 }
 
-// Clear image selection
+/**
+ * Clear image selection and reset UI
+ */
 function clearImage() {
   selectedImageFile = null;
   uploadedImageUrl = null;
@@ -1132,17 +1184,18 @@ function clearImage() {
   if (uploadArea) uploadArea.style.borderColor = '#cbd5e0';
 }
 
+/**
+ * Save menu item (add or update)
+ */
 async function saveMenuItem(event) {
-  console.log('saveMenuItem function called');
   event.preventDefault();
   
   const saveBtn = document.getElementById('save-item-btn');
   const originalText = saveBtn.textContent;
   saveBtn.disabled = true;
-  saveBtn.textContent = 'جاري الحفظ...';
+  saveBtn.textContent = '💾 Saving...';
   
   try {
-    console.log('Importing db-service...');
     const dbService = (await import('./db-service.js')).default;
     
     const itemId = document.getElementById('item-id').value;
@@ -1153,64 +1206,52 @@ async function saveMenuItem(event) {
     
     // Validate inputs
     if (!itemName || !itemDesc || !itemCategory || isNaN(itemPrice) || itemPrice <= 0) {
-      alert('❌ يرجى ملء جميع الحقول بشكل صحيح');
+      alert('❌ Please fill all fields correctly');
       saveBtn.disabled = false;
       saveBtn.textContent = originalText;
       return;
     }
     
+    // Prepare item data
     const itemData = {
       name: itemName,
       price: itemPrice,
       desc: itemDesc,
       category: itemCategory,
-      img: currentEditingItem?.img || ''
+      img: currentEditingItem?.img || '' // Keep existing image if no new upload
     };
     
-    console.log('Item data prepared:', itemData);
-    console.log('Image file selected:', selectedImageFile ? selectedImageFile.name : 'No file selected');
-    
-    // Check if there's a file to upload
-    if (selectedImageFile && selectedImageFile instanceof File) {
-      console.log('✅ Valid file found, uploading to ImgBB...', selectedImageFile.name);
-      saveBtn.textContent = 'جاري رفع الصورة...';
-      
-      try {
-        const imageUrl = await dbService.uploadImage(selectedImageFile, 'menu');
-        console.log('✅ Image uploaded successfully:', imageUrl);
-        itemData.img = imageUrl;
-      } catch (uploadError) {
-        console.error('❌ Image upload failed:', uploadError);
-        saveBtn.disabled = false;
-        saveBtn.textContent = originalText;
-        alert('❌ فشل رفع الصورة: ' + uploadError.message);
-        return;
-      }
-    } else {
-      console.log('No image file selected, using default or current image');
+    // If new image was uploaded, use it
+    if (uploadedImageUrl) {
+      console.log('✅ Using uploaded image:', uploadedImageUrl);
+      itemData.img = uploadedImageUrl;
+    } else if (!itemId && !itemData.img) {
+      // New item without image - use placeholder
+      itemData.img = '';
     }
     
-    saveBtn.textContent = 'جاري حفظ البيانات...';
+    console.log('Saving item:', itemData);
+    
+    // Save to Firebase
+    saveBtn.textContent = '💾 Saving to database...';
     
     if (itemId) {
       await dbService.updateMenuItem(itemId, itemData);
-      alert('✅ تم تحديث العنصر بنجاح!');
+      alert('✅ Menu item updated successfully!');
     } else {
       await dbService.addMenuItem(itemData);
-      alert('✅ تم إضافة العنصر بنجاح' + (itemData.img ? ' مع الصورة!' : '!'));
+      alert('✅ Menu item added successfully!');
     }
     
-    // Reset file input
+    // Reset and close
     selectedImageFile = null;
-    const fileInput = document.getElementById('item-image');
-    if (fileInput) fileInput.value = '';
-    
+    uploadedImageUrl = null;
     closeMenuItemModal();
     loadMenuItems();
     
   } catch (error) {
     console.error('Failed to save item:', error);
-    alert('❌ فشل في حفظ العنصر: ' + error.message);
+    alert('❌ Failed to save menu item: ' + error.message);
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = originalText;
@@ -1609,6 +1650,8 @@ window.openCategoryModal = openCategoryModal;
 window.closeCategoryModal = closeCategoryModal;
 window.addCategory = addCategory;
 window.deleteCategory = deleteCategory;
+window.handleImageSelect = handleImageSelect;
+window.clearImage = clearImage;
 
 document.addEventListener('DOMContentLoaded', async () => {
   try {
