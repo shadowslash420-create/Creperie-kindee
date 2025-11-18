@@ -6,10 +6,13 @@ import urllib.request
 import urllib.parse
 from urllib.parse import urlparse, parse_qs
 
+# Change to public directory for serving static files
+os.chdir(os.path.join(os.path.dirname(__file__), 'public'))
+
 # Store menu data (in production, use a proper database)
-MENU_FILE = 'menu_data.json'
-ORDERS_FILE = 'orders_data.json'
-FEEDBACK_FILE = 'feedback_data.json'
+MENU_FILE = '../menu_data.json'
+ORDERS_FILE = '../orders_data.json'
+FEEDBACK_FILE = '../feedback_data.json'
 
 def load_json_file(filename, default):
     try:
@@ -76,7 +79,7 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(feedback).encode())
             return
 
-        # Serve HTML files
+        # Serve HTML files (already in public directory)
         if self.path == '/':
             self.path = '/index.html'
         return SimpleHTTPRequestHandler.do_GET(self)

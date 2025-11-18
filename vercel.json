@@ -1,13 +1,7 @@
 {
-  "version": 2,
-  "public": true,
+  "buildCommand": "echo 'No build needed for static site'",
+  "outputDirectory": "public",
   "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/public/$1"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -31,7 +25,7 @@
       ]
     },
     {
-      "source": "/public/(.*)",
+      "source": "/(.*)",
       "headers": [
         {
           "key": "Cache-Control",

@@ -21,7 +21,7 @@
   "devDependencies": {
     "http-server": "^14.1.1",
     "live-server": "^1.2.2",
-    "vercel": "^latest"
+    "vercel": "^39.2.1"
   },
   "dependencies": {
     "firebase": "^12.6.0",

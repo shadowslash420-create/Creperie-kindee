@@ -19,30 +19,29 @@ A modern, elegant cloud-powered website for "Creperie Kinder" - a crepe restaura
 - **Server**: Python HTTP server for static file serving
 - **Language**: Arabic UI with English code
 
-## Project Structure
+## Project Structure (Vercel-Ready)
 ```
 .
-├── index.html              # Main landing page with tabbed menu
-├── about.html              # About us page
-├── contact.html            # Contact form page
-├── admin.html              # Admin login and professional dashboard
-├── menu.html               # Menu page with Firebase integration
-├── migrate-data.html       # Data migration tool for Firestore
-├── style.css               # Main website styles with orange theme
-├── admin-dashboard.css     # Dashboard-specific styles
-├── script.js               # Client-side logic (menu, cart, orders)
-├── admin-dashboard.js      # Dashboard logic (charts, stats, order management)
-├── firebase-config.js      # Firebase initialization and configuration
-├── db-service.js           # Firestore database service layer
-├── firebase-customer.js    # Firebase integration for customer-facing features
-├── auth.js                 # Firebase Authentication integration
-├── server.py               # Python HTTP server (serves on 0.0.0.0:5000)
-├── firestore.rules         # Firestore security rules
-├── storage.rules           # Firebase Storage security rules
-├── FIREBASE_SETUP.md       # Complete Firebase setup guide
-├── images/                 # SVG placeholder images
-└── replit.md               # This file
+├── public/                      # Static files served by Vercel
+│   ├── *.html                   # All HTML pages (index, menu, admin, etc.)
+│   ├── *.css                    # Stylesheets (style.css, admin-dashboard.css)
+│   ├── *.js                     # Frontend JavaScript modules
+│   ├── *.md, *.txt, *.rules    # Documentation and Firebase rules
+│   └── attached_assets/         # Images and media files
+├── api/                         # Vercel Serverless Functions (Node.js)
+│   ├── firebase-config.js       # Returns Firebase config from environment
+│   └── upload-image.js          # Proxies image uploads to ImgBB
+├── server.py                    # Python HTTP server (Replit development only)
+├── vercel.json                  # Vercel deployment configuration
+├── package.json                 # NPM dependencies and deployment scripts
+├── VERCEL_DEPLOYMENT.md         # Complete Vercel deployment guide
+└── replit.md                    # This file
 ```
+
+### Dual-Environment Setup
+- **Replit Development**: Uses `server.py` (Python) serving from `public/`
+- **Vercel Production**: Uses serverless functions in `api/` with static files from `public/`
+- API endpoints work identically in both environments
 
 ## Design Features
 
@@ -132,9 +131,48 @@ The site runs on Python's built-in HTTP server:
 - Socket reuse enabled for quick restarts
 
 ## Deployment
-Configured to deploy as an autoscale static website on Replit.
+
+### Vercel Deployment (Primary)
+The project is optimized for Vercel with:
+- Static files in `public/` directory
+- Serverless API functions in `api/` directory
+- `vercel.json` configuration for routing and headers
+- See `VERCEL_DEPLOYMENT.md` for complete deployment guide
+
+**Quick Deploy to Vercel:**
+```bash
+npm run deploy
+```
+
+### Replit Development
+- Python server serves static files from `public/`
+- All API endpoints functional for local testing
+- Workflow automatically configured
 
 ## Recent Changes
+
+- **2025-11-18 (v5)**: Restructured for Vercel Deployment
+  - **Vercel-Ready Architecture**: Complete project restructure for optimal Vercel deployment
+    - Created `public/` directory for all static assets (HTML, CSS, JS, images)
+    - Created `api/` directory with Node.js serverless functions
+    - Converted Python API endpoints to Vercel-compatible serverless functions
+    - Added `vercel.json` configuration with routing and CORS headers
+  - **Dual-Environment Support**: Works seamlessly in both Replit and Vercel
+    - Python server (server.py) updated to serve from `public/` for Replit dev
+    - Serverless functions (api/*.js) for Vercel production
+    - Identical API endpoints in both environments
+  - **Package Updates**: 
+    - Added Vercel CLI to devDependencies
+    - Added formidable for multipart form parsing in serverless functions
+    - Updated package.json scripts for Vercel deployment
+  - **Documentation**: Created comprehensive `VERCEL_DEPLOYMENT.md` guide
+    - Step-by-step deployment instructions
+    - Environment variable configuration
+    - Local development with `vercel dev`
+    - Custom domain setup
+    - Cost considerations and optimization tips
+  
+
 - **2025-11-18 (v4)**: Migrated Image Hosting to ImgBB
   - **ImgBB Integration**: Product images now upload to ImgBB instead of Firebase Storage
     - Free cloud image hosting with permanent storage
