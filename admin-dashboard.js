@@ -370,41 +370,28 @@ function loadStatusChart() {
   });
 }
 
-// Load All Orders
-function loadAllOrders() {
-  const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  let filteredOrders = orders;
-  
-  if (currentFilter !== 'all') {
-    filteredOrders = orders.filter(o => o.status === currentFilter);
-  }
-  
-  let html = '<table class="orders-table"><thead><tr>';
-  html += '<th>Order ID</th><th>Customer</th><th>Phone</th><th>Address</th>';
-  html += '<th>Items</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-  
-  if (filteredOrders.length === 0) {
-    html += '<tr><td colspan="8" style="text-align:center;color:#999;padding:40px;">No orders found</td></tr>';
-  } else {
-    filteredOrders.reverse().forEach(order => {
-      html += '<tr>';
-      html += '<td class="order-id">#' + order.id + '</td>';
-      html += '<td>' + order.name + '</td>';
-      html += '<td>' + order.phone + '</td>';
-      html += '<td>' + order.address + '</td>';
-      html += '<td>' + order.items.length + ' items' + (order.specialInstructions ? ' <span style="color:#e67e22;" title="Has special instructions">📝</span>' : '') + '</td>';
-      html += '<td>' + order.total.toFixed(2) + ' DZD</td>';
-      html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
-      html += '<td class="order-actions">';
-      html += '<button class="action-btn btn-view" onclick="viewOrder(\'' + order.id + '\')">View</button>';
-      html += '<button class="action-btn btn-update" onclick="updateOrderStatus(\'' + order.id + '\')">Update</button>';
-      html += '</td>';
-      html += '</tr>';
+// Load All Orders (Firebase-powered)
+async function loadAllOrders() {
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    const orders = await dbService.getAllOrders();
+    
+    renderOrdersTable(orders);
+    
+    dbService.listenToOrderChanges((updatedOrders) => {
+      renderOrdersTable(updatedOrders);
+      updateDashboardStats(updatedOrders);
     });
+  } catch (error) {
+    console.error('Failed to load orders:', error);
+    document.getElementById('orders-table').innerHTML = `
+      <div style="padding:40px;text-align:center;color:#999;">
+        <p>⚠️ Failed to load orders</p>
+        <p style="font-size:0.9em;">${error.message}</p>
+        <button onclick="loadAllOrders()" style="margin-top:16px;padding:8px 16px;background:#FF6B35;color:white;border:none;border-radius:8px;cursor:pointer;">Retry</button>
+      </div>
+    `;
   }
-  
-  html += '</tbody></table>';
-  document.getElementById('orders-table').innerHTML = html;
 }
 
 // Filter Orders by Status
@@ -543,30 +530,27 @@ function updateOrderStatus(orderId) {
   }
 }
 
-// Load Menu Items
+// Load Menu Items (Firebase-powered)
 async function loadMenuItems() {
-  const menu = await getMenuFromServer();
-  
-  let html = '<button class="add-menu-btn" onclick="showAddMenuModal()">+ Add New Item</button>';
-  html += '<div class="menu-grid">';
-  
-  menu.forEach(item => {
-    html += '<div class="menu-item-card">';
-    html += '<img src="' + item.img + '" alt="' + item.name + '" class="menu-item-image" />';
-    html += '<h4>' + item.name + '</h4>';
-    html += '<p>' + item.desc + '</p>';
-    html += '<p class="price">' + item.price.toFixed(2) + ' DZD</p>';
-    html += '<p style="font-size:12px;color:#999;text-transform:capitalize;margin:8px 0;">' + item.category + '</p>';
-    html += '<div class="menu-item-actions">';
-    html += '<button class="action-btn btn-edit" onclick="editMenuItem(\'' + item.id + '\')">Edit</button>';
-    html += '<button class="action-btn btn-delete" onclick="deleteMenuItem(\'' + item.id + '\')">Delete</button>';
-    html += '</div>';
-    html += '</div>';
-  });
-  
-  html += '</div>';
-  
-  document.getElementById('menu-items-grid').innerHTML = html;
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    const menu = await dbService.getAllMenuItems();
+    
+    renderMenuItems(menu);
+    
+    dbService.listenToMenuChanges((updatedMenu) => {
+      renderMenuItems(updatedMenu);
+    });
+  } catch (error) {
+    console.error('Failed to load menu:', error);
+    document.getElementById('menu-items-grid').innerHTML = `
+      <div style="padding:40px;text-align:center;color:#999;">
+        <p>⚠️ Failed to load menu items</p>
+        <p style="font-size:0.9em;">${error.message}</p>
+        <button onclick="loadMenuItems()" style="margin-top:16px;padding:8px 16px;background:#FF6B35;color:white;border:none;border-radius:8px;cursor:pointer;">Retry</button>
+      </div>
+    `;
+  }
 }
 
 // Show Add Menu Modal
@@ -896,28 +880,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 let currentMenuFilter = 'all';
 let currentEditingItem = null;
 
-async function loadMenuItems() {
-  try {
-    const dbService = (await import('./db-service.js')).default;
-    const menu = await dbService.getAllMenuItems();
-    
-    renderMenuItems(menu);
-    
-    dbService.listenToMenuChanges((updatedMenu) => {
-      renderMenuItems(updatedMenu);
-    });
-  } catch (error) {
-    console.error('Failed to load menu:', error);
-    document.getElementById('menu-items-grid').innerHTML = `
-      <div style="padding:40px;text-align:center;color:#999;">
-        <p>⚠️ Failed to load menu items</p>
-        <p style="font-size:0.9em;">${error.message}</p>
-        <button onclick="loadMenuItems()" style="margin-top:16px;padding:8px 16px;background:#FF6B35;color:white;border:none;border-radius:8px;cursor:pointer;">Retry</button>
-      </div>
-    `;
-  }
-}
-
 function renderMenuItems(menu) {
   const filtered = currentMenuFilter === 'all' 
     ? menu 
@@ -1098,30 +1060,7 @@ async function deleteMenuItemById(itemId) {
   }
 }
 
-/* Firebase-Powered Order Management */
-
-async function loadAllOrders() {
-  try {
-    const dbService = (await import('./db-service.js')).default;
-    const orders = await dbService.getAllOrders();
-    
-    renderOrdersTable(orders);
-    
-    dbService.listenToOrderChanges((updatedOrders) => {
-      renderOrdersTable(updatedOrders);
-      updateDashboardStats(updatedOrders);
-    });
-  } catch (error) {
-    console.error('Failed to load orders:', error);
-    document.getElementById('orders-table').innerHTML = `
-      <div style="padding:40px;text-align:center;color:#999;">
-        <p>⚠️ Failed to load orders</p>
-        <p style="font-size:0.9em;">${error.message}</p>
-        <button onclick="loadAllOrders()" style="margin-top:16px;padding:8px 16px;background:#FF6B35;color:white;border:none;border-radius:8px;cursor:pointer;">Retry</button>
-      </div>
-    `;
-  }
-}
+/* Firebase-Powered Order Management - moved to replace old loadAllOrders */
 
 function renderOrdersTable(orders) {
   const filtered = currentFilter === 'all' 
