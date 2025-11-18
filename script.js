@@ -532,17 +532,25 @@ if(!localStorage.getItem(MENU_KEY)){
   localStorage.setItem(MENU_KEY, JSON.stringify(defaultMenu));
 }
 
-// Use server API for menu data
+// Use Firebase Firestore for menu data (with fallback to server API)
 async function getMenu(){ 
+  try {
+    if (window.FirebaseCustomer) {
+      const menu = await window.FirebaseCustomer.getMenu();
+      localStorage.setItem(MENU_KEY, JSON.stringify(menu));
+      return menu;
+    }
+  } catch(error) {
+    console.log('Firebase not available, falling back to server API');
+  }
+  
   try {
     const response = await fetch('/api/menu');
     const menu = await response.json();
-    // Also sync to localStorage for offline use
     localStorage.setItem(MENU_KEY, JSON.stringify(menu));
     return menu;
   } catch(error) {
-    // Fallback to localStorage if server is unavailable
-    return JSON.parse(localStorage.getItem(MENU_KEY) || '[]');
+    return JSON.parse(localStorage.getItem(MENU_KEY) || JSON.stringify(defaultMenu));
   }
 }
 
@@ -951,29 +959,28 @@ function checkoutFlow(){
     saveCustomerInfo(name, formattedPhone, address);
     
     // Create order
-    const orders = getOrders();
-    const id = 'ORD-' + Date.now();
     const order = {
-      id, 
-      name, 
-      phone: formattedPhone, 
-      address,
+      customerName: name,
+      customerPhone: formattedPhone,
+      customerAddress: address,
       items: cart,
       subtotal,
       deliveryFee,
       total,
       specialInstructions: notes,
-      status:'pending',
-      timestamp: new Date().toISOString()
+      status:'pending'
     };
-    orders.push(order);
-    saveOrders(orders);
-    saveCart([]);
-    closeCheckoutModal();
-    toggleCart();
     
-    // Show order confirmation
-    showOrderConfirmation(id, order, lang);
+    // Save to Firebase (with fallback to localStorage)
+    placeOrderAsync(order, lang).then(orderId => {
+      saveCart([]);
+      closeCheckoutModal();
+      toggleCart();
+      showOrderConfirmation(orderId, order, lang);
+    }).catch(error => {
+      alert(lang === 'ar' ? 'فشل في إرسال الطلب. حاول مرة أخرى.' : 'Failed to place order. Please try again.');
+      console.error('Order placement failed:', error);
+    });
   };
 }
 
@@ -1579,3 +1586,25 @@ document.addEventListener('DOMContentLoaded', ()=>{
   renderFeedbackList();
   initStarRating();
 });
+/* Firebase Order Placement */
+async function placeOrderAsync(order, lang) {
+  try {
+    if (window.FirebaseCustomer) {
+      const orderId = await window.FirebaseCustomer.placeOrder(order);
+      return orderId;
+    }
+  } catch (error) {
+    console.log('Firebase not available, falling back to localStorage');
+  }
+  
+  const orders = getOrders();
+  const id = 'ORD-' + Date.now();
+  const localOrder = {
+    id,
+    ...order,
+    timestamp: new Date().toISOString()
+  };
+  orders.push(localOrder);
+  saveOrders(orders);
+  return id;
+}

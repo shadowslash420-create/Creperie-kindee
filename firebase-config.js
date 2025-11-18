@@ -3,9 +3,13 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
 let app = null;
 let auth = null;
+let db = null;
+let storage = null;
 let initPromise = null;
 
 // Fetch Firebase config from server
@@ -34,8 +38,10 @@ async function initializeFirebase() {
       const config = await loadFirebaseConfig();
       app = initializeApp(config);
       auth = getAuth(app);
-      console.log('Firebase initialized successfully');
-      return { app, auth };
+      db = getFirestore(app);
+      storage = getStorage(app);
+      console.log('Firebase initialized successfully with Firestore and Storage');
+      return { app, auth, db, storage };
     } catch (error) {
       console.error('Firebase initialization failed:', error);
       initPromise = null; // Reset so it can be retried
@@ -60,9 +66,23 @@ export async function getAppInstance() {
   return result.app;
 }
 
+// Get Firestore instance (ensures Firebase is initialized)
+export async function getFirestoreInstance() {
+  if (db) return db;
+  const result = await initializeFirebase();
+  return result.db;
+}
+
+// Get Storage instance (ensures Firebase is initialized)
+export async function getStorageInstance() {
+  if (storage) return storage;
+  const result = await initializeFirebase();
+  return result.storage;
+}
+
 // Auto-initialize on import
 initializeFirebase().catch(err => {
   console.error('Auto-initialization failed:', err);
 });
 
-export { app, auth };
+export { app, auth, db, storage };

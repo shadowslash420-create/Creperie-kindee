@@ -1,0 +1,89 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.email != null &&
+             (request.auth.token.admin == true || 
+              request.auth.token.email in ['your-admin-email@example.com']);
+    }
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Menu collection rules
+    // - Anyone can read menu items (public)
+    // - Only admins can create, update, or delete menu items
+    match /menu/{menuId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Orders collection rules
+    // - Anyone can create orders (for guest checkout)
+    // - Admins can read all orders
+    // - Authenticated users can read orders they created (matched by uid)
+    // - Unauthenticated users cannot read orders (admin-only after creation)
+    match /orders/{orderId} {
+      allow read: if isAdmin() || 
+                     (isAuthenticated() && resource.data.createdBy == request.auth.uid);
+      allow create: if request.resource.data.keys().hasAll(['customerName', 'customerPhone', 'items', 'total', 'status']) &&
+                       request.resource.data.status == 'pending';
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Customers collection (optional - for analytics)
+    match /customers/{customerId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+  }
+}
+
+// IMPORTANT SETUP INSTRUCTIONS:
+// 
+// 1. Enable Cloud Firestore:
+//    - Go to Firebase Console: https://console.firebase.google.com/
+//    - Select your project (kinder-87e7e)
+//    - Click "Firestore Database" in the left sidebar
+//    - Click "Create database"
+//    - Choose production mode
+//    - Select a location (choose closest to your users)
+//
+// 2. Deploy these security rules:
+//    - In Firebase Console, go to Firestore Database > Rules tab
+//    - Copy and paste the rules above
+//    - Replace 'your-admin-email@example.com' with your actual admin email
+//    - Click "Publish"
+//
+// 3. Enable Firebase Storage:
+//    - Go to Storage in Firebase Console
+//    - Click "Get Started"
+//    - Use the same location as Firestore
+//
+// 4. Set up Firebase Storage rules:
+//    - Go to Storage > Rules tab
+//    - See storage.rules file for recommended rules
+//
+// 5. Set up admin authentication:
+//    - Go to Authentication in Firebase Console
+//    - Enable Google Sign-In provider
+//    - Add your admin email to the authorized users
+//    - Optionally: Set custom claims for admin users using Firebase Admin SDK
+//
+// TEMPORARY DEVELOPMENT RULES (⚠️ INSECURE - DO NOT USE IN PRODUCTION):
+// Use these ONLY for initial testing, then switch to the secure rules above:
+//
+// rules_version = '2';
+// service cloud.firestore {
+//   match /databases/{database}/documents {
+//     match /{document=**} {
+//       allow read, write: if true;  // WARNING: Anyone can read/write!
+//     }
+//   }
+// }

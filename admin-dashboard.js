@@ -125,38 +125,67 @@ function closeSidebar() {
 }
 
 // Load Dashboard
-function loadDashboard() {
+async function loadDashboard() {
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    const orders = await dbService.getAllOrders();
+    
+    updateDashboardStatsFromOrders(orders);
+    loadRecentOrdersFromOrders(orders);
+    loadBestSellersFromOrders(orders);
+    loadSalesChartFromOrders(orders);
+    loadStatusChartFromOrders(orders);
+    
+    dbService.listenToOrderChanges((updatedOrders) => {
+      updateDashboardStatsFromOrders(updatedOrders);
+      loadRecentOrdersFromOrders(updatedOrders);
+      loadBestSellersFromOrders(updatedOrders);
+      loadSalesChartFromOrders(updatedOrders);
+      loadStatusChartFromOrders(updatedOrders);
+    });
+  } catch (error) {
+    console.error('Failed to load dashboard from Firebase, using localStorage:', error);
+    loadDashboardFallback();
+  }
+}
+
+function loadDashboardFallback() {
   const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
+  updateDashboardStatsFromOrders(orders);
+  loadRecentOrdersFromOrders(orders);
+  loadBestSellersFromOrders(orders);
+  loadSalesChartFromOrders(orders);
+  loadStatusChartFromOrders(orders);
+}
+
+function updateDashboardStatsFromOrders(orders) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   
-  // Calculate stats
-  const today = new Date().toDateString();
-  const todayOrders = orders.filter(o => new Date(o.timestamp || o.createdAt).toDateString() === today);
+  const todayOrders = orders.filter(o => {
+    const orderDate = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.timestamp || o.createdAt);
+    orderDate.setHours(0, 0, 0, 0);
+    return orderDate.getTime() === today.getTime();
+  });
+  
   const pendingOrders = orders.filter(o => o.status === 'pending');
   const completedToday = todayOrders.filter(o => o.status === 'delivered');
+  const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
   
-  const todayRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
-  
-  // Update stat cards
   document.getElementById('stat-revenue').textContent = todayRevenue.toFixed(2) + ' DZD';
   document.getElementById('stat-total-orders').textContent = orders.length;
   document.getElementById('stat-pending').textContent = pendingOrders.length;
   document.getElementById('stat-completed').textContent = completedToday.length;
-  
-  // Load recent orders
-  loadRecentOrders();
-  
-  // Load best sellers
-  loadBestSellers();
-  
-  // Load charts
-  loadSalesChart();
-  loadStatusChart();
 }
 
 // Load Recent Orders
 function loadRecentOrders() {
   const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
-  const recentOrders = orders.slice(-5).reverse();
+  loadRecentOrdersFromOrders(orders);
+}
+
+function loadRecentOrdersFromOrders(orders) {
+  const recentOrders = orders.slice(0, 5);
   
   let html = '<table class="simple-table"><thead><tr>';
   html += '<th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>';
@@ -166,9 +195,9 @@ function loadRecentOrders() {
   } else {
     recentOrders.forEach(order => {
       html += '<tr>';
-      html += '<td class="order-id">#' + order.id + '</td>';
-      html += '<td>' + order.name + '</td>';
-      html += '<td>' + order.total.toFixed(2) + ' DZD</td>';
+      html += '<td class="order-id">#' + (order.id ? order.id.substring(0, 8) : 'N/A') + '</td>';
+      html += '<td>' + (order.customerName || order.name || 'N/A') + '</td>';
+      html += '<td>' + (order.total || 0).toFixed(2) + ' DZD</td>';
       html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
       html += '</tr>';
     });
@@ -181,15 +210,21 @@ function loadRecentOrders() {
 // Load Best Sellers
 function loadBestSellers() {
   const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
+  loadBestSellersFromOrders(orders);
+}
+
+function loadBestSellersFromOrders(orders) {
   const itemCounts = {};
   const itemRevenue = {};
   
   orders.forEach(order => {
-    order.items.forEach(item => {
-      const name = item.name;
-      itemCounts[name] = (itemCounts[name] || 0) + item.qty;
-      itemRevenue[name] = (itemRevenue[name] || 0) + (item.price * item.qty);
-    });
+    if (order.items) {
+      order.items.forEach(item => {
+        const name = item.name || item.id;
+        itemCounts[name] = (itemCounts[name] || 0) + (item.qty || 1);
+        itemRevenue[name] = (itemRevenue[name] || 0) + ((item.price || 0) * (item.qty || 1));
+      });
+    }
   });
   
   const sortedItems = Object.keys(itemCounts)
@@ -754,3 +789,412 @@ window.addEventListener('DOMContentLoaded', () => {
     showSection(lastSection);
   }
 });
+
+/* Firebase-Powered Menu Management */
+
+let currentMenuFilter = 'all';
+let currentEditingItem = null;
+
+async function loadMenuItems() {
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    const menu = await dbService.getAllMenuItems();
+    
+    renderMenuItems(menu);
+    
+    dbService.listenToMenuChanges((updatedMenu) => {
+      renderMenuItems(updatedMenu);
+    });
+  } catch (error) {
+    console.error('Failed to load menu:', error);
+    document.getElementById('menu-items-grid').innerHTML = `
+      <div style="padding:40px;text-align:center;color:#999;">
+        <p>⚠️ Failed to load menu items</p>
+        <p style="font-size:0.9em;">${error.message}</p>
+        <button onclick="loadMenuItems()" style="margin-top:16px;padding:8px 16px;background:#FF6B35;color:white;border:none;border-radius:8px;cursor:pointer;">Retry</button>
+      </div>
+    `;
+  }
+}
+
+function renderMenuItems(menu) {
+  const filtered = currentMenuFilter === 'all' 
+    ? menu 
+    : menu.filter(item => item.category === currentMenuFilter);
+  
+  if (filtered.length === 0) {
+    document.getElementById('menu-items-grid').innerHTML = `
+      <div style="grid-column:1/-1;padding:60px 20px;text-align:center;color:#999;">
+        <h3 style="margin:0 0 8px 0;">No items found</h3>
+        <p style="font-size:0.9em;">Try adding a new menu item or changing the filter</p>
+      </div>
+    `;
+    return;
+  }
+  
+  let html = '';
+  filtered.forEach(item => {
+    html += `
+      <div class="menu-item-card">
+        <img src="${item.img}" alt="${item.name}" class="menu-item-image" onerror="this.src='images/crepe1.svg'" />
+        <div class="menu-item-content">
+          <div class="menu-item-header">
+            <h4 class="menu-item-name">${item.name}</h4>
+            <span class="menu-item-category ${item.category}">${item.category}</span>
+          </div>
+          <p class="menu-item-desc">${item.desc}</p>
+          <p class="menu-item-price">${item.price.toFixed(2)} DZD</p>
+          <div class="menu-item-actions">
+            <button class="btn-edit" onclick="openEditMenuItemModal('${item.id}')">
+              ✏️ Edit
+            </button>
+            <button class="btn-delete" onclick="confirmDeleteMenuItem('${item.id}', '${item.name.replace(/'/g, "\\'")}')">
+              🗑️ Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  document.getElementById('menu-items-grid').innerHTML = html;
+}
+
+function filterMenuByCategory(category, event) {
+  if (event) {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+  }
+  
+  currentMenuFilter = category;
+  loadMenuItems();
+}
+
+function openMenuItemModal() {
+  currentEditingItem = null;
+  document.getElementById('modal-title').textContent = 'Add New Menu Item';
+  document.getElementById('menu-item-form').reset();
+  document.getElementById('item-id').value = '';
+  document.getElementById('current-image-url').value = '';
+  document.getElementById('image-preview').classList.remove('active');
+  document.getElementById('image-preview').innerHTML = '';
+  document.getElementById('menu-item-modal').classList.add('active');
+}
+
+async function openEditMenuItemModal(itemId) {
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    const item = await dbService.getMenuItem(itemId);
+    
+    if (!item) {
+      alert('Item not found');
+      return;
+    }
+    
+    currentEditingItem = item;
+    document.getElementById('modal-title').textContent = 'Edit Menu Item';
+    document.getElementById('item-id').value = item.id;
+    document.getElementById('item-name').value = item.name;
+    document.getElementById('item-price').value = item.price;
+    document.getElementById('item-desc').value = item.desc;
+    document.getElementById('item-category').value = item.category;
+    document.getElementById('current-image-url').value = item.img;
+    
+    const preview = document.getElementById('image-preview');
+    preview.innerHTML = `<img src="${item.img}" alt="${item.name}" onerror="this.src='images/crepe1.svg'" />`;
+    preview.classList.add('active');
+    
+    document.getElementById('menu-item-modal').classList.add('active');
+  } catch (error) {
+    console.error('Failed to load item:', error);
+    alert('Failed to load item details');
+  }
+}
+
+function closeMenuItemModal() {
+  document.getElementById('menu-item-modal').classList.remove('active');
+  currentEditingItem = null;
+}
+
+function previewImage(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.getElementById('image-preview');
+      preview.innerHTML = `<img src="${e.target.result}" alt="Preview" />`;
+      preview.classList.add('active');
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+async function saveMenuItem(event) {
+  event.preventDefault();
+  
+  const saveBtn = document.getElementById('save-item-btn');
+  const originalText = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving...';
+  
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    
+    const itemData = {
+      name: document.getElementById('item-name').value,
+      price: parseFloat(document.getElementById('item-price').value),
+      desc: document.getElementById('item-desc').value,
+      category: document.getElementById('item-category').value,
+      img: document.getElementById('current-image-url').value || 'images/crepe1.svg'
+    };
+    
+    const imageFile = document.getElementById('item-image').files[0];
+    if (imageFile) {
+      saveBtn.textContent = 'Uploading image...';
+      const imageUrl = await dbService.uploadImage(imageFile, 'menu');
+      itemData.img = imageUrl;
+    }
+    
+    const itemId = document.getElementById('item-id').value;
+    
+    if (itemId) {
+      await dbService.updateMenuItem(itemId, itemData);
+      alert('✅ Menu item updated successfully!');
+    } else {
+      await dbService.addMenuItem(itemData);
+      alert('✅ Menu item added successfully!');
+    }
+    
+    closeMenuItemModal();
+    loadMenuItems();
+    
+  } catch (error) {
+    console.error('Failed to save item:', error);
+    alert('❌ Failed to save menu item: ' + error.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
+  }
+}
+
+async function confirmDeleteMenuItem(itemId, itemName) {
+  if (confirm(`Are you sure you want to delete "${itemName}"?\n\nThis action cannot be undone.`)) {
+    await deleteMenuItemById(itemId);
+  }
+}
+
+async function deleteMenuItemById(itemId) {
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    await dbService.deleteMenuItem(itemId);
+    alert('✅ Menu item deleted successfully!');
+    loadMenuItems();
+  } catch (error) {
+    console.error('Failed to delete item:', error);
+    alert('❌ Failed to delete menu item: ' + error.message);
+  }
+}
+
+/* Firebase-Powered Order Management */
+
+async function loadAllOrders() {
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    const orders = await dbService.getAllOrders();
+    
+    renderOrdersTable(orders);
+    
+    dbService.listenToOrderChanges((updatedOrders) => {
+      renderOrdersTable(updatedOrders);
+      updateDashboardStats(updatedOrders);
+    });
+  } catch (error) {
+    console.error('Failed to load orders:', error);
+    document.getElementById('orders-table').innerHTML = `
+      <div style="padding:40px;text-align:center;color:#999;">
+        <p>⚠️ Failed to load orders</p>
+        <p style="font-size:0.9em;">${error.message}</p>
+        <button onclick="loadAllOrders()" style="margin-top:16px;padding:8px 16px;background:#FF6B35;color:white;border:none;border-radius:8px;cursor:pointer;">Retry</button>
+      </div>
+    `;
+  }
+}
+
+function renderOrdersTable(orders) {
+  const filtered = currentFilter === 'all' 
+    ? orders 
+    : orders.filter(order => order.status === currentFilter);
+  
+  const searchTerm = document.getElementById('order-search')?.value?.toLowerCase() || '';
+  const searchFiltered = filtered.filter(order => 
+    order.customerName?.toLowerCase().includes(searchTerm) ||
+    order.id?.toLowerCase().includes(searchTerm)
+  );
+  
+  if (searchFiltered.length === 0) {
+    document.getElementById('orders-table').innerHTML = `
+      <div style="padding:60px 20px;text-align:center;color:#999;">
+        <h3 style="margin:0 0 8px 0;">No orders found</h3>
+        <p style="font-size:0.9em;">Try changing the filter or search term</p>
+      </div>
+    `;
+    return;
+  }
+  
+  let html = '<table class="orders-table">';
+  html += '<thead><tr>';
+  html += '<th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th>';
+  html += '</tr></thead><tbody>';
+  
+  searchFiltered.forEach(order => {
+    const date = order.createdAt?.toDate ? order.createdAt.toDate() : new Date();
+    const statusClass = order.status || 'pending';
+    
+    html += '<tr>';
+    html += `<td><strong>${order.id.substring(0, 8)}</strong></td>`;
+    html += `<td>${order.customerName || 'N/A'}</td>`;
+    html += `<td>${order.customerPhone || 'N/A'}</td>`;
+    html += `<td>${order.items?.length || 0} items</td>`;
+    html += `<td><strong>${(order.total || 0).toFixed(2)} DZD</strong></td>`;
+    html += `<td><span class="status-badge ${statusClass}">${order.status || 'pending'}</span></td>`;
+    html += `<td>${date.toLocaleDateString()}</td>`;
+    html += `<td>
+      <select onchange="updateOrderStatusQuick('${order.id}', this.value)" class="status-select">
+        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+        <option value="in-progress" ${order.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+      </select>
+    </td>`;
+    html += '</tr>';
+  });
+  
+  html += '</tbody></table>';
+  document.getElementById('orders-table').innerHTML = html;
+}
+
+async function updateOrderStatusQuick(orderId, newStatus) {
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    await dbService.updateOrderStatus(orderId, newStatus);
+  } catch (error) {
+    console.error('Failed to update order status:', error);
+    alert('❌ Failed to update order status');
+  }
+}
+
+function updateDashboardStats(orders) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const todayOrders = orders.filter(order => {
+    const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date();
+    orderDate.setHours(0, 0, 0, 0);
+    return orderDate.getTime() === today.getTime();
+  });
+  
+  const todayRevenue = todayOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const pendingCount = orders.filter(o => o.status === 'pending').length;
+  const todayCompleted = todayOrders.filter(o => o.status === 'delivered').length;
+  
+  document.getElementById('stat-revenue').textContent = todayRevenue.toFixed(2) + ' DZD';
+  document.getElementById('stat-total-orders').textContent = orders.length;
+  document.getElementById('stat-pending').textContent = pendingCount;
+  document.getElementById('stat-completed').textContent = todayCompleted;
+}
+
+
+/* Override loadDashboard to use Firebase */
+async function loadDashboardFromFirebase() {
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    const orders = await dbService.getAllOrders();
+    
+    updateDashboardStats(orders);
+    loadRecentOrdersFromFirebase(orders);
+    loadBestSellersFromFirebase(orders);
+    loadSalesChartFromFirebase(orders);
+    loadStatusChartFromFirebase(orders);
+    
+    dbService.listenToOrderChanges((updatedOrders) => {
+      updateDashboardStats(updatedOrders);
+      loadRecentOrdersFromFirebase(updatedOrders);
+      loadBestSellersFromFirebase(updatedOrders);
+    });
+  } catch (error) {
+    console.error('Failed to load dashboard from Firebase:', error);
+    loadDashboard();
+  }
+}
+
+function loadRecentOrdersFromFirebase(orders) {
+  const recentOrders = orders.slice(0, 5);
+  
+  let html = '<table class="simple-table"><thead><tr>';
+  html += '<th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>';
+  
+  if (recentOrders.length === 0) {
+    html += '<tr><td colspan="4" style="text-align:center;color:#999;padding:40px;">No orders yet</td></tr>';
+  } else {
+    recentOrders.forEach(order => {
+      html += '<tr>';
+      html += '<td class="order-id">#' + (order.id ? order.id.substring(0, 8) : 'N/A') + '</td>';
+      html += '<td>' + (order.customerName || order.name || 'N/A') + '</td>';
+      html += '<td>' + (order.total || 0).toFixed(2) + ' DZD</td>';
+      html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
+      html += '</tr>';
+    });
+  }
+  
+  html += '</tbody></table>';
+  document.getElementById('recent-orders-table').innerHTML = html;
+}
+
+async function loadBestSellersFromFirebase(orders) {
+  const itemCounts = {};
+  
+  orders.forEach(order => {
+    if (order.items) {
+      order.items.forEach(item => {
+        if (!itemCounts[item.name || item.id]) {
+          itemCounts[item.name || item.id] = { name: item.name || item.id, count: 0, revenue: 0 };
+        }
+        itemCounts[item.name || item.id].count += item.qty || 1;
+        itemCounts[item.name || item.id].revenue += (item.price || 0) * (item.qty || 1);
+      });
+    }
+  });
+  
+  const sorted = Object.values(itemCounts).sort((a, b) => b.count - a.count).slice(0, 5);
+  
+  let html = '';
+  if (sorted.length === 0) {
+    html = '<div style="text-align:center;color:#999;padding:20px;">No sales data yet</div>';
+  } else {
+    sorted.forEach((item, index) => {
+      html += `
+        <div class="best-seller-item">
+          <div class="best-seller-rank">${index + 1}</div>
+          <div class="best-seller-info">
+            <div class="best-seller-name">${item.name}</div>
+            <div class="best-seller-stats">${item.count} sold • ${item.revenue.toFixed(2)} DZD</div>
+          </div>
+        </div>
+      `;
+    });
+  }
+  
+  document.getElementById('best-sellers-list').innerHTML = html;
+}
+
+function loadSalesChartFromFirebase(orders) {
+  loadSalesChart();
+}
+
+function loadStatusChartFromFirebase(orders) {
+  loadStatusChart();
+}
+
+window.loadDashboard = loadDashboardFromFirebase;
+

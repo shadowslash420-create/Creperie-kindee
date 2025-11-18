@@ -1,17 +1,21 @@
 # Creperie Kinder
 
 ## Overview
-A modern, elegant static website for "Creperie Kinder" - a crepe restaurant featuring Sweet Paris-inspired design with:
+A modern, elegant cloud-powered website for "Creperie Kinder" - a crepe restaurant featuring Sweet Paris-inspired design with:
 - Customer-facing menu with tab navigation and shopping cart
 - Order placement with Cash on Delivery (COD)
 - Admin panel for order management
+- **Firebase Firestore integration** for real-time data synchronization
+- **Firebase Storage** for product image management
 - Responsive design with RTL (right-to-left) support for Arabic
 - Modern orange color scheme with professional Shopify-like design
 
 ## Tech Stack
 - **Frontend**: Pure HTML, CSS, JavaScript (no frameworks)
+- **Backend**: Firebase Firestore (NoSQL cloud database)
+- **Storage**: Firebase Storage (cloud file storage)
+- **Authentication**: Firebase Authentication + Google Sign-In
 - **Fonts**: Playfair Display (serif headings), Inter (body text)
-- **Data Storage**: Browser localStorage (client-side only)
 - **Server**: Python HTTP server for static file serving
 - **Language**: Arabic UI with English code
 
@@ -22,11 +26,20 @@ A modern, elegant static website for "Creperie Kinder" - a crepe restaurant feat
 ├── about.html              # About us page
 ├── contact.html            # Contact form page
 ├── admin.html              # Admin login and professional dashboard
+├── menu.html               # Menu page with Firebase integration
+├── migrate-data.html       # Data migration tool for Firestore
 ├── style.css               # Main website styles with orange theme
 ├── admin-dashboard.css     # Dashboard-specific styles
 ├── script.js               # Client-side logic (menu, cart, orders)
 ├── admin-dashboard.js      # Dashboard logic (charts, stats, order management)
+├── firebase-config.js      # Firebase initialization and configuration
+├── db-service.js           # Firestore database service layer
+├── firebase-customer.js    # Firebase integration for customer-facing features
+├── auth.js                 # Firebase Authentication integration
 ├── server.py               # Python HTTP server (serves on 0.0.0.0:5000)
+├── firestore.rules         # Firestore security rules
+├── storage.rules           # Firebase Storage security rules
+├── FIREBASE_SETUP.md       # Complete Firebase setup guide
 ├── images/                 # SVG placeholder images
 └── replit.md               # This file
 ```
@@ -91,11 +104,18 @@ A modern, elegant static website for "Creperie Kinder" - a crepe restaurant feat
 - **Drinks** (مشروبات): Hot chocolate, juices, etc.
 
 ## Data Storage
-All data is stored in browser localStorage:
-- `kc_menu`: Product menu items with categories
-- `kc_cart`: Customer shopping cart
-- `kc_orders`: All placed orders
+**Primary Storage** (Firebase Firestore):
+- `menu` collection: Product menu items with categories, images, prices
+- `orders` collection: Customer orders with status tracking and timestamps
+- `customers` collection: Auto-generated customer analytics
+
+**Local Storage** (Browser - Fallback & Cache):
+- `kc_cart`: Customer shopping cart (temporary)
+- `kc_menu`: Menu cache for offline access
 - `kc_admin`: Admin login session
+
+**File Storage** (Firebase Storage):
+- `/menu/*`: Product images uploaded by admins
 
 ## Development
 The site runs on Python's built-in HTTP server:
@@ -108,6 +128,38 @@ The site runs on Python's built-in HTTP server:
 Configured to deploy as an autoscale static website on Replit.
 
 ## Recent Changes
+- **2025-11-18**: Complete Firebase Firestore & Storage Integration
+  - **Database Migration**: Implemented full cloud database with Firestore
+    - Created comprehensive database service layer (db-service.js)
+    - Migrated from localStorage to Firestore for menu and orders
+    - Built one-click data migration tool (migrate-data.html)
+  - **Admin Menu Management**: Full CRUD operations
+    - Add/Edit/Delete menu items from admin dashboard
+    - Upload product images to Firebase Storage
+    - Real-time menu synchronization across all clients
+    - Category filtering and search
+    - Modal-based editing interface with image preview
+  - **Real-time Updates**: Live data synchronization
+    - Dashboard statistics update in real-time
+    - Order status changes reflect immediately
+    - Menu changes propagate to all customers instantly
+  - **Enhanced Order System**: Cloud-based order management
+    - Orders saved to Firestore instead of localStorage
+    - Admin can edit order details and update status
+    - Customer analytics automatically generated
+  - **Security Implementation**: Firebase security rules
+    - Created firestore.rules for database access control
+    - Created storage.rules for image upload security
+    - Documentation for admin authentication setup
+  - **Comprehensive Documentation**: Setup guides and troubleshooting
+    - FIREBASE_SETUP.md with step-by-step instructions
+    - Security best practices and recommendations
+    - Migration guide and testing procedures
+  - **Backward Compatibility**: Graceful fallbacks
+    - Falls back to localStorage if Firebase unavailable
+    - Progressive enhancement approach
+    - No breaking changes for existing features
+  
 - **2025-11-17**: Added Google Firebase Authentication
   - Implemented secure Google sign-in/sign-out functionality
   - Added login button to all pages (next to EN language button)
