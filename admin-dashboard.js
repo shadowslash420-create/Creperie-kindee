@@ -960,6 +960,11 @@ async function openMenuItemModal() {
   document.getElementById('modal-title').textContent = 'Add New Menu Item';
   document.getElementById('menu-item-form').reset();
   document.getElementById('item-id').value = '';
+  
+  // Reset file input
+  const fileInput = document.getElementById('item-image');
+  if (fileInput) fileInput.value = '';
+  
   const preview = document.getElementById('image-preview');
   if (preview) {
     preview.style.display = 'none';
@@ -1014,6 +1019,17 @@ async function openEditMenuItemModal(itemId) {
 function closeMenuItemModal() {
   document.getElementById('menu-item-modal').classList.remove('active');
   currentEditingItem = null;
+  selectedImageFile = null;
+  
+  // Reset file input
+  const fileInput = document.getElementById('item-image');
+  if (fileInput) fileInput.value = '';
+  
+  const preview = document.getElementById('image-preview');
+  if (preview) {
+    preview.style.display = 'none';
+    preview.innerHTML = '';
+  }
 }
 
 // Store the selected file globally so it doesn't get lost
@@ -1024,6 +1040,22 @@ function previewImage(event) {
   console.log('previewImage called with file:', file ? file.name : 'No file');
   
   if (file) {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('❌ يرجى اختيار ملف صورة فقط');
+      event.target.value = '';
+      selectedImageFile = null;
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('❌ حجم الصورة كبير جداً. الحد الأقصى هو 5 ميجابايت');
+      event.target.value = '';
+      selectedImageFile = null;
+      return;
+    }
+    
     // Store the file object
     selectedImageFile = file;
     console.log('✅ File stored for upload:', selectedImageFile.name, 'Size:', selectedImageFile.size, 'bytes');
@@ -1041,6 +1073,12 @@ function previewImage(event) {
         `;
         preview.style.display = 'block';
       }
+    };
+    reader.onerror = function() {
+      console.error('❌ فشل في قراءة الملف');
+      alert('❌ فشل في قراءة الصورة. يرجى المحاولة مرة أخرى');
+      selectedImageFile = null;
+      event.target.value = '';
     };
     reader.readAsDataURL(file);
   } else {
@@ -1067,15 +1105,29 @@ async function saveMenuItem(event) {
     const dbService = (await import('./db-service.js')).default;
     
     const itemId = document.getElementById('item-id').value;
+    const itemName = document.getElementById('item-name').value.trim();
+    const itemPrice = parseFloat(document.getElementById('item-price').value);
+    const itemDesc = document.getElementById('item-desc').value.trim();
+    const itemCategory = document.getElementById('item-category').value;
+    
+    // Validate inputs
+    if (!itemName || !itemDesc || !itemCategory || isNaN(itemPrice) || itemPrice <= 0) {
+      alert('❌ يرجى ملء جميع الحقول بشكل صحيح');
+      saveBtn.disabled = false;
+      saveBtn.textContent = originalText;
+      return;
+    }
+    
     const itemData = {
-      name: document.getElementById('item-name').value,
-      price: parseFloat(document.getElementById('item-price').value),
-      desc: document.getElementById('item-desc').value,
-      category: document.getElementById('item-category').value,
+      name: itemName,
+      price: itemPrice,
+      desc: itemDesc,
+      category: itemCategory,
       img: currentEditingItem?.img || ''
     };
     
-    console.log('Selected image file:', selectedImageFile);
+    console.log('Item data prepared:', itemData);
+    console.log('Image file selected:', selectedImageFile ? selectedImageFile.name : 'No file selected');
     
     // Check if there's a file to upload
     if (selectedImageFile && selectedImageFile instanceof File) {
@@ -1090,12 +1142,11 @@ async function saveMenuItem(event) {
         console.error('❌ Image upload failed:', uploadError);
         saveBtn.disabled = false;
         saveBtn.textContent = originalText;
-        if (!confirm('فشل رفع الصورة. هل تريد حفظ العنصر بدون صورة؟')) {
-          return;
-        }
+        alert('❌ فشل رفع الصورة: ' + uploadError.message);
+        return;
       }
     } else {
-      console.log('ℹ️ No new image file selected');
+      console.log('No image file selected, using default or current image');
     }
     
     saveBtn.textContent = 'جاري حفظ البيانات...';
@@ -1108,7 +1159,11 @@ async function saveMenuItem(event) {
       alert('✅ تم إضافة العنصر بنجاح' + (itemData.img ? ' مع الصورة!' : '!'));
     }
     
+    // Reset file input
     selectedImageFile = null;
+    const fileInput = document.getElementById('item-image');
+    if (fileInput) fileInput.value = '';
+    
     closeMenuItemModal();
     loadMenuItems();
     
