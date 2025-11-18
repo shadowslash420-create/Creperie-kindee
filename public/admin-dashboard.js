@@ -1068,9 +1068,13 @@ async function handleImageSelect(event) {
   // Show local preview
   const reader = new FileReader();
   reader.onload = (e) => {
-    document.getElementById('upload-placeholder').style.display = 'none';
-    document.getElementById('image-preview-container').style.display = 'block';
-    document.getElementById('image-preview-img').src = e.target.result;
+    const previewPlaceholder = document.getElementById('upload-placeholder');
+    const previewContainer = document.getElementById('image-preview-container');
+    const previewImg = document.getElementById('image-preview-img');
+    
+    if (previewPlaceholder) previewPlaceholder.style.display = 'none';
+    if (previewContainer) previewContainer.style.display = 'block';
+    if (previewImg) previewImg.src = e.target.result;
     
     const uploadArea = document.getElementById('image-upload-area');
     if (uploadArea) uploadArea.style.borderColor = '#48bb78';
@@ -1082,7 +1086,7 @@ async function handleImageSelect(event) {
 }
 
 /**
- * Upload image to ImgBB cloud storage
+ * Upload image to ImgBB cloud storage via server API
  */
 async function uploadImageToImgBB() {
   if (!selectedImageFile) {
@@ -1097,16 +1101,16 @@ async function uploadImageToImgBB() {
   
   try {
     // Show progress UI
-    uploadProgress.style.display = 'block';
-    uploadSuccess.style.display = 'none';
-    progressBar.style.width = '10%';
-    uploadText.textContent = '📤 Preparing upload...';
+    if (uploadProgress) uploadProgress.style.display = 'block';
+    if (uploadSuccess) uploadSuccess.style.display = 'none';
+    if (progressBar) progressBar.style.width = '10%';
+    if (uploadText) uploadText.textContent = '📤 Preparing upload...';
     
     console.log('📤 Starting upload to ImgBB...');
     
     // Convert file to base64
-    progressBar.style.width = '30%';
-    uploadText.textContent = '📤 Converting image...';
+    if (progressBar) progressBar.style.width = '30%';
+    if (uploadText) uploadText.textContent = '📤 Converting image...';
     
     const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -1119,23 +1123,24 @@ async function uploadImageToImgBB() {
     });
     
     // Upload to server (which forwards to ImgBB)
-    progressBar.style.width = '50%';
-    uploadText.textContent = '📤 Uploading to ImgBB...';
+    if (progressBar) progressBar.style.width = '50%';
+    if (uploadText) uploadText.textContent = '📤 Uploading to ImgBB...';
     
     const formData = new FormData();
     formData.append('image', base64);
     formData.append('folder', 'menu');
-    formData.append('filename', selectedImageFile.name.split('.')[0]);
+    formData.append('filename', selectedImageFile.name.replace(/\.[^/.]+$/, ''));
     
     const response = await fetch('/api/upload-image', {
       method: 'POST',
       body: formData
     });
     
-    progressBar.style.width = '80%';
+    if (progressBar) progressBar.style.width = '80%';
     
     if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Upload failed (${response.status}): ${errorText}`);
     }
     
     const result = await response.json();
@@ -1145,15 +1150,15 @@ async function uploadImageToImgBB() {
     }
     
     // Success!
-    progressBar.style.width = '100%';
+    if (progressBar) progressBar.style.width = '100%';
     uploadedImageUrl = result.url;
     
     console.log('✅ Image uploaded successfully:', uploadedImageUrl);
     
     // Show success message
     setTimeout(() => {
-      uploadProgress.style.display = 'none';
-      uploadSuccess.style.display = 'block';
+      if (uploadProgress) uploadProgress.style.display = 'none';
+      if (uploadSuccess) uploadSuccess.style.display = 'block';
     }, 500);
     
   } catch (error) {
@@ -1173,15 +1178,32 @@ function clearImage() {
   const fileInput = document.getElementById('item-image');
   if (fileInput) fileInput.value = '';
   
-  document.getElementById('upload-placeholder').style.display = 'block';
-  document.getElementById('image-preview-container').style.display = 'none';
-  document.getElementById('image-preview-img').src = '';
-  document.getElementById('upload-progress').style.display = 'none';
-  document.getElementById('upload-success').style.display = 'none';
-  document.getElementById('progress-bar').style.width = '0%';
+  const uploadPlaceholder = document.getElementById('upload-placeholder');
+  const previewContainer = document.getElementById('image-preview-container');
+  const previewImg = document.getElementById('image-preview-img');
+  const uploadProgress = document.getElementById('upload-progress');
+  const uploadSuccess = document.getElementById('upload-success');
+  const progressBar = document.getElementById('progress-bar');
+  
+  if (uploadPlaceholder) uploadPlaceholder.style.display = 'block';
+  if (previewContainer) previewContainer.style.display = 'none';
+  if (previewImg) previewImg.src = '';
+  if (uploadProgress) uploadProgress.style.display = 'none';
+  if (uploadSuccess) uploadSuccess.style.display = 'none';
+  if (progressBar) progressBar.style.width = '0%';
   
   const uploadArea = document.getElementById('image-upload-area');
   if (uploadArea) uploadArea.style.borderColor = '#cbd5e0';
+  
+  // Reset placeholder to default text
+  if (uploadPlaceholder) {
+    uploadPlaceholder.innerHTML = `
+      <div style="font-size: 48px; margin-bottom: 12px;">📸</div>
+      <p style="color: #4a5568; font-weight: 500; margin-bottom: 8px;">Click to upload image</p>
+      <p style="color: #718096; font-size: 13px;">Supports: JPG, PNG, WebP (Max 5MB)</p>
+      <p style="color: #FF6B35; font-size: 12px; margin-top: 8px;">✨ Images uploaded to ImgBB cloud storage</p>
+    `;
+  }
 }
 
 /**
@@ -1212,23 +1234,28 @@ async function saveMenuItem(event) {
       return;
     }
     
+    // Determine which image URL to use
+    let imageUrl = '';
+    
+    if (uploadedImageUrl) {
+      // New image was uploaded
+      console.log('✅ Using newly uploaded image:', uploadedImageUrl);
+      imageUrl = uploadedImageUrl;
+    } else if (currentEditingItem?.img) {
+      // Editing existing item, keep current image
+      console.log('✅ Keeping existing image:', currentEditingItem.img);
+      imageUrl = currentEditingItem.img;
+    }
+    // else: new item without image, leave empty
+    
     // Prepare item data
     const itemData = {
       name: itemName,
       price: itemPrice,
       desc: itemDesc,
       category: itemCategory,
-      img: currentEditingItem?.img || '' // Keep existing image if no new upload
+      img: imageUrl
     };
-    
-    // If new image was uploaded, use it
-    if (uploadedImageUrl) {
-      console.log('✅ Using uploaded image:', uploadedImageUrl);
-      itemData.img = uploadedImageUrl;
-    } else if (!itemId && !itemData.img) {
-      // New item without image - use placeholder
-      itemData.img = '';
-    }
     
     console.log('Saving item:', itemData);
     
@@ -1246,6 +1273,7 @@ async function saveMenuItem(event) {
     // Reset and close
     selectedImageFile = null;
     uploadedImageUrl = null;
+    currentEditingItem = null;
     closeMenuItemModal();
     loadMenuItems();
     

@@ -185,54 +185,39 @@ class DatabaseService {
 
   // ==================== END CATEGORY MANAGEMENT ====================
 
+  // Image upload is now handled directly in admin-dashboard.js via /api/upload-image endpoint
+  // This method is kept for backward compatibility but delegates to the server API
   async uploadImage(file, folder = 'menu') {
-    console.log('uploadImage called with file:', file.name, 'size:', file.size);
-    await this.init();
+    console.warn('⚠️ uploadImage method is deprecated. Use /api/upload-image endpoint directly.');
     
     // Convert file to base64
-    console.log('Converting image to base64...');
     const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
         const base64String = reader.result.split(',')[1];
-        console.log('Base64 conversion successful, length:', base64String.length);
         resolve(base64String);
       };
-      reader.onerror = (error) => {
-        console.error('FileReader error:', error);
-        reject(error);
-      };
+      reader.onerror = reject;
       reader.readAsDataURL(file);
     });
 
-    // Send to server for secure upload to ImgBB
-    console.log('Preparing upload to server...');
+    // Send to server for upload to ImgBB
     const formData = new FormData();
     formData.append('image', base64);
     formData.append('folder', folder);
-    formData.append('filename', file.name);
+    formData.append('filename', file.name.replace(/\.[^/.]+$/, ''));
 
-    try {
-      console.log('Sending POST request to /api/upload-image...');
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        body: formData
-      });
+    const response = await fetch('/api/upload-image', {
+      method: 'POST',
+      body: formData
+    });
 
-      console.log('Server response status:', response.status);
-      const result = await response.json();
-      console.log('Server response:', result);
-      
-      if (result.success) {
-        console.log('✅ Image uploaded successfully to ImgBB:', result.url);
-        return result.url;
-      } else {
-        console.error('❌ Upload failed:', result.error);
-        throw new Error(result.error || 'Upload failed');
-      }
-    } catch (error) {
-      console.error('❌ Image upload error:', error);
-      throw new Error('Image upload failed: ' + error.message);
+    const result = await response.json();
+    
+    if (result.success) {
+      return result.url;
+    } else {
+      throw new Error(result.error || 'Upload failed');
     }
   }
 
