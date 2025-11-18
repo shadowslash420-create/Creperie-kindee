@@ -223,7 +223,7 @@
               </label>
               
               <!-- Image Upload Area -->
-              <div id="image-upload-area" style="border: 2px dashed #cbd5e0; border-radius: 12px; padding: 24px; text-align: center; background: #f7fafc; cursor: pointer; transition: all 0.3s;" onclick="document.getElementById('item-image').click()">
+              <div id="image-upload-area" style="border: 2px dashed #cbd5e0; border-radius: 12px; padding: 24px; text-align: center; background: #f7fafc; cursor: pointer; transition: all 0.3s;" onclick="event.stopPropagation(); document.getElementById('item-image').click();">
                 <div id="upload-placeholder">
                   <div style="font-size: 48px; margin-bottom: 12px;">📸</div>
                   <p style="color: #4a5568; font-weight: 500; margin-bottom: 8px;">Click to upload image</p>

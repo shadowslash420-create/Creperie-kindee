@@ -1068,24 +1068,43 @@ async function handleImageSelect(event) {
   }
   
   selectedImageFile = file;
+  console.log('✅ File validated, showing preview...');
   
   // Show local preview first
   const reader = new FileReader();
   reader.onload = async (e) => {
+    console.log('✅ File read successfully, updating UI...');
+    
     const previewPlaceholder = document.getElementById('upload-placeholder');
     const previewContainer = document.getElementById('image-preview-container');
     const previewImg = document.getElementById('image-preview-img');
     
-    if (previewPlaceholder) previewPlaceholder.style.display = 'none';
-    if (previewContainer) previewContainer.style.display = 'block';
-    if (previewImg) previewImg.src = e.target.result;
+    if (previewPlaceholder) {
+      previewPlaceholder.style.display = 'none';
+      console.log('✅ Placeholder hidden');
+    }
+    if (previewContainer) {
+      previewContainer.style.display = 'block';
+      console.log('✅ Preview container shown');
+    }
+    if (previewImg) {
+      previewImg.src = e.target.result;
+      console.log('✅ Preview image set');
+    }
     
     const uploadArea = document.getElementById('image-upload-area');
-    if (uploadArea) uploadArea.style.borderColor = '#48bb78';
+    if (uploadArea) {
+      uploadArea.style.borderColor = '#48bb78';
+    }
     
     // Auto-upload to ImgBB after preview is shown
-    console.log('🚀 Starting upload to ImgBB...');
-    await uploadImageToImgBB();
+    try {
+      console.log('🚀 Starting upload to ImgBB...');
+      await uploadImageToImgBB();
+    } catch (error) {
+      console.error('❌ Upload failed:', error);
+      alert('⚠️ فشل رفع الصورة، لكن يمكنك المتابعة والحفظ');
+    }
   };
   
   reader.onerror = (error) => {
@@ -1094,6 +1113,7 @@ async function handleImageSelect(event) {
     clearImage();
   };
   
+  console.log('📖 Starting to read file...');
   reader.readAsDataURL(file);
 }
 
@@ -1137,7 +1157,7 @@ async function uploadImageToImgBB() {
       };
       reader.onerror = (error) => {
         console.error('❌ FileReader error:', error);
-        reject(error);
+        reject(new Error('فشل في قراءة الملف'));
       };
       reader.readAsDataURL(selectedImageFile);
     });
@@ -1169,7 +1189,7 @@ async function uploadImageToImgBB() {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Server error response:', errorText);
-      throw new Error(`فشل الرفع (${response.status}): ${errorText}`);
+      throw new Error(`فشل الرفع (${response.status})`);
     }
     
     const result = await response.json();
@@ -1195,12 +1215,17 @@ async function uploadImageToImgBB() {
     
   } catch (error) {
     console.error('❌ Upload failed:', error);
-    alert('❌ فشل رفع الصورة: ' + error.message);
     
-    // Hide progress, show error
+    // Hide progress, show error in UI
     if (uploadProgress) uploadProgress.style.display = 'none';
-    if (uploadSuccess) uploadSuccess.style.display = 'none';
+    if (uploadSuccess) {
+      uploadSuccess.style.display = 'block';
+      uploadSuccess.style.color = '#e53e3e';
+      uploadSuccess.textContent = '⚠️ فشل الرفع - يمكنك المتابعة والحفظ';
+    }
     
+    // Don't throw - allow user to continue
+    console.log('⚠️ Upload failed but allowing user to continue with local preview');
     return false;
   }
 }
