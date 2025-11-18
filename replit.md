@@ -93,7 +93,11 @@ A modern, elegant cloud-powered website for "Creperie Kinder" - a crepe restaura
   - Filter by status (All, Pending, In Progress, Delivered)
   - Quick status updates via dropdown
   - Export orders to CSV
-- **Menu Management**: View all menu items with categories
+- **Menu Management**: 
+  - View all menu items with categories
+  - Add/Edit/Delete menu items with modal interface
+  - Upload product images to Firebase Storage
+  - **Category Management**: Dynamic category system with add/delete capabilities
 - **Analytics & Reports**: Revenue metrics, order statistics, popular items analysis
 - **Responsive Design**: Mobile-friendly sidebar navigation
 
@@ -113,6 +117,7 @@ A modern, elegant cloud-powered website for "Creperie Kinder" - a crepe restaura
 - `kc_cart`: Customer shopping cart (temporary)
 - `kc_menu`: Menu cache for offline access
 - `kc_admin`: Admin login session
+- `kc_categories`: Dynamic menu categories (synced across admin sessions)
 
 **File Storage** (Firebase Storage):
 - `/menu/*`: Product images uploaded by admins
@@ -128,7 +133,22 @@ The site runs on Python's built-in HTTP server:
 Configured to deploy as an autoscale static website on Replit.
 
 ## Recent Changes
-- **2025-11-18**: Complete Firebase Firestore & Storage Integration
+- **2025-11-18 (v2)**: Added Dynamic Category Management System
+  - **Category Management UI**: New "Manage Categories" button in admin menu section
+    - Modal interface for adding and deleting menu categories
+    - Dynamic category list showing all existing categories
+    - Category validation (lowercase IDs, no duplicates)
+  - **Dynamic Category Integration**: Categories are now fully dynamic
+    - Menu filter buttons automatically update based on categories
+    - Item category dropdown dynamically populated from categories
+    - Category names displayed in menu item cards
+    - Default categories: Sweet Crêpes, Savory Crêpes, Kids Crêpes, Drinks
+  - **localStorage-based**: Categories stored in browser localStorage (`kc_categories`)
+    - Persists across admin sessions on same device
+    - Falls back to default categories if not initialized
+  - **Bug Fixes**: Fixed dashboard fallback error (loadSalesChartFromOrders)
+  
+- **2025-11-18 (v1)**: Complete Firebase Firestore & Storage Integration
   - **Database Migration**: Implemented full cloud database with Firestore
     - Created comprehensive database service layer (db-service.js)
     - Migrated from localStorage to Firestore for menu and orders
