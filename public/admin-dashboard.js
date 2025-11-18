@@ -7,6 +7,13 @@ let currentSection = 'dashboard';
 let currentFilter = 'all';
 let currentUser = null;
 
+// Menu management variables - initialize early
+let currentMenuFilter = 'all';
+let currentEditingItem = null;
+let selectedImageFile = null;
+let uploadedImageUrl = null;
+let categoriesCache = [];
+
 // Server sync functions
 async function getMenuFromServer() {
   try {
@@ -890,9 +897,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 /* Firebase-Powered Menu Management */
 
-let currentMenuFilter = 'all';
-let currentEditingItem = null;
-
 async function renderMenuItems(menu) {
   const filtered = currentMenuFilter === 'all' 
     ? menu 
@@ -1033,8 +1037,6 @@ function closeMenuItemModal() {
 }
 
 // ==================== IMAGE UPLOAD MANAGEMENT ====================
-let selectedImageFile = null;
-let uploadedImageUrl = null;
 
 /**
  * Handle image file selection and show preview
@@ -1514,8 +1516,6 @@ window.loadDashboard = loadDashboardFromFirebase;
 
 /* ==================== CATEGORY MANAGEMENT ==================== */
 
-let categoriesCache = [];
-
 async function loadCategories() {
   try {
     const dbService = (await import('./db-service.js')).default;
@@ -1674,14 +1674,16 @@ async function deleteCategory(categoryId) {
   }
 }
 
-window.openCategoryModal = openCategoryModal;
-window.closeCategoryModal = closeCategoryModal;
-window.addCategory = addCategory;
-window.deleteCategory = deleteCategory;
-window.handleImageSelect = handleImageSelect;
-window.clearImage = clearImage;
-
 document.addEventListener('DOMContentLoaded', async () => {
+  // Make all functions globally accessible
+  window.openCategoryModal = openCategoryModal;
+  window.closeCategoryModal = closeCategoryModal;
+  window.addCategory = addCategory;
+  window.deleteCategory = deleteCategory;
+  window.handleImageSelect = handleImageSelect;
+  window.clearImage = clearImage;
+  window.saveMenuItem = saveMenuItem;
+  
   try {
     await updateCategoryUI();
     
