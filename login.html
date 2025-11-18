@@ -409,12 +409,20 @@
       errorDiv.style.display = 'none';
       
       try {
+        let user;
         if (currentMode === 'signup') {
-          await signUpWithEmail(email, password, name);
+          user = await signUpWithEmail(email, password, name);
         } else {
-          await signInWithEmail(email, password);
+          user = await signInWithEmail(email, password);
         }
-        window.location.href = 'index.html';
+        
+        // Check if user is admin
+        const adminEmails = ['oussamaanis2005@gmail.com'];
+        if (adminEmails.includes(user.email)) {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'index.html';
+        }
       } catch (error) {
         console.error('Auth failed:', error);
         errorDiv.textContent = getErrorMessage(error.code);
@@ -446,8 +454,15 @@
       googleSignInBtn.textContent = 'جاري تسجيل الدخول...';
       
       try {
-        await signInWithGoogle();
-        window.location.href = 'index.html';
+        const user = await signInWithGoogle();
+        
+        // Check if user is admin
+        const adminEmails = ['oussamaanis2005@gmail.com'];
+        if (user.email && adminEmails.includes(user.email)) {
+          window.location.href = 'admin.html';
+        } else {
+          window.location.href = 'index.html';
+        }
       } catch (error) {
         console.error('Login failed:', error);
         googleSignInBtn.disabled = false;
