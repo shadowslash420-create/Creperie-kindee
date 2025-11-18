@@ -955,6 +955,7 @@ function filterMenuByCategory(category, event) {
 
 async function openMenuItemModal() {
   currentEditingItem = null;
+  selectedImageFile = null; // Clear any previous file
   document.getElementById('modal-title').textContent = 'Add New Menu Item';
   document.getElementById('menu-item-form').reset();
   document.getElementById('item-id').value = '';
@@ -998,11 +999,20 @@ async function openEditMenuItemModal(itemId) {
 function closeMenuItemModal() {
   document.getElementById('menu-item-modal').classList.remove('active');
   currentEditingItem = null;
+  selectedImageFile = null; // Clear file when closing
 }
+
+// Store the selected file globally so it doesn't get lost
+let selectedImageFile = null;
 
 function previewImage(event) {
   const file = event.target.files[0];
+  console.log('previewImage called with file:', file ? file.name : 'No file');
+  
   if (file) {
+    selectedImageFile = file; // Store the file
+    console.log('File stored for upload:', selectedImageFile.name);
+    
     const reader = new FileReader();
     reader.onload = function(e) {
       const preview = document.getElementById('image-preview');
@@ -1035,15 +1045,17 @@ async function saveMenuItem(event) {
     };
     console.log('Item data prepared:', itemData);
     
-    const imageFile = document.getElementById('item-image').files[0];
-    console.log('Image file selected:', imageFile ? imageFile.name : 'No file selected');
+    // Use the globally stored file instead of reading from input
+    console.log('Checking for selected image file...');
+    console.log('selectedImageFile:', selectedImageFile ? selectedImageFile.name : 'No file');
     
-    if (imageFile) {
+    if (selectedImageFile) {
       console.log('File detected, starting upload...');
       saveBtn.textContent = 'Uploading image...';
-      const imageUrl = await dbService.uploadImage(imageFile, 'menu');
+      const imageUrl = await dbService.uploadImage(selectedImageFile, 'menu');
       console.log('Upload complete, URL:', imageUrl);
       itemData.img = imageUrl;
+      selectedImageFile = null; // Clear after upload
     } else {
       console.log('No image file selected, using default or current image');
     }
