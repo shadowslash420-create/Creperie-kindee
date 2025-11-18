@@ -53,7 +53,7 @@ service cloud.firestore {
              data.desc is string &&
              data.price is number &&
              data.price > 0 &&
-             data.category in ['sweet', 'savory', 'kids', 'drinks'] &&
+             data.category is string &&
              data.img is string;
     }
 
