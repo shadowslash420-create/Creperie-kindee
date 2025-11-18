@@ -92,6 +92,98 @@ class DatabaseService {
     await deleteDoc(docRef);
   }
 
+  // ==================== CATEGORY MANAGEMENT ====================
+  
+  async getAllCategories() {
+    await this.init();
+    const categoriesRef = collection(this.db, 'categories');
+    const q = query(categoriesRef, orderBy('order', 'asc'));
+    const snapshot = await getDocs(q);
+    const categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // If no categories exist, initialize with defaults
+    if (categories.length === 0) {
+      await this.initializeDefaultCategories();
+      return await this.getAllCategories();
+    }
+    
+    return categories;
+  }
+
+  async getCategory(id) {
+    await this.init();
+    const docRef = doc(this.db, 'categories', id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    return null;
+  }
+
+  async addCategory(categoryData) {
+    await this.init();
+    const categoriesRef = collection(this.db, 'categories');
+    
+    // Get current count for ordering
+    const snapshot = await getDocs(categoriesRef);
+    const order = snapshot.size;
+    
+    // Use the category ID as the document ID for easy lookup
+    const docRef = doc(categoriesRef, categoryData.id);
+    await setDoc(docRef, {
+      name: categoryData.name,
+      order: categoryData.order !== undefined ? categoryData.order : order,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    });
+    
+    return categoryData.id;
+  }
+
+  async updateCategory(id, updates) {
+    await this.init();
+    const docRef = doc(this.db, 'categories', id);
+    await updateDoc(docRef, {
+      ...updates,
+      updatedAt: Timestamp.now()
+    });
+  }
+
+  async deleteCategory(id) {
+    await this.init();
+    const docRef = doc(this.db, 'categories', id);
+    await deleteDoc(docRef);
+  }
+
+  async initializeDefaultCategories() {
+    await this.init();
+    const defaultCategories = [
+      { id: 'sweet', name: 'Sweet Crêpes', order: 0 },
+      { id: 'savory', name: 'Savory Crêpes', order: 1 },
+      { id: 'kids', name: 'Kids Crêpes', order: 2 },
+      { id: 'drinks', name: 'Drinks', order: 3 }
+    ];
+    
+    for (const category of defaultCategories) {
+      await this.addCategory(category);
+    }
+    
+    return defaultCategories;
+  }
+
+  listenToCategoryChanges(callback) {
+    this.init().then(() => {
+      const categoriesRef = collection(this.db, 'categories');
+      const q = query(categoriesRef, orderBy('order', 'asc'));
+      return onSnapshot(q, (snapshot) => {
+        const categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(categories);
+      });
+    });
+  }
+
+  // ==================== END CATEGORY MANAGEMENT ====================
+
   async uploadImage(file, folder = 'menu') {
     await this.init();
     const timestamp = Date.now();

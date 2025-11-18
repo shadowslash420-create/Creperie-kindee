@@ -893,7 +893,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 let currentMenuFilter = 'all';
 let currentEditingItem = null;
 
-function renderMenuItems(menu) {
+async function renderMenuItems(menu) {
   const filtered = currentMenuFilter === 'all' 
     ? menu 
     : menu.filter(item => item.category === currentMenuFilter);
@@ -908,7 +908,7 @@ function renderMenuItems(menu) {
     return;
   }
   
-  const categories = getCategories();
+  const categories = await loadCategories();
   
   let html = '';
   filtered.forEach(item => {
@@ -953,7 +953,7 @@ function filterMenuByCategory(category, event) {
   loadMenuItems();
 }
 
-function openMenuItemModal() {
+async function openMenuItemModal() {
   currentEditingItem = null;
   document.getElementById('modal-title').textContent = 'Add New Menu Item';
   document.getElementById('menu-item-form').reset();
@@ -961,7 +961,7 @@ function openMenuItemModal() {
   document.getElementById('current-image-url').value = '';
   document.getElementById('image-preview').classList.remove('active');
   document.getElementById('image-preview').innerHTML = '';
-  updateCategoryUI();
+  await updateCategoryUI();
   document.getElementById('menu-item-modal').classList.add('active');
 }
 
@@ -1259,29 +1259,28 @@ window.loadDashboard = loadDashboardFromFirebase;
 
 /* ==================== CATEGORY MANAGEMENT ==================== */
 
-const DEFAULT_CATEGORIES = [
-  { id: 'sweet', name: 'Sweet Crêpes' },
-  { id: 'savory', name: 'Savory Crêpes' },
-  { id: 'kids', name: 'Kids Crêpes' },
-  { id: 'drinks', name: 'Drinks' }
-];
+let categoriesCache = [];
 
-function getCategories() {
-  const stored = localStorage.getItem('kc_categories');
-  if (!stored) {
-    localStorage.setItem('kc_categories', JSON.stringify(DEFAULT_CATEGORIES));
-    return DEFAULT_CATEGORIES;
+async function loadCategories() {
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    categoriesCache = await dbService.getAllCategories();
+    return categoriesCache;
+  } catch (error) {
+    console.error('Failed to load categories from Firebase:', error);
+    // Fallback to default categories
+    categoriesCache = [
+      { id: 'sweet', name: 'Sweet Crêpes' },
+      { id: 'savory', name: 'Savory Crêpes' },
+      { id: 'kids', name: 'Kids Crêpes' },
+      { id: 'drinks', name: 'Drinks' }
+    ];
+    return categoriesCache;
   }
-  return JSON.parse(stored);
 }
 
-function saveCategories(categories) {
-  localStorage.setItem('kc_categories', JSON.stringify(categories));
-  updateCategoryUI();
-}
-
-function updateCategoryUI() {
-  const categories = getCategories();
+async function updateCategoryUI() {
+  const categories = await loadCategories();
   
   const categorySelect = document.getElementById('item-category');
   if (categorySelect) {
@@ -1313,8 +1312,8 @@ function updateCategoryUI() {
   loadCategoriesList();
 }
 
-function loadCategoriesList() {
-  const categories = getCategories();
+async function loadCategoriesList() {
+  const categories = await loadCategories();
   const listContainer = document.getElementById('categories-list');
   
   if (!listContainer) return;
@@ -1337,9 +1336,21 @@ function loadCategoriesList() {
   `).join('');
 }
 
-function openCategoryModal() {
+async function openCategoryModal() {
   document.getElementById('category-modal').classList.add('active');
-  loadCategoriesList();
+  await loadCategoriesList();
+  
+  // Listen to real-time category changes
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    dbService.listenToCategoryChanges((categories) => {
+      categoriesCache = categories;
+      loadCategoriesList();
+      updateCategoryUI();
+    });
+  } catch (error) {
+    console.error('Failed to listen to category changes:', error);
+  }
 }
 
 function closeCategoryModal() {
@@ -1348,7 +1359,7 @@ function closeCategoryModal() {
   document.getElementById('new-category-name').value = '';
 }
 
-function addCategory() {
+async function addCategory() {
   const id = document.getElementById('new-category-id').value.trim().toLowerCase();
   const name = document.getElementById('new-category-name').value.trim();
   
@@ -1362,36 +1373,50 @@ function addCategory() {
     return;
   }
   
-  const categories = getCategories();
-  
-  if (categories.find(cat => cat.id === id)) {
-    alert('A category with this ID already exists');
-    return;
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    const categories = await loadCategories();
+    
+    if (categories.find(cat => cat.id === id)) {
+      alert('A category with this ID already exists');
+      return;
+    }
+    
+    await dbService.addCategory({ id, name });
+    
+    document.getElementById('new-category-id').value = '';
+    document.getElementById('new-category-name').value = '';
+    
+    alert('✅ Category added successfully!');
+    await loadCategoriesList();
+    await updateCategoryUI();
+  } catch (error) {
+    console.error('Failed to add category:', error);
+    alert('❌ Failed to add category: ' + error.message);
   }
-  
-  categories.push({ id, name });
-  saveCategories(categories);
-  
-  document.getElementById('new-category-id').value = '';
-  document.getElementById('new-category-name').value = '';
-  
-  alert('✅ Category added successfully!');
 }
 
-function deleteCategory(categoryId) {
-  const categories = getCategories();
-  const category = categories.find(cat => cat.id === categoryId);
-  
-  if (!category) return;
-  
-  if (!confirm(`Are you sure you want to delete "${category.name}"?\n\nNote: Menu items in this category will still exist but may need their category updated.`)) {
-    return;
+async function deleteCategory(categoryId) {
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    const categories = await loadCategories();
+    const category = categories.find(cat => cat.id === categoryId);
+    
+    if (!category) return;
+    
+    if (!confirm(`Are you sure you want to delete "${category.name}"?\n\nNote: Menu items in this category will still exist but may need their category updated.`)) {
+      return;
+    }
+    
+    await dbService.deleteCategory(categoryId);
+    
+    alert('✅ Category deleted successfully!');
+    await loadCategoriesList();
+    await updateCategoryUI();
+  } catch (error) {
+    console.error('Failed to delete category:', error);
+    alert('❌ Failed to delete category: ' + error.message);
   }
-  
-  const filtered = categories.filter(cat => cat.id !== categoryId);
-  saveCategories(filtered);
-  
-  alert('✅ Category deleted successfully!');
 }
 
 window.openCategoryModal = openCategoryModal;
@@ -1399,7 +1424,18 @@ window.closeCategoryModal = closeCategoryModal;
 window.addCategory = addCategory;
 window.deleteCategory = deleteCategory;
 
-document.addEventListener('DOMContentLoaded', () => {
-  updateCategoryUI();
+document.addEventListener('DOMContentLoaded', async () => {
+  await updateCategoryUI();
+  
+  // Listen to real-time category changes
+  try {
+    const dbService = (await import('./db-service.js')).default;
+    dbService.listenToCategoryChanges((categories) => {
+      categoriesCache = categories;
+      updateCategoryUI();
+    });
+  } catch (error) {
+    console.error('Failed to listen to category changes:', error);
+  }
 });
 
