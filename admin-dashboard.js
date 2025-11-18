@@ -158,8 +158,8 @@ function loadDashboardFallback() {
   updateDashboardStatsFromOrders(orders);
   loadRecentOrdersFromOrders(orders);
   loadBestSellersFromOrders(orders);
-  loadSalesChartFromOrders(orders);
-  loadStatusChartFromOrders(orders);
+  loadSalesChart();
+  loadStatusChart();
 }
 
 function updateDashboardStatsFromOrders(orders) {
