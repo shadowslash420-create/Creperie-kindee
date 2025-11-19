@@ -185,8 +185,6 @@ class DatabaseService {
 
   // ==================== END CATEGORY MANAGEMENT ====================
 
-  // Image upload is now handled directly in admin-dashboard.js via /api/upload-image endpoint
-  // This method is kept for backward compatibility but delegates to the server API
   async uploadImage(file, folder = 'menu') {
     console.warn('⚠️ uploadImage method is deprecated. Use /api/upload-image endpoint directly.');
     
