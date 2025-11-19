@@ -688,13 +688,13 @@ function renderCategoryTabs() {
   updateFooterCategoryLinks();
 }
 
-// Update footer with category links on menu page
+// Update footer with navigation links only (no category links)
 function updateFooterCategoryLinks() {
   const footerLinks = document.getElementById('footer-links');
   if (!footerLinks) return;
   
   const t = translations[state.currentLang];
-  const existingLinks = `
+  const navigationLinks = `
     <a href="index.html" class="nav-link-home">${t.navHome}</a>
     <a href="about.html" class="nav-link-about">${t.navAbout}</a>
     <a href="menu.html" class="nav-link-menu">${t.navMenu}</a>
@@ -704,27 +704,8 @@ function updateFooterCategoryLinks() {
     <a href="contact.html" class="nav-link-contact">${t.navContact}</a>
   `;
   
-  // Only add category links if we're on the menu page
-  const isMenuPage = window.location.pathname.includes('menu.html');
-  
-  if (isMenuPage) {
-    // Only show main default categories in footer (not custom ones)
-    const defaultCategoryIds = ['sweet', 'savory', 'kids', 'drinks'];
-    const categoryLinks = state.categories
-      .filter(cat => defaultCategoryIds.includes(cat.id))
-      .map(cat => {
-        const categoryName = state.currentLang === 'ar'
-          ? (menuTranslations.ar.categories[cat.id] || cat.name)
-          : (menuTranslations.en.categories[cat.id] || cat.name);
-        
-        return `<a href="#section-${cat.id}" onclick="switchTab('${cat.id}')">${categoryName}</a>`;
-      }).join('');
-    
-    footerLinks.innerHTML = existingLinks + categoryLinks;
-  } else {
-    // On other pages, just show the standard navigation links
-    footerLinks.innerHTML = existingLinks;
-  }
+  // Show only navigation links on all pages (no category links)
+  footerLinks.innerHTML = navigationLinks;
 }
 
 // Render menu
