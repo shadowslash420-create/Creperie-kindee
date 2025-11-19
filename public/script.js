@@ -730,6 +730,9 @@ function renderMenu() {
 
   console.log('📦 Items grouped by category:', Object.keys(itemsByCategory).map(cat => `${cat}: ${itemsByCategory[cat].length} items`));
 
+  // Find the footer element to insert sections before it
+  const footer = container.querySelector('.footer');
+
   state.categories.forEach(category => {
     const sectionId = `section-${category.id}`;
     let section = document.getElementById(sectionId);
@@ -738,7 +741,12 @@ function renderMenu() {
       section = document.createElement('section');
       section.id = sectionId;
       section.className = 'section hidden';
-      container.appendChild(section);
+      // Insert before footer instead of appending to end
+      if (footer) {
+        container.insertBefore(section, footer);
+      } else {
+        container.appendChild(section);
+      }
     }
 
     const items = itemsByCategory[category.id] || [];
