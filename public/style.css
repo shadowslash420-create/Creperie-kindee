@@ -163,18 +163,17 @@ html{
 .brand{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:8px;
   flex:1;
   justify-content:center;
 }
 
 .brand-logo{
-  width:56px;
-  height:56px;
-  border-radius:50%;
-  object-fit:cover;
-  box-shadow:var(--soft-shadow);
-  border:2px solid var(--warm-gold);
+  width:80px;
+  height:80px;
+  object-fit:contain;
+  mix-blend-mode:multiply;
+  filter:contrast(1.1);
 }
 
 .brand-text{
@@ -193,6 +192,7 @@ html{
   line-height:1.1;
   max-width:140px;
   text-align:center;
+  display:none;
 }
 
 .site-subtitle{
