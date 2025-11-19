@@ -642,6 +642,11 @@ function openImgBBUpload() {
   // Show the URL input section
   document.getElementById('upload-placeholder').style.display = 'none';
   document.getElementById('image-url-input-container').style.display = 'block';
+  
+  // Focus on the input field
+  setTimeout(() => {
+    document.getElementById('image-url-input').focus();
+  }, 100);
 }
 
 function handleImageUrlInput(event) {

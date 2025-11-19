@@ -266,17 +266,22 @@
                 </div>
 
                 <div id="image-url-input-container" style="display: none;">
-                  <p style="color: #4a5568; font-weight: 500; margin-bottom: 12px;">📋 Paste your ImgBB image URL:</p>
+                  <p style="color: #FF6B35; font-weight: 600; margin-bottom: 16px; font-size: 16px;">📋 Paste your ImgBB image URL here:</p>
                   <input 
                     type="url" 
                     id="image-url-input" 
                     placeholder="https://i.ibb.co/xxxxx/image.jpg" 
                     onchange="handleImageUrlInput(event)"
-                    style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; margin-bottom: 12px;"
+                    style="width: 100%; padding: 14px; border: 3px solid #FF6B35; border-radius: 8px; font-size: 15px; margin-bottom: 16px; box-sizing: border-box;"
                   />
-                  <button type="button" onclick="resetImageUpload();" style="padding: 8px 16px; background: #718096; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">
-                    ↩️ Back
-                  </button>
+                  <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="resetImageUpload();" style="padding: 10px 20px; background: #718096; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                      ↩️ Back
+                    </button>
+                    <button type="button" onclick="document.getElementById('image-url-input').select();" style="padding: 10px 20px; background: #4299e1; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                      📋 Paste Here
+                    </button>
+                  </div>
                 </div>
 
                 <div id="image-preview-container" style="display: none;">
