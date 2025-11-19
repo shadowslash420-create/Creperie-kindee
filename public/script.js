@@ -693,9 +693,6 @@ function updateFooterCategoryLinks() {
   const footerLinks = document.getElementById('footer-links');
   if (!footerLinks) return;
   
-  const isMenuPage = window.location.pathname.includes('menu.html');
-  if (!isMenuPage) return;
-  
   const t = translations[state.currentLang];
   const existingLinks = `
     <a href="index.html" class="nav-link-home">${t.navHome}</a>
@@ -707,19 +704,27 @@ function updateFooterCategoryLinks() {
     <a href="contact.html" class="nav-link-contact">${t.navContact}</a>
   `;
   
-  // Only show main default categories in footer (not custom ones)
-  const defaultCategoryIds = ['sweet', 'savory', 'kids', 'drinks'];
-  const categoryLinks = state.categories
-    .filter(cat => defaultCategoryIds.includes(cat.id))
-    .map(cat => {
-      const categoryName = state.currentLang === 'ar'
-        ? (menuTranslations.ar.categories[cat.id] || cat.name)
-        : (menuTranslations.en.categories[cat.id] || cat.name);
-      
-      return `<a href="#section-${cat.id}" onclick="switchTab('${cat.id}')">${categoryName}</a>`;
-    }).join('');
+  // Only add category links if we're on the menu page
+  const isMenuPage = window.location.pathname.includes('menu.html');
   
-  footerLinks.innerHTML = existingLinks + categoryLinks;
+  if (isMenuPage) {
+    // Only show main default categories in footer (not custom ones)
+    const defaultCategoryIds = ['sweet', 'savory', 'kids', 'drinks'];
+    const categoryLinks = state.categories
+      .filter(cat => defaultCategoryIds.includes(cat.id))
+      .map(cat => {
+        const categoryName = state.currentLang === 'ar'
+          ? (menuTranslations.ar.categories[cat.id] || cat.name)
+          : (menuTranslations.en.categories[cat.id] || cat.name);
+        
+        return `<a href="#section-${cat.id}" onclick="switchTab('${cat.id}')">${categoryName}</a>`;
+      }).join('');
+    
+    footerLinks.innerHTML = existingLinks + categoryLinks;
+  } else {
+    // On other pages, just show the standard navigation links
+    footerLinks.innerHTML = existingLinks;
+  }
 }
 
 // Render menu
