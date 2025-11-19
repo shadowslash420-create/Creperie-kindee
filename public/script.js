@@ -6,8 +6,8 @@ const LANG_KEY = 'kc_lang';
 const FEEDBACK_KEY = 'kc_feedback';
 
 // Import Firebase services
-import { getMenuFromFirebase, placeOrderToFirebase, listenToMenuUpdates } from './firebase-customer.js';
 import dbService from './db-service.js';
+import { getMenuFromFirebase, placeOrderToFirebase, listenToMenuUpdates } from './firebase-customer.js';
 
 // Translations
 const translations = {
@@ -518,9 +518,25 @@ async function initMenu() {
 async function loadCategoriesFromFirebase() {
   try {
     console.log('📂 Loading categories from Firestore...');
+    
+    if (!dbService || typeof dbService.getAllCategories !== 'function') {
+      throw new Error('dbService not initialized');
+    }
+    
     const categories = await dbService.getAllCategories();
     console.log('✅ Categories loaded:', categories.length);
-    state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+    
+    if (categories && categories.length > 0) {
+      state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+    } else {
+      console.warn('⚠️ No categories found in Firestore, using defaults');
+      state.categories = [
+        { id: 'sweet', name: 'Sweet Crêpes', order: 0 },
+        { id: 'savory', name: 'Savory Crêpes', order: 1 },
+        { id: 'kids', name: 'Kids Crêpes', order: 2 },
+        { id: 'drinks', name: 'Drinks', order: 3 }
+      ];
+    }
   } catch (error) {
     console.error('❌ Failed to load categories from Firebase:', error);
     state.categories = [
@@ -536,11 +552,17 @@ async function loadCategoriesFromFirebase() {
 async function loadMenuItemsFromFirebase() {
   try {
     console.log('📋 Loading menu items from Firestore...');
+    
+    if (!dbService) {
+      throw new Error('dbService not initialized - check firebase-config.js');
+    }
+    
     const items = await getMenuFromFirebase();
-    console.log('✅ Menu items loaded:', items.length);
-    state.menuItems = items;
+    console.log('✅ Menu items loaded:', items ? items.length : 0);
+    state.menuItems = items || [];
   } catch (error) {
     console.error('❌ Failed to load menu items from Firebase:', error);
+    console.error('Error details:', error.message);
     state.menuItems = [];
   }
 }

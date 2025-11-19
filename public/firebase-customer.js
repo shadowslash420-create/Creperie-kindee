@@ -7,6 +7,11 @@ export async function getMenuFromFirebase() {
   try {
     console.log('🔍 firebase-customer.js: Fetching menu from dbService...');
     
+    if (!dbService || typeof dbService.getAllMenuItems !== 'function') {
+      console.error('❌ dbService is not properly initialized');
+      return [];
+    }
+    
     if (menuCache) {
       console.log('📦 Returning cached menu:', menuCache.length, 'items');
       return menuCache;
