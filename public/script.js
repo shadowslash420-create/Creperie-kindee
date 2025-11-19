@@ -525,9 +525,15 @@ async function loadCategoriesFromFirebase() {
     
     const categories = await dbService.getAllCategories();
     console.log('✅ Categories loaded:', categories.length);
+    console.log('📊 Category IDs:', categories.map(c => ({ id: c.id, name: c.name })));
     
     if (categories && categories.length > 0) {
       state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+      // Set default tab to first category
+      if (state.categories.length > 0) {
+        state.currentTab = state.categories[0].id;
+        console.log('🎯 Default tab set to:', state.currentTab);
+      }
     } else {
       console.warn('⚠️ No categories found in Firestore, using defaults');
       state.categories = [
@@ -585,10 +591,15 @@ function setupRealtimeListeners() {
 
 // Render category tabs
 function renderCategoryTabs() {
+  console.log('📑 Rendering category tabs...');
   const tabNav = document.getElementById('tab-nav');
-  if (!tabNav) return;
+  if (!tabNav) {
+    console.error('❌ tab-nav element not found');
+    return;
+  }
 
   const sortedCategories = [...state.categories].sort((a, b) => (a.order || 0) - (b.order || 0));
+  console.log('📋 Sorted categories:', sortedCategories.map(c => c.id));
 
   const html = sortedCategories.map(cat => {
     const categoryName = state.currentLang === 'ar'
@@ -608,8 +619,12 @@ function renderCategoryTabs() {
 
 // Render menu
 function renderMenu() {
-  const container = document.querySelector('.menu-container');
-  if (!container) return;
+  console.log('🎨 Rendering menu for tab:', state.currentTab);
+  const container = document.querySelector('.container');
+  if (!container) {
+    console.error('❌ Container not found for menu rendering');
+    return;
+  }
 
   document.querySelectorAll('.section').forEach(section => {
     section.classList.add('hidden');

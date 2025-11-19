@@ -19,6 +19,7 @@ export async function getMenuFromFirebase() {
     
     const menu = await dbService.getAllMenuItems();
     console.log('✅ Menu fetched from Firestore:', menu.length, 'items');
+    console.log('📊 Item details:', menu.map(item => ({ name: item.name, category: item.category })));
     menuCache = menu;
     
     if (!menuListener) {
