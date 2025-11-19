@@ -212,28 +212,28 @@
             <h2 style="color: #FF6B35; font-size: 24px;">🏷️ Manage Categories</h2>
             <button class="modal-close" onclick="closeCategoryModal()" style="font-size: 28px; color: #666;">&times;</button>
           </div>
-          
+
           <form onsubmit="addCategory(event)" style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 2px solid #e2e8f0;">
             <h3 style="color: #2d3748; font-size: 16px; margin-bottom: 16px;">➕ Add New Category</h3>
-            
+
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="category-id" style="font-weight: 600; color: #2d3748; margin-bottom: 8px; display: block;">Category ID *</label>
               <input type="text" id="category-id" required placeholder="e.g., desserts" 
                 style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; box-sizing: border-box;" />
               <p style="color: #666; font-size: 12px; margin-top: 4px;">Use lowercase, no spaces (e.g., "sweet", "savory")</p>
             </div>
-            
+
             <div class="form-group" style="margin-bottom: 16px;">
               <label for="category-name" style="font-weight: 600; color: #2d3748; margin-bottom: 8px; display: block;">Category Name *</label>
               <input type="text" id="category-name" required placeholder="e.g., Desserts" 
                 style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; box-sizing: border-box;" />
             </div>
-            
+
             <button type="submit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #FF6B35, #FF8C42); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
               ➕ Add Category
             </button>
           </form>
-          
+
           <div>
             <h3 style="color: #2d3748; font-size: 16px; margin-bottom: 12px;">📋 Existing Categories</h3>
             <div id="categories-list" style="max-height: 300px; overflow-y: auto;"></div>
@@ -251,36 +251,40 @@
           <form id="menu-item-form" onsubmit="saveMenuItem(event)">
             <input type="hidden" id="item-id" />
             <input type="hidden" id="item-current-image" />
-            
+
             <!-- Image Upload Section -->
-            <div class="form-group" style="margin-bottom: 24px;">
-              <label style="font-weight: 600; color: #2d3748; margin-bottom: 12px; display: block; font-size: 15px;">
-                🖼️ Product Image
-              </label>
-              
-              <!-- Image Upload Area -->
-              <div id="image-upload-area" style="border: 2px dashed #cbd5e0; border-radius: 12px; padding: 24px; text-align: center; background: #f7fafc; cursor: pointer; transition: all 0.3s;" onclick="event.stopPropagation(); document.getElementById('item-image').click();">
+            <div class="form-group">
+              <label for="item-image" style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748;">Menu Item Image</label>
+              <div id="image-upload-area" style="border: 2px dashed #cbd5e0; border-radius: 8px; padding: 32px; text-align: center; transition: all 0.2s; background: #f7fafc;">
                 <div id="upload-placeholder">
                   <div style="font-size: 48px; margin-bottom: 12px;">📸</div>
-                  <p style="color: #4a5568; font-weight: 500; margin-bottom: 8px;">Click to upload image</p>
-                  <p style="color: #718096; font-size: 13px;">Supports: JPG, PNG, WebP (Max 5MB)</p>
-                  <p style="color: #FF6B35; font-size: 12px; margin-top: 8px;">✨ Images uploaded to ImgBB cloud storage</p>
+                  <p style="color: #4a5568; font-weight: 500; margin-bottom: 12px;">Upload to ImgBB</p>
+                  <button type="button" onclick="openImgBBUpload();" style="padding: 12px 24px; background: linear-gradient(135deg, #FF6B35, #FF8C42); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                    🌐 Open ImgBB
+                  </button>
+                  <p style="color: #718096; font-size: 13px; margin-top: 12px;">Upload your image on ImgBB, then paste the link below</p>
                 </div>
+
+                <div id="image-url-input-container" style="display: none;">
+                  <p style="color: #4a5568; font-weight: 500; margin-bottom: 12px;">📋 Paste your ImgBB image URL:</p>
+                  <input 
+                    type="url" 
+                    id="image-url-input" 
+                    placeholder="https://i.ibb.co/xxxxx/image.jpg" 
+                    onchange="handleImageUrlInput(event)"
+                    style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; margin-bottom: 12px;"
+                  />
+                  <button type="button" onclick="resetImageUpload();" style="padding: 8px 16px; background: #718096; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                    ↩️ Back
+                  </button>
+                </div>
+
                 <div id="image-preview-container" style="display: none;">
                   <img id="image-preview-img" src="" alt="Preview" style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 12px;" />
-                  <div id="upload-status" style="margin-top: 12px;">
-                    <div id="upload-progress" style="display: none;">
-                      <div style="background: #e2e8f0; border-radius: 8px; height: 8px; overflow: hidden; margin-bottom: 8px;">
-                        <div id="progress-bar" style="background: linear-gradient(90deg, #FF6B35, #FFC857); height: 100%; width: 0%; transition: width 0.3s;"></div>
-                      </div>
-                      <p id="upload-text" style="color: #4a5568; font-size: 13px; font-weight: 500;">📤 Uploading to ImgBB...</p>
-                    </div>
-                    <p id="upload-success" style="display: none; color: #38a169; font-weight: 500; font-size: 13px;">✅ Image uploaded successfully!</p>
-                  </div>
-                  <button type="button" onclick="event.stopPropagation(); clearImage();" style="margin-top: 8px; padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">🗑️ Remove Image</button>
+                  <p style="color: #38a169; font-weight: 500; font-size: 13px; margin-bottom: 12px;">✅ Image URL set successfully!</p>
+                  <button type="button" onclick="clearImage();" style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">🗑️ Remove Image</button>
                 </div>
               </div>
-              <input type="file" id="item-image" accept="image/*" style="display: none;" />
             </div>
 
             <!-- Item Details -->
@@ -294,14 +298,14 @@
                 <input type="number" id="item-price" step="0.01" min="0" required placeholder="0.00" style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; box-sizing: border-box;" />
               </div>
             </div>
-            
+
             <div class="form-group" style="margin-bottom: 16px;">
               <label for="item-category" style="font-weight: 600; color: #2d3748; margin-bottom: 8px; display: block;">Category *</label>
               <select id="item-category" required style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; box-sizing: border-box; background: white;">
                 <option value="">Select category</option>
               </select>
             </div>
-            
+
             <div class="form-group" style="margin-bottom: 24px;">
               <label for="item-desc" style="font-weight: 600; color: #2d3748; margin-bottom: 8px; display: block;">Description *</label>
               <textarea id="item-desc" required placeholder="Describe your delicious item..." rows="3" style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; resize: vertical; box-sizing: border-box;"></textarea>

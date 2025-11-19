@@ -633,192 +633,62 @@ function closeModal() {
   resetImageUpload();
 }
 
-// ==================== IMAGE UPLOAD (ImgBB Integration) ====================
+// ==================== IMAGE UPLOAD (Manual ImgBB) ====================
 
-function handleImageSelect(event) {
-  const file = event.target.files[0];
-  console.log('📸 Image selected:', file ? file.name : 'None');
-
-  if (!file) {
-    resetImageUpload();
-    return;
-  }
-
-  if (!file.type.startsWith('image/')) {
-    alert('❌ Please select an image file (JPG, PNG, WebP)');
-    event.target.value = '';
-    resetImageUpload();
-    return;
-  }
-
-  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-  if (file.size > MAX_SIZE) {
-    alert('❌ Image too large! Maximum size is 5MB');
-    event.target.value = '';
-    resetImageUpload();
-    return;
-  }
-
-  state.selectedImage = file;
-  console.log('✅ File validated, showing preview...');
-
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    console.log('✅ File read successfully, updating UI...');
-
-    document.getElementById('upload-placeholder').style.display = 'none';
-    document.getElementById('image-preview-container').style.display = 'block';
-    document.getElementById('image-preview-img').src = e.target.result;
-    document.getElementById('image-upload-area').style.borderColor = '#48bb78';
-
-    try {
-      console.log('🚀 Starting upload to ImgBB...');
-      await uploadToImgBB();
-    } catch (error) {
-      console.error('❌ Upload failed:', error);
-      alert('⚠️ Failed to upload image, but you can continue and save');
-    }
-  };
-
-  reader.onerror = (error) => {
-    console.error('❌ Error reading file:', error);
-    alert('❌ Failed to read file');
-    resetImageUpload();
-  };
-
-  console.log('📖 Starting to read file...');
-  reader.readAsDataURL(file);
+function openImgBBUpload() {
+  // Open ImgBB in a new tab
+  window.open('https://imgbb.com/', '_blank');
+  
+  // Show the URL input section
+  document.getElementById('upload-placeholder').style.display = 'none';
+  document.getElementById('image-url-input-container').style.display = 'block';
 }
 
-async function uploadToImgBB() {
-  if (!state.selectedImage) {
-    console.log('⚠️ No file selected for upload');
-    return false;
+function handleImageUrlInput(event) {
+  const url = event.target.value.trim();
+  
+  if (!url) {
+    resetImageUpload();
+    return;
   }
-
-  const uploadProgress = document.getElementById('upload-progress');
-  const uploadSuccess = document.getElementById('upload-success');
-  const progressBar = document.getElementById('progress-bar');
-  const uploadText = document.getElementById('upload-text');
-
-  try {
-    uploadProgress.style.display = 'block';
-    uploadSuccess.style.display = 'none';
-    progressBar.style.width = '10%';
-    uploadText.textContent = '📤 Preparing...';
-
-    console.log('📤 Starting upload to ImgBB...', {
-      fileName: state.selectedImage.name,
-      fileSize: state.selectedImage.size,
-      fileType: state.selectedImage.type
-    });
-
-    progressBar.style.width = '30%';
-    uploadText.textContent = '📤 Converting image...';
-
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64String = reader.result.split(',')[1];
-        console.log('✅ Image converted to base64, length:', base64String.length);
-        resolve(base64String);
-      };
-      reader.onerror = (error) => {
-        console.error('❌ FileReader error:', error);
-        reject(new Error('Failed to read file'));
-      };
-      reader.readAsDataURL(state.selectedImage);
-    });
-
-    progressBar.style.width = '50%';
-    uploadText.textContent = 'Uploading to ImgBB...';
-
-    // Use URLSearchParams instead of FormData for proper encoding
-    const formBody = new URLSearchParams();
-    formBody.append('image', base64);
-    formBody.append('folder', 'menu');
-    formBody.append('filename', state.selectedImage.name.replace(/\.[^/.]+$/, ''));
-
-    console.log('📤 Sending request to /api/upload-image...');
-    console.log('📊 Request details:', {
-      imageLength: base64.length,
-      folder: 'menu',
-      filename: state.selectedImage.name.replace(/\.[^/.]+$/, '')
-    });
-
-    const response = await fetch('/api/upload-image', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: formBody.toString()
-    });
-
-    progressBar.style.width = '80%';
-
-    console.log('📡 Response received:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Server error response:', errorText);
-      throw new Error(`Upload failed (${response.status}): ${errorText}`);
-    }
-
-    const result = await response.json();
-    console.log('📦 Response data:', result);
-
-    if (!result.success) {
-      throw new Error(result.error || 'Upload failed');
-    }
-
-    progressBar.style.width = '100%';
-    state.uploadedImageUrl = result.url;
-
-    console.log('✅ Image uploaded successfully:', state.uploadedImageUrl);
-
-    setTimeout(() => {
-      uploadProgress.style.display = 'none';
-      uploadSuccess.style.display = 'block';
-    }, 500);
-
-    return true;
-  } catch (error) {
-    console.error('❌ Upload failed:', error);
-
-    uploadProgress.style.display = 'none';
-    uploadSuccess.style.display = 'block';
-    uploadSuccess.style.color = '#e53e3e';
-    uploadSuccess.textContent = '⚠️ Upload failed: ' + error.message;
-
-    console.log('⚠️ Upload failed but allowing user to continue with local preview');
-    return false;
+  
+  // Basic URL validation
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    alert('❌ Please enter a valid URL starting with http:// or https://');
+    return;
   }
+  
+  // Store the URL
+  state.uploadedImageUrl = url;
+  
+  // Show preview
+  document.getElementById('image-url-input-container').style.display = 'none';
+  document.getElementById('image-preview-container').style.display = 'block';
+  document.getElementById('image-preview-img').src = url;
+  document.getElementById('image-upload-area').style.borderColor = '#48bb78';
+  
+  console.log('✅ Image URL set:', url);
 }
 
 function resetImageUpload() {
-  state.selectedImage = null;
   state.uploadedImageUrl = null;
 
-  const fileInput = document.getElementById('item-image');
-  if (fileInput) fileInput.value = '';
+  const urlInput = document.getElementById('image-url-input');
+  if (urlInput) urlInput.value = '';
 
   document.getElementById('upload-placeholder').style.display = 'block';
+  document.getElementById('image-url-input-container').style.display = 'none';
   document.getElementById('image-preview-container').style.display = 'none';
   document.getElementById('image-preview-img').src = '';
-  document.getElementById('upload-progress').style.display = 'none';
-  document.getElementById('upload-success').style.display = 'none';
-  document.getElementById('progress-bar').style.width = '0%';
   document.getElementById('image-upload-area').style.borderColor = '#cbd5e0';
 
   document.getElementById('upload-placeholder').innerHTML = `
     <div style="font-size: 48px; margin-bottom: 12px;">📸</div>
-    <p style="color: #4a5568; font-weight: 500; margin-bottom: 8px;">Click to upload image</p>
-    <p style="color: #718096; font-size: 13px;">Supports: JPG, PNG, WebP (Max 5MB)</p>
-    <p style="color: #FF6B35; font-size: 12px; margin-top: 8px;">✨ Images uploaded to ImgBB cloud storage</p>
+    <p style="color: #4a5568; font-weight: 500; margin-bottom: 12px;">Upload to ImgBB</p>
+    <button onclick="event.stopPropagation(); openImgBBUpload();" style="padding: 12px 24px; background: linear-gradient(135deg, #FF6B35, #FF8C42); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+      🌐 Open ImgBB
+    </button>
+    <p style="color: #718096; font-size: 13px; margin-top: 12px;">Upload your image on ImgBB, then paste the link below</p>
   `;
 }
 
@@ -918,9 +788,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Login form
   document.getElementById('admin-login-form')?.addEventListener('submit', handleLogin);
 
-  // Image upload
-  document.getElementById('item-image')?.addEventListener('change', handleImageSelect);
-
   // Menu item form
   document.getElementById('menu-item-form')?.addEventListener('submit', saveMenuItem);
 
@@ -943,6 +810,8 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeCategoryModal = closeCategoryModal;
   window.addCategory = addCategory;
   window.deleteCategory = deleteCategory;
+  window.openImgBBUpload = openImgBBUpload;
+  window.handleImageUrlInput = handleImageUrlInput;
 });
 
 // ==================== CATEGORY MANAGEMENT ====================
