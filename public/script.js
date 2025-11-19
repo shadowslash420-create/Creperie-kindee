@@ -634,13 +634,6 @@ async function loadMenuItemsFromFirebase() {
     const items = await getMenuFromFirebase();
     console.log('✅ Menu items loaded:', items ? items.length : 0);
     state.menuItems = items || [];
-    
-    // Only switch tab if we're on the menu page
-    const isMenuPage = window.location.pathname.includes('menu.html');
-    if (!isMenuPage) {
-      console.log('📍 Not on menu page, skipping tab selection');
-      return;
-    }
   } catch (error) {
     console.error('❌ Failed to load menu items from Firebase:', error);
     console.error('Error details:', error.message);
