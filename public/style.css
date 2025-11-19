@@ -914,6 +914,7 @@ html{
   overflow-y:auto;
 }
 
+.cart-side.active,
 .cart-side.open{
   right:0;
 }
@@ -1075,6 +1076,7 @@ html{
   flex-direction:column;
 }
 
+.nav-menu.active,
 .nav-menu.open{
   inset-inline-start:0;
 }

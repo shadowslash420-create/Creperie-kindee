@@ -903,6 +903,17 @@ function toggleMenu() {
   }
 }
 
+function closeAllSidebars() {
+  const navMenu = document.getElementById('nav-menu');
+  const cartSide = document.getElementById('cart-side');
+  const overlay = document.getElementById('menu-overlay');
+  
+  if (navMenu) navMenu.classList.remove('active');
+  if (cartSide) cartSide.classList.remove('active');
+  if (overlay) overlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
 function checkoutFlow(){
   const lang = state.currentLang;
   const t = translations[lang];
@@ -1736,3 +1747,4 @@ window.saveOrders = saveOrders; // Export helper
 window.showToast = showToast; // Export showToast
 window.showOrderConfirmation = showOrderConfirmation; // Export showOrderConfirmation
 window.renderHomeMenuPreview = renderHomeMenuPreview; // Export renderHomeMenuPreview
+window.closeAllSidebars = closeAllSidebars; // Export closeAllSidebars
