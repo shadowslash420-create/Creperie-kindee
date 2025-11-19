@@ -707,14 +707,17 @@ function updateFooterCategoryLinks() {
     <a href="contact.html" class="nav-link-contact">${t.navContact}</a>
   `;
   
-  // Add category quick links
-  const categoryLinks = state.categories.map(cat => {
-    const categoryName = state.currentLang === 'ar'
-      ? (menuTranslations.ar.categories[cat.id] || cat.name)
-      : (menuTranslations.en.categories[cat.id] || cat.name);
-    
-    return `<a href="#section-${cat.id}" onclick="switchTab('${cat.id}')">${categoryName}</a>`;
-  }).join('');
+  // Only show main default categories in footer (not custom ones)
+  const defaultCategoryIds = ['sweet', 'savory', 'kids', 'drinks'];
+  const categoryLinks = state.categories
+    .filter(cat => defaultCategoryIds.includes(cat.id))
+    .map(cat => {
+      const categoryName = state.currentLang === 'ar'
+        ? (menuTranslations.ar.categories[cat.id] || cat.name)
+        : (menuTranslations.en.categories[cat.id] || cat.name);
+      
+      return `<a href="#section-${cat.id}" onclick="switchTab('${cat.id}')">${categoryName}</a>`;
+    }).join('');
   
   footerLinks.innerHTML = existingLinks + categoryLinks;
 }
