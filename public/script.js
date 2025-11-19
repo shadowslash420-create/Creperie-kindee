@@ -605,28 +605,18 @@ async function loadCategoriesFromFirebase() {
 
     if (categories && categories.length > 0) {
       state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-      // Set default tab to first category (will be updated after items load)
+      // Set default tab to first category
       if (state.categories.length > 0) {
         state.currentTab = state.categories[0].id;
         console.log('🎯 Initial default tab set to:', state.currentTab);
       }
     } else {
-      console.warn('⚠️ No categories found in Firestore, using defaults');
-      state.categories = [
-        { id: 'sweet', name: 'Sweet Crêpes', order: 0 },
-        { id: 'savory', name: 'Savory Crêpes', order: 1 },
-        { id: 'kids', name: 'Kids Crêpes', order: 2 },
-        { id: 'drinks', name: 'Drinks', order: 3 }
-      ];
+      console.warn('⚠️ No categories found in Firestore');
+      state.categories = [];
     }
   } catch (error) {
     console.error('❌ Failed to load categories from Firebase:', error);
-    state.categories = [
-      { id: 'sweet', name: 'Sweet Crêpes', order: 0 },
-      { id: 'savory', name: 'Savory Crêpes', order: 1 },
-      { id: 'kids', name: 'Kids Crêpes', order: 2 },
-      { id: 'drinks', name: 'Drinks', order: 3 }
-    ];
+    state.categories = [];
   }
 }
 
@@ -642,24 +632,6 @@ async function loadMenuItemsFromFirebase() {
     const items = await getMenuFromFirebase();
     console.log('✅ Menu items loaded:', items ? items.length : 0);
     state.menuItems = items || [];
-
-    // Auto-select first category with items
-    if (items && items.length > 0 && state.categories.length > 0) {
-      const itemsByCategory = {};
-      items.forEach(item => {
-        if (!itemsByCategory[item.category]) {
-          itemsByCategory[item.category] = [];
-        }
-        itemsByCategory[item.category].push(item);
-      });
-
-      // Find first category with items
-      const firstCategoryWithItems = state.categories.find(cat => itemsByCategory[cat.id] && itemsByCategory[cat.id].length > 0);
-      if (firstCategoryWithItems) {
-        state.currentTab = firstCategoryWithItems.id;
-        console.log('🎯 Auto-selected first category with items:', state.currentTab);
-      }
-    }
   } catch (error) {
     console.error('❌ Failed to load menu items from Firebase:', error);
     console.error('Error details:', error.message);

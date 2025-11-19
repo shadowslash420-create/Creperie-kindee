@@ -100,13 +100,6 @@ class DatabaseService {
     const q = query(categoriesRef, orderBy('order', 'asc'));
     const snapshot = await getDocs(q);
     const categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
-    // If no categories exist, initialize with defaults
-    if (categories.length === 0) {
-      await this.initializeDefaultCategories();
-      return await this.getAllCategories();
-    }
-    
     return categories;
   }
 
