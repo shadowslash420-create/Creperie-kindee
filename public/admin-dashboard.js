@@ -799,6 +799,7 @@ function loadAnalytics() {
 
 // ==================== GLOBAL FUNCTIONS ====================
 
+// Expose all functions globally
 window.adminLogin = adminLogin;
 window.adminLogout = adminLogout;
 window.showSection = showSection;
@@ -815,6 +816,8 @@ window.handleImageSelect = handleImageSelect;
 window.clearImage = clearImage;
 window.saveMenuItem = saveMenuItem;
 window.deleteItem = deleteItem;
+window.loadMenu = loadMenu;
+window.renderMenuItems = renderMenuItems;
 
 // ==================== INITIALIZATION ====================
 
