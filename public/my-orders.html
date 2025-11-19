@@ -301,9 +301,12 @@
         }
       }
       
-      applyTranslations();
-      renderCart();
-      updatePageIndicator();
+      // Wait for script.js module to load
+      setTimeout(() => {
+        if (typeof applyTranslations === 'function') applyTranslations();
+        if (typeof renderCart === 'function') renderCart();
+        if (typeof updatePageIndicator === 'function') updatePageIndicator();
+      }, 100);
     });
   </script>
   <script type="module" src="auth.js"></script>
