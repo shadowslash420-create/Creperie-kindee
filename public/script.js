@@ -259,8 +259,21 @@ function toggleLanguage(){
   applyTranslations();
   updateCart();
   updatePageIndicator();
-  renderMenu();
-  renderCategoryTabs();
+  
+  // Only render menu components if on menu page
+  const isMenuPage = window.location.pathname.includes('menu.html');
+  if (isMenuPage && typeof renderMenu === 'function') {
+    renderMenu();
+  }
+  if (isMenuPage && typeof renderCategoryTabs === 'function') {
+    renderCategoryTabs();
+  }
+  
+  // Re-render feedback list if on feedback page
+  const isFeedbackPage = window.location.pathname.includes('feedback.html');
+  if (isFeedbackPage && typeof renderFeedbackList === 'function') {
+    renderFeedbackList();
+  }
 }
 
 function applyTranslations(){
