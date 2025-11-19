@@ -5,6 +5,13 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ============================================
+    // IMAGE STORAGE NOTE
+    // ============================================
+    // Images are stored on ImgBB cloud service (https://imgbb.com)
+    // Firestore only stores the image URLs as strings in the 'img' field
+    // No Firebase Storage rules needed - ImgBB handles all image hosting
+    
+    // ============================================
     // HELPER FUNCTIONS
     // ============================================
 
@@ -37,7 +44,9 @@ service cloud.firestore {
              data.desc is string &&
              data.price is number &&
              data.price > 0 &&
-             data.category is string;
+             data.category is string &&
+             // Image URL is optional but must be a string if present (from ImgBB)
+             (!data.keys().hasAny(['img']) || data.img is string);
     }
 
     function isValidCategory() {
