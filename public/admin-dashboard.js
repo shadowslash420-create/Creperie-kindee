@@ -1,28 +1,101 @@
-/* Admin Dashboard - Rebuilt from Scratch */
+/* ==================== CREPERIE KINDER ADMIN DASHBOARD ==================== */
+/* Rebuilt from scratch with ImgBB integration and menu_data.json support */
 
 import { getAuthInstance } from './firebase-config.js';
-import {signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-// State management
+// ==================== STATE MANAGEMENT ====================
 const state = {
   currentSection: 'dashboard',
-  currentFilter: 'all',
   currentUser: null,
-  menuFilter: 'all',
-  editingItem: null,
+  menuItems: [],
+  orders: [],
+  categories: [],
   selectedImage: null,
   uploadedImageUrl: null,
-  categories: []
+  editingItem: null,
+  menuFilter: 'all',
+  orderFilter: 'all'
 };
+
+// ==================== DATA LOADING ====================
+
+async function loadMenuData() {
+  try {
+    const response = await fetch('/api/menu');
+    const data = await response.json();
+    state.menuItems = data;
+    return data;
+  } catch (error) {
+    console.error('Failed to load menu data:', error);
+    // Fallback to local JSON
+    try {
+      const fallbackResponse = await fetch('/menu_data.json');
+      const fallbackData = await fallbackResponse.json();
+      state.menuItems = fallbackData;
+      return fallbackData;
+    } catch (fallbackError) {
+      console.error('Failed to load fallback menu data:', fallbackError);
+      return [];
+    }
+  }
+}
+
+async function saveMenuData(menuData) {
+  try {
+    const response = await fetch('/api/menu', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(menuData)
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to save menu data:', error);
+    throw error;
+  }
+}
+
+async function loadOrdersData() {
+  try {
+    const response = await fetch('/api/orders');
+    const data = await response.json();
+    state.orders = data || [];
+    return data;
+  } catch (error) {
+    console.error('Failed to load orders:', error);
+    return [];
+  }
+}
+
+async function saveOrdersData(ordersData) {
+  try {
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ordersData)
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to save orders:', error);
+    throw error;
+  }
+}
 
 // ==================== AUTHENTICATION ====================
 
-async function adminLogin(event) {
+async function handleLogin(event) {
   event.preventDefault();
-  const email = document.getElementById('adm-user').value;
+  
+  const email = document.getElementById('adm-user').value.trim();
   const password = document.getElementById('adm-pass').value;
   const loginBtn = document.getElementById('admin-login-btn');
   const errorDiv = document.getElementById('login-error');
+
+  if (!email || !password) {
+    errorDiv.textContent = 'Please enter both email and password';
+    errorDiv.style.display = 'block';
+    return;
+  }
 
   loginBtn.disabled = true;
   loginBtn.textContent = 'Logging in...';
@@ -33,41 +106,39 @@ async function adminLogin(event) {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     state.currentUser = userCredential.user;
 
-    localStorage.setItem('kc_admin', 'true');
+    // Hide login, show dashboard
     document.getElementById('login-section').classList.add('hidden');
     document.getElementById('admin-section').classList.remove('hidden');
 
-    const lastSection = localStorage.getItem('kc_current_section') || 'dashboard';
-    showSection(lastSection);
+    // Initialize dashboard
+    await initializeDashboard();
+    showSection('dashboard');
   } catch (error) {
     console.error('Login failed:', error);
-    errorDiv.textContent = getErrorMessage(error.code);
+    errorDiv.textContent = getLoginErrorMessage(error.code);
     errorDiv.style.display = 'block';
+  } finally {
     loginBtn.disabled = false;
     loginBtn.textContent = 'Login';
   }
 }
 
-function getErrorMessage(code) {
-  const messages = {
+function getLoginErrorMessage(code) {
+  const errors = {
     'auth/invalid-email': 'Invalid email address',
-    'auth/user-disabled': 'This account has been disabled',
-    'auth/user-not-found': 'No account found with this email',
+    'auth/user-disabled': 'Account disabled',
+    'auth/user-not-found': 'No account found',
     'auth/wrong-password': 'Incorrect password',
-    'auth/invalid-credential': 'Invalid email or password',
-    'auth/too-many-requests': 'Too many failed attempts. Try again later.'
+    'auth/invalid-credential': 'Invalid email or password'
   };
-  return messages[code] || 'Login failed. Please check your credentials.';
+  return errors[code] || 'Login failed. Please try again.';
 }
 
-async function adminLogout() {
+async function handleLogout() {
   try {
     const auth = await getAuthInstance();
     await signOut(auth);
     state.currentUser = null;
-    localStorage.removeItem('kc_admin');
-    localStorage.removeItem('kc_current_section');
-    localStorage.removeItem('kc_current_filter');
     window.location.href = 'index.html';
   } catch (error) {
     console.error('Logout failed:', error);
@@ -77,20 +148,22 @@ async function adminLogout() {
 
 // ==================== NAVIGATION ====================
 
-function showSection(section) {
-  state.currentSection = section;
-  localStorage.setItem('kc_current_section', section);
+function showSection(section, event) {
+  if (event) {
+    event.preventDefault();
+  }
 
-  // Update nav items
+  state.currentSection = section;
+
+  // Update active nav item
   document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.remove('active');
-    const navText = item.textContent.trim().toLowerCase();
-    if (navText.includes(section.toLowerCase())) {
-      item.classList.add('active');
-    }
   });
+  if (event) {
+    event.currentTarget.classList.add('active');
+  }
 
-  // Update content sections
+  // Show correct section
   document.querySelectorAll('.content-section').forEach(sec => {
     sec.classList.remove('active');
   });
@@ -110,370 +183,472 @@ function showSection(section) {
   else if (section === 'orders') loadOrders();
   else if (section === 'menu') loadMenu();
   else if (section === 'analytics') loadAnalytics();
-
-  // Close sidebar on mobile
-  if (window.innerWidth <= 768) closeSidebar();
 }
 
 function toggleSidebar() {
   const sidebar = document.getElementById('dashboard-sidebar');
   sidebar.classList.toggle('active');
-
-  let overlay = document.getElementById('sidebar-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'sidebar-overlay';
-    overlay.className = 'sidebar-overlay';
-    overlay.onclick = closeSidebar;
-    document.body.appendChild(overlay);
-  }
-  overlay.classList.toggle('active');
 }
 
-function closeSidebar() {
-  const sidebar = document.getElementById('dashboard-sidebar');
-  const overlay = document.getElementById('sidebar-overlay');
-  if (sidebar) sidebar.classList.remove('active');
-  if (overlay) overlay.classList.remove('active');
-}
-
-// ==================== DASHBOARD ====================
+// ==================== DASHBOARD SECTION ====================
 
 async function loadDashboard() {
   try {
-    const dbService = (await import('./db-service.js')).default;
-    const orders = await dbService.getAllOrders();
-
-    updateDashboardStats(orders);
-    loadRecentOrders(orders);
-    loadBestSellers(orders);
-
-    dbService.listenToOrderChanges((updatedOrders) => {
-      updateDashboardStats(updatedOrders);
-      loadRecentOrders(updatedOrders);
-      loadBestSellers(updatedOrders);
-    });
+    await Promise.all([loadMenuData(), loadOrdersData()]);
+    updateDashboardStats();
+    renderRecentOrders();
+    renderBestSellers();
   } catch (error) {
     console.error('Failed to load dashboard:', error);
   }
 }
 
-function updateDashboardStats(orders) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const todayOrders = orders.filter(o => {
-    const orderDate = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.timestamp || o.createdAt);
-    orderDate.setHours(0, 0, 0, 0);
-    return orderDate.getTime() === today.getTime();
+function updateDashboardStats() {
+  const today = new Date().toDateString();
+  const todayOrders = state.orders.filter(o => {
+    if (!o.createdAt) return false;
+    const orderDate = new Date(o.createdAt).toDateString();
+    return orderDate === today;
   });
 
-  const pendingOrders = orders.filter(o => o.status === 'pending');
-  const completedToday = todayOrders.filter(o => o.status === 'delivered');
-  const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const todayRevenue = todayOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const pending = state.orders.filter(o => o.status === 'pending').length;
+  const completed = todayOrders.filter(o => o.status === 'delivered').length;
 
   document.getElementById('stat-revenue').textContent = todayRevenue.toFixed(2) + ' DZD';
-  document.getElementById('stat-total-orders').textContent = orders.length;
-  document.getElementById('stat-pending').textContent = pendingOrders.length;
-  document.getElementById('stat-completed').textContent = completedToday.length;
+  document.getElementById('stat-total-orders').textContent = state.orders.length;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-completed').textContent = completed;
 }
 
-function loadRecentOrders(orders) {
-  const recentOrders = orders.slice(0, 5);
-  let html = '<table class="simple-table"><thead><tr>';
-  html += '<th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody>';
+function renderRecentOrders() {
+  const container = document.getElementById('recent-orders-table');
+  const recentOrders = state.orders.slice(0, 5);
 
   if (recentOrders.length === 0) {
-    html += '<tr><td colspan="4" style="text-align:center;color:#999;padding:40px;">No orders yet</td></tr>';
-  } else {
-    recentOrders.forEach(order => {
-      html += '<tr>';
-      html += '<td class="order-id">#' + (order.id ? order.id.substring(0, 8) : 'N/A') + '</td>';
-      html += '<td>' + (order.customerName || 'N/A') + '</td>';
-      html += '<td>' + (order.total || 0).toFixed(2) + ' DZD</td>';
-      html += '<td><span class="status-badge status-' + order.status + '">' + order.status + '</span></td>';
-      html += '</tr>';
-    });
+    container.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">No orders yet</p>';
+    return;
   }
 
-  html += '</tbody></table>';
-  document.getElementById('recent-orders-table').innerHTML = html;
+  const html = `
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background: #f7fafc; text-align: left;">
+          <th style="padding: 12px;">Order ID</th>
+          <th style="padding: 12px;">Customer</th>
+          <th style="padding: 12px;">Total</th>
+          <th style="padding: 12px;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${recentOrders.map(order => `
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 12px;">#${order.id || 'N/A'}</td>
+            <td style="padding: 12px;">${order.customerName || 'Anonymous'}</td>
+            <td style="padding: 12px; font-weight: 600;">${(order.total || 0).toFixed(2)} DZD</td>
+            <td style="padding: 12px;">
+              <span style="padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; 
+                background: ${getStatusColor(order.status)};">
+                ${order.status || 'pending'}
+              </span>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  container.innerHTML = html;
 }
 
-function loadBestSellers(orders) {
-  const itemCounts = {};
-  const itemRevenue = {};
+function renderBestSellers() {
+  const container = document.getElementById('best-sellers-list');
+  const topItems = state.menuItems.slice(0, 5);
 
-  orders.forEach(order => {
-    if (order.items) {
-      order.items.forEach(item => {
-        const name = item.name || item.id;
-        itemCounts[name] = (itemCounts[name] || 0) + (item.qty || 1);
-        itemRevenue[name] = (itemRevenue[name] || 0) + ((item.price || 0) * (item.qty || 1));
-      });
-    }
-  });
-
-  const sortedItems = Object.keys(itemCounts)
-    .map(name => ({ name, count: itemCounts[name], revenue: itemRevenue[name] }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  let html = '';
-  if (sortedItems.length === 0) {
-    html = '<p style="text-align:center;color:#999;padding:40px 0;">No sales data yet</p>';
-  } else {
-    sortedItems.forEach(item => {
-      html += '<div class="best-seller-item">';
-      html += '<div class="item-info">';
-      html += '<p class="item-name">' + item.name + '</p>';
-      html += '<p class="item-sales">' + item.count + ' sold</p>';
-      html += '</div>';
-      html += '<div class="item-revenue">' + item.revenue.toFixed(2) + ' DZD</div>';
-      html += '</div>';
-    });
+  if (topItems.length === 0) {
+    container.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">No menu items yet</p>';
+    return;
   }
 
-  document.getElementById('best-sellers-list').innerHTML = html;
+  const html = topItems.map((item, index) => `
+    <div style="display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #e2e8f0;">
+      <span style="font-size: 20px; font-weight: bold; color: #FF6B35; margin-right: 12px;">${index + 1}</span>
+      <img src="${item.img || 'images/placeholder.svg'}" alt="${item.name}" 
+        style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 12px;">
+      <div style="flex: 1;">
+        <p style="font-weight: 600; margin: 0 0 4px 0;">${item.name}</p>
+        <p style="color: #666; font-size: 13px; margin: 0;">${item.price} DZD</p>
+      </div>
+    </div>
+  `).join('');
+  container.innerHTML = html;
 }
 
-// ==================== ORDERS ====================
+function getStatusColor(status) {
+  const colors = {
+    'pending': '#FFF3CD',
+    'in-progress': '#D1ECF1',
+    'delivered': '#D4EDDA',
+    'cancelled': '#F8D7DA'
+  };
+  return colors[status] || '#E2E8F0';
+}
+
+// ==================== ORDERS SECTION ====================
 
 async function loadOrders() {
   try {
-    const dbService = (await import('./db-service.js')).default;
-    const orders = await dbService.getAllOrders();
-
-    renderOrdersTable(orders);
-
-    dbService.listenToOrderChanges((updatedOrders) => {
-      renderOrdersTable(updatedOrders);
-    });
+    await loadOrdersData();
+    renderOrdersTable();
   } catch (error) {
     console.error('Failed to load orders:', error);
   }
 }
 
-function renderOrdersTable(orders) {
-  const filtered = state.currentFilter === 'all' 
-    ? orders 
-    : orders.filter(order => order.status === state.currentFilter);
+function filterOrdersByStatus(status, event) {
+  if (event) {
+    document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+  state.orderFilter = status;
+  renderOrdersTable();
+}
 
-  const searchTerm = document.getElementById('order-search')?.value?.toLowerCase() || '';
-  const searchFiltered = filtered.filter(order => 
-    order.customerName?.toLowerCase().includes(searchTerm) ||
-    order.id?.toLowerCase().includes(searchTerm)
-  );
+function filterOrders() {
+  renderOrdersTable();
+}
 
-  if (searchFiltered.length === 0) {
-    document.getElementById('orders-table').innerHTML = `
-      <div style="padding:60px 20px;text-align:center;color:#999;">
-        <h3 style="margin:0 0 8px 0;">No orders found</h3>
-        <p style="font-size:0.9em;">Try changing the filter or search term</p>
-      </div>
-    `;
+function renderOrdersTable() {
+  const container = document.getElementById('orders-table');
+  const searchTerm = document.getElementById('order-search')?.value.toLowerCase() || '';
+
+  let filtered = state.orders;
+
+  // Filter by status
+  if (state.orderFilter !== 'all') {
+    filtered = filtered.filter(o => o.status === state.orderFilter);
+  }
+
+  // Filter by search
+  if (searchTerm) {
+    filtered = filtered.filter(o => 
+      (o.customerName || '').toLowerCase().includes(searchTerm) ||
+      (o.id || '').toString().includes(searchTerm)
+    );
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<p style="padding: 40px; text-align: center; color: #666;">No orders found</p>';
     return;
   }
 
-  let html = '<table class="orders-table"><thead><tr>';
-  html += '<th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th>';
-  html += '</tr></thead><tbody>';
-
-  searchFiltered.forEach(order => {
-    const date = order.createdAt?.toDate ? order.createdAt.toDate() : new Date();
-    const statusClass = order.status || 'pending';
-
-    html += '<tr>';
-    html += `<td><strong>${order.id.substring(0, 8)}</strong></td>`;
-    html += `<td>${order.customerName || 'N/A'}</td>`;
-    html += `<td>${order.customerPhone || 'N/A'}</td>`;
-    html += `<td>${order.items?.length || 0} items</td>`;
-    html += `<td><strong>${(order.total || 0).toFixed(2)} DZD</strong></td>`;
-    html += `<td><span class="status-badge ${statusClass}">${order.status || 'pending'}</span></td>`;
-    html += `<td>${date.toLocaleDateString()}</td>`;
-    html += `<td>
-      <select onchange="updateOrderStatus('${order.id}', this.value)" class="status-select">
-        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-        <option value="in-progress" ${order.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
-        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-      </select>
-    </td>`;
-    html += '</tr>';
-  });
-
-  html += '</tbody></table>';
-  document.getElementById('orders-table').innerHTML = html;
+  const html = `
+    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+      <thead>
+        <tr style="background: #f7fafc; text-align: left;">
+          <th style="padding: 16px;">Order ID</th>
+          <th style="padding: 16px;">Customer</th>
+          <th style="padding: 16px;">Phone</th>
+          <th style="padding: 16px;">Items</th>
+          <th style="padding: 16px;">Total</th>
+          <th style="padding: 16px;">Status</th>
+          <th style="padding: 16px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(order => `
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 16px; font-weight: 600;">#${order.id || 'N/A'}</td>
+            <td style="padding: 16px;">${order.customerName || 'Anonymous'}</td>
+            <td style="padding: 16px;">${order.customerPhone || '-'}</td>
+            <td style="padding: 16px;">${(order.items || []).length} items</td>
+            <td style="padding: 16px; font-weight: 600;">${(order.total || 0).toFixed(2)} DZD</td>
+            <td style="padding: 16px;">
+              <select onchange="updateOrderStatus('${order.id}', this.value)" 
+                style="padding: 6px 12px; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
+                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                <option value="in-progress" ${order.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+              </select>
+            </td>
+            <td style="padding: 16px;">
+              <button onclick="deleteOrder('${order.id}')" 
+                style="padding: 6px 12px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                🗑️ Delete
+              </button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  container.innerHTML = html;
 }
 
 async function updateOrderStatus(orderId, newStatus) {
   try {
-    const dbService = (await import('./db-service.js')).default;
-    await dbService.updateOrderStatus(orderId, newStatus);
+    const orderIndex = state.orders.findIndex(o => o.id === orderId);
+    if (orderIndex !== -1) {
+      state.orders[orderIndex].status = newStatus;
+      await saveOrdersData(state.orders);
+      loadDashboard();
+    }
   } catch (error) {
     console.error('Failed to update order status:', error);
-    alert('❌ Failed to update order status');
+    alert('Failed to update order status');
   }
 }
 
-function filterOrdersByStatus(status, evt) {
-  state.currentFilter = status;
-  localStorage.setItem('kc_current_filter', status);
+async function deleteOrder(orderId) {
+  if (!confirm('Are you sure you want to delete this order?')) return;
 
-  document.querySelectorAll('.filter-tab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-
-  if (evt && evt.target) {
-    evt.target.classList.add('active');
+  try {
+    state.orders = state.orders.filter(o => o.id !== orderId);
+    await saveOrdersData(state.orders);
+    renderOrdersTable();
+    loadDashboard();
+  } catch (error) {
+    console.error('Failed to delete order:', error);
+    alert('Failed to delete order');
   }
-
-  loadOrders();
 }
 
-function filterOrders() {
-  loadOrders();
-}
-
-// ==================== MENU ====================
+// ==================== MENU SECTION ====================
 
 async function loadMenu() {
   try {
-    const dbService = (await import('./db-service.js')).default;
-    const menu = await dbService.getAllMenuItems();
-
-    renderMenuItems(menu);
-
-    dbService.listenToMenuChanges((updatedMenu) => {
-      renderMenuItems(updatedMenu);
-    });
+    await loadMenuData();
+    loadCategories();
+    renderCategoryFilters();
+    renderMenuGrid();
   } catch (error) {
     console.error('Failed to load menu:', error);
   }
 }
 
-async function renderMenuItems(menu) {
-  const filtered = state.menuFilter === 'all' 
-    ? menu 
-    : menu.filter(item => item.category === state.menuFilter);
+function loadCategories() {
+  const uniqueCategories = [...new Set(state.menuItems.map(item => item.category))];
+  state.categories = uniqueCategories.map(cat => ({
+    id: cat,
+    name: cat.charAt(0).toUpperCase() + cat.slice(1)
+  }));
+}
+
+function renderCategoryFilters() {
+  const container = document.getElementById('menu-category-filters');
+  const html = `
+    <button class="filter-btn ${state.menuFilter === 'all' ? 'active' : ''}" 
+      onclick="filterMenuByCategory('all', event)">All</button>
+    ${state.categories.map(cat => `
+      <button class="filter-btn ${state.menuFilter === cat.id ? 'active' : ''}" 
+        onclick="filterMenuByCategory('${cat.id}', event)">${cat.name}</button>
+    `).join('')}
+  `;
+  container.innerHTML = html;
+
+  // Update category dropdown in modal
+  const categorySelect = document.getElementById('item-category');
+  categorySelect.innerHTML = `
+    <option value="">Select category</option>
+    ${state.categories.map(cat => `
+      <option value="${cat.id}">${cat.name}</option>
+    `).join('')}
+  `;
+}
+
+function filterMenuByCategory(category, event) {
+  if (event) {
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+  state.menuFilter = category;
+  renderMenuGrid();
+}
+
+function renderMenuGrid() {
+  const container = document.getElementById('menu-items-grid');
+  
+  let filtered = state.menuItems;
+  if (state.menuFilter !== 'all') {
+    filtered = state.menuItems.filter(item => item.category === state.menuFilter);
+  }
 
   if (filtered.length === 0) {
-    document.getElementById('menu-items-grid').innerHTML = `
-      <div style="grid-column:1/-1;padding:60px 20px;text-align:center;color:#999;">
-        <h3 style="margin:0 0 8px 0;">No items found</h3>
-        <p style="font-size:0.9em;">Try adding a new menu item or changing the filter</p>
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+        <div style="font-size: 64px; margin-bottom: 16px;">🍽️</div>
+        <h3 style="color: #2d3748; margin-bottom: 8px;">No menu items yet</h3>
+        <p style="color: #718096; margin-bottom: 24px;">Start by adding your first menu item</p>
+        <button class="btn-primary" onclick="openAddModal()" 
+          style="padding: 12px 24px; background: linear-gradient(135deg, #FF6B35, #FF8C42); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+          ➕ Add Menu Item
+        </button>
       </div>
     `;
     return;
   }
 
-  const categories = await loadCategories();
-
-  let html = '';
-  filtered.forEach(item => {
-    const category = categories.find(cat => cat.id === item.category);
-    const categoryName = category ? category.name : item.category;
-    const imgSrc = item.img || '';
-
-    html += `
-      <div class="menu-item-card">
-        ${imgSrc ? `<img src="${imgSrc}" alt="${item.name}" class="menu-item-image" />` : `<div class="menu-item-placeholder">${item.name.charAt(0)}</div>`}
-        <div class="menu-item-content">
-          <div class="menu-item-header">
-            <h4 class="menu-item-name">${item.name}</h4>
-            <span class="menu-item-category ${item.category}">${categoryName}</span>
-          </div>
-          <p class="menu-item-desc">${item.desc}</p>
-          <p class="menu-item-price">${item.price.toFixed(2)} DZD</p>
-          <div class="menu-item-actions">
-            <button class="btn-edit" onclick="openEditModal('${item.id}')">✏️ Edit</button>
-            <button class="btn-delete" onclick="deleteItem('${item.id}', '${item.name.replace(/'/g, "\\'")}')">🗑️ Delete</button>
-          </div>
+  const html = filtered.map(item => `
+    <div class="menu-item-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s;">
+      <div style="position: relative; padding-bottom: 75%; overflow: hidden; background: #f7fafc;">
+        <img src="${item.img || 'images/placeholder.svg'}" alt="${item.name}" 
+          style="position: absolute; width: 100%; height: 100%; object-fit: cover;">
+      </div>
+      <div style="padding: 16px;">
+        <h3 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${item.name}</h3>
+        <p style="margin: 0 0 12px 0; color: #718096; font-size: 14px; line-height: 1.5;">${item.desc}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 20px; font-weight: bold; color: #FF6B35;">${item.price} DZD</span>
+          <span style="padding: 4px 12px; background: #FFF3CD; color: #856404; border-radius: 12px; font-size: 12px; font-weight: 600;">
+            ${item.category}
+          </span>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+          <button onclick="editMenuItem('${item.id}')" 
+            style="flex: 1; padding: 8px; background: #4299e1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+            ✏️ Edit
+          </button>
+          <button onclick="deleteMenuItem('${item.id}')" 
+            style="flex: 1; padding: 8px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+            🗑️ Delete
+          </button>
         </div>
       </div>
-    `;
-  });
+    </div>
+  `).join('');
 
-  document.getElementById('menu-items-grid').innerHTML = html;
+  container.innerHTML = html;
 }
 
-function filterMenuByCategory(category, event) {
-  if (event) {
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-  }
+// ==================== MENU ITEM CRUD ====================
 
-  state.menuFilter = category;
-  loadMenu();
-}
-
-// ==================== MENU ITEM MODAL ====================
-
-async function openAddModal() {
+function openAddModal() {
   state.editingItem = null;
-  state.selectedImage = null;
   state.uploadedImageUrl = null;
+  state.selectedImage = null;
 
   document.getElementById('modal-title').textContent = '➕ Add New Menu Item';
-  document.getElementById('menu-item-form').reset();
   document.getElementById('item-id').value = '';
-
+  document.getElementById('item-name').value = '';
+  document.getElementById('item-price').value = '';
+  document.getElementById('item-desc').value = '';
+  document.getElementById('item-category').value = '';
+  
   resetImageUpload();
-  await updateCategorySelect();
   document.getElementById('menu-item-modal').classList.add('active');
 }
 
-async function openEditModal(itemId) {
-  try {
-    const dbService = (await import('./db-service.js')).default;
-    const item = await dbService.getMenuItem(itemId);
+function editMenuItem(itemId) {
+  const item = state.menuItems.find(i => i.id === itemId);
+  if (!item) return;
 
-    if (!item) {
-      alert('Item not found');
-      return;
-    }
+  state.editingItem = item;
+  state.uploadedImageUrl = null;
+  state.selectedImage = null;
 
-    state.editingItem = item;
-    state.selectedImage = null;
-    state.uploadedImageUrl = null;
+  document.getElementById('modal-title').textContent = '✏️ Edit Menu Item';
+  document.getElementById('item-id').value = item.id;
+  document.getElementById('item-name').value = item.name;
+  document.getElementById('item-price').value = item.price;
+  document.getElementById('item-desc').value = item.desc;
+  document.getElementById('item-category').value = item.category;
 
-    document.getElementById('modal-title').textContent = '✏️ Edit Menu Item';
-    document.getElementById('item-id').value = item.id;
-    document.getElementById('item-name').value = item.name;
-    document.getElementById('item-price').value = item.price;
-    document.getElementById('item-desc').value = item.desc;
-    document.getElementById('item-category').value = item.category;
-
+  // Show existing image
+  if (item.img) {
+    document.getElementById('upload-placeholder').style.display = 'none';
+    document.getElementById('image-preview-container').style.display = 'block';
+    document.getElementById('image-preview-img').src = item.img;
+  } else {
     resetImageUpload();
+  }
 
-    if (item.img) {
-      document.getElementById('upload-placeholder').innerHTML = `
-        <div style="font-size: 48px; margin-bottom: 12px;">📷</div>
-        <p style="color: #4a5568; font-weight: 500; margin-bottom: 8px;">Current Image</p>
-        <img src="${item.img}" alt="Current" style="max-width: 200px; max-height: 150px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 12px;" />
-        <p style="color: #718096; font-size: 13px; margin-bottom: 8px;">Click to upload a new image</p>
-        <p style="color: #FF6B35; font-size: 12px;">✨ Or keep the current image</p>
-      `;
+  document.getElementById('menu-item-modal').classList.add('active');
+}
+
+async function saveMenuItem(event) {
+  event.preventDefault();
+
+  const itemId = document.getElementById('item-id').value;
+  const itemName = document.getElementById('item-name').value.trim();
+  const itemPrice = parseFloat(document.getElementById('item-price').value);
+  const itemDesc = document.getElementById('item-desc').value.trim();
+  const itemCategory = document.getElementById('item-category').value;
+
+  if (!itemName || !itemDesc || !itemCategory || isNaN(itemPrice) || itemPrice <= 0) {
+    alert('❌ Please fill all fields correctly');
+    return;
+  }
+
+  const saveBtn = document.getElementById('save-item-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '💾 Saving...';
+
+  try {
+    let imageUrl = '';
+    
+    // Use uploaded image URL if available
+    if (state.uploadedImageUrl) {
+      imageUrl = state.uploadedImageUrl;
+    } else if (state.editingItem?.img) {
+      imageUrl = state.editingItem.img;
     }
 
-    await updateCategorySelect();
-    document.getElementById('menu-item-modal').classList.add('active');
+    const itemData = {
+      id: itemId || 'c' + Date.now(),
+      name: itemName,
+      price: itemPrice,
+      desc: itemDesc,
+      category: itemCategory,
+      img: imageUrl
+    };
+
+    if (itemId) {
+      // Update existing item
+      const index = state.menuItems.findIndex(i => i.id === itemId);
+      if (index !== -1) {
+        state.menuItems[index] = itemData;
+      }
+    } else {
+      // Add new item
+      state.menuItems.push(itemData);
+    }
+
+    await saveMenuData(state.menuItems);
+    closeModal();
+    loadMenu();
+    alert('✅ Menu item saved successfully!');
   } catch (error) {
-    console.error('Failed to load item:', error);
-    alert('Failed to load item details');
+    console.error('Failed to save item:', error);
+    alert('❌ Failed to save menu item');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '💾 Save Item';
+  }
+}
+
+async function deleteMenuItem(itemId) {
+  if (!confirm('Are you sure you want to delete this menu item?')) return;
+
+  try {
+    state.menuItems = state.menuItems.filter(i => i.id !== itemId);
+    await saveMenuData(state.menuItems);
+    loadMenu();
+    alert('✅ Menu item deleted successfully!');
+  } catch (error) {
+    console.error('Failed to delete item:', error);
+    alert('❌ Failed to delete menu item');
   }
 }
 
 function closeModal() {
   document.getElementById('menu-item-modal').classList.remove('active');
   state.editingItem = null;
-  state.selectedImage = null;
   state.uploadedImageUrl = null;
+  state.selectedImage = null;
   resetImageUpload();
 }
 
-// ==================== IMAGE UPLOAD ====================
+// ==================== IMAGE UPLOAD (ImgBB Integration) ====================
 
 function handleImageSelect(event) {
   const file = event.target.files[0];
@@ -491,7 +666,7 @@ function handleImageSelect(event) {
     return;
   }
 
-  const MAX_SIZE = 5 * 1024 * 1024;
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
   if (file.size > MAX_SIZE) {
     alert('❌ Image too large! Maximum size is 5MB');
     event.target.value = '';
@@ -657,209 +832,77 @@ function clearImage() {
   resetImageUpload();
 }
 
-// ==================== SAVE MENU ITEM ====================
+// ==================== ANALYTICS SECTION ====================
 
-async function saveMenuItem(event) {
-  event.preventDefault();
-
-  const saveBtn = document.getElementById('save-item-btn');
-  const originalText = saveBtn.textContent;
-  saveBtn.disabled = true;
-  saveBtn.textContent = '💾 Saving...';
-
+async function loadAnalytics() {
   try {
-    const dbService = (await import('./db-service.js')).default;
-
-    const itemId = document.getElementById('item-id').value;
-    const itemName = document.getElementById('item-name').value.trim();
-    const itemPrice = parseFloat(document.getElementById('item-price').value);
-    const itemDesc = document.getElementById('item-desc').value.trim();
-    const itemCategory = document.getElementById('item-category').value;
-
-    if (!itemName || !itemDesc || !itemCategory || isNaN(itemPrice) || itemPrice <= 0) {
-      alert('❌ Please fill all fields correctly');
-      saveBtn.disabled = false;
-      saveBtn.textContent = originalText;
-      return;
-    }
-
-    let imageUrl = '';
-
-    if (state.uploadedImageUrl) {
-      console.log('✅ Using newly uploaded image:', state.uploadedImageUrl);
-      imageUrl = state.uploadedImageUrl;
-    } else if (state.editingItem?.img) {
-      console.log('✅ Keeping existing image:', state.editingItem.img);
-      imageUrl = state.editingItem.img;
-    }
-
-    const itemData = {
-      name: itemName,
-      price: itemPrice,
-      desc: itemDesc,
-      category: itemCategory,
-      img: imageUrl
-    };
-
-    console.log('Saving item:', itemData);
-
-    saveBtn.textContent = '💾 Saving to database...';
-
-    if (itemId) {
-      await dbService.updateMenuItem(itemId, itemData);
-      alert('✅ Menu item updated successfully!');
-    } else {
-      await dbService.addMenuItem(itemData);
-      alert('✅ Menu item added successfully!');
-    }
-
-    state.selectedImage = null;
-    state.uploadedImageUrl = null;
-    state.editingItem = null;
-    closeModal();
-    loadMenu();
+    await Promise.all([loadMenuData(), loadOrdersData()]);
+    updateAnalytics();
   } catch (error) {
-    console.error('Failed to save item:', error);
-    alert('❌ Failed to save menu item: ' + error.message);
-  } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = originalText;
+    console.error('Failed to load analytics:', error);
   }
 }
 
-async function deleteItem(itemId, itemName) {
-  if (confirm(`Are you sure you want to delete "${itemName}"?\n\nThis action cannot be undone.`)) {
-    try {
-      const dbService = (await import('./db-service.js')).default;
-      await dbService.deleteMenuItem(itemId);
-      alert('✅ Menu item deleted successfully!');
-      loadMenu();
-    } catch (error) {
-      console.error('Failed to delete item:', error);
-      alert('❌ Failed to delete menu item: ' + error.message);
-    }
+function updateAnalytics() {
+  const totalRevenue = state.orders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const avgOrder = state.orders.length > 0 ? totalRevenue / state.orders.length : 0;
+
+  document.getElementById('total-revenue').textContent = totalRevenue.toFixed(2) + ' DZD';
+  document.getElementById('avg-order').textContent = avgOrder.toFixed(2) + ' DZD';
+  document.getElementById('best-day').textContent = '-';
+
+  // Popular items
+  const popularContainer = document.getElementById('popular-items');
+  const topItems = state.menuItems.slice(0, 5);
+  
+  if (topItems.length === 0) {
+    popularContainer.innerHTML = '<p style="color: #666;">No menu items yet</p>';
+  } else {
+    popularContainer.innerHTML = topItems.map((item, index) => `
+      <div style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+        <p style="margin: 0; font-weight: 600;">${index + 1}. ${item.name}</p>
+        <p style="margin: 4px 0 0 0; color: #666; font-size: 14px;">${item.price} DZD</p>
+      </div>
+    `).join('');
   }
 }
-
-// ==================== CATEGORIES ====================
-
-async function loadCategories() {
-  try {
-    const dbService = (await import('./db-service.js')).default;
-    state.categories = await dbService.getAllCategories();
-
-    if (state.categories.length === 0) {
-      await dbService.initializeDefaultCategories();
-      state.categories = await dbService.getAllCategories();
-    }
-
-    return state.categories;
-  } catch (error) {
-    console.error('Failed to load categories:', error);
-    return [];
-  }
-}
-
-async function updateCategorySelect() {
-  const categories = await loadCategories();
-
-  const categorySelect = document.getElementById('item-category');
-  if (categorySelect) {
-    const currentValue = categorySelect.value;
-    categorySelect.innerHTML = '<option value="">Select category</option>';
-    categories.forEach(cat => {
-      const option = document.createElement('option');
-      option.value = cat.id;
-      option.textContent = cat.name;
-      categorySelect.appendChild(option);
-    });
-    if (currentValue) {
-      categorySelect.value = currentValue;
-    }
-  }
-
-  const filtersContainer = document.getElementById('menu-category-filters');
-  if (filtersContainer) {
-    filtersContainer.innerHTML = '<button class="filter-btn active" onclick="filterMenuByCategory(\'all\', event)">All</button>';
-    categories.forEach(cat => {
-      const btn = document.createElement('button');
-      btn.className = 'filter-btn';
-      btn.textContent = cat.name;
-      btn.onclick = (e) => filterMenuByCategory(cat.id, e);
-      filtersContainer.appendChild(btn);
-    });
-  }
-}
-
-// ==================== ANALYTICS ====================
-
-function loadAnalytics() {
-  console.log('Analytics loaded');
-}
-
-// ==================== GLOBAL FUNCTIONS ====================
-
-// Expose all functions globally
-window.adminLogin = adminLogin;
-window.adminLogout = adminLogout;
-window.showSection = showSection;
-window.toggleSidebar = toggleSidebar;
-window.closeSidebar = closeSidebar;
-window.filterOrdersByStatus = filterOrdersByStatus;
-window.filterOrders = filterOrders;
-window.updateOrderStatus = updateOrderStatus;
-window.openAddModal = openAddModal;
-window.openEditModal = openEditModal;
-window.closeModal = closeModal;
-window.filterMenuByCategory = filterMenuByCategory;
-window.handleImageSelect = handleImageSelect;
-window.clearImage = clearImage;
-window.saveMenuItem = saveMenuItem;
-window.deleteItem = deleteItem;
-window.loadMenu = loadMenu;
-window.renderMenuItems = renderMenuItems;
 
 // ==================== INITIALIZATION ====================
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const loginForm = document.getElementById('admin-login-form');
-  if (loginForm) {
-    loginForm.addEventListener('submit', adminLogin);
-  }
-
-  // Attach image input handler
-  const imageInput = document.getElementById('item-image');
-  if (imageInput) {
-    imageInput.addEventListener('change', handleImageSelect);
-  }
-
+async function initializeDashboard() {
   try {
-    const auth = await getAuthInstance();
-    auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        state.currentUser = user;
-        localStorage.setItem('kc_admin', 'true');
-
-        if (document.getElementById('admin-section')) {
-          document.getElementById('login-section').classList.add('hidden');
-          document.getElementById('admin-section').classList.remove('hidden');
-
-          const lastSection = localStorage.getItem('kc_current_section') || 'dashboard';
-          showSection(lastSection);
-        }
-      } else {
-        state.currentUser = null;
-        localStorage.removeItem('kc_admin');
-
-        if (document.getElementById('login-section')) {
-          document.getElementById('login-section').classList.remove('hidden');
-          document.getElementById('admin-section').classList.add('hidden');
-        }
-      }
-    });
+    await Promise.all([loadMenuData(), loadOrdersData()]);
+    loadCategories();
   } catch (error) {
-    console.error('Auth initialization failed:', error);
+    console.error('Failed to initialize dashboard:', error);
   }
+}
 
-  await updateCategorySelect();
+// ==================== EVENT LISTENERS ====================
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Login form
+  document.getElementById('admin-login-form')?.addEventListener('submit', handleLogin);
+
+  // Image upload
+  document.getElementById('item-image')?.addEventListener('change', handleImageSelect);
+
+  // Menu item form
+  document.getElementById('menu-item-form')?.addEventListener('submit', saveMenuItem);
+
+  // Make functions globally available
+  window.showSection = showSection;
+  window.toggleSidebar = toggleSidebar;
+  window.adminLogout = handleLogout;
+  window.openAddModal = openAddModal;
+  window.closeModal = closeModal;
+  window.editMenuItem = editMenuItem;
+  window.deleteMenuItem = deleteMenuItem;
+  window.clearImage = clearImage;
+  window.filterMenuByCategory = filterMenuByCategory;
+  window.filterOrdersByStatus = filterOrdersByStatus;
+  window.filterOrders = filterOrders;
+  window.updateOrderStatus = updateOrderStatus;
+  window.deleteOrder = deleteOrder;
+  window.saveMenuItem = saveMenuItem;
 });
