@@ -263,6 +263,18 @@
                     🌐 Open ImgBB
                   </button>
                   <p style="color: #718096; font-size: 13px; margin-top: 12px;">Upload your image on ImgBB, then paste the link below</p>
+                  
+                  <!-- Link Input Field - Always Visible -->
+                  <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #cbd5e0;">
+                    <label for="item-image-url" style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748; font-size: 14px;">📎 Or paste image URL directly:</label>
+                    <input 
+                      type="url" 
+                      id="item-image-url" 
+                      placeholder="https://i.ibb.co/xxxxx/image.jpg or any image URL" 
+                      onchange="handleImageUrlInput(event)"
+                      style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; box-sizing: border-box;"
+                    />
+                  </div>
                 </div>
 
                 <div id="image-url-input-container" style="display: none;">

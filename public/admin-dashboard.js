@@ -666,7 +666,18 @@ function handleImageUrlInput(event) {
   // Store the URL
   state.uploadedImageUrl = url;
   
+  // Sync the URL to both input fields
+  const visibleInput = document.getElementById('item-image-url');
+  const hiddenInput = document.getElementById('image-url-input');
+  if (visibleInput && event.target.id !== 'item-image-url') {
+    visibleInput.value = url;
+  }
+  if (hiddenInput && event.target.id !== 'image-url-input') {
+    hiddenInput.value = url;
+  }
+  
   // Show preview
+  document.getElementById('upload-placeholder').style.display = 'none';
   document.getElementById('image-url-input-container').style.display = 'none';
   document.getElementById('image-preview-container').style.display = 'block';
   document.getElementById('image-preview-img').src = url;
@@ -679,7 +690,9 @@ function resetImageUpload() {
   state.uploadedImageUrl = null;
 
   const urlInput = document.getElementById('image-url-input');
+  const visibleUrlInput = document.getElementById('item-image-url');
   if (urlInput) urlInput.value = '';
+  if (visibleUrlInput) visibleUrlInput.value = '';
 
   document.getElementById('upload-placeholder').style.display = 'block';
   document.getElementById('image-url-input-container').style.display = 'none';
@@ -694,6 +707,18 @@ function resetImageUpload() {
       🌐 Open ImgBB
     </button>
     <p style="color: #718096; font-size: 13px; margin-top: 12px;">Upload your image on ImgBB, then paste the link below</p>
+    
+    <!-- Link Input Field - Always Visible -->
+    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #cbd5e0;">
+      <label for="item-image-url" style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748; font-size: 14px;">📎 Or paste image URL directly:</label>
+      <input 
+        type="url" 
+        id="item-image-url" 
+        placeholder="https://i.ibb.co/xxxxx/image.jpg or any image URL" 
+        onchange="handleImageUrlInput(event)"
+        style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; box-sizing: border-box;"
+      />
+    </div>
   `;
 }
 
