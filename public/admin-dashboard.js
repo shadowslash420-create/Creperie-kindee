@@ -914,23 +914,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== CATEGORY MANAGEMENT ====================
 
-async function loadCategories() {
-  try {
-    const categories = await dbService.getAllCategories();
-    state.categories = categories;
-    return categories;
-  } catch (error) {
-    console.error('Failed to load categories from Firebase:', error);
-    // Fallback to extracting from menu items
-    const uniqueCategories = [...new Set(state.menuItems.map(item => item.category))];
-    state.categories = uniqueCategories.map(cat => ({
-      id: cat,
-      name: cat.charAt(0).toUpperCase() + cat.slice(1)
-    }));
-    return state.categories;
-  }
-}
-
 function openCategoryModal() {
   document.getElementById('category-modal').classList.add('active');
   renderCategoriesList();
