@@ -2,7 +2,7 @@
 /* Rebuilt from scratch with ImgBB integration and menu_data.json support */
 
 import { getAuthInstance } from './firebase-config.js';
-import { signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import {signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 // ==================== STATE MANAGEMENT ====================
 const state = {
@@ -85,7 +85,7 @@ async function saveOrdersData(ordersData) {
 
 async function handleLogin(event) {
   event.preventDefault();
-  
+
   const email = document.getElementById('adm-user').value.trim();
   const password = document.getElementById('adm-pass').value;
   const loginBtn = document.getElementById('admin-login-btn');
@@ -467,7 +467,7 @@ function filterMenuByCategory(category, event) {
 
 function renderMenuGrid() {
   const container = document.getElementById('menu-items-grid');
-  
+
   let filtered = state.menuItems;
   if (state.menuFilter !== 'all') {
     filtered = state.menuItems.filter(item => item.category === state.menuFilter);
@@ -533,7 +533,7 @@ function openAddModal() {
   document.getElementById('item-price').value = '';
   document.getElementById('item-desc').value = '';
   document.getElementById('item-category').value = '';
-  
+
   resetImageUpload();
   document.getElementById('menu-item-modal').classList.add('active');
 }
@@ -585,7 +585,7 @@ async function saveMenuItem(event) {
 
   try {
     let imageUrl = '';
-    
+
     // Use uploaded image URL if available
     if (state.uploadedImageUrl) {
       imageUrl = state.uploadedImageUrl;
@@ -854,7 +854,7 @@ function updateAnalytics() {
   // Popular items
   const popularContainer = document.getElementById('popular-items');
   const topItems = state.menuItems.slice(0, 5);
-  
+
   if (topItems.length === 0) {
     popularContainer.innerHTML = '<p style="color: #666;">No menu items yet</p>';
   } else {
@@ -905,4 +905,12 @@ document.addEventListener('DOMContentLoaded', () => {
   window.updateOrderStatus = updateOrderStatus;
   window.deleteOrder = deleteOrder;
   window.saveMenuItem = saveMenuItem;
+  // Add this line to make openCategoryModal globally available
+  window.openCategoryModal = openCategoryModal;
 });
+
+// Placeholder for the new function
+function openCategoryModal() {
+  // This function will be implemented to open the category management modal
+  alert('Category management modal will open here!');
+}
