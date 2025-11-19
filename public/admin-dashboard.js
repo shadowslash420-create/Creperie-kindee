@@ -871,8 +871,8 @@ function updateAnalytics() {
 
 async function initializeDashboard() {
   try {
-    await Promise.all([loadMenuData(), loadOrdersData()]);
-    loadCategories();
+    await Promise.all([loadMenuData(), loadOrdersData(), loadCategories()]);
+    setupCategoryManagement();
   } catch (error) {
     console.error('Failed to initialize dashboard:', error);
   }
@@ -905,12 +905,133 @@ document.addEventListener('DOMContentLoaded', () => {
   window.updateOrderStatus = updateOrderStatus;
   window.deleteOrder = deleteOrder;
   window.saveMenuItem = saveMenuItem;
-  // Add this line to make openCategoryModal globally available
   window.openCategoryModal = openCategoryModal;
+  window.closeCategoryModal = closeCategoryModal;
+  window.addCategory = addCategory;
+  window.deleteCategory = deleteCategory;
 });
 
-// Placeholder for the new function
+// ==================== CATEGORY MANAGEMENT ====================
+
+async function loadCategories() {
+  try {
+    const categories = await dbService.getAllCategories();
+    state.categories = categories;
+    return categories;
+  } catch (error) {
+    console.error('Failed to load categories:', error);
+    // Fallback to extracting from menu items
+    loadCategories();
+    return state.categories;
+  }
+}
+
 function openCategoryModal() {
-  // This function will be implemented to open the category management modal
-  alert('Category management modal will open here!');
+  document.getElementById('category-modal').classList.add('active');
+  renderCategoriesList();
+}
+
+function closeCategoryModal() {
+  document.getElementById('category-modal').classList.remove('active');
+}
+
+async function addCategory(event) {
+  event.preventDefault();
+  
+  const categoryId = document.getElementById('category-id').value.trim().toLowerCase();
+  const categoryName = document.getElementById('category-name').value.trim();
+  
+  if (!categoryId || !categoryName) {
+    alert('❌ Please fill all fields');
+    return;
+  }
+  
+  // Validate ID format
+  if (!/^[a-z0-9_-]+$/.test(categoryId)) {
+    alert('❌ Category ID must contain only lowercase letters, numbers, hyphens, and underscores');
+    return;
+  }
+  
+  // Check if category already exists
+  if (state.categories.find(cat => cat.id === categoryId)) {
+    alert('❌ Category ID already exists');
+    return;
+  }
+  
+  try {
+    const newCategory = {
+      id: categoryId,
+      name: categoryName,
+      order: state.categories.length
+    };
+    
+    await dbService.addCategory(newCategory);
+    
+    state.categories.push(newCategory);
+    
+    // Clear form
+    document.getElementById('category-id').value = '';
+    document.getElementById('category-name').value = '';
+    
+    renderCategoriesList();
+    renderCategoryFilters();
+    
+    alert('✅ Category added successfully!');
+  } catch (error) {
+    console.error('Failed to add category:', error);
+    alert('❌ Failed to add category');
+  }
+}
+
+async function deleteCategory(categoryId) {
+  if (!confirm('Are you sure you want to delete this category?\n\nNote: Menu items in this category will remain but may need reassignment.')) {
+    return;
+  }
+  
+  try {
+    await dbService.deleteCategory(categoryId);
+    
+    state.categories = state.categories.filter(cat => cat.id !== categoryId);
+    
+    renderCategoriesList();
+    renderCategoryFilters();
+    
+    alert('✅ Category deleted successfully!');
+  } catch (error) {
+    console.error('Failed to delete category:', error);
+    alert('❌ Failed to delete category');
+  }
+}
+
+function renderCategoriesList() {
+  const container = document.getElementById('categories-list');
+  if (!container) return;
+  
+  if (state.categories.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">No categories yet</p>';
+    return;
+  }
+  
+  const html = state.categories.map(cat => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:2px solid #e2e8f0;border-radius:8px;margin-bottom:8px;background:white;">
+      <div>
+        <div style="font-weight:600;color:#2d3748;margin-bottom:4px;">${cat.name}</div>
+        <div style="font-size:12px;color:#718096;">ID: ${cat.id}</div>
+      </div>
+      <button onclick="deleteCategory('${cat.id}')" 
+        style="padding:8px 16px;background:#e53e3e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;">
+        🗑️ Delete
+      </button>
+    </div>
+  `).join('');
+  
+  container.innerHTML = html;
+}
+
+// Update the manage categories button handler
+function setupCategoryManagement() {
+  const manageCategoriesBtn = document.querySelector('button[onclick*="Manage Categories"]');
+  if (manageCategoriesBtn) {
+    manageCategoriesBtn.onclick = openCategoryModal;
+  }
 }
