@@ -40,13 +40,7 @@ const translations = {
     offering6Title: 'خدمة طوال اليوم',
     offering6Desc: 'نعمل من 9 صباحاً حتى 11 مساءً لنكون دائماً في خدمتكم',
 
-    menuPreviewTitle: 'Diverse Selection',
-    menuPreview1Title: 'Sweet Crêpes',
-    menuPreview1Desc: 'Kinder, Nutella, fresh fruits',
-    menuPreview2Title: 'Savory Crêpes',
-    menuPreview2Desc: 'Meat, cheese, grilled chicken',
-    menuPreview3Title: 'Drinks',
-    menuPreview3Desc: 'Hot chocolate, fresh juices',
+    menuPreviewTitle: 'من قائمتنا',
     viewFullMenuBtn: 'شاهد القائمة الكاملة',
     ctaTitle: 'جاهز لتجربة لا تُنسى؟',
     ctaDesc: 'اطلب الآن واستمتع بطعم كيندر الأصيل',
@@ -160,13 +154,7 @@ const translations = {
     offering6Title: 'All-Day Service',
     offering6Desc: 'We are open from 9 AM to 11 PM to always be at your service.',
 
-    menuPreviewTitle: 'Diverse Selection',
-    menuPreview1Title: 'Sweet Crêpes',
-    menuPreview1Desc: 'Kinder, Nutella, fresh fruits',
-    menuPreview2Title: 'Savory Crêpes',
-    menuPreview2Desc: 'Meat, cheese, grilled chicken',
-    menuPreview3Title: 'Drinks',
-    menuPreview3Desc: 'Hot chocolate, fresh juices',
+    menuPreviewTitle: 'From Our Menu',
     viewFullMenuBtn: 'View Full Menu',
     ctaTitle: 'Ready for an unforgettable experience?',
     ctaDesc: 'Order now and enjoy the authentic taste of Kinder',
@@ -372,24 +360,6 @@ function applyTranslations(){
 
   const menuPreviewTitle = document.getElementById('menu-preview-title');
   if(menuPreviewTitle) menuPreviewTitle.textContent = t.menuPreviewTitle;
-
-  const menuPreview1Title = document.getElementById('menu-preview1-title');
-  if(menuPreview1Title) menuPreview1Title.textContent = t.menuPreview1Title;
-
-  const menuPreview1Desc = document.getElementById('menu-preview1-desc');
-  if(menuPreview1Desc) menuPreview1Desc.textContent = t.menuPreview1Desc;
-
-  const menuPreview2Title = document.getElementById('menu-preview2-title');
-  if(menuPreview2Title) menuPreview2Title.textContent = t.menuPreview2Title;
-
-  const menuPreview2Desc = document.getElementById('menu-preview2-desc');
-  if(menuPreview2Desc) menuPreview2Desc.textContent = t.menuPreview2Desc;
-
-  const menuPreview3Title = document.getElementById('menu-preview3-title');
-  if(menuPreview3Title) menuPreview3Title.textContent = t.menuPreview3Title;
-
-  const menuPreview3Desc = document.getElementById('menu-preview3-desc');
-  if(menuPreview3Desc) menuPreview3Desc.textContent = t.menuPreview3Desc;
 
   const viewFullMenuBtn = document.getElementById('view-full-menu-btn');
   if(viewFullMenuBtn) viewFullMenuBtn.textContent = t.viewFullMenuBtn;
@@ -1618,6 +1588,61 @@ function formatPhone(phone){
 function getOrders(){ return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); }
 function saveOrders(o){ localStorage.setItem(ORDERS_KEY, JSON.stringify(o)); }
 
+// Render homepage menu preview
+async function renderHomeMenuPreview() {
+  const container = document.getElementById('home-menu-items-grid');
+  if (!container) return;
+
+  try {
+    // Load menu items if not already loaded
+    if (state.menuItems.length === 0) {
+      await loadMenuItemsFromFirebase();
+    }
+
+    // Get up to 4 random items to display
+    const itemsToShow = state.menuItems
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 4);
+
+    if (itemsToShow.length === 0) {
+      container.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+          <div style="font-size: 48px; margin-bottom: 16px;">🍽️</div>
+          <p>قريباً... منتجات شهية في انتظاركم</p>
+        </div>
+      `;
+      return;
+    }
+
+    const addToCartText = state.currentLang === 'ar' 
+      ? menuTranslations.ar.addToCart 
+      : menuTranslations.en.addToCart;
+
+    container.innerHTML = itemsToShow.map(item => `
+      <div class="menu-card">
+        <div class="menu-card-image" style="background-image:url('${item.img || 'images/placeholder.svg'}')"></div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">${item.name}</h3>
+          <p class="menu-card-desc">${item.desc}</p>
+          <div class="menu-card-footer">
+            <span class="menu-card-price">${item.price.toFixed(2)} DZD</span>
+            <button class="menu-card-btn" onclick="addToCart('${item.id}')">
+              ${addToCartText}
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.error('Failed to render home menu preview:', error);
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+        <p>تعذر تحميل المنتجات</p>
+      </div>
+    `;
+  }
+}
+
 // Initialize on load
 document.addEventListener('DOMContentLoaded', async ()=>{
   initPageLoad();
@@ -1628,8 +1653,18 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
     // Only initialize menu if we're on the menu page
     const isMenuPage = window.location.pathname.includes('menu.html');
+    const isHomePage = window.location.pathname === '/' || 
+                       window.location.pathname === '/index.html' || 
+                       window.location.pathname.endsWith('/');
+    
     if (isMenuPage) {
       await initMenu();
+    } else if (isHomePage) {
+      // Load menu items for homepage preview
+      await loadMenuItemsFromFirebase();
+      loadCart();
+      updateCart();
+      renderHomeMenuPreview();
     } else {
       // Still load cart for other pages
       loadCart();
@@ -1700,3 +1735,4 @@ window.getOrders = getOrders; // Export helper
 window.saveOrders = saveOrders; // Export helper
 window.showToast = showToast; // Export showToast
 window.showOrderConfirmation = showOrderConfirmation; // Export showOrderConfirmation
+window.renderHomeMenuPreview = renderHomeMenuPreview; // Export renderHomeMenuPreview
