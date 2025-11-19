@@ -29,15 +29,15 @@
 
   <div class="container">
     <section class="section">
-      <h2 class="section-title" id="orders-title" style="text-align:center"></h2>
+      <h2 class="section-title" id="orders-title" style="text-align:center">تتبع طلباتك</h2>
       
       <!-- Search Form -->
       <div class="card" style="margin-bottom:24px;padding:24px;">
-        <h3 id="search-title" style="margin-bottom:16px;"></h3>
+        <h3 id="search-title" style="margin-bottom:16px;">ابحث عن طلبك</h3>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <input type="text" id="order-search" placeholder="" style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
-          <input type="tel" id="phone-search" placeholder="" style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
-          <button class="cta" onclick="searchOrders()" id="search-btn" style="padding:12px 24px;"></button>
+          <input type="text" id="order-search" placeholder="رقم الطلب (مثال: ORD-1234567890)" style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
+          <input type="tel" id="phone-search" placeholder="رقم الهاتف" style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
+          <button class="cta" onclick="searchOrders()" id="search-btn" style="padding:12px 24px;">بحث</button>
         </div>
       </div>
 
@@ -108,47 +108,57 @@
 
   <script type="module" src="script.js"></script>
   <script>
+    // Translations for my-orders page
+    const orderTranslations = {
+      ar: {
+        ordersTitle: 'تتبع طلباتك',
+        searchTitle: 'ابحث عن طلبك',
+        orderNumber: 'رقم الطلب',
+        customer: 'العميل',
+        phone: 'الهاتف',
+        address: 'العنوان',
+        items: 'المنتجات',
+        subtotal: 'المجموع الفرعي',
+        deliveryFee: 'رسوم التوصيل',
+        total: 'المجموع',
+        status: 'الحالة',
+        pending: 'قيد الانتظار',
+        'in-progress': 'قيد التوصيل',
+        delivered: 'تم التسليم',
+        specialInstructions: 'تعليمات خاصة',
+        noInstructions: 'لا توجد تعليمات خاصة',
+        noOrders: 'لم يتم العثور على طلبات',
+        searchPlaceholder: 'رقم الطلب أو رقم الهاتف',
+        date: 'التاريخ',
+        viewDetails: 'عرض التفاصيل'
+      },
+      en: {
+        ordersTitle: 'Track Your Orders',
+        searchTitle: 'Search for Your Order',
+        orderNumber: 'Order Number',
+        customer: 'Customer',
+        phone: 'Phone',
+        address: 'Address',
+        items: 'Items',
+        subtotal: 'Subtotal',
+        deliveryFee: 'Delivery Fee',
+        total: 'Total',
+        status: 'Status',
+        pending: 'Pending',
+        'in-progress': 'In Progress',
+        delivered: 'Delivered',
+        specialInstructions: 'Special Instructions',
+        noInstructions: 'No special instructions',
+        noOrders: 'No orders found',
+        searchPlaceholder: 'Order number or phone number',
+        date: 'Date',
+        viewDetails: 'View Details'
+      }
+    };
+
     function getOrderTranslations(){
       const lang = getCurrentLang();
-      const t = translations[lang] || translations.en;
-      return {
-        ordersTitle: t.ordersTitle,
-        searchTitle: t.searchTitle,
-        orderNumber: t.orderNumberLabel,
-        customer: t.customerLabel,
-        phone: t.phoneLabel,
-        address: t.addressLabel,
-        items: t.itemsLabel,
-        subtotal: t.subtotalLabel,
-        deliveryFee: t.deliveryFeeLabel,
-        total: t.totalLabelOrders,
-        status: t.statusLabel,
-        pending: t.pendingStatus,
-        'in-progress': t.inProgressStatus,
-        delivered: t.deliveredStatus,
-        specialInstructions: t.specialInstructionsLabel,
-        noInstructions: t.noInstructions,
-        noOrders: t.noOrdersFound,
-        searchPlaceholder: t.searchPlaceholder,
-        phoneSearchPlaceholder: t.phoneSearchPlaceholder,
-        date: t.dateLabel,
-        freeDelivery: t.freeDeliveryText
-      };
-    }
-
-    function applyOrdersPageTranslations() {
-      const t = getOrderTranslations();
-      const ordersTitle = document.getElementById('orders-title');
-      const searchTitle = document.getElementById('search-title');
-      const orderSearch = document.getElementById('order-search');
-      const phoneSearch = document.getElementById('phone-search');
-      const searchBtn = document.getElementById('search-btn');
-
-      if (ordersTitle) ordersTitle.textContent = t.ordersTitle;
-      if (searchTitle) searchTitle.textContent = t.searchTitle;
-      if (orderSearch) orderSearch.placeholder = t.searchPlaceholder;
-      if (phoneSearch) phoneSearch.placeholder = t.phoneSearchPlaceholder;
-      if (searchBtn) searchBtn.textContent = t.searchBtn;
+      return orderTranslations[lang] || orderTranslations.en;
     }
 
     function searchOrders(){
@@ -276,13 +286,6 @@
 
     // Check for order ID in URL
     window.addEventListener('DOMContentLoaded', () => {
-      // Apply translations first
-      setTimeout(() => {
-        if (typeof applyTranslations === 'function') applyTranslations();
-        applyOrdersPageTranslations();
-        if (typeof updatePageIndicator === 'function') updatePageIndicator();
-      }, 100);
-
       const urlParams = new URLSearchParams(window.location.search);
       const orderId = urlParams.get('order');
       
@@ -297,20 +300,14 @@
           searchOrders();
         }
       }
-    });
-
-    // Override toggleLanguage to also apply orders page translations
-    const originalToggleLanguage = window.toggleLanguage;
-    window.toggleLanguage = function() {
-      if (originalToggleLanguage) originalToggleLanguage();
+      
+      // Wait for script.js module to load
       setTimeout(() => {
-        applyOrdersPageTranslations();
-        const currentOrders = document.querySelectorAll('.card');
-        if (currentOrders.length > 1) {
-          searchOrders(); // Re-render orders with new language
-        }
-      }, 150);
-    };
+        if (typeof applyTranslations === 'function') applyTranslations();
+        if (typeof renderCart === 'function') renderCart();
+        if (typeof updatePageIndicator === 'function') updatePageIndicator();
+      }, 100);
+    });
   </script>
   <script type="module" src="auth.js"></script>
 </body>
