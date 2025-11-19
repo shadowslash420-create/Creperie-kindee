@@ -608,17 +608,17 @@ async function loadCategoriesFromFirebase() {
     if (categories && categories.length > 0) {
       state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
       // Set default tab to first category
-      if (state.categories.length > 0) {
-        state.currentTab = state.categories[0].id;
-        console.log('🎯 Initial default tab set to:', state.currentTab);
-      }
+      state.currentTab = state.categories[0].id;
+      console.log('🎯 Initial default tab set to:', state.currentTab);
     } else {
       console.warn('⚠️ No categories found in Firestore');
       state.categories = [];
+      state.currentTab = null;
     }
   } catch (error) {
     console.error('❌ Failed to load categories from Firebase:', error);
     state.categories = [];
+    state.currentTab = null;
   }
 }
 
@@ -704,7 +704,6 @@ function updateFooterCategoryLinks() {
     <a href="contact.html" class="nav-link-contact">${t.navContact}</a>
   `;
   
-  // Show only navigation links on all pages (no category links)
   footerLinks.innerHTML = navigationLinks;
 }
 
