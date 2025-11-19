@@ -104,6 +104,30 @@ const translations = {
     feedbackReviewsTitle: 'تقييمات العملاء',
     noFeedback: 'لا توجد تقييمات بعد',
 
+    // Orders Page
+    ordersTitle: 'تتبع طلباتك',
+    searchTitle: 'ابحث عن طلبك',
+    orderNumberLabel: 'رقم الطلب',
+    customerLabel: 'العميل',
+    phoneLabel: 'الهاتف',
+    addressLabel: 'العنوان',
+    itemsLabel: 'المنتجات',
+    subtotalLabel: 'المجموع الفرعي',
+    deliveryFeeLabel: 'رسوم التوصيل',
+    totalLabelOrders: 'المجموع',
+    statusLabel: 'الحالة',
+    pendingStatus: 'قيد الانتظار',
+    inProgressStatus: 'قيد التوصيل',
+    deliveredStatus: 'تم التسليم',
+    specialInstructionsLabel: 'تعليمات خاصة',
+    noInstructions: 'لا توجد تعليمات خاصة',
+    noOrdersFound: 'لم يتم العثور على طلبات',
+    searchPlaceholder: 'رقم الطلب (مثال: ORD-1234567890)',
+    phoneSearchPlaceholder: 'رقم الهاتف',
+    searchBtn: 'بحث',
+    dateLabel: 'التاريخ',
+    freeDeliveryText: 'توصيل مجاني!'
+
     // About & Contact
     aboutTitle: 'من نحن',
     aboutDesc1: 'Creperie Kinder تأسست بشغف لتقديم أفضل كريب للأطفال والكبار. نختار أفضل مكونات الشوكولا ونضيف لمسة سحرية في كل لفّة.',
@@ -220,6 +244,30 @@ const translations = {
     feedbackFormTitle: 'Share Your Experience',
     feedbackReviewsTitle: 'Customer Reviews',
     noFeedback: 'No reviews yet',
+
+    // Orders Page
+    ordersTitle: 'Track Your Orders',
+    searchTitle: 'Search for Your Order',
+    orderNumberLabel: 'Order Number',
+    customerLabel: 'Customer',
+    phoneLabel: 'Phone',
+    addressLabel: 'Address',
+    itemsLabel: 'Items',
+    subtotalLabel: 'Subtotal',
+    deliveryFeeLabel: 'Delivery Fee',
+    totalLabelOrders: 'Total',
+    statusLabel: 'Status',
+    pendingStatus: 'Pending',
+    inProgressStatus: 'In Progress',
+    deliveredStatus: 'Delivered',
+    specialInstructionsLabel: 'Special Instructions',
+    noInstructions: 'No special instructions',
+    noOrdersFound: 'No orders found',
+    searchPlaceholder: 'Order number (e.g., ORD-1234567890)',
+    phoneSearchPlaceholder: 'Phone number',
+    searchBtn: 'Search',
+    dateLabel: 'Date',
+    freeDeliveryText: 'Free Delivery!'
 
     // About & Contact
     aboutTitle: 'About Us',
