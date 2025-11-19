@@ -172,8 +172,6 @@ html{
   width:80px;
   height:80px;
   object-fit:contain;
-  mix-blend-mode:screen;
-  filter:brightness(1.2) contrast(1.1);
   background:transparent;
 }
 
