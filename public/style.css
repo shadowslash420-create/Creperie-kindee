@@ -647,6 +647,9 @@ html{
   margin:0 auto;
   padding:48px 24px;
   animation:fadeIn 0.6s ease-out;
+  display:flex;
+  flex-direction:column;
+  min-height:calc(100vh - 200px);
 }
 
 @media(max-width:768px){
@@ -663,6 +666,7 @@ html{
   border-radius:0;
   box-shadow:var(--medium-shadow);
   animation:fadeIn 0.6s ease-out;
+  flex-shrink:0;
 }
 
 @media(max-width:768px){
@@ -1293,6 +1297,8 @@ html{
   padding:64px 32px;
   text-align:center;
   box-shadow:var(--strong-shadow);
+  margin-top:auto;
+  width:100%;
 }
 
 .footer-links{
