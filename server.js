@@ -76,17 +76,21 @@ app.post('/api/feedback', async (req, res) => {
 });
 
 // Image upload endpoint
-app.post('/api/upload-image', async (req, res) => {
-  const form = formidable({});
-
+app.post('/api/upload-image', express.urlencoded({ extended: true, limit: '10mb' }), async (req, res) => {
   try {
     console.log('📤 Upload request received');
+    console.log('📊 Request body keys:', Object.keys(req.body));
 
-    const [fields] = await form.parse(req);
+    const image = req.body.image;
+    const folder = req.body.folder || 'menu';
+    const filename = req.body.filename || 'image';
 
-    const image = fields.image?.[0];
-    const folder = fields.folder?.[0] || 'menu';
-    const filename = fields.filename?.[0] || 'image';
+    console.log('📊 Parsed data:', {
+      hasImage: !!image,
+      imageLength: image ? image.length : 0,
+      folder,
+      filename
+    });
 
     if (!image) {
       throw new Error('No image data provided');
@@ -94,7 +98,7 @@ app.post('/api/upload-image', async (req, res) => {
 
     const imgbbApiKey = process.env.IMGBB_API_KEY;
     if (!imgbbApiKey) {
-      throw new Error('ImgBB API key not configured');
+      throw new Error('ImgBB API key not configured - please add IMGBB_API_KEY to Secrets');
     }
 
     console.log('🔑 Using ImgBB API key:', imgbbApiKey.substring(0, 10) + '...');
@@ -103,9 +107,9 @@ app.post('/api/upload-image', async (req, res) => {
     const formData = new URLSearchParams();
     formData.append('key', imgbbApiKey);
     formData.append('image', image);
-    formData.append('name', `${folder}_${filename}`);
+    formData.append('name', `${folder}_${filename}_${Date.now()}`);
 
-    console.log('📤 Uploading to ImgBB...');
+    console.log('📤 Uploading to ImgBB API...');
 
     const response = await fetch('https://api.imgbb.com/1/upload', {
       method: 'POST',
@@ -116,7 +120,7 @@ app.post('/api/upload-image', async (req, res) => {
     });
 
     const result = await response.json();
-    console.log('✅ ImgBB response:', result.success);
+    console.log('📡 ImgBB response status:', result.success ? '✅ Success' : '❌ Failed');
 
     if (result.success) {
       console.log('✅ Upload successful:', result.data.display_url);

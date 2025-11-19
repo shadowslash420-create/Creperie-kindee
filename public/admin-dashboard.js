@@ -733,16 +733,25 @@ async function uploadToImgBB() {
     progressBar.style.width = '50%';
     uploadText.textContent = 'Uploading to ImgBB...';
 
-    const formData = new FormData();
-    formData.append('image', base64);
-    formData.append('folder', 'menu');
-    formData.append('filename', state.selectedImage.name.replace(/\.[^/.]+$/, ''));
+    // Use URLSearchParams instead of FormData for proper encoding
+    const formBody = new URLSearchParams();
+    formBody.append('image', base64);
+    formBody.append('folder', 'menu');
+    formBody.append('filename', state.selectedImage.name.replace(/\.[^/.]+$/, ''));
 
     console.log('📤 Sending request to /api/upload-image...');
+    console.log('📊 Request details:', {
+      imageLength: base64.length,
+      folder: 'menu',
+      filename: state.selectedImage.name.replace(/\.[^/.]+$/, '')
+    });
 
     const response = await fetch('/api/upload-image', {
       method: 'POST',
-      body: formData
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: formBody.toString()
     });
 
     progressBar.style.width = '80%';
@@ -756,7 +765,7 @@ async function uploadToImgBB() {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Server error response:', errorText);
-      throw new Error(`Upload failed (${response.status})`);
+      throw new Error(`Upload failed (${response.status}): ${errorText}`);
     }
 
     const result = await response.json();
@@ -783,7 +792,7 @@ async function uploadToImgBB() {
     uploadProgress.style.display = 'none';
     uploadSuccess.style.display = 'block';
     uploadSuccess.style.color = '#e53e3e';
-    uploadSuccess.textContent = '⚠️ Upload failed - you can continue and save';
+    uploadSuccess.textContent = '⚠️ Upload failed: ' + error.message;
 
     console.log('⚠️ Upload failed but allowing user to continue with local preview');
     return false;
