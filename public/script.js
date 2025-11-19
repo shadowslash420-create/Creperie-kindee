@@ -690,6 +690,40 @@ function renderCategoryTabs() {
   }).join('');
 
   tabNav.innerHTML = html;
+  
+  // Also update footer links if on menu page
+  updateFooterCategoryLinks();
+}
+
+// Update footer with category links on menu page
+function updateFooterCategoryLinks() {
+  const footerLinks = document.getElementById('footer-links');
+  if (!footerLinks) return;
+  
+  const isMenuPage = window.location.pathname.includes('menu.html');
+  if (!isMenuPage) return;
+  
+  const t = translations[state.currentLang];
+  const existingLinks = `
+    <a href="index.html" class="nav-link-home">${t.navHome}</a>
+    <a href="about.html" class="nav-link-about">${t.navAbout}</a>
+    <a href="menu.html" class="nav-link-menu">${t.navMenu}</a>
+    <a href="my-orders.html" class="nav-link-orders">${t.navOrders}</a>
+    <a href="faq.html" class="nav-link-faq">${t.navFaq}</a>
+    <a href="feedback.html" class="nav-link-feedback">${t.navFeedback}</a>
+    <a href="contact.html" class="nav-link-contact">${t.navContact}</a>
+  `;
+  
+  // Add category quick links
+  const categoryLinks = state.categories.map(cat => {
+    const categoryName = state.currentLang === 'ar'
+      ? (menuTranslations.ar.categories[cat.id] || cat.name)
+      : (menuTranslations.en.categories[cat.id] || cat.name);
+    
+    return `<a href="#section-${cat.id}" onclick="switchTab('${cat.id}')">${categoryName}</a>`;
+  }).join('');
+  
+  footerLinks.innerHTML = existingLinks + categoryLinks;
 }
 
 // Render menu
@@ -1776,3 +1810,4 @@ window.showToast = showToast; // Export showToast
 window.showOrderConfirmation = showOrderConfirmation; // Export showOrderConfirmation
 window.renderHomeMenuPreview = renderHomeMenuPreview; // Export renderHomeMenuPreview
 window.closeAllSidebars = closeAllSidebars; // Export closeAllSidebars
+window.updateFooterCategoryLinks = updateFooterCategoryLinks; // Export updateFooterCategoryLinks
