@@ -23,63 +23,44 @@ const state = {
 
 async function loadMenuData() {
   try {
-    const response = await fetch('/api/menu');
-    const data = await response.json();
+    console.log('📋 Admin: Loading menu items from Firestore...');
+    await dbService.init();
+    const data = await dbService.getAllMenuItems();
+    console.log('✅ Admin: Menu items loaded:', data.length);
     state.menuItems = data;
     return data;
   } catch (error) {
-    console.error('Failed to load menu data:', error);
-    // Fallback to local JSON
-    try {
-      const fallbackResponse = await fetch('/menu_data.json');
-      const fallbackData = await fallbackResponse.json();
-      state.menuItems = fallbackData;
-      return fallbackData;
-    } catch (fallbackError) {
-      console.error('Failed to load fallback menu data:', fallbackError);
-      return [];
-    }
+    console.error('❌ Admin: Failed to load menu data from Firestore:', error);
+    state.menuItems = [];
+    return [];
   }
 }
 
 async function saveMenuData(menuData) {
-  try {
-    const response = await fetch('/api/menu', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(menuData)
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Failed to save menu data:', error);
-    throw error;
-  }
+  console.log('⚠️ saveMenuData is deprecated - items are saved individually through dbService');
+  // This function is no longer needed as items are saved individually
+  return { success: true };
 }
 
 async function loadOrdersData() {
   try {
-    const response = await fetch('/api/orders');
-    const data = await response.json();
+    console.log('📦 Admin: Loading orders from Firestore...');
+    await dbService.init();
+    const data = await dbService.getAllOrders();
+    console.log('✅ Admin: Orders loaded:', data.length);
     state.orders = data || [];
     return data;
   } catch (error) {
-    console.error('Failed to load orders:', error);
+    console.error('❌ Admin: Failed to load orders from Firestore:', error);
+    state.orders = [];
     return [];
   }
 }
 
 async function saveOrdersData(ordersData) {
-  try {
-    const response = await fetch('/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(ordersData)
-    });
-    return await response.json();
-  } catch (error) {
-    console.error('Failed to save orders:', error);
-    throw error;
-  }
+  console.log('⚠️ saveOrdersData is deprecated - orders are updated individually through dbService');
+  // This function is no longer needed as orders are updated individually
+  return { success: true };
 }
 
 // ==================== AUTHENTICATION ====================
@@ -388,15 +369,14 @@ function renderOrdersTable() {
 
 async function updateOrderStatus(orderId, newStatus) {
   try {
-    const orderIndex = state.orders.findIndex(o => o.id === orderId);
-    if (orderIndex !== -1) {
-      state.orders[orderIndex].status = newStatus;
-      await saveOrdersData(state.orders);
-      loadDashboard();
-    }
+    console.log('📝 Updating order status:', orderId, 'to', newStatus);
+    await dbService.updateOrderStatus(orderId, newStatus);
+    await loadOrdersData();
+    renderOrdersTable();
+    loadDashboard();
   } catch (error) {
-    console.error('Failed to update order status:', error);
-    alert('Failed to update order status');
+    console.error('❌ Failed to update order status:', error);
+    alert('Failed to update order status: ' + error.message);
   }
 }
 
@@ -404,13 +384,14 @@ async function deleteOrder(orderId) {
   if (!confirm('Are you sure you want to delete this order?')) return;
 
   try {
-    state.orders = state.orders.filter(o => o.id !== orderId);
-    await saveOrdersData(state.orders);
+    console.log('🗑️ Deleting order:', orderId);
+    await dbService.deleteOrder(orderId);
+    await loadOrdersData();
     renderOrdersTable();
     loadDashboard();
   } catch (error) {
-    console.error('Failed to delete order:', error);
-    alert('Failed to delete order');
+    console.error('❌ Failed to delete order:', error);
+    alert('Failed to delete order: ' + error.message);
   }
 }
 
@@ -419,7 +400,7 @@ async function deleteOrder(orderId) {
 async function loadMenu() {
   try {
     await loadMenuData();
-    loadCategories();
+    await loadCategories();
     renderCategoryFilters();
     renderMenuGrid();
   } catch (error) {
@@ -427,12 +408,17 @@ async function loadMenu() {
   }
 }
 
-function loadCategories() {
-  const uniqueCategories = [...new Set(state.menuItems.map(item => item.category))];
-  state.categories = uniqueCategories.map(cat => ({
-    id: cat,
-    name: cat.charAt(0).toUpperCase() + cat.slice(1)
-  }));
+async function loadCategories() {
+  try {
+    console.log('📂 Admin: Loading categories from Firestore...');
+    await dbService.init();
+    const categories = await dbService.getAllCategories();
+    console.log('✅ Admin: Categories loaded:', categories.length);
+    state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+  } catch (error) {
+    console.error('❌ Admin: Failed to load categories:', error);
+    state.categories = [];
+  }
 }
 
 function renderCategoryFilters() {
@@ -595,7 +581,6 @@ async function saveMenuItem(event) {
     }
 
     const itemData = {
-      id: itemId || 'c' + Date.now(),
       name: itemName,
       price: itemPrice,
       desc: itemDesc,
@@ -604,23 +589,22 @@ async function saveMenuItem(event) {
     };
 
     if (itemId) {
-      // Update existing item
-      const index = state.menuItems.findIndex(i => i.id === itemId);
-      if (index !== -1) {
-        state.menuItems[index] = itemData;
-      }
+      // Update existing item in Firestore
+      console.log('📝 Updating menu item:', itemId);
+      await dbService.updateMenuItem(itemId, itemData);
     } else {
-      // Add new item
-      state.menuItems.push(itemData);
+      // Add new item to Firestore
+      console.log('➕ Adding new menu item');
+      const newId = await dbService.addMenuItem(itemData);
+      console.log('✅ Item added with ID:', newId);
     }
 
-    await saveMenuData(state.menuItems);
     closeModal();
-    loadMenu();
+    await loadMenu();
     alert('✅ Menu item saved successfully!');
   } catch (error) {
-    console.error('Failed to save item:', error);
-    alert('❌ Failed to save menu item');
+    console.error('❌ Failed to save item:', error);
+    alert('❌ Failed to save menu item: ' + error.message);
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = '💾 Save Item';
@@ -631,13 +615,13 @@ async function deleteMenuItem(itemId) {
   if (!confirm('Are you sure you want to delete this menu item?')) return;
 
   try {
-    state.menuItems = state.menuItems.filter(i => i.id !== itemId);
-    await saveMenuData(state.menuItems);
-    loadMenu();
+    console.log('🗑️ Deleting menu item:', itemId);
+    await dbService.deleteMenuItem(itemId);
+    await loadMenu();
     alert('✅ Menu item deleted successfully!');
   } catch (error) {
-    console.error('Failed to delete item:', error);
-    alert('❌ Failed to delete menu item');
+    console.error('❌ Failed to delete item:', error);
+    alert('❌ Failed to delete menu item: ' + error.message);
   }
 }
 
@@ -872,11 +856,51 @@ function updateAnalytics() {
 
 async function initializeDashboard() {
   try {
+    await dbService.init();
     await Promise.all([loadMenuData(), loadOrdersData(), loadCategories()]);
     setupCategoryManagement();
+    setupRealtimeListeners();
   } catch (error) {
     console.error('Failed to initialize dashboard:', error);
   }
+}
+
+function setupRealtimeListeners() {
+  console.log('👂 Setting up real-time listeners for admin dashboard...');
+  
+  // Listen to menu changes
+  dbService.listenToMenuChanges((updatedMenu) => {
+    console.log('🔄 Admin: Menu updated in real-time:', updatedMenu.length, 'items');
+    state.menuItems = updatedMenu;
+    if (state.currentSection === 'menu') {
+      renderMenuGrid();
+    }
+    if (state.currentSection === 'dashboard') {
+      renderBestSellers();
+    }
+  });
+  
+  // Listen to order changes
+  dbService.listenToOrderChanges((updatedOrders) => {
+    console.log('🔄 Admin: Orders updated in real-time:', updatedOrders.length, 'orders');
+    state.orders = updatedOrders;
+    if (state.currentSection === 'orders') {
+      renderOrdersTable();
+    }
+    if (state.currentSection === 'dashboard') {
+      updateDashboardStats();
+      renderRecentOrders();
+    }
+  });
+  
+  // Listen to category changes
+  dbService.listenToCategoryChanges((updatedCategories) => {
+    console.log('🔄 Admin: Categories updated in real-time:', updatedCategories.length, 'categories');
+    state.categories = updatedCategories.sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (state.currentSection === 'menu') {
+      renderCategoryFilters();
+    }
+  });
 }
 
 // ==================== EVENT LISTENERS ====================
