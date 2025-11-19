@@ -1,6 +1,10 @@
 {
-  "buildCommand": "echo 'No build needed for static site'",
-  "outputDirectory": "public",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/public/$1"
+    }
+  ],
   "cleanUrls": true,
   "headers": [
     {
@@ -25,7 +29,7 @@
       ]
     },
     {
-      "source": "/(.*)",
+      "source": "/public/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
