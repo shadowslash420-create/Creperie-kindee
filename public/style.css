@@ -1304,27 +1304,51 @@ html{
 .footer-links{
   display:flex;
   flex-direction:column;
-  gap:20px;
+  gap:16px;
   margin-bottom:40px;
+  align-items:center;
 }
 
 .footer-links a{
   color:#fff;
   text-decoration:none;
-  font-size:16px;
+  font-size:15px;
   transition:all 0.3s;
-  font-weight:400;
-  letter-spacing:1px;
+  font-weight:500;
+  letter-spacing:0.5px;
+  padding:8px 16px;
+  border-radius:6px;
+  background:rgba(255,255,255,0.1);
+  display:inline-block;
+  min-width:160px;
+  text-align:center;
 }
 
 .footer-links a:hover{
-  color:var(--warm-gold);
+  background:rgba(212,165,116,0.3);
+  color:#fff;
+  transform:translateX(4px);
 }
 
 .footer-links a.active-page{
-  color:var(--warm-gold);
+  background:rgba(212,165,116,0.4);
+  color:#fff;
   font-weight:700;
-  text-decoration:underline;
+  border-left:3px solid #d4a574;
+}
+
+@media(min-width:768px){
+  .footer-links{
+    flex-direction:row;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:12px;
+  }
+  
+  .footer-links a{
+    min-width:auto;
+    padding:10px 20px;
+  }
 }
 
 .footer-connect{
