@@ -258,11 +258,21 @@
               <div id="image-upload-area" style="border: 2px dashed #cbd5e0; border-radius: 8px; padding: 32px; text-align: center; transition: all 0.2s; background: #f7fafc;">
                 <div id="upload-placeholder">
                   <div style="font-size: 48px; margin-bottom: 12px;">📸</div>
-                  <p style="color: #4a5568; font-weight: 500; margin-bottom: 12px;">Upload to ImgBB</p>
-                  <button type="button" onclick="openImgBBUpload();" style="padding: 12px 24px; background: linear-gradient(135deg, #FF6B35, #FF8C42); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
-                    🌐 Open ImgBB
-                  </button>
-                  <p style="color: #718096; font-size: 13px; margin-top: 12px;">Upload your image on ImgBB, then paste the link below</p>
+                  <p style="color: #4a5568; font-weight: 500; margin-bottom: 16px;">Upload Image</p>
+                  
+                  <!-- Hidden file input -->
+                  <input type="file" id="image-file-input" accept="image/*" style="display: none;" onchange="handleFileSelect(event)" />
+                  
+                  <!-- Upload Buttons -->
+                  <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 12px;">
+                    <button type="button" onclick="document.getElementById('image-file-input').click();" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                      📁 Choose Image
+                    </button>
+                    <button type="button" onclick="openImgBBUpload();" style="padding: 12px 24px; background: linear-gradient(135deg, #FF6B35, #FF8C42); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                      🌐 Open ImgBB
+                    </button>
+                  </div>
+                  <p style="color: #718096; font-size: 13px; margin-bottom: 16px;">Click "Choose Image" to upload automatically, or use ImgBB manually</p>
                   
                   <!-- Link Input Field - Always Visible -->
                   <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #cbd5e0;">
