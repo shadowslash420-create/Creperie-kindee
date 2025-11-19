@@ -702,21 +702,11 @@ function resetImageUpload() {
 
   document.getElementById('upload-placeholder').innerHTML = `
     <div style="font-size: 48px; margin-bottom: 12px;">📸</div>
-    <p style="color: #4a5568; font-weight: 500; margin-bottom: 16px;">Upload Image</p>
-    
-    <!-- Hidden file input -->
-    <input type="file" id="image-file-input" accept="image/*" style="display: none;" onchange="handleFileSelect(event)" />
-    
-    <!-- Upload Buttons -->
-    <div style="display: flex; gap: 12px; justify-content: center; margin-bottom: 12px;">
-      <button type="button" onclick="document.getElementById('image-file-input').click();" style="padding: 12px 24px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
-        📁 Choose Image
-      </button>
-      <button type="button" onclick="openImgBBUpload();" style="padding: 12px 24px; background: linear-gradient(135deg, #FF6B35, #FF8C42); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
-        🌐 Open ImgBB
-      </button>
-    </div>
-    <p style="color: #718096; font-size: 13px; margin-bottom: 16px;">Click "Choose Image" to upload automatically, or use ImgBB manually</p>
+    <p style="color: #4a5568; font-weight: 500; margin-bottom: 12px;">Upload to ImgBB</p>
+    <button onclick="event.stopPropagation(); openImgBBUpload();" style="padding: 12px 24px; background: linear-gradient(135deg, #FF6B35, #FF8C42); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+      🌐 Open ImgBB
+    </button>
+    <p style="color: #718096; font-size: 13px; margin-top: 12px;">Upload your image on ImgBB, then paste the link below</p>
     
     <!-- Link Input Field - Always Visible -->
     <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #cbd5e0;">
@@ -734,122 +724,6 @@ function resetImageUpload() {
 
 function clearImage() {
   resetImageUpload();
-}
-
-// ==================== AUTOMATIC IMAGE UPLOAD ====================
-
-async function handleFileSelect(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  // Validate file type
-  if (!file.type.startsWith('image/')) {
-    alert('❌ Please select an image file');
-    return;
-  }
-  
-  // Validate file size (max 32MB for ImgBB)
-  const maxSize = 32 * 1024 * 1024;
-  if (file.size > maxSize) {
-    alert('❌ Image too large. Maximum size is 32MB');
-    return;
-  }
-  
-  console.log('📤 Uploading image:', file.name, `(${(file.size / 1024).toFixed(2)} KB)`);
-  
-  try {
-    // Show uploading state
-    showUploadingState();
-    
-    // Convert to base64
-    const base64 = await fileToBase64(file);
-    
-    // Upload to server
-    const url = await uploadImageToImgBB(base64, file.name);
-    
-    // Set the uploaded URL
-    state.uploadedImageUrl = url;
-    
-    // Show preview
-    document.getElementById('upload-placeholder').style.display = 'none';
-    document.getElementById('image-url-input-container').style.display = 'none';
-    document.getElementById('image-preview-container').style.display = 'block';
-    document.getElementById('image-preview-img').src = url;
-    document.getElementById('image-upload-area').style.borderColor = '#48bb78';
-    
-    // Update URL input fields
-    const visibleInput = document.getElementById('item-image-url');
-    const hiddenInput = document.getElementById('image-url-input');
-    if (visibleInput) visibleInput.value = url;
-    if (hiddenInput) hiddenInput.value = url;
-    
-    console.log('✅ Image uploaded successfully:', url);
-  } catch (error) {
-    console.error('❌ Upload failed:', error);
-    alert('❌ Upload failed: ' + error.message);
-    resetImageUpload();
-  }
-  
-  // Reset file input
-  event.target.value = '';
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      // Remove data URL prefix (data:image/png;base64,)
-      const base64 = reader.result.split(',')[1];
-      resolve(base64);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-async function uploadImageToImgBB(base64Image, filename) {
-  const response = await fetch('/api/upload-image', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: new URLSearchParams({
-      image: base64Image,
-      folder: 'menu',
-      filename: filename.replace(/\.[^/.]+$/, '')
-    })
-  });
-  
-  const result = await response.json();
-  
-  if (!result.success) {
-    throw new Error(result.error || 'Upload failed');
-  }
-  
-  return result.url;
-}
-
-function showUploadingState() {
-  const uploadArea = document.getElementById('image-upload-area');
-  const placeholder = document.getElementById('upload-placeholder');
-  
-  uploadArea.style.borderColor = '#667eea';
-  placeholder.innerHTML = `
-    <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
-    <p style="color: #667eea; font-weight: 600; font-size: 16px; margin-bottom: 8px;">Uploading to ImgBB...</p>
-    <p style="color: #718096; font-size: 14px;">Please wait while we upload your image</p>
-    <div style="margin-top: 16px;">
-      <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-        <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); animation: progressBar 1.5s ease-in-out infinite;"></div>
-      </div>
-    </div>
-    <style>
-      @keyframes progressBar {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-      }
-    </style>
-  `;
 }
 
 // ==================== ANALYTICS SECTION ====================
@@ -968,7 +842,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.deleteCategory = deleteCategory;
   window.openImgBBUpload = openImgBBUpload;
   window.handleImageUrlInput = handleImageUrlInput;
-  window.handleFileSelect = handleFileSelect;
 });
 
 // ==================== CATEGORY MANAGEMENT ====================

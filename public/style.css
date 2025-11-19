@@ -242,7 +242,7 @@ html{
 .home-hero{
   position:relative;
   min-height:85vh;
-  background:#3b2414 url('https://i.ibb.co/nMgc0KB7/Kinder-Kinderino-GIF-Kinder-Kinderino-Relax-Discover-Share-GIFs.gif') center center / cover no-repeat;
+  background:#3b2414;
   display:flex;
   align-items:center;
   justify-content:center;
