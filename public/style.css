@@ -242,7 +242,9 @@ html{
 .home-hero{
   position:relative;
   min-height:85vh;
-  background:#3b2414;
+  background:
+    linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
+    url('https://i.ibb.co/nMgc0KB7/Kinder-Kinderino-GIF-Kinder-Kinderino-Relax-Discover-Share-GIFs.gif') center/cover no-repeat;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -258,8 +260,8 @@ html{
   right:0;
   bottom:0;
   background:
-    radial-gradient(circle at 20% 50%, rgba(201,160,80,0.15) 0%, transparent 60%),
-    radial-gradient(circle at 80% 80%, rgba(166,124,0,0.1) 0%, transparent 50%);
+    radial-gradient(circle at 20% 50%, rgba(201,160,80,0.1) 0%, transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(166,124,0,0.08) 0%, transparent 50%);
   pointer-events:none;
 }
 
