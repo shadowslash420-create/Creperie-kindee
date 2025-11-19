@@ -3,6 +3,7 @@
 
 import { getAuthInstance } from './firebase-config.js';
 import {signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import dbService from './db-service.js';
 
 // ==================== STATE MANAGEMENT ====================
 const state = {
@@ -919,9 +920,13 @@ async function loadCategories() {
     state.categories = categories;
     return categories;
   } catch (error) {
-    console.error('Failed to load categories:', error);
+    console.error('Failed to load categories from Firebase:', error);
     // Fallback to extracting from menu items
-    loadCategories();
+    const uniqueCategories = [...new Set(state.menuItems.map(item => item.category))];
+    state.categories = uniqueCategories.map(cat => ({
+      id: cat,
+      name: cat.charAt(0).toUpperCase() + cat.slice(1)
+    }));
     return state.categories;
   }
 }
