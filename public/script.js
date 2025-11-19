@@ -252,7 +252,7 @@ function getCurrentLang(){
 function setLanguage(lang){
   localStorage.setItem(LANG_KEY, lang);
   document.documentElement.lang = lang;
-  document.body.dir = 'ltr';
+  document.body.dir = 'ltr'; // Default to LTR, Arabic will override if needed via CSS or explicit direction setting
 }
 
 function toggleLanguage(){
@@ -260,8 +260,11 @@ function toggleLanguage(){
   const newLang = currentLang === 'ar' ? 'en' : 'ar';
   setLanguage(newLang);
   applyTranslations();
-  renderCart();
-  updatePageIndicator();
+  updateCart(); // Re-render cart to update language-specific elements if any
+  updatePageIndicator(); // Update page indicator if it uses language
+  // Re-render menu to update category names/descriptions if they are translated
+  renderMenu(); 
+  renderCategoryTabs(); // Update tab buttons too
 }
 
 function applyTranslations(){
@@ -269,15 +272,17 @@ function applyTranslations(){
   const t = translations[lang];
 
   const langBtn = document.getElementById('lang-btn');
-  if(langBtn) langBtn.textContent = lang === 'ar' ? 'EN' : 'ع';
+  if(langBtn) langBtn.textContent = lang === 'ar' ? 'EN' : 'AR'; // Changed to AR for Arabic
 
   const subtitle = document.getElementById('subtitle');
   if(subtitle) subtitle.textContent = t.subtitle;
 
   // Only translate hero-title on menu.html, not on index.html
   const heroTitle = document.getElementById('hero-title');
-  if(heroTitle && !document.querySelector('.home-hero')) heroTitle.textContent = t.heroTitle;
+  // Assuming .home-hero class is present on index.html's hero section
+  if(heroTitle && !document.querySelector('.home-hero')) heroTitle.textContent = t.heroTitle; 
 
+  // Update tab buttons (these will be re-rendered by renderCategoryTabs anyway, but good for immediate feedback if needed)
   const tabSweet = document.getElementById('tab-sweet');
   if(tabSweet) tabSweet.textContent = t.tabSweet;
 
@@ -290,6 +295,7 @@ function applyTranslations(){
   const tabDrinks = document.getElementById('tab-drinks');
   if(tabDrinks) tabDrinks.textContent = t.tabDrinks;
 
+  // Update category titles and descriptions IF they are not dynamically rendered by new menu logic
   const titleSweet = document.getElementById('title-sweet');
   if(titleSweet) titleSweet.textContent = t.titleSweet;
 
@@ -513,349 +519,431 @@ function applyTranslations(){
 
 }
 
-// default menu with proper categories
-const defaultMenu = [
-  {id:'c1', name:'Kinder Nutella Crepe', desc:'Nutella, banana, whipped cream', price:5.5, img:'images/crepe1.svg', category:'sweet'},
-  {id:'c2', name:'Strawberry Kinder', desc:'Fresh strawberries & Kinder flakes', price:6.0, img:'images/crepe2.svg', category:'sweet'},
-  {id:'c4', name:'Banoffee Delight', desc:'Banana, caramel, Kinder pieces', price:6.8, img:'images/crepe4.svg', category:'sweet'},
-  {id:'c6', name:'Vegan Berry', desc:'Mixed berries, vegan cream', price:6.2, img:'images/crepe5.svg', category:'sweet'},
-  {id:'c3', name:'Ham & Cheese', desc:'Savory ham, melted cheese', price:6.5, img:'images/crepe3.svg', category:'savory'},
-  {id:'c7', name:'Chicken Alfredo', desc:'Grilled chicken, creamy sauce', price:7.5, img:'images/crepe3.svg', category:'savory'},
-  {id:'c8', name:'Kids Ham Special', desc:'Ham & cheese for kids', price:4.5, img:'images/crepe3.svg', category:'kids'},
-  {id:'c9', name:'Kids Nutella', desc:'Simple Nutella crepe', price:4.0, img:'images/crepe1.svg', category:'kids'},
-  {id:'c5', name:'Hot Chocolate', desc:'Creamy hot chocolate', price:3.5, img:'images/drink1.svg', category:'drinks'},
-  {id:'c10', name:'Fresh Orange Juice', desc:'Freshly squeezed orange juice', price:3.0, img:'images/drink1.svg', category:'drinks'}
-];
-
-// init menu in localStorage if not present
-if(!localStorage.getItem(MENU_KEY)){
-  localStorage.setItem(MENU_KEY, JSON.stringify(defaultMenu));
-}
+/* ====== NEW MENU LOGIC ====== */
+// Assuming dbService is available globally or imported elsewhere if this were a module
+// For this single file, we'll assume dbService is defined globally or in a preceding script.
+// If not, this would need to be adapted.
+// For example: const dbService = window.dbService || {}; 
 
 // Use Firebase Firestore for menu data (with fallback to server API)
-async function getMenu(){ 
-  try {
-    if (window.FirebaseCustomer) {
-      const menu = await window.FirebaseCustomer.getMenu();
-      localStorage.setItem(MENU_KEY, JSON.stringify(menu));
-      return menu;
-    }
-  } catch(error) {
-    console.log('Firebase not available, falling back to server API');
+// This section replaces the old getMenu and saveMenu functions.
+
+// --- State Management ---
+const state = {
+  currentLang: getCurrentLang(), // Initialize from localStorage
+  currentTab: 'sweet',
+  cart: [],
+  menuItems: [],
+  categories: []
+};
+
+// --- Translations (Menu specific, integrated into the main translations object) ---
+// NOTE: The original translations object is kept. New menu-specific ones are added below for clarity.
+// Existing translations for menu page elements will be used by applyTranslations.
+// This new object is for dynamic rendering of menu items and categories within the new renderMenu function.
+const menuTranslations = {
+  ar: {
+    categories: {
+      sweet: 'كريب حلو',
+      savory: 'كريب مالح',
+      kids: 'كريب الأطفال',
+      drinks: 'مشروبات'
+    },
+    categoryDesc: {
+      sweet: 'كريب حلو محضر بعناية مع مكونات طازجة',
+      savory: 'كريب مالح مع حشوات شهية',
+      kids: 'كريب خاص للأطفال',
+      drinks: 'مشروبات ساخنة وباردة'
+    },
+    addToCart: 'أضف للسلة',
+    emptyCategoryMsg: 'لا توجد عناصر في هذه الفئة',
+    addedToCartToast: 'تمت الإضافة للسلة'
+  },
+  en: {
+    categories: {
+      sweet: 'Sweet Crêpes',
+      savory: 'Savory Crêpes',
+      kids: 'Kids Crêpes',
+      drinks: 'Drinks'
+    },
+    categoryDesc: {
+      sweet: 'Delicious sweet crepes with fresh ingredients',
+      savory: 'Savory crepes with tasty fillings',
+      kids: 'Special crepes for kids',
+      drinks: 'Hot and cold beverages'
+    },
+    addToCart: 'Add to Cart',
+    emptyCategoryMsg: 'No items in this category',
+    addedToCartToast: 'Added to cart'
   }
-  
+};
+
+// --- Initialization ---
+async function initMenu() {
   try {
-    const response = await fetch('/api/menu');
-    const menu = await response.json();
-    localStorage.setItem(MENU_KEY, JSON.stringify(menu));
-    return menu;
-  } catch(error) {
-    return JSON.parse(localStorage.getItem(MENU_KEY) || JSON.stringify(defaultMenu));
+    console.log('🔄 Loading menu from Firebase...');
+
+    // Load categories first
+    await loadCategories();
+
+    // Load menu items
+    await loadMenuItems();
+
+    // Setup real-time listeners
+    setupRealtimeListeners();
+
+    // Load cart from localStorage
+    loadCart();
+
+    // Render initial view
+    renderMenu();
+    updateCart(); // Render cart contents
+
+    console.log('✅ Menu loaded successfully');
+  } catch (error) {
+    console.error('❌ Failed to load menu:', error);
+    // Fallback to empty state if Firebase/DB fails
+    state.menuItems = [];
+    state.categories = [];
+    renderMenu();
   }
 }
 
-async function saveMenu(m){ 
-  localStorage.setItem(MENU_KEY, JSON.stringify(m));
+// --- Data Loading ---
+async function loadCategories() {
   try {
-    await fetch('/api/menu', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(m)
+    // Assuming dbService has a method to fetch all categories
+    // If dbService is not available, this will throw an error.
+    const categories = await dbService.getAllCategories(); 
+    state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0)); // Sort by order
+
+    // Update tab navigation UI
+    renderCategoryTabs();
+  } catch (error) {
+    console.error('Failed to load categories from DB:', error);
+    // Use default categories as fallback
+    state.categories = [
+      { id: 'sweet', name: 'Sweet Crêpes', order: 0 },
+      { id: 'savory', name: 'Savory Crêpes', order: 1 },
+      { id: 'kids', name: 'Kids Crêpes', order: 2 },
+      { id: 'drinks', name: 'Drinks', order: 3 }
+    ];
+    renderCategoryTabs(); // Render with default categories
+  }
+}
+
+async function loadMenuItems() {
+  try {
+    // Assuming dbService has a method to fetch all menu items
+    const items = await dbService.getAllMenuItems();
+    state.menuItems = items;
+  } catch (error) {
+    console.error('Failed to load menu items from DB:', error);
+    state.menuItems = []; // Fallback to empty array
+  }
+}
+
+// --- Real-Time Sync ---
+function setupRealtimeListeners() {
+  // Listen to menu item changes
+  if (typeof dbService.listenToMenuChanges === 'function') {
+    dbService.listenToMenuChanges((items) => {
+      console.log('📡 Menu updated in real-time:', items.length, 'items');
+      state.menuItems = items;
+      renderMenu(); // Re-render the menu view
     });
-  } catch(error) {
-    console.error('Failed to sync menu to server:', error);
+  } else {
+    console.warn('dbService.listenToMenuChanges not available. Real-time menu updates disabled.');
+  }
+
+  // Listen to category changes
+  if (typeof dbService.listenToCategoryChanges === 'function') {
+    dbService.listenToCategoryChanges((categories) => {
+      console.log('📡 Categories updated in real-time:', categories.length, 'categories');
+      state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+      renderCategoryTabs(); // Update tab navigation
+      renderMenu(); // Re-render menu in case category order/visibility changed
+    });
+  } else {
+    console.warn('dbService.listenToCategoryChanges not available. Real-time category updates disabled.');
   }
 }
 
-function getCart(){ return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); }
-function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); renderCart(); }
+// --- Category Tabs ---
+function renderCategoryTabs() {
+  const tabNav = document.getElementById('tab-nav'); // Assuming a div with id="tab-nav" exists
+  if (!tabNav) return;
 
-function getOrders(){ return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); }
-function saveOrders(o){ localStorage.setItem(ORDERS_KEY, JSON.stringify(o)); }
+  // Sort categories by order before rendering
+  const sortedCategories = [...state.categories].sort((a, b) => (a.order || 0) - (b.order || 0));
 
-/* ====== UI Functions ====== */
+  const html = sortedCategories.map(cat => {
+    // Use translated name if available, otherwise use the category name
+    const categoryName = state.currentLang === 'ar' 
+      ? (menuTranslations.ar.categories[cat.id] || cat.name)
+      : (menuTranslations.en.categories[cat.id] || cat.name);
 
-function toggleCart(){
-  const cartSide = document.getElementById('cart-side');
-  const navMenu = document.getElementById('nav-menu');
-  const overlay = document.getElementById('menu-overlay');
-  
-  if(cartSide){
-    const isOpen = cartSide.classList.contains('open');
-    
-    // Close nav menu if open
-    if(navMenu && navMenu.classList.contains('open')){
-      navMenu.classList.remove('open');
-      if(overlay) overlay.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-    
-    // Toggle cart
-    if(isOpen){
-      cartSide.classList.remove('open');
-      if(overlay) overlay.classList.remove('active');
-      document.body.style.overflow = '';
-    } else {
-      cartSide.classList.add('open');
-      if(overlay) overlay.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-  }
+    return `
+      <button class="tab-btn ${state.currentTab === cat.id ? 'active' : ''}" 
+        onclick="switchTab('${cat.id}')" id="tab-${cat.id}">
+        ${categoryName}
+      </button>
+    `;
+  }).join('');
+
+  tabNav.innerHTML = html;
 }
 
-function toggleMenu(){
-  const navMenu = document.getElementById('nav-menu');
-  const cartSide = document.getElementById('cart-side');
-  const overlay = document.getElementById('menu-overlay');
-  
-  if(navMenu && overlay){
-    const isOpen = navMenu.classList.contains('open');
-    
-    // Close cart if open
-    if(cartSide && cartSide.classList.contains('open')){
-      cartSide.classList.remove('open');
+// --- Menu Rendering ---
+function renderMenu() {
+  const container = document.querySelector('.menu-container'); // Assuming a container for menu sections
+  if (!container) return;
+
+  // Hide all sections first, then show the active one
+  document.querySelectorAll('.section').forEach(section => {
+    section.classList.add('hidden');
+  });
+
+  // Group items by category
+  const itemsByCategory = {};
+  state.menuItems.forEach(item => {
+    if (!itemsByCategory[item.category]) {
+      itemsByCategory[item.category] = [];
     }
-    
-    // Toggle menu
-    if(isOpen){
-      navMenu.classList.remove('open');
-      overlay.classList.remove('active');
-      document.body.style.overflow = '';
-    } else {
-      navMenu.classList.add('open');
-      overlay.classList.add('active');
-      document.body.style.overflow = 'hidden';
+    itemsByCategory[item.category].push(item);
+  });
+
+  // Render each category section
+  state.categories.forEach(category => {
+    const sectionId = `section-${category.id}`;
+    let section = document.getElementById(sectionId);
+
+    // Create section element if it doesn't exist
+    if (!section) {
+      section = document.createElement('section');
+      section.id = sectionId;
+      section.className = 'section hidden'; // Initially hidden
+      container.appendChild(section);
     }
-  }
+
+    // Get category details and translations
+    const items = itemsByCategory[category.id] || [];
+    const categoryName = state.currentLang === 'ar' 
+      ? (menuTranslations.ar.categories[category.id] || category.name)
+      : (menuTranslations.en.categories[cat.id] || category.name);
+    const categoryDesc = state.currentLang === 'ar'
+      ? (menuTranslations.ar.categoryDesc[category.id] || '')
+      : (menuTranslations.en.categoryDesc[category.id] || '');
+    const emptyMsg = state.currentLang === 'ar' ? menuTranslations.ar.emptyCategoryMsg : menuTranslations.en.emptyCategoryMsg;
+
+    // Generate HTML for the menu items within this category
+    const menuItemsHTML = items.length === 0 ? `
+      <div class="empty-category-message">
+        <div class="empty-icon">🍽️</div>
+        <p>${emptyMsg}</p>
+      </div>
+    ` : items.map(item => `
+      <div class="menu-card">
+        <div class="menu-card-image" style="background-image:url('${item.img || 'images/placeholder.svg'}')"></div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">${item.name}</h3>
+          <p class="menu-card-desc">${item.desc}</p>
+          <div class="menu-card-footer">
+            <span class="menu-card-price">${item.price.toFixed(2)} DZD</span>
+            <button class="menu-card-btn" onclick="addToCart('${item.id}')">
+              ${state.currentLang === 'ar' ? menuTranslations.ar.addToCart : menuTranslations.en.addToCart}
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    // Update section content
+    section.innerHTML = `
+      <h2 class="section-title" id="title-${category.id}">${categoryName}</h2>
+      <div class="section-desc" id="desc-${category.id}">${categoryDesc}</div>
+      <div class="menu-grid" id="menu-${category.id}">
+        ${menuItemsHTML}
+      </div>
+    `;
+
+    // Show the section if it's the currently active tab
+    if (category.id === state.currentTab) {
+      section.classList.remove('hidden');
+    }
+  });
 }
 
-function closeAllSidebars(){
-  const navMenu = document.getElementById('nav-menu');
-  const cartSide = document.getElementById('cart-side');
-  const overlay = document.getElementById('menu-overlay');
-  
-  if(navMenu) navMenu.classList.remove('open');
-  if(cartSide) cartSide.classList.remove('open');
-  if(overlay) overlay.classList.remove('active');
-  document.body.style.overflow = '';
-}
+// --- Tab Switching ---
+function switchTab(categoryId) {
+  state.currentTab = categoryId;
 
-function switchTab(category){
-  // Update tab buttons
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+  // Update active tab button visual state
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  const activeTabBtn = document.getElementById(`tab-${categoryId}`);
+  if (activeTabBtn) activeTabBtn.classList.add('active');
 
   // Show/hide sections
-  const sections = ['sweet', 'savory', 'kids', 'drinks'];
-  sections.forEach(sec => {
-    const section = document.getElementById('section-' + sec);
-    if(section){
-      if(sec === category){
-        section.classList.remove('hidden');
-      } else {
-        section.classList.add('hidden');
-      }
-    }
+  document.querySelectorAll('.section').forEach(section => {
+    section.classList.add('hidden');
   });
+  const targetSection = document.getElementById(`section-${categoryId}`);
+  if (targetSection) targetSection.classList.remove('hidden');
 }
 
-/* ====== Menu Rendering ====== */
+// --- Cart Functions ---
+function addToCart(itemId) {
+  const item = state.menuItems.find(i => i.id === itemId);
+  if (!item) return;
 
-async function renderMenuByCategory(category, containerId){
-  const container = document.getElementById(containerId);
-  if(!container) return;
-  const menu = (await getMenu()).filter(item => item.category === category);
-  container.innerHTML = '';
-
-  menu.forEach(item=>{
-    const card = document.createElement('div');
-    card.className = 'menu-item';
-    card.onclick = () => addToCart(item.id);
-
-    const img = document.createElement('img');
-    img.className = 'menu-item-img';
-    img.src = item.img;
-    img.alt = item.name;
-    img.loading = 'lazy';
-
-    const info = document.createElement('div');
-    info.className = 'menu-item-info';
-
-    const name = document.createElement('div');
-    name.className = 'menu-item-name';
-    name.textContent = item.name;
-
-    const desc = document.createElement('div');
-    desc.className = 'menu-item-desc';
-    desc.textContent = item.desc;
-
-    const price = document.createElement('div');
-    price.className = 'menu-item-price';
-    price.textContent = '$' + Number(item.price).toFixed(2);
-
-    info.appendChild(name);
-    info.appendChild(desc);
-    info.appendChild(price);
-
-    card.appendChild(img);
-    card.appendChild(info);
-    container.appendChild(card);
-  });
-}
-
-async function addToCart(id){
-  const menu = await getMenu();
-  const item = menu.find(m=>m.id===id);
-  if(!item) return;
-  const cart = getCart();
-  const found = cart.find(c=>c.id===id);
-  if(found){
-    found.qty += 1;
+  const existing = state.cart.find(c => c.id === itemId);
+  if (existing) {
+    existing.quantity++;
   } else {
-    cart.push({id:item.id, name:item.name, price:item.price, qty:1});
+    // Ensure item has all necessary properties for cart display if not present in DB item
+    state.cart.push({ 
+      id: item.id, 
+      name: item.name, 
+      price: item.price, 
+      img: item.img, // Include image for cart display
+      quantity: 1 
+    });
   }
-  saveCart(cart);
-  const lang = getCurrentLang();
-  const t = translations[lang];
-  toast(t.addedToCart);
-  toggleCart();
+
+  saveCart();
+  updateCart(); // Update cart UI
+
+  // Visual feedback toast
+  const toastMsg = state.currentLang === 'ar' ? menuTranslations.ar.addedToCartToast : menuTranslations.en.addedToCartToast;
+  showToast(toastMsg);
 }
 
-function renderCart(){
-  const container = document.getElementById('cart-contents');
-  if(!container) return;
-  const cart = getCart();
-  const lang = getCurrentLang();
-  const t = translations[lang];
-  container.innerHTML = '';
+function removeFromCart(itemId) {
+  state.cart = state.cart.filter(item => item.id !== itemId);
+  saveCart();
+  updateCart();
+}
 
-  if(cart.length===0){
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">' + t.emptyCart + '</div>';
-    const totalEl = document.getElementById('cart-total');
-    if(totalEl) totalEl.textContent = '0.00 DZD';
+function updateQuantity(itemId, delta) {
+  const item = state.cart.find(c => c.id === itemId);
+  if (!item) return;
+
+  item.quantity += delta;
+  if (item.quantity <= 0) {
+    removeFromCart(itemId);
+  } else {
+    saveCart();
+    updateCart();
+  }
+}
+
+function updateCart() {
+  const container = document.getElementById('cart-contents'); // Element to render cart items
+  const totalEl = document.getElementById('cart-total');     // Element to display total price
+
+  if (!container || !totalEl) {
+    console.warn('Cart elements not found. Cannot update cart.');
     return;
   }
 
-  cart.forEach(it=>{
-    const div = document.createElement('div');
-    div.className='cart-item';
+  if (state.cart.length === 0) {
+    container.innerHTML = `
+      <div style="padding: 40px 20px; text-align: center; color: #999;">
+        <div style="font-size: 48px; margin-bottom: 16px;">🛒</div>
+        <p>${state.currentLang === 'ar' ? translations.ar.emptyCart : translations.en.emptyCart}</p>
+      </div>
+    `;
+    totalEl.textContent = '0.00 DZD';
+    return;
+  }
 
-    const details = document.createElement('div');
-    details.className = 'cart-item-details';
+  // Calculate total
+  const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    const itemName = document.createElement('div');
-    itemName.className = 'cart-item-name';
-    itemName.textContent = it.name;
+  // Render cart items
+  container.innerHTML = state.cart.map(item => `
+    <div class="cart-item">
+      <img src="${item.img || 'images/placeholder.svg'}" alt="${item.name}" class="cart-item-img">
+      <div class="cart-item-info">
+        <h4>${item.name}</h4>
+        <p>${item.price.toFixed(2)} DZD</p>
+      </div>
+      <div class="cart-item-controls">
+        <button onclick="updateQuantity('${item.id}', -1)">-</button>
+        <span>${item.quantity}</span>
+        <button onclick="updateQuantity('${item.id}', 1)">+</button>
+      </div>
+      <button class="cart-item-remove" onclick="removeFromCart('${item.id}')">×</button>
+    </div>
+  `).join('');
 
-    const itemPrice = document.createElement('div');
-    itemPrice.className = 'cart-item-price';
-    itemPrice.textContent = it.price.toFixed(2) + ' DZD';
+  // Update total display
+  totalEl.textContent = total.toFixed(2) + ' DZD';
+}
 
-    const controls = document.createElement('div');
-    controls.className='qty';
-
-    const minus = document.createElement('button');
-    minus.textContent='-';
-    minus.onclick = ()=> updateQty(it.id, it.qty-1);
-
-    const q = document.createElement('span');
-    q.textContent = it.qty;
-
-    const plus = document.createElement('button');
-    plus.textContent='+';
-    plus.onclick = ()=> updateQty(it.id, it.qty+1);
-
-    const del = document.createElement('button');
-    del.textContent='×';
-    del.onclick = ()=> removeFromCart(it.id);
-    del.style.marginLeft='8px';
-
-    controls.appendChild(minus);
-    controls.appendChild(q);
-    controls.appendChild(plus);
-    controls.appendChild(del);
-
-    details.appendChild(itemName);
-    details.appendChild(itemPrice);
-    details.appendChild(controls);
-
-    div.appendChild(details);
-    container.appendChild(div);
-  });
-
-  const subtotal = cart.reduce((s,i)=>s + i.price * i.qty, 0);
-  const deliveryFee = calculateDeliveryFee(subtotal);
-  const total = subtotal + deliveryFee;
-  const totalEl = document.getElementById('cart-total');
-  if(totalEl) {
-    if(deliveryFee > 0 && subtotal > 0) {
-      totalEl.innerHTML = `<div style="font-size:12px;color:#999;margin-bottom:4px;">Subtotal: ${subtotal.toFixed(2)} DZD</div><div style="font-size:12px;color:#999;margin-bottom:4px;">Delivery: ${deliveryFee.toFixed(2)} DZD</div><div>${total.toFixed(2)} DZD</div>`;
-    } else {
-      totalEl.textContent = total.toFixed(2) + ' DZD';
-    }
+function saveCart() {
+  try {
+    localStorage.setItem(CART_KEY, JSON.stringify(state.cart));
+  } catch (error) {
+    console.error('Failed to save cart to localStorage:', error);
   }
 }
 
-function updateQty(id, qty){
-  let cart = getCart();
-  cart = cart.map(c=> c.id===id ? {...c, qty: Math.max(0, qty)} : c).filter(c=>c.qty>0);
-  saveCart(cart);
+function loadCart() {
+  try {
+    const saved = localStorage.getItem(CART_KEY);
+    if (saved) {
+      state.cart = JSON.parse(saved);
+      // Ensure quantities are valid numbers
+      state.cart.forEach(item => {
+        if (typeof item.quantity !== 'number' || item.quantity < 0) {
+          item.quantity = 0;
+        }
+      });
+      state.cart = state.cart.filter(item => item.quantity > 0); // Remove items with zero quantity
+    }
+  } catch (error) {
+    console.error('Failed to load cart from localStorage:', error);
+    state.cart = []; // Reset cart if parsing fails
+  }
 }
 
-function removeFromCart(id){
-  let cart = getCart();
-  cart = cart.filter(c=>c.id!==id);
-  saveCart(cart);
+// ==================== UI FUNCTIONS ====================
+function toggleCart() {
+  const cartSide = document.getElementById('cart-side');
+  if (cartSide) {
+    cartSide.classList.toggle('active');
+    // Add/remove overlay and body overflow if they exist
+    const overlay = document.getElementById('menu-overlay');
+    if (overlay) overlay.classList.toggle('active');
+    document.body.style.overflow = cartSide.classList.contains('active') ? 'hidden' : '';
+  }
 }
 
-// Constants
-const MIN_ORDER_AMOUNT = 5.0; // Minimum order in DZD
-const FREE_DELIVERY_THRESHOLD = 15.0; // Free delivery over this amount
-const DELIVERY_FEE = 2.0; // Delivery fee in DZD
-
-// Validate Algerian phone number
-function validatePhone(phone){
-  // Remove spaces and special characters
-  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
-  // Check if it matches Algerian format: +213XXXXXXXXX or 0XXXXXXXXX or 213XXXXXXXXX
-  return /^(\+213|213|0)[5-7][0-9]{8}$/.test(cleaned);
-}
-
-// Format phone number
-function formatPhone(phone){
-  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
-  if(cleaned.startsWith('+213')) return cleaned;
-  if(cleaned.startsWith('213')) return '+' + cleaned;
-  if(cleaned.startsWith('0')) return '+213' + cleaned.substring(1);
-  return '+213' + cleaned;
-}
-
-// Calculate delivery fee
-function calculateDeliveryFee(subtotal){
-  return subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-}
-
-// Get saved customer info
-function getSavedCustomerInfo(){
-  const saved = localStorage.getItem('kc_customer_info');
-  return saved ? JSON.parse(saved) : {name: '', phone: '', address: ''};
-}
-
-// Save customer info
-function saveCustomerInfo(name, phone, address){
-  localStorage.setItem('kc_customer_info', JSON.stringify({name, phone, address}));
+function toggleMenu() {
+  const navMenu = document.getElementById('nav-menu');
+  const overlay = document.getElementById('menu-overlay');
+  if (navMenu && overlay) {
+    navMenu.classList.toggle('active');
+    overlay.classList.toggle('active');
+    document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+  }
 }
 
 function checkoutFlow(){
-  const lang = getCurrentLang();
+  const lang = state.currentLang;
   const t = translations[lang];
-  const cart = getCart();
-  if(cart.length===0) return alert(t.emptyCartAlert);
+  const cart = state.cart; // Use state.cart
+
+  if(cart.length === 0) return alert(t.emptyCartAlert || 'Cart is empty!');
   
   // Calculate totals
-  const subtotal = cart.reduce((s,i)=>s + i.price * i.qty, 0);
+  const subtotal = cart.reduce((s,i)=>s + i.price * i.qty, 0); // Assuming cart items have price and qty properties
   
   // Check minimum order
+  const MIN_ORDER_AMOUNT = 5.0; // Minimum order in DZD
   if(subtotal < MIN_ORDER_AMOUNT){
     const minOrderMsg = lang === 'ar' 
       ? `الحد الأدنى للطلب هو ${MIN_ORDER_AMOUNT} دج`
@@ -863,7 +951,9 @@ function checkoutFlow(){
     return alert(minOrderMsg);
   }
   
-  const deliveryFee = calculateDeliveryFee(subtotal);
+  const FREE_DELIVERY_THRESHOLD = 15.0; // Free delivery over this amount
+  const DELIVERY_FEE = 2.0; // Delivery fee in DZD
+  const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const total = subtotal + deliveryFee;
   
   // Get saved customer info
@@ -958,25 +1048,31 @@ function checkoutFlow(){
     // Save customer info
     saveCustomerInfo(name, formattedPhone, address);
     
-    // Create order
+    // Create order object using current cart state
     const order = {
       customerName: name,
       customerPhone: formattedPhone,
       customerAddress: address,
-      items: cart,
+      items: state.cart.map(item => ({ // Map to include only necessary details for order
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity
+      })),
       subtotal,
       deliveryFee,
       total,
       specialInstructions: notes,
-      status:'pending'
+      status:'pending', // Default status
+      createdAt: new Date().toISOString() // Timestamp for the order
     };
     
     // Save to Firebase (with fallback to localStorage)
     placeOrderAsync(order, lang).then(orderId => {
-      saveCart([]);
+      saveCart([]); // Clear cart after successful order placement
       closeCheckoutModal();
-      toggleCart();
-      showOrderConfirmation(orderId, order, lang);
+      toggleCart(); // Close cart UI if open
+      showOrderConfirmation(orderId, order, lang); // Show confirmation modal
     }).catch(error => {
       alert(lang === 'ar' ? 'فشل في إرسال الطلب. حاول مرة أخرى.' : 'Failed to place order. Please try again.');
       console.error('Order placement failed:', error);
@@ -999,7 +1095,7 @@ function showOrderConfirmation(orderId, order, lang){
   };
   
   const itemsList = order.items.map(item => 
-    `${item.qty}x ${item.name} - ${item.price.toFixed(2)} DZD`
+    `${item.quantity}x ${item.name} - ${item.price.toFixed(2)} DZD`
   ).join('\n');
   
   const successTitle = lang === 'ar' ? 'تم إرسال الطلب بنجاح!' : 'Order Placed Successfully!';
@@ -1075,16 +1171,20 @@ function isAdmin(){
 function renderAdminOrders(){
   const list = document.getElementById('orders-list');
   const statsEl = document.getElementById('stats-area');
-  const orders = getOrders().slice().reverse();
+  // Fetch orders from localStorage or wherever they are stored. Assuming getOrders() retrieves them.
+  const orders = getOrders().slice().reverse(); 
   if(!list) return;
   list.innerHTML = '';
   orders.forEach(o=>{
     const el = document.createElement('div');
     el.className='order';
-    el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${o.id}</strong> <div class="text-sm">${o.name} • ${o.phone}</div></div><div><small>${new Date(o.timestamp || o.createdAt).toLocaleString()}</small></div></div>`;
+    // Ensure 'id' and 'name'/'phone' exist, and 'timestamp' or 'createdAt'
+    el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${o.id || 'N/A'}</strong> <div class="text-sm">${o.customerName || o.name} • ${o.customerPhone || o.phone}</div></div><div><small>${new Date(o.createdAt || o.timestamp).toLocaleString()}</small></div></div>`;
     const items = document.createElement('div');
     items.className='text-sm';
-    items.textContent = o.items.map(i=> i.name + ' x' + i.qty).join(', ');
+    // Check if o.items exists and is an array
+    items.textContent = Array.isArray(o.items) ? o.items.map(i=> `${i.name} x${i.quantity || i.qty}`).join(', ') : 'No items';
+    
     const status = document.createElement('div');
     status.style.marginTop='6px';
     const sel = document.createElement('select');
@@ -1093,7 +1193,9 @@ function renderAdminOrders(){
       const opt = document.createElement('option');
       opt.value=key;
       opt.textContent=statusMap[key];
-      if(o.status===key || o.status===statusMap[key]) opt.selected=true;
+      // Normalize status for comparison: current order status vs mapped option value
+      const currentStatusNormalized = o.status ? o.status.toLowerCase() : '';
+      if(currentStatusNormalized === key || currentStatusNormalized === statusMap[key].toLowerCase()) opt.selected=true;
       sel.appendChild(opt);
     });
     sel.onchange = ()=> updateOrderStatus(o.id, sel.value);
@@ -1107,17 +1209,22 @@ function renderAdminOrders(){
     const totalOrders = orders.length;
     const totalSales = orders.reduce((s,o)=>s + (o.total||0),0);
     const byStatus = orders.reduce((acc,o)=> {
-      acc[o.status] = (acc[o.status]||0) +1;
+      const statusKey = o.status ? o.status.toLowerCase() : 'unknown';
+      acc[statusKey] = (acc[statusKey]||0) +1;
       return acc;
     }, {});
     const popular = {};
-    orders.forEach(o=> o.items.forEach(it=> {
-      popular[it.name] = (popular[it.name]||0) + it.qty;
-    }));
+    orders.forEach(o=> {
+      if(Array.isArray(o.items)) {
+        o.items.forEach(it=> {
+          popular[it.name] = (popular[it.name]||0) + (it.quantity || it.qty || 0);
+        });
+      }
+    });
     const top = Object.entries(popular).sort((a,b)=>b[1]-a[1]).slice(0,5);
     statsEl.innerHTML = '<div class="stat-card"><strong>المبيعات الإجمالية</strong><div style="font-size:20px;margin-top:6px">'+ totalSales.toFixed(2) +' DZD</div></div>';
     statsEl.innerHTML += '<div class="stat-card"><strong>عدد الطلبات</strong><div style="font-size:18px;margin-top:6px">'+ totalOrders +'</div></div>';
-    statsEl.innerHTML += '<div class="stat-card"><strong>حسب الحالة</strong><div style="margin-top:6px">Pending: '+(byStatus.pending||byStatus.Pending||0)+' • In Progress: '+(byStatus['in-progress']||byStatus['In Progress']||0)+' • Delivered: '+(byStatus.delivered||byStatus.Delivered||0)+'</div></div>';
+    statsEl.innerHTML += '<div class="stat-card"><strong>حسب الحالة</strong><div style="margin-top:6px">Pending: '+(byStatus.pending||0)+' • In Progress: '+(byStatus['in-progress']||0)+' • Delivered: '+(byStatus.delivered||0)+'</div></div>';
     statsEl.innerHTML += '<div class="stat-card"><strong>الأكثر مبيعًا</strong><ul>' + top.map(t=>'<li>'+t[0]+' — '+t[1]+'</li>').join('') + '</ul></div>';
   }
 }
@@ -1139,13 +1246,13 @@ function checkAdminPage(){
 }
 
 function updateOrderStatus(id, status){
-  const orders = getOrders();
+  const orders = getOrders(); // Assuming this retrieves orders from localStorage
   const o = orders.find(x=> x.id===id);
   if(!o) return;
-  // Normalize status to lowercase
+  // Normalize status to lowercase for consistency
   const statusMap = {'Pending': 'pending', 'In Progress': 'in-progress', 'Delivered': 'delivered'};
-  o.status = statusMap[status] || status.toLowerCase();
-  saveOrders(orders);
+  o.status = statusMap[status] || status.toLowerCase(); // Use mapped status or lowercase original
+  saveOrders(orders); // Assuming this saves orders back to localStorage
   renderAdminOrders();
   toast('تم تحديث حالة الطلب ' + id);
 }
@@ -1158,7 +1265,8 @@ function submitContact(e){
   const msg = document.getElementById('contact-msg').value;
   const lang = getCurrentLang();
   const t = translations[lang];
-  toast(t.contactSuccess.replace('{name}', name));
+  // Assuming contactSuccess message requires name replacement
+  toast(t.contactSuccess.replace('{name}', name)); 
   e.target.reset();
 }
 
@@ -1167,14 +1275,18 @@ function toggleFaq(element){
   const faqItem = element.parentElement;
   const isActive = faqItem.classList.contains('active');
 
+  // Close all other FAQ items first
   document.querySelectorAll('.faq-item').forEach(item => {
     item.classList.remove('active');
-    item.querySelector('.faq-icon').textContent = '+';
+    const icon = item.querySelector('.faq-icon');
+    if(icon) icon.textContent = '+';
   });
 
+  // Toggle the clicked item
   if(!isActive){
     faqItem.classList.add('active');
-    element.querySelector('.faq-icon').textContent = '−';
+    const icon = element.querySelector('.faq-icon');
+    if(icon) icon.textContent = '−';
   }
 }
 
@@ -1187,24 +1299,33 @@ async function submitFeedback(e){
   const lang = getCurrentLang();
   const t = translations[lang];
 
-  const name = document.getElementById('feedback-name').value;
-  const itemId = document.getElementById('feedback-item').value;
-  const rating = parseInt(document.getElementById('feedback-rating').value);
-  const comment = document.getElementById('feedback-comment').value;
+  const nameInput = document.getElementById('feedback-name');
+  const itemIdInput = document.getElementById('feedback-item');
+  const ratingInput = document.getElementById('feedback-rating');
+  const commentInput = document.getElementById('feedback-comment');
+
+  const name = nameInput ? nameInput.value : '';
+  const itemId = itemIdInput ? itemIdInput.value : '';
+  const rating = ratingInput ? parseInt(ratingInput.value) : 0;
+  const comment = commentInput ? commentInput.value : '';
 
   if(!rating){
-    return alert('الرجاء اختيار تقييم');
+    return alert('الرجاء اختيار تقييم'); // "Please select a rating"
+  }
+  if (!itemId) {
+      alert(lang === 'ar' ? 'الرجاء اختيار منتج' : 'Please select a product');
+      return;
   }
 
-  const menu = await getMenu();
-  const item = menu.find(m => m.id === itemId);
+  const menu = await getMenu(); // Use original getMenu for item name lookup if needed, or get from state.menuItems
+  const item = state.menuItems.find(m => m.id === itemId); // Use the new state
 
   const feedback = getFeedback();
   const newFeedback = {
     id: 'FB-' + Date.now(),
     name,
     itemId,
-    itemName: item ? item.name : '',
+    itemName: item ? item.name : '', // Get name from state.menuItems
     rating,
     comment,
     createdAt: new Date().toISOString()
@@ -1213,9 +1334,10 @@ async function submitFeedback(e){
   feedback.push(newFeedback);
   saveFeedback(feedback);
 
-  e.target.reset();
-  document.getElementById('feedback-rating').value = '';
-  document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
+  // Reset form and toast
+  if(e.target) e.target.reset();
+  if(ratingInput) ratingInput.value = '';
+  document.querySelectorAll('.star').forEach(star => star.textContent = '☆'); // Reset stars
 
   toast(t.feedbackSuccess);
   renderFeedbackList();
@@ -1262,7 +1384,8 @@ async function populateFeedbackItems(){
   const select = document.getElementById('feedback-item');
   if(!select) return;
 
-  const menu = await getMenu();
+  // Use the new state.menuItems loaded by initMenu
+  const menu = state.menuItems; 
   const lang = getCurrentLang();
   const t = translations[lang];
 
@@ -1330,7 +1453,10 @@ function highlightActivePage(){
   
   navLinks.forEach(link => {
     const linkPage = link.getAttribute('href');
-    if(linkPage === currentPage || (currentPage === '' && linkPage === 'index.html')){
+    // Handle root path and index.html cases
+    if( (currentPage === '' || currentPage === 'index.html') && (linkPage === '' || linkPage === 'index.html') ) {
+      link.classList.add('active-page');
+    } else if (linkPage === currentPage) {
       link.classList.add('active-page');
     }
   });
@@ -1346,7 +1472,7 @@ function updatePageIndicator(){
   
   const pageNames = {
     'index.html': { ar: 'الرئيسية', en: 'Home' },
-    '': { ar: 'الرئيسية', en: 'Home' },
+    '': { ar: 'الرئيسية', en: 'Home' }, // For root path
     'menu.html': { ar: 'القائمة', en: 'Menu' },
     'about.html': { ar: 'من نحن', en: 'About Us' },
     'my-orders.html': { ar: 'طلباتي', en: 'My Orders' },
@@ -1362,51 +1488,28 @@ function updatePageIndicator(){
     pageIndicator.textContent = pageNames[currentPage][lang];
   }
   
-  // Apply translations to all navigation links
-  const navHomeLinks = document.querySelectorAll('.nav-link-home');
-  navHomeLinks.forEach(link => link.textContent = t.navHome);
-  
-  const navAboutLinks = document.querySelectorAll('.nav-link-about');
-  navAboutLinks.forEach(link => link.textContent = t.navAbout);
-  
-  const navMenuLinks = document.querySelectorAll('.nav-link-menu');
-  navMenuLinks.forEach(link => link.textContent = t.navMenu);
-  
-  const navOrdersLinks = document.querySelectorAll('.nav-link-orders');
-  navOrdersLinks.forEach(link => link.textContent = t.navOrders);
-  
-  const navContactLinks = document.querySelectorAll('.nav-link-contact');
-  navContactLinks.forEach(link => link.textContent = t.navContact);
-  
-  const navAdminLinks = document.querySelectorAll('.nav-link-admin');
-  navAdminLinks.forEach(link => link.textContent = t.navAdmin);
-  
-  const navFaqLinks = document.querySelectorAll('.nav-link-faq');
-  navFaqLinks.forEach(link => link.textContent = t.navFaq);
-  
-  const navFeedbackLinks = document.querySelectorAll('.nav-link-feedback');
-  navFeedbackLinks.forEach(link => link.textContent = t.navFeedback);
-  
-  const navDeliveryLinks = document.querySelectorAll('.nav-link-delivery');
-  navDeliveryLinks.forEach(link => link.textContent = t.navDelivery);
+  // Apply translations to all navigation links (already done in applyTranslations, but good for redundancy if needed)
+  // const navHomeLinks = document.querySelectorAll('.nav-link-home');
+  // navHomeLinks.forEach(link => link.textContent = t.navHome);
+  // ... and so on for other nav links ...
 }
 
 /* Scroll Button Functions */
 function initScrollButton(){
-  // Create scroll button
-  const scrollBtn = document.createElement('button');
-  scrollBtn.className = 'scroll-btn visible';
-  scrollBtn.id = 'scroll-btn';
-  scrollBtn.innerHTML = '↓';
-  scrollBtn.setAttribute('aria-label', 'Scroll to bottom');
-  document.body.appendChild(scrollBtn);
+  // Check if scroll-btn element already exists, if not create it
+  let scrollBtn = document.getElementById('scroll-btn');
+  if (!scrollBtn) {
+    scrollBtn = document.createElement('button');
+    scrollBtn.className = 'scroll-btn'; // Add base class
+    scrollBtn.id = 'scroll-btn';
+    document.body.appendChild(scrollBtn);
+  }
 
-  // Handle scroll
+  // Handle scroll event
   window.addEventListener('scroll', () => {
-    const scrollBtn = document.getElementById('scroll-btn');
-    if(!scrollBtn) return;
-
     const scrolled = window.scrollY;
+    
+    if (!scrollBtn) return; // Exit if button somehow disappeared
 
     // Show button initially, or after scrolling
     if(scrolled === 0){
@@ -1419,6 +1522,9 @@ function initScrollButton(){
       scrollBtn.classList.add('visible');
       scrollBtn.innerHTML = '↑';
       scrollBtn.setAttribute('aria-label', 'Scroll to top');
+    } else {
+      // Scrolled a little but not enough to show up arrow, maybe hide or keep subtle
+      scrollBtn.classList.remove('visible');
     }
   });
 
@@ -1440,7 +1546,22 @@ function initScrollButton(){
       });
     }
   });
+  
+  // Initial check for visibility on load
+  const scrolled = window.scrollY;
+  if (scrolled === 0) {
+    scrollBtn.classList.add('visible');
+    scrollBtn.innerHTML = '↓';
+    scrollBtn.setAttribute('aria-label', 'Scroll to bottom');
+  } else if (scrolled > 50) {
+     scrollBtn.classList.add('visible');
+     scrollBtn.innerHTML = '↑';
+     scrollBtn.setAttribute('aria-label', 'Scroll to top');
+  } else {
+     scrollBtn.classList.remove('visible');
+  }
 }
+
 
 /* Hidden Admin & Delivery Access - Secret Keyboard Shortcuts */
 function initSecretAdminAccess(){
@@ -1485,7 +1606,10 @@ function initSecretAdminAccess(){
   }
 
   // Delivery: 7 rapid taps on "Connect" text
-  const connectText = document.querySelector('.footer-connect');
+  // Find the element with class 'footer-connect' or similar if it exists
+  // Example: const connectText = document.querySelector('.footer-connect'); 
+  // If not found, this part might be skipped or needs adjustment based on actual HTML.
+  const connectText = document.querySelector('.footer-connect'); // Placeholder selector
   if(connectText) {
     let deliveryTapCount = 0;
     let deliveryTapTimer = null;
@@ -1525,45 +1649,29 @@ function initPageLoad(){
 document.addEventListener('DOMContentLoaded', ()=>{
   initPageLoad();
   try {
-    // Set language
-    const lang = getCurrentLang();
-    setLanguage(lang);
-    applyTranslations();
+    // Set language based on localStorage
+    const initialLang = getCurrentLang();
+    setLanguage(initialLang);
+    applyTranslations(); // Apply translations for static elements
 
-    // Update menu if needed
-    getMenu().then(currentMenu => {
-      if(currentMenu.length === 0 || !currentMenu[0].category || currentMenu[0].img.includes('.jpg')){
-        localStorage.setItem(MENU_KEY, JSON.stringify(defaultMenu));
-        saveMenu(defaultMenu);
-      }
-
-      // Render only visible category initially
-      requestAnimationFrame(() => {
-        renderMenuByCategory('sweet', 'menu-sweet');
-        renderCart();
-      });
-      
-      // Lazy load other categories
-      setTimeout(() => {
-        renderMenuByCategory('savory', 'menu-savory');
-        renderMenuByCategory('kids', 'menu-kids');
-        renderMenuByCategory('drinks', 'menu-drinks');
-      }, 100);
+    // Initialize menu loading (Firebase + real-time)
+    initMenu().then(() => {
+      // After menu is loaded and rendered, ensure cart and other UI elements are up-to-date.
+      updateCart(); // Render cart contents based on loaded cart
+      // Highlight active page might depend on menu rendering if nav links are dynamic
+      highlightActivePage(); 
     });
     
-    // Highlight active page
-    highlightActivePage();
-
     // Initialize scroll button
     initScrollButton();
 
     // Initialize secret admin access
     initSecretAdminAccess();
   } catch(error) {
-    console.error('خطأ في تهيئة التطبيق:', error);
+    console.error('Error during DOMContentLoaded initialization:', error);
   }
 
-  // Admin login
+  // Admin login form submission
   const adminForm = document.getElementById('admin-login-form');
   if(adminForm){
     adminForm.addEventListener('submit', e=>{
@@ -1571,40 +1679,132 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const u = document.getElementById('adm-user').value;
       const p = document.getElementById('adm-pass').value;
       if(adminLogin(u,p)){
-        checkAdminPage();
+        checkAdminPage(); // Refresh admin page view
       } else {
-        alert('خطأ في بيانات الدخول');
+        alert('خطأ في بيانات الدخول'); // "Login data error"
       }
     });
   }
 
-  // Admin orders page
+  // Initial check for admin page state
   checkAdminPage();
 
-  // Feedback page
-  populateFeedbackItems();
-  renderFeedbackList();
-  initStarRating();
+  // Feedback page setup
+  // Need to ensure populateFeedbackItems is called after menu items are loaded
+  // So it's better to call it within initMenu's completion or here after ensuring menuItems are loaded.
+  // For now, assuming feedback page might load independently or menu items are already available.
+  populateFeedbackItems(); // Populate dropdown with menu items
+  renderFeedbackList();    // Display existing feedback
+  initStarRating();        // Initialize star rating functionality
 });
-/* Firebase Order Placement */
+
+/* Firebase Order Placement - Replaces the old placeOrderAsync */
 async function placeOrderAsync(order, lang) {
   try {
-    if (window.FirebaseCustomer) {
+    // Check if FirebaseCustomer object and its placeOrder method exist
+    if (window.FirebaseCustomer && typeof window.FirebaseCustomer.placeOrder === 'function') {
+      console.log('Placing order via Firebase...');
       const orderId = await window.FirebaseCustomer.placeOrder(order);
+      console.log('Order placed successfully via Firebase with ID:', orderId);
       return orderId;
+    } else {
+      console.warn('FirebaseCustomer.placeOrder not available. Falling back to localStorage.');
     }
   } catch (error) {
-    console.log('Firebase not available, falling back to localStorage');
+    console.error('Firebase order placement failed:', error);
+    console.log('Falling back to localStorage order placement.');
   }
   
-  const orders = getOrders();
-  const id = 'ORD-' + Date.now();
+  // Fallback to localStorage
+  const orders = getOrders(); // Get existing orders
+  const id = 'ORD-' + Date.now(); // Generate a unique ID
   const localOrder = {
     id,
-    ...order,
-    timestamp: new Date().toISOString()
+    ...order, // Spread the order details
+    createdAt: new Date().toISOString() // Ensure a creation timestamp
   };
   orders.push(localOrder);
-  saveOrders(orders);
+  saveOrders(orders); // Save updated orders list
+  console.log('Order placed successfully via localStorage with ID:', id);
   return id;
+}
+
+/* Helper functions from original file that might still be relevant */
+
+// Get saved customer info (used in checkoutFlow)
+function getSavedCustomerInfo(){
+  const saved = localStorage.getItem('kc_customer_info');
+  return saved ? JSON.parse(saved) : {name: '', phone: '', address: ''};
+}
+
+// Save customer info (used in checkoutFlow)
+function saveCustomerInfo(name, phone, address){
+  localStorage.setItem('kc_customer_info', JSON.stringify({name, phone, address}));
+}
+
+// Validate Algerian phone number (used in checkoutFlow)
+function validatePhone(phone){
+  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  return /^(\+213|213|0)[5-7][0-9]{8}$/.test(cleaned);
+}
+
+// Format phone number (used in checkoutFlow)
+function formatPhone(phone){
+  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  if(cleaned.startsWith('+213')) return cleaned;
+  if(cleaned.startsWith('213')) return '+' + cleaned;
+  if(cleaned.startsWith('0')) return '+213' + cleaned.substring(1);
+  return '+213' + cleaned;
+}
+
+// Get orders from localStorage (used in admin panel and checkout fallback)
+function getOrders(){ return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); }
+// Save orders to localStorage (used in admin panel and checkout fallback)
+function saveOrders(o){ localStorage.setItem(ORDERS_KEY, JSON.stringify(o)); }
+
+// Dummy functions for dbService if it's not globally available
+// In a real scenario, dbService would be imported or defined elsewhere.
+// For this standalone file, we provide minimal stubs if they are missing.
+if (typeof dbService === 'undefined') {
+    console.warn('dbService is not defined. Using mock implementations.');
+    window.dbService = {
+        getAllCategories: async () => {
+            console.log('Mock: Fetching categories...');
+            // Return some default categories if Firebase is unavailable
+            return Promise.resolve([
+                { id: 'sweet', name: 'Sweet Crêpes', order: 0 },
+                { id: 'savory', name: 'Savory Crêpes', order: 1 },
+                { id: 'kids', name: 'Kids Crêpes', order: 2 },
+                { id: 'drinks', name: 'Drinks', order: 3 }
+            ]);
+        },
+        getAllMenuItems: async () => {
+            console.log('Mock: Fetching menu items...');
+            // Return some default menu items if Firebase is unavailable
+            return Promise.resolve([
+              {id:'c1', name:'Kinder Nutella Crepe', desc:'Nutella, banana, whipped cream', price:5.5, img:'images/crepe1.svg', category:'sweet'},
+              {id:'c2', name:'Strawberry Kinder', desc:'Fresh strawberries & Kinder flakes', price:6.0, img:'images/crepe2.svg', category:'sweet'},
+              {id:'c4', name:'Banoffee Delight', desc:'Banana, caramel, Kinder pieces', price:6.8, img:'images/crepe4.svg', category:'sweet'},
+              {id:'c6', name:'Vegan Berry', desc:'Mixed berries, vegan cream', price:6.2, img:'images/crepe5.svg', category:'sweet'},
+              {id:'c3', name:'Ham & Cheese', desc:'Savory ham, melted cheese', price:6.5, img:'images/crepe3.svg', category:'savory'},
+              {id:'c7', name:'Chicken Alfredo', desc:'Grilled chicken, creamy sauce', price:7.5, img:'images/crepe3.svg', category:'savory'},
+              {id:'c8', name:'Kids Ham Special', desc:'Ham & cheese for kids', price:4.5, img:'images/crepe3.svg', category:'kids'},
+              {id:'c9', name:'Kids Nutella', desc:'Simple Nutella crepe', price:4.0, img:'images/crepe1.svg', category:'kids'},
+              {id:'c5', name:'Hot Chocolate', desc:'Creamy hot chocolate', price:3.5, img:'images/drink1.svg', category:'drinks'},
+              {id:'c10', name:'Fresh Orange Juice', desc:'Freshly squeezed orange juice', price:3.0, img:'images/drink1.svg', category:'drinks'}
+            ]);
+        },
+        listenToMenuChanges: () => { console.log('Mock: Listening to menu changes (no-op)'); },
+        listenToCategoryChanges: () => { console.log('Mock: Listening to category changes (no-op)'); }
+    };
+}
+
+// Dummy FirebaseCustomer for checkout fallback if window.FirebaseCustomer is not defined
+if (typeof window.FirebaseCustomer === 'undefined') {
+    window.FirebaseCustomer = {
+        placeOrder: async (order) => {
+            console.log('Mock: FirebaseCustomer.placeOrder called. Order:', order);
+            return Promise.resolve('MOCK_ORD_ID_' + Date.now());
+        }
+    };
 }
