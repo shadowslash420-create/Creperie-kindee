@@ -51,7 +51,10 @@ const translations = {
     navOrders: 'طلباتي',
     navContact: 'تواصل معنا',
     navAdmin: 'لوحة الإدارة',
-    footerConnect: 'Connect',
+    navFaq: 'الأسئلة الشائعة',
+    navFeedback: 'التقييمات',
+    navDelivery: 'التوصيل',
+    footerConnect: 'تواصل',
     footerCopyright: '© Creperie Kinder — طعم ممتع لعائلتك',
 
     // Menu page
@@ -165,6 +168,9 @@ const translations = {
     navOrders: 'My Orders',
     navContact: 'Contact Us',
     navAdmin: 'Admin Panel',
+    navFaq: 'FAQ',
+    navFeedback: 'Reviews',
+    navDelivery: 'Delivery',
     footerConnect: 'Connect',
     footerCopyright: '© Creperie Kinder — Delicious taste for your family',
 
@@ -473,6 +479,7 @@ function applyTranslations(){
   const adminLogoutBtn = document.getElementById('admin-logout-btn');
   if (adminLogoutBtn) adminLogoutBtn.textContent = t.adminLogoutBtn;
 
+  // Translate all navigation links
   const navHomeLinks = document.querySelectorAll('.nav-link-home');
   navHomeLinks.forEach(link => link.textContent = t.navHome);
 
@@ -481,6 +488,9 @@ function applyTranslations(){
 
   const navMenuLinks = document.querySelectorAll('.nav-link-menu');
   navMenuLinks.forEach(link => link.textContent = t.navMenu);
+
+  const navOrdersLinks = document.querySelectorAll('.nav-link-orders');
+  navOrdersLinks.forEach(link => link.textContent = t.navOrders);
 
   const navContactLinks = document.querySelectorAll('.nav-link-contact');
   navContactLinks.forEach(link => link.textContent = t.navContact);
@@ -496,6 +506,10 @@ function applyTranslations(){
 
   const navDeliveryLinks = document.querySelectorAll('.nav-link-delivery');
   navDeliveryLinks.forEach(link => link.textContent = t.navDelivery);
+
+  // Translate footer connect text
+  const footerConnectElements = document.querySelectorAll('.footer-connect');
+  footerConnectElements.forEach(el => el.textContent = t.footerConnect);
 }
 
 // Menu translations
