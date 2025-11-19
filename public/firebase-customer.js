@@ -5,15 +5,21 @@ let menuListener = null;
 
 export async function getMenuFromFirebase() {
   try {
+    console.log('🔍 firebase-customer.js: Fetching menu from dbService...');
+    
     if (menuCache) {
+      console.log('📦 Returning cached menu:', menuCache.length, 'items');
       return menuCache;
     }
     
     const menu = await dbService.getAllMenuItems();
+    console.log('✅ Menu fetched from Firestore:', menu.length, 'items');
     menuCache = menu;
     
     if (!menuListener) {
+      console.log('👂 Setting up real-time menu listener...');
       menuListener = dbService.listenToMenuChanges((updatedMenu) => {
+        console.log('🔄 Menu updated in real-time:', updatedMenu.length, 'items');
         menuCache = updatedMenu;
         window.dispatchEvent(new CustomEvent('menuUpdated', { detail: updatedMenu }));
       });
@@ -21,9 +27,9 @@ export async function getMenuFromFirebase() {
     
     return menu;
   } catch (error) {
-    console.error('Failed to load menu from Firebase:', error);
-    const fallback = await fetch('/api/menu').then(r => r.json()).catch(() => []);
-    return fallback;
+    console.error('❌ Failed to load menu from Firebase:', error);
+    // Return empty array instead of trying API fallback
+    return [];
   }
 }
 

@@ -6,8 +6,8 @@ const LANG_KEY = 'kc_lang';
 const FEEDBACK_KEY = 'kc_feedback';
 
 // Import Firebase services
-import dbService from './db-service.js';
 import { getMenuFromFirebase, placeOrderToFirebase, listenToMenuUpdates } from './firebase-customer.js';
+import dbService from './db-service.js';
 
 // Translations
 const translations = {
@@ -494,26 +494,15 @@ async function initMenu() {
     await loadMenuItemsFromFirebase();
     setupRealtimeListeners();
     loadCart();
+    renderCategoryTabs();
     renderMenu();
     updateCart();
 
     console.log('✅ Menu loaded successfully from Firestore');
   } catch (error) {
     console.error('❌ Failed to load menu from Firebase:', error);
+    // Initialize with default empty state
     state.menuItems = [];
-    state.categories = [];
-    renderMenu();
-  }
-}
-
-// Load categories from Firebase
-async function loadCategoriesFromFirebase() {
-  try {
-    const categories = await dbService.getAllCategories();
-    state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-    renderCategoryTabs();
-  } catch (error) {
-    console.error('Failed to load categories from Firebase:', error);
     state.categories = [
       { id: 'sweet', name: 'Sweet Crêpes', order: 0 },
       { id: 'savory', name: 'Savory Crêpes', order: 1 },
@@ -521,16 +510,37 @@ async function loadCategoriesFromFirebase() {
       { id: 'drinks', name: 'Drinks', order: 3 }
     ];
     renderCategoryTabs();
+    renderMenu();
+  }
+}
+
+// Load categories from Firebase
+async function loadCategoriesFromFirebase() {
+  try {
+    console.log('📂 Loading categories from Firestore...');
+    const categories = await dbService.getAllCategories();
+    console.log('✅ Categories loaded:', categories.length);
+    state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+  } catch (error) {
+    console.error('❌ Failed to load categories from Firebase:', error);
+    state.categories = [
+      { id: 'sweet', name: 'Sweet Crêpes', order: 0 },
+      { id: 'savory', name: 'Savory Crêpes', order: 1 },
+      { id: 'kids', name: 'Kids Crêpes', order: 2 },
+      { id: 'drinks', name: 'Drinks', order: 3 }
+    ];
   }
 }
 
 // Load menu items from Firebase
 async function loadMenuItemsFromFirebase() {
   try {
+    console.log('📋 Loading menu items from Firestore...');
     const items = await getMenuFromFirebase();
+    console.log('✅ Menu items loaded:', items.length);
     state.menuItems = items;
   } catch (error) {
-    console.error('Failed to load menu items from Firebase:', error);
+    console.error('❌ Failed to load menu items from Firebase:', error);
     state.menuItems = [];
   }
 }
