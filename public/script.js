@@ -5,6 +5,10 @@ const ORDERS_KEY = 'kc_orders';
 const LANG_KEY = 'kc_lang';
 const FEEDBACK_KEY = 'kc_feedback';
 
+// Import Firebase services
+import dbService from './db-service.js';
+import { getMenuFromFirebase, placeOrderToFirebase, listenToMenuUpdates } from './firebase-customer.js';
+
 // Translations
 const translations = {
   ar: {
@@ -20,7 +24,7 @@ const translations = {
     feature3Desc: 'نستخدم مكونات طازجة يومياً لضمان أفضل جودة',
     feature4Title: 'مناسب للعائلات',
     feature4Desc: 'خيارات متنوعة للأطفال والكبار في أجواء عائلية دافئة',
-    
+
     viewFullMenuBtn: 'شاهد القائمة الكاملة',
     ctaTitle: 'جاهز لتجربة لا تُنسى؟',
     ctaDesc: 'اطلب الآن واستمتع بطعم كيندر الأصيل',
@@ -96,7 +100,7 @@ const translations = {
     contactMessageLabel: 'الرسالة:',
     contactSubmit: 'أرسل',
     contactSuccess: 'شكراً {name}! تم استلام رسالتك وسنرد عليك قريباً.',
-    
+
     // Admin
     adminLoginTitle: 'تسجيل الدخول',
     adminUsername: 'اسم المستخدم:',
@@ -200,7 +204,7 @@ const translations = {
     contactMessageLabel: 'Message:',
     contactSubmit: 'Send',
     contactSuccess: 'Thank you {name}! We received your message and will respond soon.',
-    
+
     // Admin
     adminLoginTitle: 'Login',
     adminUsername: 'Username:',
@@ -218,7 +222,7 @@ function getCurrentLang(){
 function setLanguage(lang){
   localStorage.setItem(LANG_KEY, lang);
   document.documentElement.lang = lang;
-  document.body.dir = 'ltr'; // Default to LTR, Arabic will override if needed via CSS or explicit direction setting
+  document.body.dir = lang === 'ar' ? 'rtl' : 'ltr';
 }
 
 function toggleLanguage(){
@@ -226,11 +230,10 @@ function toggleLanguage(){
   const newLang = currentLang === 'ar' ? 'en' : 'ar';
   setLanguage(newLang);
   applyTranslations();
-  updateCart(); // Re-render cart to update language-specific elements if any
-  updatePageIndicator(); // Update page indicator if it uses language
-  // Re-render menu to update category names/descriptions if they are translated
-  renderMenu(); 
-  renderCategoryTabs(); // Update tab buttons too
+  updateCart();
+  updatePageIndicator();
+  renderMenu();
+  renderCategoryTabs();
 }
 
 function applyTranslations(){
@@ -238,53 +241,13 @@ function applyTranslations(){
   const t = translations[lang];
 
   const langBtn = document.getElementById('lang-btn');
-  if(langBtn) langBtn.textContent = lang === 'ar' ? 'EN' : 'AR'; // Changed to AR for Arabic
+  if(langBtn) langBtn.textContent = lang === 'ar' ? 'EN' : 'AR';
 
   const subtitle = document.getElementById('subtitle');
   if(subtitle) subtitle.textContent = t.subtitle;
 
-  // Only translate hero-title on menu.html, not on index.html
   const heroTitle = document.getElementById('hero-title');
-  // Assuming .home-hero class is present on index.html's hero section
-  if(heroTitle && !document.querySelector('.home-hero')) heroTitle.textContent = t.heroTitle; 
-
-  // Update tab buttons (these will be re-rendered by renderCategoryTabs anyway, but good for immediate feedback if needed)
-  const tabSweet = document.getElementById('tab-sweet');
-  if(tabSweet) tabSweet.textContent = t.tabSweet;
-
-  const tabSavory = document.getElementById('tab-savory');
-  if(tabSavory) tabSavory.textContent = t.tabSavory;
-
-  const tabKids = document.getElementById('tab-kids');
-  if(tabKids) tabKids.textContent = t.tabKids;
-
-  const tabDrinks = document.getElementById('tab-drinks');
-  if(tabDrinks) tabDrinks.textContent = t.tabDrinks;
-
-  // Update category titles and descriptions IF they are not dynamically rendered by new menu logic
-  const titleSweet = document.getElementById('title-sweet');
-  if(titleSweet) titleSweet.textContent = t.titleSweet;
-
-  const descSweet = document.getElementById('desc-sweet');
-  if(descSweet) descSweet.textContent = t.descSweet;
-
-  const titleSavory = document.getElementById('title-savory');
-  if(titleSavory) titleSavory.textContent = t.titleSavory;
-
-  const descSavory = document.getElementById('desc-savory');
-  if(descSavory) descSavory.textContent = t.descSavory;
-
-  const titleKids = document.getElementById('title-kids');
-  if(titleKids) titleKids.textContent = t.titleKids;
-
-  const descKids = document.getElementById('desc-kids');
-  if(descKids) descKids.textContent = t.descKids;
-
-  const titleDrinks = document.getElementById('title-drinks');
-  if(titleDrinks) titleDrinks.textContent = t.titleDrinks;
-
-  const descDrinks = document.getElementById('desc-drinks');
-  if(descDrinks) descDrinks.textContent = t.descDrinks;
+  if(heroTitle && !document.querySelector('.home-hero')) heroTitle.textContent = t.heroTitle;
 
   const cartTitle = document.getElementById('cart-title');
   if(cartTitle) cartTitle.textContent = t.cartTitle;
@@ -298,7 +261,6 @@ function applyTranslations(){
   const orderNowBtn = document.getElementById('order-now-btn');
   if(orderNowBtn) orderNowBtn.textContent = t.orderNowBtn;
 
-  // Homepage translations
   const heroDesc = document.getElementById('hero-desc');
   if(heroDesc) heroDesc.textContent = t.heroDesc;
 
@@ -365,11 +327,9 @@ function applyTranslations(){
   const ctaBtn = document.getElementById('cta-btn');
   if(ctaBtn) ctaBtn.textContent = t.ctaBtn;
 
-  // Footer copyright
   const footerCopyright = document.getElementById('footer-copyright');
   if(footerCopyright) footerCopyright.innerHTML = t.footerCopyright + '<br>اتصل: +213 5X XXX XXXX';
 
-  // FAQ translations
   const faqTitle = document.getElementById('faq-title');
   if (faqTitle) faqTitle.textContent = t.faqTitle;
   const faqQ1 = document.getElementById('faq-q1');
@@ -397,7 +357,6 @@ function applyTranslations(){
   const faqA6 = document.getElementById('faq-a6');
   if (faqA6) faqA6.textContent = t.faqA6;
 
-  // Feedback translations
   const feedbackFormTitle = document.getElementById('feedback-form-title');
   if (feedbackFormTitle) feedbackFormTitle.textContent = t.feedbackFormTitle;
   const feedbackReviewsTitle = document.getElementById('feedback-reviews-title');
@@ -412,10 +371,7 @@ function applyTranslations(){
   if (feedbackCommentLabel) feedbackCommentLabel.textContent = t.feedbackCommentLabel;
   const feedbackSubmit = document.getElementById('feedback-submit');
   if (feedbackSubmit) feedbackSubmit.textContent = t.feedbackSubmit;
-  const selectItem = document.getElementById('feedback-item');
-  if(selectItem) selectItem.innerHTML = '<option value="">' + t.selectItem + '</option>';
 
-  // About & Contact translations
   const aboutTitle = document.getElementById('about-title');
   if (aboutTitle) aboutTitle.textContent = t.aboutTitle;
   const aboutDesc1 = document.getElementById('about-desc1');
@@ -432,7 +388,7 @@ function applyTranslations(){
   if (aboutManager) aboutManager.textContent = t.aboutManager;
   const aboutManagerDesc = document.getElementById('about-manager-desc');
   if (aboutManagerDesc) aboutManagerDesc.textContent = t.aboutManagerDesc;
-  
+
   const contactTitle = document.getElementById('contact-title');
   if (contactTitle) contactTitle.textContent = t.contactTitle;
   const contactNameLabel = document.getElementById('contact-name-label');
@@ -444,7 +400,6 @@ function applyTranslations(){
   const contactSubmit = document.getElementById('contact-submit');
   if (contactSubmit) contactSubmit.textContent = t.contactSubmit;
 
-  // Admin translations
   const adminLoginTitle = document.getElementById('admin-login-title');
   if (adminLoginTitle) adminLoginTitle.textContent = t.adminLoginTitle;
   const adminUsername = document.getElementById('admin-username-label');
@@ -458,55 +413,32 @@ function applyTranslations(){
   const adminLogoutBtn = document.getElementById('admin-logout-btn');
   if (adminLogoutBtn) adminLogoutBtn.textContent = t.adminLogoutBtn;
 
-  // Navigation links translations
   const navHomeLinks = document.querySelectorAll('.nav-link-home');
   navHomeLinks.forEach(link => link.textContent = t.navHome);
-  
+
   const navAboutLinks = document.querySelectorAll('.nav-link-about');
   navAboutLinks.forEach(link => link.textContent = t.navAbout);
-  
+
   const navMenuLinks = document.querySelectorAll('.nav-link-menu');
   navMenuLinks.forEach(link => link.textContent = t.navMenu);
-  
+
   const navContactLinks = document.querySelectorAll('.nav-link-contact');
   navContactLinks.forEach(link => link.textContent = t.navContact);
-  
+
   const navAdminLinks = document.querySelectorAll('.nav-link-admin');
   navAdminLinks.forEach(link => link.textContent = t.navAdmin);
-  
+
   const navFaqLinks = document.querySelectorAll('.nav-link-faq');
   navFaqLinks.forEach(link => link.textContent = t.navFaq);
-  
+
   const navFeedbackLinks = document.querySelectorAll('.nav-link-feedback');
   navFeedbackLinks.forEach(link => link.textContent = t.navFeedback);
-  
+
   const navDeliveryLinks = document.querySelectorAll('.nav-link-delivery');
   navDeliveryLinks.forEach(link => link.textContent = t.navDelivery);
-
 }
 
-/* ====== NEW MENU LOGIC ====== */
-// Assuming dbService is available globally or imported elsewhere if this were a module
-// For this single file, we'll assume dbService is defined globally or in a preceding script.
-// If not, this would need to be adapted.
-// For example: const dbService = window.dbService || {}; 
-
-// Use Firebase Firestore for menu data (with fallback to server API)
-// This section replaces the old getMenu and saveMenu functions.
-
-// --- State Management ---
-const state = {
-  currentLang: getCurrentLang(), // Initialize from localStorage
-  currentTab: 'sweet',
-  cart: [],
-  menuItems: [],
-  categories: []
-};
-
-// --- Translations (Menu specific, integrated into the main translations object) ---
-// NOTE: The original translations object is kept. New menu-specific ones are added below for clarity.
-// Existing translations for menu page elements will be used by applyTranslations.
-// This new object is for dynamic rendering of menu items and categories within the new renderMenu function.
+// Menu translations
 const menuTranslations = {
   ar: {
     categories: {
@@ -544,113 +476,95 @@ const menuTranslations = {
   }
 };
 
-// --- Initialization ---
+// State Management
+const state = {
+  currentLang: getCurrentLang(),
+  currentTab: 'sweet',
+  cart: [],
+  menuItems: [],
+  categories: []
+};
+
+// Initialize Menu from Firebase
 async function initMenu() {
   try {
-    console.log('🔄 Loading menu from Firebase...');
+    console.log('🔄 Loading menu from Firebase Firestore...');
 
-    // Load categories first
-    await loadCategories();
-
-    // Load menu items
-    await loadMenuItems();
-
-    // Setup real-time listeners
+    await loadCategoriesFromFirebase();
+    await loadMenuItemsFromFirebase();
     setupRealtimeListeners();
-
-    // Load cart from localStorage
     loadCart();
-
-    // Render initial view
     renderMenu();
-    updateCart(); // Render cart contents
+    updateCart();
 
-    console.log('✅ Menu loaded successfully');
+    console.log('✅ Menu loaded successfully from Firestore');
   } catch (error) {
-    console.error('❌ Failed to load menu:', error);
-    // Fallback to empty state if Firebase/DB fails
+    console.error('❌ Failed to load menu from Firebase:', error);
     state.menuItems = [];
     state.categories = [];
     renderMenu();
   }
 }
 
-// --- Data Loading ---
-async function loadCategories() {
+// Load categories from Firebase
+async function loadCategoriesFromFirebase() {
   try {
-    // Assuming dbService has a method to fetch all categories
-    // If dbService is not available, this will throw an error.
-    const categories = await dbService.getAllCategories(); 
-    state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0)); // Sort by order
-
-    // Update tab navigation UI
+    const categories = await dbService.getAllCategories();
+    state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
     renderCategoryTabs();
   } catch (error) {
-    console.error('Failed to load categories from DB:', error);
-    // Use default categories as fallback
+    console.error('Failed to load categories from Firebase:', error);
     state.categories = [
       { id: 'sweet', name: 'Sweet Crêpes', order: 0 },
       { id: 'savory', name: 'Savory Crêpes', order: 1 },
       { id: 'kids', name: 'Kids Crêpes', order: 2 },
       { id: 'drinks', name: 'Drinks', order: 3 }
     ];
-    renderCategoryTabs(); // Render with default categories
+    renderCategoryTabs();
   }
 }
 
-async function loadMenuItems() {
+// Load menu items from Firebase
+async function loadMenuItemsFromFirebase() {
   try {
-    // Assuming dbService has a method to fetch all menu items
-    const items = await dbService.getAllMenuItems();
+    const items = await getMenuFromFirebase();
     state.menuItems = items;
   } catch (error) {
-    console.error('Failed to load menu items from DB:', error);
-    state.menuItems = []; // Fallback to empty array
+    console.error('Failed to load menu items from Firebase:', error);
+    state.menuItems = [];
   }
 }
 
-// --- Real-Time Sync ---
+// Setup real-time listeners
 function setupRealtimeListeners() {
-  // Listen to menu item changes
-  if (typeof dbService.listenToMenuChanges === 'function') {
-    dbService.listenToMenuChanges((items) => {
-      console.log('📡 Menu updated in real-time:', items.length, 'items');
-      state.menuItems = items;
-      renderMenu(); // Re-render the menu view
-    });
-  } else {
-    console.warn('dbService.listenToMenuChanges not available. Real-time menu updates disabled.');
-  }
+  listenToMenuUpdates((items) => {
+    console.log('📡 Menu updated in real-time:', items.length, 'items');
+    state.menuItems = items;
+    renderMenu();
+  });
 
-  // Listen to category changes
-  if (typeof dbService.listenToCategoryChanges === 'function') {
-    dbService.listenToCategoryChanges((categories) => {
-      console.log('📡 Categories updated in real-time:', categories.length, 'categories');
-      state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-      renderCategoryTabs(); // Update tab navigation
-      renderMenu(); // Re-render menu in case category order/visibility changed
-    });
-  } else {
-    console.warn('dbService.listenToCategoryChanges not available. Real-time category updates disabled.');
-  }
+  dbService.listenToCategoryChanges((categories) => {
+    console.log('📡 Categories updated in real-time:', categories.length, 'categories');
+    state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+    renderCategoryTabs();
+    renderMenu();
+  });
 }
 
-// --- Category Tabs ---
+// Render category tabs
 function renderCategoryTabs() {
-  const tabNav = document.getElementById('tab-nav'); // Assuming a div with id="tab-nav" exists
+  const tabNav = document.getElementById('tab-nav');
   if (!tabNav) return;
 
-  // Sort categories by order before rendering
   const sortedCategories = [...state.categories].sort((a, b) => (a.order || 0) - (b.order || 0));
 
   const html = sortedCategories.map(cat => {
-    // Use translated name if available, otherwise use the category name
-    const categoryName = state.currentLang === 'ar' 
+    const categoryName = state.currentLang === 'ar'
       ? (menuTranslations.ar.categories[cat.id] || cat.name)
       : (menuTranslations.en.categories[cat.id] || cat.name);
 
     return `
-      <button class="tab-btn ${state.currentTab === cat.id ? 'active' : ''}" 
+      <button class="tab-btn ${state.currentTab === cat.id ? 'active' : ''}"
         onclick="switchTab('${cat.id}')" id="tab-${cat.id}">
         ${categoryName}
       </button>
@@ -660,17 +574,15 @@ function renderCategoryTabs() {
   tabNav.innerHTML = html;
 }
 
-// --- Menu Rendering ---
+// Render menu
 function renderMenu() {
-  const container = document.querySelector('.menu-container'); // Assuming a container for menu sections
+  const container = document.querySelector('.menu-container');
   if (!container) return;
 
-  // Hide all sections first, then show the active one
   document.querySelectorAll('.section').forEach(section => {
     section.classList.add('hidden');
   });
 
-  // Group items by category
   const itemsByCategory = {};
   state.menuItems.forEach(item => {
     if (!itemsByCategory[item.category]) {
@@ -679,30 +591,26 @@ function renderMenu() {
     itemsByCategory[item.category].push(item);
   });
 
-  // Render each category section
   state.categories.forEach(category => {
     const sectionId = `section-${category.id}`;
     let section = document.getElementById(sectionId);
 
-    // Create section element if it doesn't exist
     if (!section) {
       section = document.createElement('section');
       section.id = sectionId;
-      section.className = 'section hidden'; // Initially hidden
+      section.className = 'section hidden';
       container.appendChild(section);
     }
 
-    // Get category details and translations
     const items = itemsByCategory[category.id] || [];
-    const categoryName = state.currentLang === 'ar' 
+    const categoryName = state.currentLang === 'ar'
       ? (menuTranslations.ar.categories[category.id] || category.name)
-      : (menuTranslations.en.categories[cat.id] || category.name);
+      : (menuTranslations.en.categories[category.id] || category.name);
     const categoryDesc = state.currentLang === 'ar'
       ? (menuTranslations.ar.categoryDesc[category.id] || '')
       : (menuTranslations.en.categoryDesc[category.id] || '');
     const emptyMsg = state.currentLang === 'ar' ? menuTranslations.ar.emptyCategoryMsg : menuTranslations.en.emptyCategoryMsg;
 
-    // Generate HTML for the menu items within this category
     const menuItemsHTML = items.length === 0 ? `
       <div class="empty-category-message">
         <div class="empty-icon">🍽️</div>
@@ -724,7 +632,6 @@ function renderMenu() {
       </div>
     `).join('');
 
-    // Update section content
     section.innerHTML = `
       <h2 class="section-title" id="title-${category.id}">${categoryName}</h2>
       <div class="section-desc" id="desc-${category.id}">${categoryDesc}</div>
@@ -733,25 +640,22 @@ function renderMenu() {
       </div>
     `;
 
-    // Show the section if it's the currently active tab
     if (category.id === state.currentTab) {
       section.classList.remove('hidden');
     }
   });
 }
 
-// --- Tab Switching ---
+// Tab switching
 function switchTab(categoryId) {
   state.currentTab = categoryId;
 
-  // Update active tab button visual state
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.remove('active');
   });
   const activeTabBtn = document.getElementById(`tab-${categoryId}`);
   if (activeTabBtn) activeTabBtn.classList.add('active');
 
-  // Show/hide sections
   document.querySelectorAll('.section').forEach(section => {
     section.classList.add('hidden');
   });
@@ -759,7 +663,7 @@ function switchTab(categoryId) {
   if (targetSection) targetSection.classList.remove('hidden');
 }
 
-// --- Cart Functions ---
+// Cart functions
 function addToCart(itemId) {
   const item = state.menuItems.find(i => i.id === itemId);
   if (!item) return;
@@ -768,20 +672,18 @@ function addToCart(itemId) {
   if (existing) {
     existing.quantity++;
   } else {
-    // Ensure item has all necessary properties for cart display if not present in DB item
-    state.cart.push({ 
-      id: item.id, 
-      name: item.name, 
-      price: item.price, 
-      img: item.img, // Include image for cart display
-      quantity: 1 
+    state.cart.push({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      img: item.img,
+      quantity: 1
     });
   }
 
   saveCart();
-  updateCart(); // Update cart UI
+  updateCart();
 
-  // Visual feedback toast
   const toastMsg = state.currentLang === 'ar' ? menuTranslations.ar.addedToCartToast : menuTranslations.en.addedToCartToast;
   showToast(toastMsg);
 }
@@ -806,11 +708,10 @@ function updateQuantity(itemId, delta) {
 }
 
 function updateCart() {
-  const container = document.getElementById('cart-contents'); // Element to render cart items
-  const totalEl = document.getElementById('cart-total');     // Element to display total price
+  const container = document.getElementById('cart-contents');
+  const totalEl = document.getElementById('cart-total');
 
   if (!container || !totalEl) {
-    console.warn('Cart elements not found. Cannot update cart.');
     return;
   }
 
@@ -825,10 +726,8 @@ function updateCart() {
     return;
   }
 
-  // Calculate total
   const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-  // Render cart items
   container.innerHTML = state.cart.map(item => `
     <div class="cart-item">
       <img src="${item.img || 'images/placeholder.svg'}" alt="${item.name}" class="cart-item-img">
@@ -845,7 +744,6 @@ function updateCart() {
     </div>
   `).join('');
 
-  // Update total display
   totalEl.textContent = total.toFixed(2) + ' DZD';
 }
 
@@ -862,26 +760,24 @@ function loadCart() {
     const saved = localStorage.getItem(CART_KEY);
     if (saved) {
       state.cart = JSON.parse(saved);
-      // Ensure quantities are valid numbers
       state.cart.forEach(item => {
         if (typeof item.quantity !== 'number' || item.quantity < 0) {
           item.quantity = 0;
         }
       });
-      state.cart = state.cart.filter(item => item.quantity > 0); // Remove items with zero quantity
+      state.cart = state.cart.filter(item => item.quantity > 0);
     }
   } catch (error) {
     console.error('Failed to load cart from localStorage:', error);
-    state.cart = []; // Reset cart if parsing fails
+    state.cart = [];
   }
 }
 
-// ==================== UI FUNCTIONS ====================
+// UI Functions
 function toggleCart() {
   const cartSide = document.getElementById('cart-side');
   if (cartSide) {
     cartSide.classList.toggle('active');
-    // Add/remove overlay and body overflow if they exist
     const overlay = document.getElementById('menu-overlay');
     if (overlay) overlay.classList.toggle('active');
     document.body.style.overflow = cartSide.classList.contains('active') ? 'hidden' : '';
@@ -901,38 +797,34 @@ function toggleMenu() {
 function checkoutFlow(){
   const lang = state.currentLang;
   const t = translations[lang];
-  const cart = state.cart; // Use state.cart
+  const cart = state.cart;
 
   if(cart.length === 0) return alert(t.emptyCartAlert || 'Cart is empty!');
-  
-  // Calculate totals
-  const subtotal = cart.reduce((s,i)=>s + i.price * i.qty, 0); // Assuming cart items have price and qty properties
-  
-  // Check minimum order
-  const MIN_ORDER_AMOUNT = 5.0; // Minimum order in DZD
+
+  const subtotal = cart.reduce((s,i)=>s + i.price * i.quantity, 0);
+
+  const MIN_ORDER_AMOUNT = 5.0;
   if(subtotal < MIN_ORDER_AMOUNT){
-    const minOrderMsg = lang === 'ar' 
+    const minOrderMsg = lang === 'ar'
       ? `الحد الأدنى للطلب هو ${MIN_ORDER_AMOUNT} دج`
       : `Minimum order amount is ${MIN_ORDER_AMOUNT} DZD`;
     return alert(minOrderMsg);
   }
-  
-  const FREE_DELIVERY_THRESHOLD = 15.0; // Free delivery over this amount
-  const DELIVERY_FEE = 2.0; // Delivery fee in DZD
+
+  const FREE_DELIVERY_THRESHOLD = 15.0;
+  const DELIVERY_FEE = 2.0;
   const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const total = subtotal + deliveryFee;
-  
-  // Get saved customer info
+
   const savedInfo = getSavedCustomerInfo();
-  
-  // Create checkout modal
+
   const modal = document.createElement('div');
   modal.className = 'checkout-modal-overlay';
   modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   modal.onclick = (e) => {
     if(e.target === modal) closeCheckoutModal();
   };
-  
+
   const savedNameLabel = lang === 'ar' ? 'الاسم الكامل' : 'Full Name';
   const savedPhoneLabel = lang === 'ar' ? 'رقم الهاتف' : 'Phone Number';
   const savedAddressLabel = lang === 'ar' ? 'العنوان' : 'Address';
@@ -944,7 +836,7 @@ function checkoutFlow(){
   const savedPlaceOrderLabel = lang === 'ar' ? 'تأكيد الطلب' : 'Place Order';
   const savedCancelLabel = lang === 'ar' ? 'إلغاء' : 'Cancel';
   const savedPhoneErrorLabel = lang === 'ar' ? 'رقم الهاتف غير صحيح. استخدم التنسيق: +213 5XX XXX XXX' : 'Invalid phone number. Use format: +213 5XX XXX XXX';
-  
+
   modal.innerHTML = `
     <div class="checkout-modal" style="background:#fff;border-radius:12px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
       <div style="padding:24px;border-bottom:1px solid #e8ddd1;">
@@ -989,17 +881,16 @@ function checkoutFlow(){
       </form>
     </div>
   `;
-  
+
   document.body.appendChild(modal);
-  
-  // Handle form submission
-  document.getElementById('checkout-form').onsubmit = (e) => {
+
+  document.getElementById('checkout-form').onsubmit = async (e) => {
     e.preventDefault();
     const name = document.getElementById('checkout-name').value.trim();
     const phone = document.getElementById('checkout-phone').value.trim();
     const address = document.getElementById('checkout-address').value.trim();
     const notes = document.getElementById('checkout-notes').value.trim();
-    
+
     if(!name) return alert(t.nameRequired);
     if(!phone) return alert(t.phoneRequired);
     if(!validatePhone(phone)){
@@ -1007,19 +898,16 @@ function checkoutFlow(){
       return;
     }
     if(!address) return alert(t.addressRequired);
-    
-    // Format phone
+
     const formattedPhone = formatPhone(phone);
-    
-    // Save customer info
+
     saveCustomerInfo(name, formattedPhone, address);
-    
-    // Create order object using current cart state
+
     const order = {
       customerName: name,
       customerPhone: formattedPhone,
       customerAddress: address,
-      items: state.cart.map(item => ({ // Map to include only necessary details for order
+      items: state.cart.map(item => ({
         id: item.id,
         name: item.name,
         price: item.price,
@@ -1029,20 +917,21 @@ function checkoutFlow(){
       deliveryFee,
       total,
       specialInstructions: notes,
-      status:'pending', // Default status
-      createdAt: new Date().toISOString() // Timestamp for the order
+      status:'pending',
+      createdAt: new Date().toISOString()
     };
-    
-    // Save to Firebase (with fallback to localStorage)
-    placeOrderAsync(order, lang).then(orderId => {
-      saveCart([]); // Clear cart after successful order placement
+
+    try {
+      const orderId = await placeOrderToFirebase(order);
+      state.cart = [];
+      saveCart();
       closeCheckoutModal();
-      toggleCart(); // Close cart UI if open
-      showOrderConfirmation(orderId, order, lang); // Show confirmation modal
-    }).catch(error => {
+      toggleCart();
+      showOrderConfirmation(orderId, order, lang);
+    } catch (error) {
       alert(lang === 'ar' ? 'فشل في إرسال الطلب. حاول مرة أخرى.' : 'Failed to place order. Please try again.');
       console.error('Order placement failed:', error);
-    });
+    }
   };
 }
 
@@ -1059,16 +948,12 @@ function showOrderConfirmation(orderId, order, lang){
   confirmModal.onclick = (e) => {
     if(e.target === confirmModal) confirmModal.remove();
   };
-  
-  const itemsList = order.items.map(item => 
-    `${item.quantity}x ${item.name} - ${item.price.toFixed(2)} DZD`
-  ).join('\n');
-  
+
   const successTitle = lang === 'ar' ? 'تم إرسال الطلب بنجاح!' : 'Order Placed Successfully!';
   const orderNumberLabel = lang === 'ar' ? 'رقم الطلب' : 'Order Number';
   const trackOrderLabel = lang === 'ar' ? 'تتبع الطلب' : 'Track Order';
   const closeLabel = lang === 'ar' ? 'إغلاق' : 'Close';
-  
+
   confirmModal.innerHTML = `
     <div class="checkout-modal" style="background:#fff;border-radius:12px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
       <div style="padding:24px;text-align:center;border-bottom:1px solid #e8ddd1;">
@@ -1091,13 +976,12 @@ function showOrderConfirmation(orderId, order, lang){
       </div>
     </div>
   `;
-  
+
   document.body.appendChild(confirmModal);
-  toast(t.orderSuccess + orderId);
+  showToast(t.orderSuccess + orderId);
 }
 
-/* Toast notification */
-function toast(msg){
+function showToast(msg){
   const t = document.createElement('div');
   t.textContent = msg;
   t.style.position='fixed';
@@ -1116,7 +1000,7 @@ function toast(msg){
   setTimeout(()=> t.remove(),2500);
 }
 
-/* ===== Admin ===== */
+// Admin functions
 function adminLogin(username, password){
   if(username === 'admin' && password === 'kinder123'){
     localStorage.setItem('kc_admin', '1');
@@ -1137,20 +1021,17 @@ function isAdmin(){
 function renderAdminOrders(){
   const list = document.getElementById('orders-list');
   const statsEl = document.getElementById('stats-area');
-  // Fetch orders from localStorage or wherever they are stored. Assuming getOrders() retrieves them.
-  const orders = getOrders().slice().reverse(); 
+  const orders = getOrders().slice().reverse();
   if(!list) return;
   list.innerHTML = '';
   orders.forEach(o=>{
     const el = document.createElement('div');
     el.className='order';
-    // Ensure 'id' and 'name'/'phone' exist, and 'timestamp' or 'createdAt'
     el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${o.id || 'N/A'}</strong> <div class="text-sm">${o.customerName || o.name} • ${o.customerPhone || o.phone}</div></div><div><small>${new Date(o.createdAt || o.timestamp).toLocaleString()}</small></div></div>`;
     const items = document.createElement('div');
     items.className='text-sm';
-    // Check if o.items exists and is an array
     items.textContent = Array.isArray(o.items) ? o.items.map(i=> `${i.name} x${i.quantity || i.qty}`).join(', ') : 'No items';
-    
+
     const status = document.createElement('div');
     status.style.marginTop='6px';
     const sel = document.createElement('select');
@@ -1159,7 +1040,6 @@ function renderAdminOrders(){
       const opt = document.createElement('option');
       opt.value=key;
       opt.textContent=statusMap[key];
-      // Normalize status for comparison: current order status vs mapped option value
       const currentStatusNormalized = o.status ? o.status.toLowerCase() : '';
       if(currentStatusNormalized === key || currentStatusNormalized === statusMap[key].toLowerCase()) opt.selected=true;
       sel.appendChild(opt);
@@ -1212,18 +1092,17 @@ function checkAdminPage(){
 }
 
 function updateOrderStatus(id, status){
-  const orders = getOrders(); // Assuming this retrieves orders from localStorage
+  const orders = getOrders();
   const o = orders.find(x=> x.id===id);
   if(!o) return;
-  // Normalize status to lowercase for consistency
   const statusMap = {'Pending': 'pending', 'In Progress': 'in-progress', 'Delivered': 'delivered'};
-  o.status = statusMap[status] || status.toLowerCase(); // Use mapped status or lowercase original
-  saveOrders(orders); // Assuming this saves orders back to localStorage
+  o.status = statusMap[status] || status.toLowerCase();
+  saveOrders(orders);
   renderAdminOrders();
-  toast('تم تحديث حالة الطلب ' + id);
+  showToast('تم تحديث حالة الطلب ' + id);
 }
 
-/* Contact form */
+// Contact form
 function submitContact(e){
   e.preventDefault();
   const name = document.getElementById('contact-name').value;
@@ -1231,24 +1110,21 @@ function submitContact(e){
   const msg = document.getElementById('contact-msg').value;
   const lang = getCurrentLang();
   const t = translations[lang];
-  // Assuming contactSuccess message requires name replacement
-  toast(t.contactSuccess.replace('{name}', name)); 
+  showToast(t.contactSuccess.replace('{name}', name));
   e.target.reset();
 }
 
-/* ====== FAQ Functions ====== */
+// FAQ Functions
 function toggleFaq(element){
   const faqItem = element.parentElement;
   const isActive = faqItem.classList.contains('active');
 
-  // Close all other FAQ items first
   document.querySelectorAll('.faq-item').forEach(item => {
     item.classList.remove('active');
     const icon = item.querySelector('.faq-icon');
     if(icon) icon.textContent = '+';
   });
 
-  // Toggle the clicked item
   if(!isActive){
     faqItem.classList.add('active');
     const icon = element.querySelector('.faq-icon');
@@ -1256,7 +1132,7 @@ function toggleFaq(element){
   }
 }
 
-/* ====== Feedback Functions ====== */
+// Feedback Functions
 function getFeedback(){ return JSON.parse(localStorage.getItem(FEEDBACK_KEY) || '[]'); }
 function saveFeedback(f){ localStorage.setItem(FEEDBACK_KEY, JSON.stringify(f)); }
 
@@ -1276,22 +1152,21 @@ async function submitFeedback(e){
   const comment = commentInput ? commentInput.value : '';
 
   if(!rating){
-    return alert('الرجاء اختيار تقييم'); // "Please select a rating"
+    return alert('الرجاء اختيار تقييم');
   }
   if (!itemId) {
       alert(lang === 'ar' ? 'الرجاء اختيار منتج' : 'Please select a product');
       return;
   }
 
-  const menu = await getMenu(); // Use original getMenu for item name lookup if needed, or get from state.menuItems
-  const item = state.menuItems.find(m => m.id === itemId); // Use the new state
+  const item = state.menuItems.find(m => m.id === itemId);
 
   const feedback = getFeedback();
   const newFeedback = {
     id: 'FB-' + Date.now(),
     name,
     itemId,
-    itemName: item ? item.name : '', // Get name from state.menuItems
+    itemName: item ? item.name : '',
     rating,
     comment,
     createdAt: new Date().toISOString()
@@ -1300,12 +1175,11 @@ async function submitFeedback(e){
   feedback.push(newFeedback);
   saveFeedback(feedback);
 
-  // Reset form and toast
   if(e.target) e.target.reset();
   if(ratingInput) ratingInput.value = '';
-  document.querySelectorAll('.star').forEach(star => star.textContent = '☆'); // Reset stars
+  document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
 
-  toast(t.feedbackSuccess);
+  showToast(t.feedbackSuccess);
   renderFeedbackList();
 }
 
@@ -1350,8 +1224,7 @@ async function populateFeedbackItems(){
   const select = document.getElementById('feedback-item');
   if(!select) return;
 
-  // Use the new state.menuItems loaded by initMenu
-  const menu = state.menuItems; 
+  const menu = state.menuItems;
   const lang = getCurrentLang();
   const t = translations[lang];
 
@@ -1412,22 +1285,20 @@ function initStarRating(){
   }
 }
 
-/* Highlight active page in navigation */
+// Highlight active page
 function highlightActivePage(){
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const navLinks = document.querySelectorAll('.nav-menu-links a, .footer-links a');
-  
+
   navLinks.forEach(link => {
     const linkPage = link.getAttribute('href');
-    // Handle root path and index.html cases
     if( (currentPage === '' || currentPage === 'index.html') && (linkPage === '' || linkPage === 'index.html') ) {
       link.classList.add('active-page');
     } else if (linkPage === currentPage) {
       link.classList.add('active-page');
     }
   });
-  
-  // Update page indicator in header
+
   updatePageIndicator();
 }
 
@@ -1435,10 +1306,10 @@ function updatePageIndicator(){
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const lang = getCurrentLang();
   const t = translations[lang];
-  
+
   const pageNames = {
     'index.html': { ar: 'الرئيسية', en: 'Home' },
-    '': { ar: 'الرئيسية', en: 'Home' }, // For root path
+    '': { ar: 'الرئيسية', en: 'Home' },
     'menu.html': { ar: 'القائمة', en: 'Menu' },
     'about.html': { ar: 'من نحن', en: 'About Us' },
     'my-orders.html': { ar: 'طلباتي', en: 'My Orders' },
@@ -1448,72 +1319,57 @@ function updatePageIndicator(){
     'admin.html': { ar: 'لوحة الإدارة', en: 'Admin' },
     'delivery.html': { ar: 'التوصيل', en: 'Delivery' }
   };
-  
+
   const pageIndicator = document.getElementById('page-indicator');
   if(pageIndicator && pageNames[currentPage]){
     pageIndicator.textContent = pageNames[currentPage][lang];
   }
-  
-  // Apply translations to all navigation links (already done in applyTranslations, but good for redundancy if needed)
-  // const navHomeLinks = document.querySelectorAll('.nav-link-home');
-  // navHomeLinks.forEach(link => link.textContent = t.navHome);
-  // ... and so on for other nav links ...
 }
 
-/* Scroll Button Functions */
+// Scroll Button
 function initScrollButton(){
-  // Check if scroll-btn element already exists, if not create it
   let scrollBtn = document.getElementById('scroll-btn');
   if (!scrollBtn) {
     scrollBtn = document.createElement('button');
-    scrollBtn.className = 'scroll-btn'; // Add base class
+    scrollBtn.className = 'scroll-btn';
     scrollBtn.id = 'scroll-btn';
     document.body.appendChild(scrollBtn);
   }
 
-  // Handle scroll event
   window.addEventListener('scroll', () => {
     const scrolled = window.scrollY;
-    
-    if (!scrollBtn) return; // Exit if button somehow disappeared
 
-    // Show button initially, or after scrolling
+    if (!scrollBtn) return;
+
     if(scrolled === 0){
-      // At top - show down arrow
       scrollBtn.classList.add('visible');
       scrollBtn.innerHTML = '↓';
       scrollBtn.setAttribute('aria-label', 'Scroll to bottom');
     } else if(scrolled > 50){
-      // Scrolled down - show up arrow
       scrollBtn.classList.add('visible');
       scrollBtn.innerHTML = '↑';
       scrollBtn.setAttribute('aria-label', 'Scroll to top');
     } else {
-      // Scrolled a little but not enough to show up arrow, maybe hide or keep subtle
       scrollBtn.classList.remove('visible');
     }
   });
 
-  // Handle click
   scrollBtn.addEventListener('click', () => {
     const scrolled = window.scrollY;
-    
+
     if(scrolled === 0 || scrollBtn.innerHTML === '↓'){
-      // Scroll to bottom
       window.scrollTo({
         top: document.documentElement.scrollHeight,
         behavior: 'smooth'
       });
     } else {
-      // Scroll to top
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
     }
   });
-  
-  // Initial check for visibility on load
+
   const scrolled = window.scrollY;
   if (scrolled === 0) {
     scrollBtn.classList.add('visible');
@@ -1528,24 +1384,19 @@ function initScrollButton(){
   }
 }
 
-
-/* Hidden Admin & Delivery Access - Secret Keyboard Shortcuts */
+// Secret Admin Access
 function initSecretAdminAccess(){
-  // Secret keyboard shortcuts
   document.addEventListener('keydown', (e) => {
-    // Admin: Ctrl + Shift + K
     if (e.ctrlKey && e.shiftKey && e.key === 'K') {
       e.preventDefault();
       window.location.href = 'admin.html';
     }
-    // Delivery: Ctrl + Shift + D
     if (e.ctrlKey && e.shiftKey && e.key === 'D') {
       e.preventDefault();
       window.location.href = 'delivery.html';
     }
   });
 
-  // Admin: 7 rapid taps on copyright text
   const copyrightElement = document.getElementById('footer-copyright');
   if(copyrightElement) {
     let adminTapCount = 0;
@@ -1553,29 +1404,22 @@ function initSecretAdminAccess(){
 
     copyrightElement.addEventListener('click', () => {
       adminTapCount++;
-      
-      // Clear previous timer
+
       if(adminTapTimer) clearTimeout(adminTapTimer);
-      
-      // If 7 taps within 2 seconds, go to admin
+
       if(adminTapCount >= 7) {
         window.location.href = 'admin.html';
         adminTapCount = 0;
         return;
       }
-      
-      // Reset tap count after 2 seconds
+
       adminTapTimer = setTimeout(() => {
         adminTapCount = 0;
       }, 2000);
     });
   }
 
-  // Delivery: 7 rapid taps on "Connect" text
-  // Find the element with class 'footer-connect' or similar if it exists
-  // Example: const connectText = document.querySelector('.footer-connect'); 
-  // If not found, this part might be skipped or needs adjustment based on actual HTML.
-  const connectText = document.querySelector('.footer-connect'); // Placeholder selector
+  const connectText = document.querySelector('.footer-connect');
   if(connectText) {
     let deliveryTapCount = 0;
     let deliveryTapTimer = null;
@@ -1583,18 +1427,15 @@ function initSecretAdminAccess(){
     connectText.addEventListener('click', (e) => {
       e.preventDefault();
       deliveryTapCount++;
-      
-      // Clear previous timer
+
       if(deliveryTapTimer) clearTimeout(deliveryTapTimer);
-      
-      // If 7 taps within 2 seconds, go to delivery
+
       if(deliveryTapCount >= 7) {
         window.location.href = 'delivery.html';
         deliveryTapCount = 0;
         return;
       }
-      
-      // Reset tap count after 2 seconds
+
       deliveryTapTimer = setTimeout(() => {
         deliveryTapCount = 0;
       }, 2000);
@@ -1602,8 +1443,7 @@ function initSecretAdminAccess(){
   }
 }
 
-/* On load hooks */
-/* Page loading animation */
+// Page loading
 function initPageLoad(){
   document.body.classList.add('page-loading');
   setTimeout(() => {
@@ -1612,109 +1452,21 @@ function initPageLoad(){
   }, 100);
 }
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  initPageLoad();
-  try {
-    // Set language based on localStorage
-    const initialLang = getCurrentLang();
-    setLanguage(initialLang);
-    applyTranslations(); // Apply translations for static elements
-
-    // Initialize menu loading (Firebase + real-time)
-    initMenu().then(() => {
-      // After menu is loaded and rendered, ensure cart and other UI elements are up-to-date.
-      updateCart(); // Render cart contents based on loaded cart
-      // Highlight active page might depend on menu rendering if nav links are dynamic
-      highlightActivePage(); 
-    });
-    
-    // Initialize scroll button
-    initScrollButton();
-
-    // Initialize secret admin access
-    initSecretAdminAccess();
-  } catch(error) {
-    console.error('Error during DOMContentLoaded initialization:', error);
-  }
-
-  // Admin login form submission
-  const adminForm = document.getElementById('admin-login-form');
-  if(adminForm){
-    adminForm.addEventListener('submit', e=>{
-      e.preventDefault();
-      const u = document.getElementById('adm-user').value;
-      const p = document.getElementById('adm-pass').value;
-      if(adminLogin(u,p)){
-        checkAdminPage(); // Refresh admin page view
-      } else {
-        alert('خطأ في بيانات الدخول'); // "Login data error"
-      }
-    });
-  }
-
-  // Initial check for admin page state
-  checkAdminPage();
-
-  // Feedback page setup
-  // Need to ensure populateFeedbackItems is called after menu items are loaded
-  // So it's better to call it within initMenu's completion or here after ensuring menuItems are loaded.
-  // For now, assuming feedback page might load independently or menu items are already available.
-  populateFeedbackItems(); // Populate dropdown with menu items
-  renderFeedbackList();    // Display existing feedback
-  initStarRating();        // Initialize star rating functionality
-});
-
-/* Firebase Order Placement - Replaces the old placeOrderAsync */
-async function placeOrderAsync(order, lang) {
-  try {
-    // Check if FirebaseCustomer object and its placeOrder method exist
-    if (window.FirebaseCustomer && typeof window.FirebaseCustomer.placeOrder === 'function') {
-      console.log('Placing order via Firebase...');
-      const orderId = await window.FirebaseCustomer.placeOrder(order);
-      console.log('Order placed successfully via Firebase with ID:', orderId);
-      return orderId;
-    } else {
-      console.warn('FirebaseCustomer.placeOrder not available. Falling back to localStorage.');
-    }
-  } catch (error) {
-    console.error('Firebase order placement failed:', error);
-    console.log('Falling back to localStorage order placement.');
-  }
-  
-  // Fallback to localStorage
-  const orders = getOrders(); // Get existing orders
-  const id = 'ORD-' + Date.now(); // Generate a unique ID
-  const localOrder = {
-    id,
-    ...order, // Spread the order details
-    createdAt: new Date().toISOString() // Ensure a creation timestamp
-  };
-  orders.push(localOrder);
-  saveOrders(orders); // Save updated orders list
-  console.log('Order placed successfully via localStorage with ID:', id);
-  return id;
-}
-
-/* Helper functions from original file that might still be relevant */
-
-// Get saved customer info (used in checkoutFlow)
+// Helper functions
 function getSavedCustomerInfo(){
   const saved = localStorage.getItem('kc_customer_info');
   return saved ? JSON.parse(saved) : {name: '', phone: '', address: ''};
 }
 
-// Save customer info (used in checkoutFlow)
 function saveCustomerInfo(name, phone, address){
   localStorage.setItem('kc_customer_info', JSON.stringify({name, phone, address}));
 }
 
-// Validate Algerian phone number (used in checkoutFlow)
 function validatePhone(phone){
   const cleaned = phone.replace(/[\s\-\(\)]/g, '');
   return /^(\+213|213|0)[5-7][0-9]{8}$/.test(cleaned);
 }
 
-// Format phone number (used in checkoutFlow)
 function formatPhone(phone){
   const cleaned = phone.replace(/[\s\-\(\)]/g, '');
   if(cleaned.startsWith('+213')) return cleaned;
@@ -1723,54 +1475,82 @@ function formatPhone(phone){
   return '+213' + cleaned;
 }
 
-// Get orders from localStorage (used in admin panel and checkout fallback)
 function getOrders(){ return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); }
-// Save orders to localStorage (used in admin panel and checkout fallback)
 function saveOrders(o){ localStorage.setItem(ORDERS_KEY, JSON.stringify(o)); }
 
-// Dummy functions for dbService if it's not globally available
-// In a real scenario, dbService would be imported or defined elsewhere.
-// For this standalone file, we provide minimal stubs if they are missing.
-if (typeof dbService === 'undefined') {
-    console.warn('dbService is not defined. Using mock implementations.');
-    window.dbService = {
-        getAllCategories: async () => {
-            console.log('Mock: Fetching categories...');
-            // Return some default categories if Firebase is unavailable
-            return Promise.resolve([
-                { id: 'sweet', name: 'Sweet Crêpes', order: 0 },
-                { id: 'savory', name: 'Savory Crêpes', order: 1 },
-                { id: 'kids', name: 'Kids Crêpes', order: 2 },
-                { id: 'drinks', name: 'Drinks', order: 3 }
-            ]);
-        },
-        getAllMenuItems: async () => {
-            console.log('Mock: Fetching menu items...');
-            // Return some default menu items if Firebase is unavailable
-            return Promise.resolve([
-              {id:'c1', name:'Kinder Nutella Crepe', desc:'Nutella, banana, whipped cream', price:5.5, img:'images/crepe1.svg', category:'sweet'},
-              {id:'c2', name:'Strawberry Kinder', desc:'Fresh strawberries & Kinder flakes', price:6.0, img:'images/crepe2.svg', category:'sweet'},
-              {id:'c4', name:'Banoffee Delight', desc:'Banana, caramel, Kinder pieces', price:6.8, img:'images/crepe4.svg', category:'sweet'},
-              {id:'c6', name:'Vegan Berry', desc:'Mixed berries, vegan cream', price:6.2, img:'images/crepe5.svg', category:'sweet'},
-              {id:'c3', name:'Ham & Cheese', desc:'Savory ham, melted cheese', price:6.5, img:'images/crepe3.svg', category:'savory'},
-              {id:'c7', name:'Chicken Alfredo', desc:'Grilled chicken, creamy sauce', price:7.5, img:'images/crepe3.svg', category:'savory'},
-              {id:'c8', name:'Kids Ham Special', desc:'Ham & cheese for kids', price:4.5, img:'images/crepe3.svg', category:'kids'},
-              {id:'c9', name:'Kids Nutella', desc:'Simple Nutella crepe', price:4.0, img:'images/crepe1.svg', category:'kids'},
-              {id:'c5', name:'Hot Chocolate', desc:'Creamy hot chocolate', price:3.5, img:'images/drink1.svg', category:'drinks'},
-              {id:'c10', name:'Fresh Orange Juice', desc:'Freshly squeezed orange juice', price:3.0, img:'images/drink1.svg', category:'drinks'}
-            ]);
-        },
-        listenToMenuChanges: () => { console.log('Mock: Listening to menu changes (no-op)'); },
-        listenToCategoryChanges: () => { console.log('Mock: Listening to category changes (no-op)'); }
-    };
-}
+// Initialize on load
+document.addEventListener('DOMContentLoaded', async ()=>{
+  initPageLoad();
+  try {
+    const initialLang = getCurrentLang();
+    setLanguage(initialLang);
+    applyTranslations();
 
-// Dummy FirebaseCustomer for checkout fallback if window.FirebaseCustomer is not defined
-if (typeof window.FirebaseCustomer === 'undefined') {
-    window.FirebaseCustomer = {
-        placeOrder: async (order) => {
-            console.log('Mock: FirebaseCustomer.placeOrder called. Order:', order);
-            return Promise.resolve('MOCK_ORD_ID_' + Date.now());
-        }
-    };
-}
+    await initMenu();
+
+    updateCart();
+    highlightActivePage();
+
+    initScrollButton();
+    initSecretAdminAccess();
+  } catch(error) {
+    console.error('Error during DOMContentLoaded initialization:', error);
+  }
+
+  const adminForm = document.getElementById('admin-login-form');
+  if(adminForm){
+    adminForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      const u = document.getElementById('adm-user').value;
+      const p = document.getElementById('adm-pass').value;
+      if(adminLogin(u,p)){
+        checkAdminPage();
+      } else {
+        alert('خطأ في بيانات الدخول');
+      }
+    });
+  }
+
+  checkAdminPage();
+
+  populateFeedbackItems();
+  renderFeedbackList();
+  initStarRating();
+});
+
+// Make functions globally accessible
+window.switchTab = switchTab;
+window.addToCart = addToCart;
+window.removeFromCart = removeFromCart;
+window.updateQuantity = updateQuantity;
+window.toggleCart = toggleCart;
+window.toggleMenu = toggleMenu;
+window.checkoutFlow = checkoutFlow;
+window.closeCheckoutModal = closeCheckoutModal;
+window.toggleLanguage = toggleLanguage;
+window.submitContact = submitContact;
+window.toggleFaq = toggleFaq;
+window.submitFeedback = submitFeedback;
+window.adminLogin = adminLogin;
+window.adminLogout = adminLogout;
+window.isAdmin = isAdmin; // Export isAdmin for potential use elsewhere
+window.renderAdminOrders = renderAdminOrders; // Export renderAdminOrders
+window.checkAdminPage = checkAdminPage; // Export checkAdminPage
+window.updateOrderStatus = updateOrderStatus; // Export updateOrderStatus
+window.initMenu = initMenu; // Export initMenu
+window.populateFeedbackItems = populateFeedbackItems; // Export populateFeedbackItems
+window.renderFeedbackList = renderFeedbackList; // Export renderFeedbackList
+window.initStarRating = initStarRating; // Export initStarRating
+window.highlightActivePage = highlightActivePage; // Export highlightActivePage
+window.updatePageIndicator = updatePageIndicator; // Export updatePageIndicator
+window.initScrollButton = initScrollButton; // Export initScrollButton
+window.initSecretAdminAccess = initSecretAdminAccess; // Export initSecretAdminAccess
+window.initPageLoad = initPageLoad; // Export initPageLoad
+window.getSavedCustomerInfo = getSavedCustomerInfo; // Export helper
+window.saveCustomerInfo = saveCustomerInfo; // Export helper
+window.validatePhone = validatePhone; // Export helper
+window.formatPhone = formatPhone; // Export helper
+window.getOrders = getOrders; // Export helper
+window.saveOrders = saveOrders; // Export helper
+window.showToast = showToast; // Export showToast
+window.showOrderConfirmation = showOrderConfirmation; // Export showOrderConfirmation
