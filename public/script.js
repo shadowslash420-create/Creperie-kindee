@@ -25,6 +25,28 @@ const translations = {
     feature4Title: 'مناسب للعائلات',
     feature4Desc: 'خيارات متنوعة للأطفال والكبار في أجواء عائلية دافئة',
 
+    whatWeOfferTitle: 'ماذا نقدم لعائلتك',
+    whatWeOfferSubtitle: 'في كريبري كيندر، نؤمن بأن كل لحظة مع العائلة تستحق أن تكون مميزة. لهذا نقدم لكم تجربة فريدة تجمع بين الجودة والراحة والسعادة',
+    offering1Title: 'أجواء عائلية دافئة',
+    offering1Desc: 'مساحة مريحة وآمنة للعائلات مع مقاعد مخصصة للأطفال وجو مرحب للجميع',
+    offering2Title: 'احتفالات خاصة',
+    offering2Desc: 'نساعدك في تنظيم حفلات أعياد الميلاد والمناسبات العائلية بخيارات مخصصة',
+    offering3Title: 'قائمة متنوعة للجميع',
+    offering3Desc: 'خيارات متعددة تناسب جميع الأعمار من الأطفال إلى الكبار، حلو أو مالح',
+    offering4Title: 'توصيل سريع للمنزل',
+    offering4Desc: 'استمتع بطعمنا الشهي في منزلك مع خدمة توصيل سريعة وموثوقة',
+    offering5Title: 'عروض عائلية',
+    offering5Desc: 'باقات خاصة للعائلات بأسعار مميزة وتوصيل مجاني للطلبات الكبيرة',
+    offering6Title: 'خدمة طوال اليوم',
+    offering6Desc: 'نعمل من 9 صباحاً حتى 11 مساءً لنكون دائماً في خدمتكم',
+
+    menuPreviewTitle: 'Diverse Selection',
+    menuPreview1Title: 'Sweet Crêpes',
+    menuPreview1Desc: 'Kinder, Nutella, fresh fruits',
+    menuPreview2Title: 'Savory Crêpes',
+    menuPreview2Desc: 'Meat, cheese, grilled chicken',
+    menuPreview3Title: 'Drinks',
+    menuPreview3Desc: 'Hot chocolate, fresh juices',
     viewFullMenuBtn: 'شاهد القائمة الكاملة',
     ctaTitle: 'جاهز لتجربة لا تُنسى؟',
     ctaDesc: 'اطلب الآن واستمتع بطعم كيندر الأصيل',
@@ -122,6 +144,22 @@ const translations = {
     feature3Desc: 'We use fresh ingredients daily to ensure the best quality',
     feature4Title: 'Family Friendly',
     feature4Desc: 'Variety of options for children and adults in a warm family atmosphere',
+
+    whatWeOfferTitle: 'What We Offer Your Family',
+    whatWeOfferSubtitle: 'At Creperie Kinder, we believe every family moment deserves to be special. That\'s why we offer a unique experience combining quality, comfort, and happiness.',
+    offering1Title: 'Warm Family Atmosphere',
+    offering1Desc: 'A comfortable and safe space for families with dedicated seating for children and a welcoming environment for everyone.',
+    offering2Title: 'Special Celebrations',
+    offering2Desc: 'We help you organize birthday parties and family events with customized options.',
+    offering3Title: 'Diverse Menu for Everyone',
+    offering3Desc: 'Multiple options to suit all ages, from children to adults, sweet or savory.',
+    offering4Title: 'Fast Home Delivery',
+    offering4Desc: 'Enjoy our delicious taste at home with fast and reliable delivery service.',
+    offering5Title: 'Family Deals',
+    offering5Desc: 'Special family packages at attractive prices and free delivery for large orders.',
+    offering6Title: 'All-Day Service',
+    offering6Desc: 'We are open from 9 AM to 11 PM to always be at your service.',
+
     menuPreviewTitle: 'Diverse Selection',
     menuPreview1Title: 'Sweet Crêpes',
     menuPreview1Desc: 'Kinder, Nutella, fresh fruits',
@@ -293,6 +331,44 @@ function applyTranslations(){
 
   const feature4Desc = document.getElementById('feature4-desc');
   if(feature4Desc) feature4Desc.textContent = t.feature4Desc;
+
+  // New section translations
+  const whatWeOfferTitle = document.getElementById('what-we-offer-title');
+  if (whatWeOfferTitle) whatWeOfferTitle.textContent = t.whatWeOfferTitle;
+
+  const whatWeOfferSubtitle = document.getElementById('what-we-offer-subtitle');
+  if (whatWeOfferSubtitle) whatWeOfferSubtitle.textContent = t.whatWeOfferSubtitle;
+
+  const offering1Title = document.getElementById('offering1-title');
+  if (offering1Title) offering1Title.textContent = t.offering1Title;
+  const offering1Desc = document.getElementById('offering1-desc');
+  if (offering1Desc) offering1Desc.textContent = t.offering1Desc;
+
+  const offering2Title = document.getElementById('offering2-title');
+  if (offering2Title) offering2Title.textContent = t.offering2Title;
+  const offering2Desc = document.getElementById('offering2-desc');
+  if (offering2Desc) offering2Desc.textContent = t.offering2Desc;
+
+  const offering3Title = document.getElementById('offering3-title');
+  if (offering3Title) offering3Title.textContent = t.offering3Title;
+  const offering3Desc = document.getElementById('offering3-desc');
+  if (offering3Desc) offering3Desc.textContent = t.offering3Desc;
+
+  const offering4Title = document.getElementById('offering4-title');
+  if (offering4Title) offering4Title.textContent = t.offering4Title;
+  const offering4Desc = document.getElementById('offering4-desc');
+  if (offering4Desc) offering4Desc.textContent = t.offering4Desc;
+
+  const offering5Title = document.getElementById('offering5-title');
+  if (offering5Title) offering5Title.textContent = t.offering5Title;
+  const offering5Desc = document.getElementById('offering5-desc');
+  if (offering5Desc) offering5Desc.textContent = t.offering5Desc;
+
+  const offering6Title = document.getElementById('offering6-title');
+  if (offering6Title) offering6Title.textContent = t.offering6Title;
+  const offering6Desc = document.getElementById('offering6-desc');
+  if (offering6Desc) offering6Desc.textContent = t.offering6Desc;
+
 
   const menuPreviewTitle = document.getElementById('menu-preview-title');
   if(menuPreviewTitle) menuPreviewTitle.textContent = t.menuPreviewTitle;
@@ -518,15 +594,15 @@ async function initMenu() {
 async function loadCategoriesFromFirebase() {
   try {
     console.log('📂 Loading categories from Firestore...');
-    
+
     if (!dbService || typeof dbService.getAllCategories !== 'function') {
       throw new Error('dbService not initialized');
     }
-    
+
     const categories = await dbService.getAllCategories();
     console.log('✅ Categories loaded:', categories.length);
     console.log('📊 Category IDs:', categories.map(c => ({ id: c.id, name: c.name })));
-    
+
     if (categories && categories.length > 0) {
       state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
       // Set default tab to first category (will be updated after items load)
@@ -558,15 +634,15 @@ async function loadCategoriesFromFirebase() {
 async function loadMenuItemsFromFirebase() {
   try {
     console.log('📋 Loading menu items from Firestore...');
-    
+
     if (!dbService) {
       throw new Error('dbService not initialized - check firebase-config.js');
     }
-    
+
     const items = await getMenuFromFirebase();
     console.log('✅ Menu items loaded:', items ? items.length : 0);
     state.menuItems = items || [];
-    
+
     // Auto-select first category with items
     if (items && items.length > 0 && state.categories.length > 0) {
       const itemsByCategory = {};
@@ -576,7 +652,7 @@ async function loadMenuItemsFromFirebase() {
         }
         itemsByCategory[item.category].push(item);
       });
-      
+
       // Find first category with items
       const firstCategoryWithItems = state.categories.find(cat => itemsByCategory[cat.id] && itemsByCategory[cat.id].length > 0);
       if (firstCategoryWithItems) {
@@ -655,7 +731,7 @@ function renderMenu() {
     }
     itemsByCategory[item.category].push(item);
   });
-  
+
   console.log('📦 Items grouped by category:', Object.keys(itemsByCategory).map(cat => `${cat}: ${itemsByCategory[cat].length} items`));
 
   state.categories.forEach(category => {
@@ -722,7 +798,7 @@ function renderMenu() {
       section.classList.add('hidden');
     }
   });
-  
+
   console.log('🎨 Render complete. Current tab:', state.currentTab);
 }
 
@@ -991,6 +1067,7 @@ function checkoutFlow(){
         id: item.id,
         name: item.name,
         price: item.price,
+        img: item.img,
         quantity: item.quantity
       })),
       subtotal,
