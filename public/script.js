@@ -570,8 +570,13 @@ async function initMenu() {
     await loadMenuItemsFromFirebase();
     setupRealtimeListeners();
     loadCart();
-    renderCategoryTabs();
-    renderMenu();
+    
+    // Only render if menu elements exist on the page
+    if (document.getElementById('tab-nav')) {
+      renderCategoryTabs();
+      renderMenu();
+    }
+    
     updateCart();
 
     console.log('✅ Menu loaded successfully from Firestore');
@@ -579,14 +584,13 @@ async function initMenu() {
     console.error('❌ Failed to load menu from Firebase:', error);
     // Initialize with default empty state
     state.menuItems = [];
-    state.categories = [
-      { id: 'sweet', name: 'Sweet Crêpes', order: 0 },
-      { id: 'savory', name: 'Savory Crêpes', order: 1 },
-      { id: 'kids', name: 'Kids Crêpes', order: 2 },
-      { id: 'drinks', name: 'Drinks', order: 3 }
-    ];
-    renderCategoryTabs();
-    renderMenu();
+    state.categories = [];
+    
+    // Only render if menu elements exist on the page
+    if (document.getElementById('tab-nav')) {
+      renderCategoryTabs();
+      renderMenu();
+    }
   }
 }
 
@@ -632,6 +636,13 @@ async function loadMenuItemsFromFirebase() {
     const items = await getMenuFromFirebase();
     console.log('✅ Menu items loaded:', items ? items.length : 0);
     state.menuItems = items || [];
+    
+    // Only switch tab if we're on the menu page
+    const isMenuPage = window.location.pathname.includes('menu.html');
+    if (!isMenuPage) {
+      console.log('📍 Not on menu page, skipping tab selection');
+      return;
+    }
   } catch (error) {
     console.error('❌ Failed to load menu items from Firebase:', error);
     console.error('Error details:', error.message);
@@ -1615,11 +1626,17 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     setLanguage(initialLang);
     applyTranslations();
 
-    await initMenu();
+    // Only initialize menu if we're on the menu page
+    const isMenuPage = window.location.pathname.includes('menu.html');
+    if (isMenuPage) {
+      await initMenu();
+    } else {
+      // Still load cart for other pages
+      loadCart();
+      updateCart();
+    }
 
-    updateCart();
     highlightActivePage();
-
     initScrollButton();
     initSecretAdminAccess();
   } catch(error) {
