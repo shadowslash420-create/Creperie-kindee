@@ -721,9 +721,8 @@ function renderCategoryTabs() {
   `;
 
   html += sortedCategories.map(cat => {
-    const categoryName = state.currentLang === 'ar'
-      ? (menuTranslations.ar.categories[cat.id] || cat.name)
-      : (menuTranslations.en.categories[cat.id] || cat.name);
+    // Use the actual category name from Firebase
+    const categoryName = cat.name || cat.id;
 
     return `
       <button class="tab-btn ${state.currentTab === cat.id ? 'active' : ''}"
@@ -825,8 +824,8 @@ function renderMenu() {
     `).join('');
 
     section.innerHTML = `
-      <h2 class="section-title">${allLabel}</h2>
-      <div class="section-desc">${allDesc}</div>
+      <h2 class="section-title" style="display:block;width:100%;text-align:left;">${allLabel}</h2>
+      <div class="section-desc" style="display:block;width:100%;">${allDesc}</div>
       <div class="menu-grid">
         ${menuItemsHTML}
       </div>
@@ -859,12 +858,12 @@ function renderMenu() {
 
       const items = itemsByCategory[category.id] || [];
       console.log(`🔍 Category ${category.id}: ${items.length} items found`);
-      const categoryName = state.currentLang === 'ar'
-        ? (menuTranslations.ar.categories[category.id] || category.name)
-        : (menuTranslations.en.categories[category.id] || category.name);
+      
+      // Use the actual category name from Firebase instead of translation
+      const categoryName = category.name || category.id;
       const categoryDesc = state.currentLang === 'ar'
-        ? (menuTranslations.ar.categoryDesc[category.id] || '')
-        : (menuTranslations.en.categoryDesc[category.id] || '');
+        ? (menuTranslations.ar.categoryDesc[category.id] || `منتجات ${categoryName}`)
+        : (menuTranslations.en.categoryDesc[category.id] || `${categoryName} products`);
       const emptyMsg = state.currentLang === 'ar' ? menuTranslations.ar.emptyCategoryMsg : menuTranslations.en.emptyCategoryMsg;
 
       const menuItemsHTML = items.length === 0 ? `
@@ -889,8 +888,8 @@ function renderMenu() {
       `).join('');
 
       section.innerHTML = `
-        <h2 class="section-title" id="title-${category.id}">${categoryName}</h2>
-        <div class="section-desc" id="desc-${category.id}">${categoryDesc}</div>
+        <h2 class="section-title" id="title-${category.id}" style="display:block;width:100%;text-align:left;">${categoryName}</h2>
+        <div class="section-desc" id="desc-${category.id}" style="display:block;width:100%;">${categoryDesc}</div>
         <div class="menu-grid" id="menu-${category.id}">
           ${menuItemsHTML}
         </div>
@@ -898,7 +897,7 @@ function renderMenu() {
 
       if (category.id === state.currentTab) {
         section.classList.remove('hidden');
-        console.log(`✅ Showing section for category: ${category.id} with ${items.length} items`);
+        console.log(`✅ Showing section for category: ${category.id} (${categoryName}) with ${items.length} items`);
       } else {
         section.classList.add('hidden');
       }
