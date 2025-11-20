@@ -30,7 +30,7 @@
   <div class="container">
     <section class="section">
       <h2 class="section-title" id="orders-title" style="text-align:center">تتبع طلباتك</h2>
-      
+
       <!-- Search Form -->
       <div class="card" style="margin-bottom:24px;padding:24px;">
         <h3 id="search-title" style="margin-bottom:16px;">ابحث عن طلبك</h3>
@@ -57,9 +57,7 @@
       </div>
       <div class="footer-connect">Connect</div>
       <div class="social-icons">
-        <a href="https://www.instagram.com/creperie_kinder_5?igsh=NzhpYWNzYTBtMHc4" target="_blank" class="social-icon" aria-label="Instagram">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-        </a>
+        <a href="https://www.instagram.com/creperie.kinder?igsh=MWlmcGdkOWdwbmhpcw==" target="_blank" rel="noopener noreferrer" class="social-icon">📷</a>
         <a href="https://facebook.com/creperiekinder" target="_blank" class="social-icon" aria-label="Facebook">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
         </a>
@@ -166,9 +164,9 @@
       const phone = document.getElementById('phone-search').value.trim();
       const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
       const t = getOrderTranslations();
-      
+
       let filtered = [];
-      
+
       if(orderId){
         filtered = orders.filter(o => o.id.toLowerCase().includes(orderId.toLowerCase()));
       } else if(phone){
@@ -181,7 +179,7 @@
         // Show all orders if no search
         filtered = orders;
       }
-      
+
       displayOrders(filtered.reverse());
     }
 
@@ -189,41 +187,41 @@
       const container = document.getElementById('orders-list');
       const t = getOrderTranslations();
       const lang = getCurrentLang();
-      
+
       container.innerHTML = '';
-      
+
       if(orders.length === 0){
         container.innerHTML = `<div class="card" style="text-align:center;padding:40px;color:#999;"><p>${t.noOrders}</p></div>`;
         return;
       }
-      
+
       orders.forEach(order => {
         const card = document.createElement('div');
         card.className = 'card';
         card.style.marginBottom = '20px';
-        
+
         const statusColors = {
           'pending': '#e67e22',
           'in-progress': '#3498db',
           'delivered': '#27ae60'
         };
-        
+
         const statusLabels = {
           'pending': t.pending,
           'in-progress': t['in-progress'],
           'delivered': t.delivered
         };
-        
+
         const status = order.status || 'pending';
         const statusColor = statusColors[status] || statusColors.pending;
         const statusLabel = statusLabels[status] || t.pending;
-        
+
         const itemsList = order.items.map(item => 
           `${item.qty}x ${item.name} - ${item.price.toFixed(2)} DZD`
         ).join('<br>');
-        
+
         const date = new Date(order.timestamp || order.createdAt).toLocaleString(lang === 'ar' ? 'ar-DZ' : 'en-US');
-        
+
         card.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
             <div>
@@ -279,7 +277,7 @@
             </div>
           </div>
         `;
-        
+
         container.appendChild(card);
       });
     }
@@ -288,7 +286,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       const orderId = urlParams.get('order');
-      
+
       if(orderId){
         document.getElementById('order-search').value = orderId;
         searchOrders();
@@ -300,7 +298,7 @@
           searchOrders();
         }
       }
-      
+
       // Wait for script.js module to load
       setTimeout(() => {
         if (typeof applyTranslations === 'function') applyTranslations();
@@ -312,4 +310,3 @@
   <script type="module" src="auth.js"></script>
 </body>
 </html>
-
