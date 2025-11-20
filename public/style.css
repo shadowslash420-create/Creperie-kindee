@@ -32,6 +32,9 @@
 
 html{
   scroll-behavior:smooth;
+  margin:0;
+  padding:0;
+  height:100%;
 }
 
 body{
@@ -52,6 +55,7 @@ body{
   min-height:100vh;
   display:flex;
   flex-direction:column;
+  height:100%;
 }
 
 body::before{
@@ -1357,6 +1361,8 @@ html{
   position:relative;
   margin-left:calc(-50vw + 50%);
   margin-right:calc(-50vw + 50%);
+  margin-bottom:0;
+  padding-bottom:0;
 }
 
 .footer::before{
@@ -1469,6 +1475,7 @@ html{
 #footer-copyright{
   color:#fff !important;
   padding-bottom:32px;
+  margin-bottom:0;
 }
 
 .social-icons{
