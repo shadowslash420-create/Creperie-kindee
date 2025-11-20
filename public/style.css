@@ -43,13 +43,15 @@ body{
   color:var(--text-primary);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
-  padding-bottom:0;
   line-height:1.8;
   font-size:17px;
   font-weight:400;
   overflow-x:hidden;
   transition:opacity 0.3s ease-in-out;
   position:relative;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
 }
 
 body::before{
@@ -1347,10 +1349,10 @@ html{
 .footer{
   background:linear-gradient(135deg, #E30613 0%, #C10510 100%);
   color:#fff;
-  padding:80px 0 48px;
+  padding:80px 0 0 0;
   text-align:center;
   box-shadow:0 -4px 20px rgba(0,0,0,0.1);
-  margin-top:80px;
+  margin-top:auto;
   width:100vw;
   position:relative;
   margin-left:calc(-50vw + 50%);
@@ -1466,6 +1468,7 @@ html{
 
 #footer-copyright{
   color:#fff !important;
+  padding-bottom:32px;
 }
 
 .social-icons{
