@@ -1393,6 +1393,7 @@ html{
   overflow:hidden;
   backdrop-filter:blur(4px);
   border:1px solid rgba(255,255,255,0.12);
+  box-shadow:0 4px 12px rgba(227,6,19,0.4), 0 2px 6px rgba(0,0,0,0.2);
 }
 
 .footer-links a::before{
@@ -1414,7 +1415,7 @@ html{
   background:rgba(212,165,116,0.25);
   color:#fff;
   transform:translateY(-2px);
-  box-shadow:0 6px 20px rgba(0,0,0,0.15);
+  box-shadow:0 8px 24px rgba(227,6,19,0.6), 0 4px 12px rgba(0,0,0,0.3);
   border-color:rgba(212,165,116,0.4);
 }
 
