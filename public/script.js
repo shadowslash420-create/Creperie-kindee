@@ -575,6 +575,8 @@ async function initMenu() {
     
     // Only render if menu elements exist on the page
     if (document.getElementById('tab-nav')) {
+      // Set default tab to 'all' to show all items
+      state.currentTab = 'all';
       renderCategoryTabs();
       renderMenu();
     }
@@ -590,6 +592,7 @@ async function initMenu() {
     
     // Only render if menu elements exist on the page
     if (document.getElementById('tab-nav')) {
+      state.currentTab = 'all';
       renderCategoryTabs();
       renderMenu();
     }
@@ -708,7 +711,16 @@ function renderCategoryTabs() {
   const sortedCategories = [...state.categories].sort((a, b) => (a.order || 0) - (b.order || 0));
   console.log('📋 Sorted categories:', sortedCategories.map(c => c.id));
 
-  const html = sortedCategories.map(cat => {
+  // Add "All" tab first
+  const allLabel = state.currentLang === 'ar' ? 'الكل' : 'All';
+  let html = `
+    <button class="tab-btn ${state.currentTab === 'all' ? 'active' : ''}"
+      onclick="switchTab('all')" id="tab-all">
+      ${allLabel}
+    </button>
+  `;
+
+  html += sortedCategories.map(cat => {
     const categoryName = state.currentLang === 'ar'
       ? (menuTranslations.ar.categories[cat.id] || cat.name)
       : (menuTranslations.en.categories[cat.id] || cat.name);
@@ -772,15 +784,15 @@ function renderMenu() {
   // Find the footer element to insert sections before it
   const footer = container.querySelector('.footer');
 
-  state.categories.forEach(category => {
-    const sectionId = `section-${category.id}`;
+  // Handle "All" tab - show all items
+  if (state.currentTab === 'all') {
+    const sectionId = 'section-all';
     let section = document.getElementById(sectionId);
 
     if (!section) {
       section = document.createElement('section');
       section.id = sectionId;
-      section.className = 'section hidden';
-      // Insert before footer instead of appending to end
+      section.className = 'section';
       if (footer) {
         container.insertBefore(section, footer);
       } else {
@@ -788,22 +800,15 @@ function renderMenu() {
       }
     }
 
-    const items = itemsByCategory[category.id] || [];
-    console.log(`🔍 Category ${category.id}: ${items.length} items found`);
-    const categoryName = state.currentLang === 'ar'
-      ? (menuTranslations.ar.categories[category.id] || category.name)
-      : (menuTranslations.en.categories[category.id] || category.name);
-    const categoryDesc = state.currentLang === 'ar'
-      ? (menuTranslations.ar.categoryDesc[category.id] || '')
-      : (menuTranslations.en.categoryDesc[category.id] || '');
-    const emptyMsg = state.currentLang === 'ar' ? menuTranslations.ar.emptyCategoryMsg : menuTranslations.en.emptyCategoryMsg;
+    const allLabel = state.currentLang === 'ar' ? 'جميع المنتجات' : 'All Products';
+    const allDesc = state.currentLang === 'ar' ? 'تصفح جميع منتجاتنا المميزة' : 'Browse all our featured products';
 
-    const menuItemsHTML = items.length === 0 ? `
+    const menuItemsHTML = state.menuItems.length === 0 ? `
       <div class="empty-category-message">
         <div class="empty-icon">🍽️</div>
-        <p>${emptyMsg}</p>
+        <p>${state.currentLang === 'ar' ? 'لا توجد منتجات حالياً' : 'No products available'}</p>
       </div>
-    ` : items.map(item => `
+    ` : state.menuItems.map(item => `
       <div class="menu-card">
         <div class="menu-card-image" style="background-image:url('${item.img || 'images/placeholder.svg'}')"></div>
         <div class="menu-card-content">
@@ -820,27 +825,85 @@ function renderMenu() {
     `).join('');
 
     section.innerHTML = `
-      <h2 class="section-title" id="title-${category.id}">${categoryName}</h2>
-      <div class="section-desc" id="desc-${category.id}">${categoryDesc}</div>
-      <div class="menu-grid" id="menu-${category.id}">
+      <h2 class="section-title">${allLabel}</h2>
+      <div class="section-desc">${allDesc}</div>
+      <div class="menu-grid">
         ${menuItemsHTML}
       </div>
     `;
 
-    if (category.id === state.currentTab) {
-      section.classList.remove('hidden');
-      console.log(`✅ Showing section for category: ${category.id} with ${items.length} items`);
-      // Scroll the section into view
-      setTimeout(() => {
-        const visibleSection = document.getElementById(`section-${category.id}`);
-        if (visibleSection && !visibleSection.classList.contains('hidden')) {
-          visibleSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
-    } else {
-      section.classList.add('hidden');
+    section.classList.remove('hidden');
+    console.log('✅ Showing all items:', state.menuItems.length);
+  } else {
+    // Hide "all" section if it exists
+    const allSection = document.getElementById('section-all');
+    if (allSection) {
+      allSection.classList.add('hidden');
     }
-  });
+
+    // Show specific category
+    state.categories.forEach(category => {
+      const sectionId = `section-${category.id}`;
+      let section = document.getElementById(sectionId);
+
+      if (!section) {
+        section = document.createElement('section');
+        section.id = sectionId;
+        section.className = 'section hidden';
+        if (footer) {
+          container.insertBefore(section, footer);
+        } else {
+          container.appendChild(section);
+        }
+      }
+
+      const items = itemsByCategory[category.id] || [];
+      console.log(`🔍 Category ${category.id}: ${items.length} items found`);
+      const categoryName = state.currentLang === 'ar'
+        ? (menuTranslations.ar.categories[category.id] || category.name)
+        : (menuTranslations.en.categories[category.id] || category.name);
+      const categoryDesc = state.currentLang === 'ar'
+        ? (menuTranslations.ar.categoryDesc[category.id] || '')
+        : (menuTranslations.en.categoryDesc[category.id] || '');
+      const emptyMsg = state.currentLang === 'ar' ? menuTranslations.ar.emptyCategoryMsg : menuTranslations.en.emptyCategoryMsg;
+
+      const menuItemsHTML = items.length === 0 ? `
+        <div class="empty-category-message">
+          <div class="empty-icon">🍽️</div>
+          <p>${emptyMsg}</p>
+        </div>
+      ` : items.map(item => `
+        <div class="menu-card">
+          <div class="menu-card-image" style="background-image:url('${item.img || 'images/placeholder.svg'}')"></div>
+          <div class="menu-card-content">
+            <h3 class="menu-card-title">${item.name}</h3>
+            <p class="menu-card-desc">${item.desc}</p>
+            <div class="menu-card-footer">
+              <span class="menu-card-price">${item.price.toFixed(2)} DZD</span>
+              <button class="menu-card-btn" onclick="addToCart('${item.id}')">
+                ${state.currentLang === 'ar' ? menuTranslations.ar.addToCart : menuTranslations.en.addToCart}
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      section.innerHTML = `
+        <h2 class="section-title" id="title-${category.id}">${categoryName}</h2>
+        <div class="section-desc" id="desc-${category.id}">${categoryDesc}</div>
+        <div class="menu-grid" id="menu-${category.id}">
+          ${menuItemsHTML}
+        </div>
+      `;
+
+      if (category.id === state.currentTab) {
+        section.classList.remove('hidden');
+        console.log(`✅ Showing section for category: ${category.id} with ${items.length} items`);
+      } else {
+        section.classList.add('hidden');
+      }
+    });
+  }
 
   console.log('🎨 Render complete. Current tab:', state.currentTab);
 }
@@ -855,11 +918,8 @@ function switchTab(categoryId) {
   const activeTabBtn = document.getElementById(`tab-${categoryId}`);
   if (activeTabBtn) activeTabBtn.classList.add('active');
 
-  document.querySelectorAll('.section').forEach(section => {
-    section.classList.add('hidden');
-  });
-  const targetSection = document.getElementById(`section-${categoryId}`);
-  if (targetSection) targetSection.classList.remove('hidden');
+  // Re-render menu to show correct content
+  renderMenu();
 }
 
 // Cart functions
