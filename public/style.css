@@ -995,6 +995,19 @@ html{
 
 .cart-item:last-child{border-bottom:none}
 
+.cart-item-img{
+  width:64px;
+  height:64px;
+  object-fit:cover;
+  border-radius:8px;
+  flex-shrink:0;
+  border:1px solid var(--border);
+}
+
+.cart-item-info{
+  flex:1;
+}
+
 .cart-item-details{
   flex:1;
 }

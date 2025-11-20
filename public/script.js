@@ -566,6 +566,10 @@ async function initMenu() {
 
     await loadCategoriesFromFirebase();
     await loadMenuItemsFromFirebase();
+    
+    // Derive categories from menu items if Firestore categories are empty
+    deriveCategoriesFromMenuItems();
+    
     setupRealtimeListeners();
     loadCart();
     
@@ -611,7 +615,7 @@ async function loadCategoriesFromFirebase() {
       state.currentTab = state.categories[0].id;
       console.log('🎯 Initial default tab set to:', state.currentTab);
     } else {
-      console.warn('⚠️ No categories found in Firestore');
+      console.warn('⚠️ No categories found in Firestore - will derive from menu items');
       state.categories = [];
       state.currentTab = null;
     }
@@ -619,6 +623,41 @@ async function loadCategoriesFromFirebase() {
     console.error('❌ Failed to load categories from Firebase:', error);
     state.categories = [];
     state.currentTab = null;
+  }
+}
+
+// Derive categories from menu items if Firestore categories are empty
+function deriveCategoriesFromMenuItems() {
+  if (state.categories.length > 0 || state.menuItems.length === 0) {
+    return; // Already have categories or no items to derive from
+  }
+
+  const uniqueCategories = new Set();
+  state.menuItems.forEach(item => {
+    if (item.category) {
+      uniqueCategories.add(item.category);
+    }
+  });
+
+  const categoryOrder = ['sweet', 'savory', 'kids', 'drinks'];
+  const sortedCategories = Array.from(uniqueCategories).sort((a, b) => {
+    const indexA = categoryOrder.indexOf(a);
+    const indexB = categoryOrder.indexOf(b);
+    if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
+
+  state.categories = sortedCategories.map((catId, index) => ({
+    id: catId,
+    name: catId,
+    order: index
+  }));
+
+  if (state.categories.length > 0) {
+    state.currentTab = state.categories[0].id;
+    console.log('✅ Derived categories from menu items:', state.categories.map(c => c.id));
   }
 }
 
