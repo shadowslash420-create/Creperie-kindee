@@ -683,19 +683,30 @@ async function loadMenuItemsFromFirebase() {
   }
 }
 
+// Debounce helper to prevent excessive re-renders
+let renderTimeout = null;
+function debounceRender(callback, delay = 300) {
+  if (renderTimeout) {
+    clearTimeout(renderTimeout);
+  }
+  renderTimeout = setTimeout(callback, delay);
+}
+
 // Setup real-time listeners
 function setupRealtimeListeners() {
   listenToMenuUpdates((items) => {
     console.log('📡 Menu updated in real-time:', items.length, 'items');
     state.menuItems = items;
-    renderMenu();
+    debounceRender(() => renderMenu(), 100);
   });
 
   dbService.listenToCategoryChanges((categories) => {
     console.log('📡 Categories updated in real-time:', categories.length, 'categories');
     state.categories = categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-    renderCategoryTabs();
-    renderMenu();
+    debounceRender(() => {
+      renderCategoryTabs();
+      renderMenu();
+    }, 100);
   });
 }
 
