@@ -665,13 +665,13 @@ html{
 }
 
 .tab-btn{
-  padding:10px 24px;
+  padding:12px 28px;
   border:none;
   background:transparent;
-  color:#718096;
-  font-size:15px;
-  font-weight:500;
-  letter-spacing:0.2px;
+  color:#2d3748;
+  font-size:16px;
+  font-weight:600;
+  letter-spacing:0.3px;
   cursor:pointer;
   white-space:nowrap;
   text-align:center;
@@ -681,6 +681,7 @@ html{
   position:relative;
   flex-shrink:0;
   min-width:fit-content;
+  text-transform:capitalize;
 }
 
 .tab-btn::after{
