@@ -1,27 +1,26 @@
 {
-  "version": 2,
-  "builds": [
+  "buildCommand": "echo 'No build needed'",
+  "outputDirectory": "public",
+  "rewrites": [
     {
-      "src": "api/index.js",
-      "use": "@vercel/node"
+      "source": "/api/firebase-config",
+      "destination": "/api/index.js"
     },
     {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
+      "source": "/api/menu",
+      "destination": "/api/index.js"
     },
     {
-      "src": "/(.*\\.(css|js|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot|html))",
-      "dest": "/public/$1"
+      "source": "/api/orders",
+      "destination": "/api/index.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+      "source": "/api/feedback",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/api/upload-image",
+      "destination": "/api/index.js"
     }
   ]
 }
