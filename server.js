@@ -147,8 +147,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running at http://0.0.0.0:${PORT}/`);
-  console.log(`Serving directory: ${path.join(__dirname, 'public')}`);
-});
+// Export for Vercel serverless
+module.exports = app;
+
+// Start server for local development
+if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running at http://0.0.0.0:${PORT}/`);
+    console.log(`Serving directory: ${path.join(__dirname, 'public')}`);
+  });
+}
