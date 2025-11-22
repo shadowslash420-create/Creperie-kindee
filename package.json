@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "description": "Modern website for Creperie Kinder - a crepe restaurant with Sweet Paris-inspired design",
   "scripts": {
-    "dev": "npx vercel dev",
-    "build": "echo 'Static site - no build needed'",
-    "start": "npx vercel dev",
-    "deploy": "npx vercel --prod",
-    "preview": "npx http-server public -p 5000 -c-1 --cors"
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'No build step required'",
+    "vercel-build": "echo 'No build step required'"
   },
   "keywords": [
     "creperie",
@@ -18,9 +17,6 @@
   ],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "http-server": "^14.1.1"
-  },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2",
