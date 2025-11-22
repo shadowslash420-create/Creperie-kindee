@@ -1,8 +1,21 @@
 {
-  "buildCommand": "echo 'No build needed'",
-  "outputDirectory": "public",
-  "cleanUrls": true,
-  "trailingSlash": false,
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "server.js"
+    }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -26,7 +39,7 @@
       ]
     },
     {
-      "source": "/(.*)",
+      "source": "/(.*\\.(html|css|js|png|jpg|jpeg|gif|svg|ico))",
       "headers": [
         {
           "key": "Cache-Control",
