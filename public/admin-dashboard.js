@@ -281,7 +281,8 @@ function updateDashboardStats() {
 
   const todayRevenue = todayOrders.reduce((sum, order) => sum + (order.total || 0), 0);
   const pending = state.orders.filter(o => o.status === 'pending' || o.status === 'unconfirmed').length;
-  const completed = todayOrders.filter(o => o.status === 'delivered').length;
+  // Count both delivered orders today and all delivered orders as confirmed
+  const completed = state.orders.filter(o => o.status === 'delivered').length;
 
   document.getElementById('stat-revenue').textContent = todayRevenue.toFixed(2) + ' DZD';
   document.getElementById('stat-total-orders').textContent = state.orders.length;
