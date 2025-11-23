@@ -501,8 +501,46 @@
       const searchForm = document.querySelector('.card'); // The search form card
       const t = getOrderTranslations();
 
-      // Always show the search form for all users
-      if (searchForm) searchForm.style.display = 'block';
+      // Check if there's a recent order in URL params or localStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderIdFromUrl = urlParams.get('order');
+      const recentOrderId = localStorage.getItem('kc_recent_order_id');
+      const recentOrderPhone = localStorage.getItem('kc_recent_order_phone');
+
+      // If there's a recent order, automatically show it
+      if ((orderIdFromUrl || recentOrderId) && recentOrderPhone) {
+        console.log('📦 Auto-loading recent order:', orderIdFromUrl || recentOrderId);
+        
+        // Hide search form initially
+        if (searchForm) searchForm.style.display = 'none';
+        
+        // Auto-search by phone number
+        searchOrdersByPhone(recentOrderPhone);
+        
+        // Clear the recent order after displaying
+        if (!orderIdFromUrl) {
+          localStorage.removeItem('kc_recent_order_id');
+          localStorage.removeItem('kc_recent_order_phone');
+        }
+        
+        // Show a button to search again
+        const ordersList = document.getElementById('orders-list');
+        if (ordersList) {
+          setTimeout(() => {
+            const searchAgainBtn = document.createElement('div');
+            searchAgainBtn.style.cssText = 'text-align:center;margin-top:20px;';
+            searchAgainBtn.innerHTML = `
+              <button class="cta" onclick="showSearchForm()" style="padding:12px 24px;">
+                ${t.searchBtn}
+              </button>
+            `;
+            ordersList.appendChild(searchAgainBtn);
+          }, 500);
+        }
+      } else {
+        // Show the search form for manual search
+        if (searchForm) searchForm.style.display = 'block';
+      }
       
       const phoneSearch = document.getElementById('phone-search');
       const searchDesc = document.getElementById('search-description');
@@ -530,6 +568,18 @@
         if (typeof updatePageIndicator === 'function') updatePageIndicator();
       }, 100);
     });
+    
+    // Function to show search form again
+    window.showSearchForm = function() {
+      const searchForm = document.querySelector('.card');
+      if (searchForm) searchForm.style.display = 'block';
+      document.getElementById('orders-list').innerHTML = '';
+      cachedOrders = null;
+      if (orderListenerUnsubscribe) {
+        orderListenerUnsubscribe();
+        orderListenerUnsubscribe = null;
+      }
+    };
   </script>
   <script type="module" src="auth.js"></script>
 </body>

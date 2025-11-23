@@ -359,6 +359,10 @@ window.checkoutFlow = async function() {
     const orderId = await placeOrderToFirebase(orderData);
     console.log('Order placed with ID:', orderId);
 
+    // Save order info for auto-display
+    localStorage.setItem('kc_recent_order_id', orderId);
+    localStorage.setItem('kc_recent_order_phone', formattedPhone);
+
     cart = [];
     saveCart();
     updateCart();
@@ -368,7 +372,7 @@ window.checkoutFlow = async function() {
 
     // Redirect to orders page after successful order
     setTimeout(() => {
-      window.location.href = 'my-orders.html';
+      window.location.href = 'my-orders.html?order=' + orderId;
     }, 1000);
   } catch (error) {
     console.error('Error placing order:', error);
