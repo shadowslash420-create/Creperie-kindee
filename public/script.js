@@ -1034,7 +1034,7 @@ async function loadMenuItemsFromFirebase() {
 // Initialize menu (for menu.html)
 async function initMenu() {
   await loadMenuItemsFromFirebase();
-  renderMenu();
+  renderMenu(null);  // Display all categories with their items
   setupSearch();
 }
 
@@ -1179,9 +1179,12 @@ window.filterByCategory = function(category) {
     activeTab.classList.add('active');
   }
 
-  // Re-render menu with filter
-  const actualCategory = category === 'all' ? null : category;
-  renderMenu(actualCategory);
+  // Re-render menu with filter - null shows all categories
+  if (category === 'all') {
+    renderMenu(null);  // Show all categories with their items
+  } else {
+    renderMenu(category);  // Show only selected category
+  }
 }
 
 // Alias for compatibility
