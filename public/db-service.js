@@ -238,11 +238,47 @@ class DatabaseService {
     return null;
   }
 
+  async getOrdersByPhone(phoneNumber) {
+    await this.init();
+    const normalizedPhone = this.normalizePhone(phoneNumber);
+    const ordersRef = collection(this.db, 'orders');
+    const q = query(ordersRef, where('phone', '==', normalizedPhone));
+    const snapshot = await getDocs(q);
+    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    orders.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+      const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+      return dateB - dateA;
+    });
+    
+    return orders;
+  }
+
+  normalizePhone(phoneStr) {
+    if (!phoneStr) return '';
+    
+    let cleaned = phoneStr.replace(/\D/g, '');
+    
+    if (cleaned.startsWith('00213')) {
+      cleaned = cleaned.substring(5);
+    } else if (cleaned.startsWith('213')) {
+      cleaned = cleaned.substring(3);
+    }
+    
+    if (!cleaned.startsWith('0')) {
+      cleaned = '0' + cleaned;
+    }
+    
+    return cleaned;
+  }
+
   async createOrder(orderData) {
     await this.init();
     const ordersRef = collection(this.db, 'orders');
     const order = {
       ...orderData,
+      phone: this.normalizePhone(orderData.phone),
       status: orderData.status || 'pending',
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
