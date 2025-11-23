@@ -8,18 +8,35 @@ const admin = require('firebase-admin');
 
 const app = express();
 
-// Initialize Firebase Admin SDK for Vercel
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-    })
-  });
+// Initialize Firebase Admin SDK
+let db;
+try {
+  if (!admin.apps.length) {
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    
+    if (projectId && clientEmail && privateKey) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey
+        })
+      });
+      db = admin.firestore();
+      console.log('✅ Firebase Admin initialized');
+    } else {
+      console.log('⚠️ Firebase credentials not configured - Firebase features will be disabled');
+      db = null;
+    }
+  } else {
+    db = admin.firestore();
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize Firebase Admin:', error.message);
+  db = null;
 }
-
-const db = admin.firestore();
 
 // Middleware
 app.use(cors());
