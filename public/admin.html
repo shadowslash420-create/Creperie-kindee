@@ -57,7 +57,6 @@
           <span class="nav-icon">👥</span>
           <span class="nav-text">Customers</span>
         </a>
-
         <a href="#" class="nav-item" onclick="showSection('reviews', event)">
           <span class="nav-icon">⭐</span>
           <span class="nav-text">Reviews</span>
@@ -141,17 +140,9 @@
           </div>
         </div>
 
-        <!-- Recent Orders & Best Sellers -->
+        <!-- Best Sellers -->
         <div class="dashboard-row">
-          <div class="table-card">
-            <div class="card-header">
-              <h3>Recent Orders</h3>
-              <a href="#" onclick="showSection('orders', event)" class="view-all-link">View All →</a>
-            </div>
-            <div class="table-container" id="recent-orders-table"></div>
-          </div>
-
-          <div class="best-sellers-card">
+          <div class="best-sellers-card" style="grid-column: 1 / -1; max-width: 600px; margin: 0 auto;">
             <div class="card-header">
               <h3>Best Sellers</h3>
             </div>

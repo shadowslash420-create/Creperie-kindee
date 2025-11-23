@@ -247,7 +247,6 @@ function showSection(section, event) {
   if (section === 'dashboard') loadDashboard();
   else if (section === 'orders') loadOrders();
   else if (section === 'menu') loadMenu();
-  else if (section === 'inventory') loadInventory();
   else if (section === 'customers') loadCustomers();
   else if (section === 'reviews') loadReviews();
   else if (section === 'analytics') loadAnalytics();
@@ -266,7 +265,6 @@ async function loadDashboard() {
   try {
     await Promise.all([loadMenuData(), loadOrdersData()]);
     updateDashboardStats();
-    renderRecentOrders();
     renderBestSellers();
   } catch (error) {
     console.error('Failed to load dashboard:', error);
@@ -289,45 +287,6 @@ function updateDashboardStats() {
   document.getElementById('stat-total-orders').textContent = state.orders.length;
   document.getElementById('stat-pending').textContent = pending;
   document.getElementById('stat-completed').textContent = completed;
-}
-
-function renderRecentOrders() {
-  const container = document.getElementById('recent-orders-table');
-  const recentOrders = state.orders.slice(0, 5);
-
-  if (recentOrders.length === 0) {
-    container.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">No orders yet</p>';
-    return;
-  }
-
-  const html = `
-    <table style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr style="background: #f7fafc; text-align: left;">
-          <th style="padding: 12px;">Order ID</th>
-          <th style="padding: 12px;">Customer</th>
-          <th style="padding: 12px;">Total</th>
-          <th style="padding: 12px;">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${recentOrders.map(order => `
-          <tr style="border-bottom: 1px solid #e2e8f0;">
-            <td style="padding: 12px;">#${order.id || 'N/A'}</td>
-            <td style="padding: 12px;">${order.customerName || 'Anonymous'}</td>
-            <td style="padding: 12px; font-weight: 600;">${(order.total || 0).toFixed(2)} DZD</td>
-            <td style="padding: 12px;">
-              <span style="padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; 
-                background: ${getStatusColor(order.status)};">
-                ${order.status || 'pending'}
-              </span>
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
-  container.innerHTML = html;
 }
 
 function renderBestSellers() {
@@ -1008,15 +967,6 @@ function setupRealtimeListeners() {
     }
   });
 
-  // Listen to ingredients changes
-  dbService.listenToIngredientChanges((updated) => {
-    console.log('🔄 Admin: Ingredients updated:', updated.length);
-    state.ingredients = updated;
-    if (state.currentSection === 'inventory') {
-      renderInventoryGrid();
-    }
-  });
-
   // Listen to coupons changes
   dbService.listenToCouponChanges((updated) => {
     console.log('🔄 Admin: Coupons updated:', updated.length);
@@ -1085,11 +1035,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openImgBBUpload = openImgBBUpload;
   window.handleImageUrlInput = handleImageUrlInput;
   window.initializeDashboard = initializeDashboard;
-  window.openAddIngredientModal = openAddIngredientModal;
-  window.editIngredient = editIngredient;
-  window.saveIngredient = saveIngredient;
-  window.deleteIngredient = deleteIngredient;
-  window.closeIngredientModal = closeIngredientModal;
   window.openAddCouponModal = openAddCouponModal;
   window.editCoupon = editCoupon;
   window.saveCoupon = saveCoupon;
@@ -1098,7 +1043,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openAddStaffModal = openAddStaffModal;
   window.deleteStaff = deleteStaff;
   window.deleteReview = deleteReview;
-  window.renderInventoryGrid = renderInventoryGrid;
   window.renderCouponsGrid = renderCouponsGrid;
   window.renderReviewsList = renderReviewsList;
   window.renderStaffTable = renderStaffTable;
@@ -1210,81 +1154,6 @@ function renderCategoriesList() {
 }
 
 // ==================== NEW SECTIONS LOAD FUNCTIONS ====================
-
-async function loadInventory() {
-  console.log('📋 Loading inventory...');
-  try {
-    await loadIngredientsData();
-    renderInventoryGrid();
-  } catch (error) {
-    console.error('Failed to load inventory:', error);
-  }
-}
-
-function renderInventoryGrid() {
-  const container = document.getElementById('inventory-grid');
-  if (!container) return;
-
-  if (state.ingredients.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center;padding:60px 20px;">
-        <div style="font-size:64px;margin-bottom:16px;">📦</div>
-        <h3 style="color:#2d3748;margin-bottom:8px;">No ingredients yet</h3>
-        <p style="color:#718096;margin-bottom:24px;">Start tracking your inventory</p>
-        <button class="btn-primary" onclick="openAddIngredientModal()" 
-          style="padding:12px 24px;background:linear-gradient(135deg,#FF6B35,#FF8C42);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
-          ➕ Add Ingredient
-        </button>
-      </div>
-    `;
-    return;
-  }
-
-  const html = state.ingredients.map(ingredient => {
-    const stockLevel = ingredient.currentStock || 0;
-    const minStock = ingredient.minStock || 0;
-    const isLowStock = stockLevel <= minStock;
-
-    return `
-      <div class="inventory-card" style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
-          <h3 style="margin:0;color:#2d3748;font-size:18px;">${ingredient.name}</h3>
-          <span style="padding:4px 12px;background:${isLowStock ? '#FEE' : '#E8F5E9'};color:${isLowStock ? '#C00' : '#2E7D32'};border-radius:12px;font-size:12px;font-weight:600;">
-            ${isLowStock ? '⚠️ Low Stock' : '✅ In Stock'}
-          </span>
-        </div>
-        <div style="margin-bottom:16px;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-            <span style="color:#666;font-size:14px;">Current Stock:</span>
-            <strong style="color:#2d3748;">${stockLevel} ${ingredient.unit || 'units'}</strong>
-          </div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-            <span style="color:#666;font-size:14px;">Min Stock:</span>
-            <strong style="color:#666;">${minStock} ${ingredient.unit || 'units'}</strong>
-          </div>
-          ${ingredient.supplier ? `
-            <div style="display:flex;justify-content:space-between;">
-              <span style="color:#666;font-size:14px;">Supplier:</span>
-              <span style="color:#2d3748;font-weight:500;">${ingredient.supplier}</span>
-            </div>
-          ` : ''}
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="editIngredient('${ingredient.id}')" 
-            style="flex:1;padding:8px;background:#4299e1;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
-            ✏️ Edit
-          </button>
-          <button onclick="deleteIngredient('${ingredient.id}')" 
-            style="flex:1;padding:8px;background:#e53e3e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
-            🗑️ Delete
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  container.innerHTML = html;
-}
 
 async function loadCustomers() {
   console.log('👥 Loading customers...');
@@ -1657,91 +1526,6 @@ async function deleteStaff(staffId) {
 }
 
 // ==================== NEW MODAL FUNCTIONS ====================
-
-function openAddIngredientModal() {
-  state.editingIngredient = null;
-  document.getElementById('ingredient-modal-title').textContent = '➕ Add New Ingredient';
-  document.getElementById('ingredient-id').value = '';
-  document.getElementById('ingredient-name').value = '';
-  document.getElementById('ingredient-current-stock').value = '';
-  document.getElementById('ingredient-min-stock').value = '';
-  document.getElementById('ingredient-unit').value = 'kg';
-  document.getElementById('ingredient-supplier').value = '';
-  document.getElementById('ingredient-modal').classList.add('active');
-}
-
-function editIngredient(ingredientId) {
-  const ingredient = state.ingredients.find(i => i.id === ingredientId);
-  if (!ingredient) return;
-
-  state.editingIngredient = ingredient;
-  document.getElementById('ingredient-modal-title').textContent = '✏️ Edit Ingredient';
-  document.getElementById('ingredient-id').value = ingredient.id;
-  document.getElementById('ingredient-name').value = ingredient.name;
-  document.getElementById('ingredient-current-stock').value = ingredient.currentStock || 0;
-  document.getElementById('ingredient-min-stock').value = ingredient.minStock || 0;
-  document.getElementById('ingredient-unit').value = ingredient.unit || 'kg';
-  document.getElementById('ingredient-supplier').value = ingredient.supplier || '';
-  document.getElementById('ingredient-modal').classList.add('active');
-}
-
-async function saveIngredient(event) {
-  event.preventDefault();
-
-  const ingredientId = document.getElementById('ingredient-id').value;
-  const name = document.getElementById('ingredient-name').value.trim();
-  const currentStock = parseFloat(document.getElementById('ingredient-current-stock').value);
-  const minStock = parseFloat(document.getElementById('ingredient-min-stock').value);
-  const unit = document.getElementById('ingredient-unit').value;
-  const supplier = document.getElementById('ingredient-supplier').value.trim();
-
-  if (!name || isNaN(currentStock) || isNaN(minStock)) {
-    alert('❌ Please fill all required fields correctly');
-    return;
-  }
-
-  const saveBtn = document.getElementById('save-ingredient-btn');
-  saveBtn.disabled = true;
-  saveBtn.textContent = '💾 Saving...';
-
-  try {
-    const ingredientData = { name, currentStock, minStock, unit, supplier };
-
-    if (ingredientId) {
-      await dbService.updateIngredient(ingredientId, ingredientData);
-    } else {
-      await dbService.addIngredient(ingredientData);
-    }
-
-    closeIngredientModal();
-    await loadInventory();
-    alert('✅ Ingredient saved successfully!');
-  } catch (error) {
-    console.error('❌ Failed to save ingredient:', error);
-    alert('❌ Failed to save ingredient: ' + error.message);
-  } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = '💾 Save Ingredient';
-  }
-}
-
-async function deleteIngredient(ingredientId) {
-  if (!confirm('Are you sure you want to delete this ingredient?')) return;
-
-  try {
-    await dbService.deleteIngredient(ingredientId);
-    await loadInventory();
-    alert('✅ Ingredient deleted successfully!');
-  } catch (error) {
-    console.error('❌ Failed to delete ingredient:', error);
-    alert('❌ Failed to delete ingredient: ' + error.message);
-  }
-}
-
-function closeIngredientModal() {
-  document.getElementById('ingredient-modal').classList.remove('active');
-  state.editingIngredient = null;
-}
 
 function openAddCouponModal() {
   state.editingCoupon = null;
