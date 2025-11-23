@@ -34,5 +34,18 @@ service cloud.firestore {
       // Only admin can update or delete orders
       allow update, delete: if isAdmin();
     }
+    
+    // Settings - public read, admin write
+    match /settings/{settingId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Reviews/Feedback - public read, authenticated users can create
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if isAdmin();
+    }
   }
 }
