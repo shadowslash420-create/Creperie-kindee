@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>My Orders - Creperie Kinder</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      }
+    }
+  </style>
 </head>
 <body dir="ltr">
   <header class="header">
@@ -214,7 +226,7 @@
       }
 
       // Set up real-time listener using dbService
-      orderListenerUnsubscribe = dbService.listenToOrdersByEmail(userEmail, (updatedOrders) => {
+      dbService.listenToOrdersByEmail(userEmail, (updatedOrders) => {
         console.log('📲 Real-time order update received:', updatedOrders.length, 'orders');
 
         const previousOrders = cachedOrders || [];
@@ -232,6 +244,8 @@
         }
 
         displayOrders(updatedOrders);
+      }).then(unsubscribe => {
+        orderListenerUnsubscribe = unsubscribe;
       });
     }
 
@@ -336,7 +350,23 @@
 
         card.innerHTML = `
           <div style="margin-bottom:16px;">
-            <h3 style="margin:0 0 8px 0;color:var(--warm-gold);">${order.id}</h3>
+            <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+              <h3 style="margin:0;color:var(--warm-gold);">${order.id}</h3>
+              <div style="
+                background:${statusColor};
+                color:white;
+                padding:8px 20px;
+                border-radius:20px;
+                font-weight:700;
+                font-size:14px;
+                text-transform:uppercase;
+                letter-spacing:0.5px;
+                box-shadow:0 2px 8px rgba(0,0,0,0.15);
+                animation:pulse 2s ease-in-out infinite;
+              ">
+                ${statusLabel}
+              </div>
+            </div>
             <div style="font-size:14px;color:#999;">${date}</div>
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-bottom:16px;">

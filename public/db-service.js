@@ -303,7 +303,7 @@ class DatabaseService {
   }
 
   listenToOrdersByEmail(email, callback) {
-    this.init().then(() => {
+    return this.init().then(() => {
       const ordersRef = collection(this.db, 'orders');
       const q = query(ordersRef, where('email', '==', email));
       return onSnapshot(q, (snapshot) => {
