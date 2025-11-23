@@ -427,74 +427,98 @@
       });
     }
 
+    async function searchOrdersByPhone(phone) {
+      const t = getOrderTranslations();
+      const errorDiv = document.getElementById('search-error');
+      const searchBtn = document.getElementById('search-btn');
+      
+      errorDiv.style.display = 'none';
+      errorDiv.textContent = '';
+      
+      if (!phone) {
+        errorDiv.textContent = t.phoneRequired;
+        errorDiv.style.display = 'block';
+        return;
+      }
+      
+      searchBtn.disabled = true;
+      searchBtn.textContent = t.searching;
+      
+      try {
+        console.log('📞 Searching orders for phone:', phone);
+        
+        // Clean up previous listener if exists
+        if (orderListenerUnsubscribe) {
+          orderListenerUnsubscribe();
+          orderListenerUnsubscribe = null;
+        }
+        
+        // Get orders by phone
+        const orders = await dbService.getOrdersByPhone(phone);
+        console.log('✅ Orders loaded for phone:', orders.length);
+        
+        cachedOrders = orders;
+        currentSearchPhone = phone;
+        displayOrders(orders);
+        
+        // Set up real-time listener for this phone number
+        orderListenerUnsubscribe = dbService.listenToOrdersByPhone(phone, (updatedOrders) => {
+          console.log('📲 Real-time order update for phone:', updatedOrders.length, 'orders');
+          
+          const previousOrders = cachedOrders || [];
+          cachedOrders = updatedOrders;
+          
+          // Check if there were any status changes
+          const statusChanged = previousOrders.some((prevOrder) => {
+            const newOrder = updatedOrders.find(o => o.id === prevOrder.id);
+            return newOrder && newOrder.status !== prevOrder.status;
+          });
+          
+          if (statusChanged) {
+            showStatusUpdateNotification(t.statusUpdated);
+          }
+          
+          displayOrders(updatedOrders);
+        });
+        
+      } catch (error) {
+        console.error('Error searching orders:', error);
+        errorDiv.textContent = t.errorFetching;
+        errorDiv.style.display = 'block';
+        cachedOrders = [];
+        displayOrders([]);
+      } finally {
+        searchBtn.disabled = false;
+        searchBtn.textContent = t.searchBtn;
+      }
+    }
+    
+    window.searchOrdersByPhone = searchOrdersByPhone;
+
     // Check for logged-in user and load their orders
     window.addEventListener('DOMContentLoaded', () => {
       const authBtn = document.getElementById('auth-btn');
       const searchForm = document.querySelector('.card'); // The search form card
       const t = getOrderTranslations();
 
-      // Check authentication status
-      const currentUser = JSON.parse(localStorage.getItem('kc_user') || '{}');
+      // Always show the search form for all users
+      if (searchForm) searchForm.style.display = 'block';
+      
+      const phoneSearch = document.getElementById('phone-search');
+      const searchDesc = document.getElementById('search-description');
+      if(phoneSearch) phoneSearch.placeholder = t.phonePlaceholder;
+      if(searchDesc) searchDesc.textContent = t.searchDescription;
 
-      if (currentUser.email) {
-        console.log('User is logged in:', currentUser.email);
-        // Hide the phone search form
-        if (searchForm) searchForm.style.display = 'none';
-        // Load orders using the authenticated user's email
-        loadUserOrders(currentUser.email);
-      } else {
-        console.log('User not logged in.');
-        // Ensure search form is visible if user is not logged in
-        if (searchForm) searchForm.style.display = 'block';
-        // Update placeholder and description for phone search
-        const phoneSearch = document.getElementById('phone-search');
-        const searchDesc = document.getElementById('search-description');
-        if(phoneSearch) phoneSearch.placeholder = t.phonePlaceholder;
-        if(searchDesc) searchDesc.textContent = t.searchDescription;
-
-        // Add event listener for the search button to call the old searchOrders function
-        const searchBtn = document.getElementById('search-btn');
-        if (searchBtn) {
-          searchBtn.onclick = () => {
-            const phone = document.getElementById('phone-search').value.trim();
-            const errorDiv = document.getElementById('search-error');
-            errorDiv.style.display = 'none';
-            errorDiv.textContent = '';
-
-            if (!phone) {
-              errorDiv.textContent = t.phoneRequired;
-              errorDiv.style.display = 'block';
-              cachedOrders = null;
-              currentSearchPhone = null;
-              document.getElementById('orders-list').innerHTML = '';
-
-              if (orderListenerUnsubscribe) {
-                orderListenerUnsubscribe();
-                orderListenerUnsubscribe = null;
-              }
-              return;
-            }
-            // Call the original searchOrders logic if needed, or adapt it here
-            // For now, we'll just log and let it be handled by the original script.js or other parts
-            console.log('Performing phone search for:', phone);
-            // If you need to execute the old searchOrders logic here, uncomment the line below
-            // searchOrdersByPhone(phone); // Assuming searchOrdersByPhone holds the old logic
-          };
-        }
-
-        // If user is not logged in, we might want to show a message or redirect to login
-        const ordersList = document.getElementById('orders-list');
-        if (ordersList) {
-          ordersList.innerHTML = `
-            <div class="card" style="text-align:center;padding:40px;color:#999;">
-              <p>${t.searchDescription}</p>
-              <button class="cta" onclick="document.getElementById('auth-btn').click()" style="margin-top:16px;">${authBtn.title}</button>
-            </div>
-          `;
-        }
+      // Add event listener for the search button
+      const searchBtn = document.getElementById('search-btn');
+      if (searchBtn) {
+        searchBtn.onclick = () => {
+          const phone = document.getElementById('phone-search').value.trim();
+          searchOrdersByPhone(phone);
+        };
       }
 
-      // Apply order translations immediately (using localStorage directly)
+      // Apply order translations immediately
       if (typeof window.applyOrderTranslations === 'function') {
         window.applyOrderTranslations();
       }
