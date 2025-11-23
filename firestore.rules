@@ -1,32 +1,38 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Allow all users to read menu and categories
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.email == 'oussamaanis2005@gmail.com';
+    }
+    
+    // Menu items - public read, admin write
     match /menu/{menuId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create, update, delete: if isAdmin();
     }
-
+    
+    // Categories - public read, admin write
     match /categories/{categoryId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create, update, delete: if isAdmin();
     }
-
-    // Allow anyone to create orders (for guest checkout)
-    // But only authenticated users can read their own orders
+    
+    // Orders - clients can create and read their own, admin can do everything
     match /orders/{orderId} {
+      // Anyone can create an order (guest checkout)
       allow create: if true;
-      allow read: if request.auth != null &&
-                     (request.auth.token.email in resource.data.email ||
-                      request.auth.uid == resource.data.userId);
-      allow update, delete: if request.auth != null;
-    }
-
-    // Admin-only access to all orders
-    match /orders/{orderId} {
-      allow read, write: if request.auth != null &&
-                            request.auth.token.email == 'oussamaanis2005@gmail.com';
+      
+      // Users can read their own orders by email or phone
+      allow read: if isAdmin() || 
+                     (request.auth != null && request.auth.token.email == resource.data.email) ||
+                     (request.auth != null && request.auth.uid == resource.data.userId);
+      
+      // Only admin can update or delete orders
+      allow update, delete: if isAdmin();
     }
   }
 }

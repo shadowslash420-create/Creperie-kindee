@@ -1094,6 +1094,9 @@ window.filterByCategory = function(category) {
   renderMenu(actualCategory);
 }
 
+// Alias for compatibility
+window.switchTab = window.filterByCategory;
+
 // Setup search
 function setupSearch() {
   const searchInput = document.getElementById('menu-search');
@@ -2411,10 +2414,21 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   initStarRatingOriginal(); // Call original initStarRating
 });
 
+// Update footer category links
+function updateFooterCategoryLinks() {
+  const footerLinks = document.getElementById('footer-links');
+  if (!footerLinks) return;
+  
+  // This function is called but doesn't need to do anything special
+  // Footer links are static in the HTML
+  console.log('Footer links updated');
+}
+
 // Make functions globally accessible (Original)
 // These are kept from the original to maintain compatibility if other scripts rely on them.
 // However, the primary logic now uses the updated functions.
 window.addToCart = addToCart; // Updated function
+window.updateFooterCategoryLinks = updateFooterCategoryLinks;
 window.removeFromCart = removeFromCart; // Updated function
 window.updateQuantity = updateQuantity; // Updated function (assuming this exists in updated code)
 window.toggleCart = toggleCart; // Updated function
