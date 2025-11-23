@@ -1190,6 +1190,25 @@ window.filterByCategory = function(category) {
 // Alias for compatibility
 window.switchTab = window.filterByCategory;
 
+// Mark active footer navigation link based on current page
+function markActiveFooterLink() {
+  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  const footerLinks = document.querySelectorAll('.footer-links a');
+  
+  footerLinks.forEach(link => {
+    link.classList.remove('active');
+    const href = link.getAttribute('href');
+    if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+      link.classList.add('active');
+    }
+  });
+}
+
+// Call on page load
+document.addEventListener('DOMContentLoaded', markActiveFooterLink);
+// Also call when page is shown (after navigation)
+window.addEventListener('pageshow', markActiveFooterLink);
+
 // Setup search with debouncing
 function setupSearch() {
   const searchInput = document.getElementById('menu-search');
