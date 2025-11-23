@@ -1989,7 +1989,7 @@ async function submitFeedbackOriginal(e){
   const comment = commentInput ? commentInput.value : '';
 
   if(!rating){
-    return alert('الرجاء اختيار تقييم');
+    return alert(lang === 'ar' ? 'الرجاء اختيار تقييم' : 'Please select a rating');
   }
   if (!itemId) {
       alert(lang === 'ar' ? 'الرجاء اختيار منتج' : 'Please select a product');
@@ -1998,23 +1998,26 @@ async function submitFeedbackOriginal(e){
 
   const item = menuItems.find(m => m.id === itemId); // Use updated menuItems
 
-  const feedback = getFeedbackOriginal();
-  const newFeedback = {
-    id: 'FB-' + Date.now(),
-    name,
-    itemId,
+  // Save to Firestore
+  const reviewData = {
+    customerName: name,
+    itemId: itemId,
     itemName: item ? item.name : '',
-    rating,
-    comment,
-    createdAt: new Date().toISOString()
+    rating: rating,
+    comment: comment
   };
 
-  feedback.push(newFeedback);
-  saveFeedbackOriginal(feedback);
-
-  if(e.target) e.target.reset();
-  if(ratingInput) ratingInput.value = '';
-  document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
+  // Import dbService dynamically
+  import('./db-service.js').then(async (module) => {
+    const dbService = module.default;
+    try {
+      await dbService.addReview(reviewData);
+      alert(lang === 'ar' ? 'شكراً لك! تم إرسال تقييمك بنجاح' : 'Thank you! Your review has been submitted successfully');
+      
+      // Reset form
+      if(e.target) e.target.reset();
+      if(ratingInput) ratingInput.value = '';
+      document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
 
   showToastOriginal(t.ar.feedbackSuccess); // Use original showToast and translation key
   renderFeedbackListOriginal(); // Use original render function
@@ -2408,6 +2411,20 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     initSecretAdminAccessOriginal(); // Call original initSecretAdminAccess
   } catch(error) {
     console.error('Error during DOMContentLoaded initialization:', error);
+  }
+
+  // Load menu items for feedback form
+  const feedbackItemSelect = document.getElementById('feedback-item');
+  if (feedbackItemSelect) {
+    loadMenuItemsFromFirebase().then(() => {
+      feedbackItemSelect.innerHTML = '<option value="">-- اختر منتج --</option>';
+      menuItems.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.name;
+        feedbackItemSelect.appendChild(option);
+      });
+    });
   }
 
   const adminForm = document.getElementById('admin-login-form');
