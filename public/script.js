@@ -609,20 +609,38 @@ function setupSearch() {
 
 // Render home menu preview
 function renderHomeMenuPreview() {
-  const container = document.getElementById('home-menu-preview');
-  if (!container) return;
+  const container = document.getElementById('home-menu-items-grid');
+  if (!container) {
+    console.warn('⚠️ home-menu-items-grid container not found');
+    return;
+  }
 
+  console.log('🎨 Rendering home menu preview with', menuItems.length, 'items');
   const t = getT();
   const featured = menuItems.slice(0, 6);
 
+  if (featured.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+        <div style="font-size: 48px; margin-bottom: 16px;">🍽️</div>
+        <p>قريباً... منتجات شهية في انتظاركم</p>
+      </div>
+    `;
+    return;
+  }
+
   container.innerHTML = featured.map(item => `
-    <div class="card menu-item">
-      ${item.img ? `<img src="${item.img}" alt="${item.name}" class="menu-item-img">` : ''}
-      <h3 class="item-name">${item.name}</h3>
-      ${item.desc ? `<p class="item-desc">${item.desc}</p>` : ''}
-      <div class="item-footer">
-        <span class="price">${item.price.toFixed(2)} DZD</span>
-        <button class="cta" onclick="addToCart('${item.id}')">${t.addToCart}</button>
+    <div class="menu-card">
+      <div class="menu-card-image" style="background-image:url('${item.img || 'images/placeholder.svg'}')"></div>
+      <div class="menu-card-content">
+        <h3 class="menu-card-title">${item.name}</h3>
+        <p class="menu-card-desc">${item.desc || ''}</p>
+        <div class="menu-card-footer">
+          <span class="menu-card-price">${item.price ? item.price.toFixed(2) : '0.00'} DZD</span>
+          <button class="menu-card-btn" onclick="addToCart('${item.id}')">
+            ${t.addToCart}
+          </button>
+        </div>
       </div>
     </div>
   `).join('');
