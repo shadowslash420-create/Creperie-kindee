@@ -2173,60 +2173,68 @@ async function submitFeedbackOriginal(e){
     return;
   }
 
-  const reviewData = {
-    customerName: name,
-    rating: rating,
-    comment: comment,
-    createdAt: new Date().toISOString()
-  };
+  try {
+    const reviewData = {
+      customerName: name,
+      rating: rating,
+      comment: comment
+    };
 
-  const feedback = getFeedbackOriginal();
-  feedback.push(reviewData);
-  saveFeedbackOriginal(feedback);
+    await dbService.addReview(reviewData);
+    alert(lang === 'ar' ? 'شكراً لك! تم إرسال تقييمك بنجاح' : 'Thank you! Your review has been submitted successfully');
+    
+    if(e.target) e.target.reset();
+    if(ratingInput) ratingInput.value = '';
+    document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
 
-  alert(lang === 'ar' ? 'شكراً لك! تم إرسال تقييمك بنجاح' : 'Thank you! Your review has been submitted successfully');
-  
-  if(e.target) e.target.reset();
-  if(ratingInput) ratingInput.value = '';
-  document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
-
-  renderFeedbackListOriginal();
+    renderFeedbackListOriginal();
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    alert(lang === 'ar' ? 'حدث خطأ في إرسال تقييمك' : 'Error submitting feedback');
+  }
 }
 
-function renderFeedbackListOriginal(){
+async function renderFeedbackListOriginal(){
   const container = document.getElementById('feedback-list');
   if(!container) return;
 
-  const feedback = getFeedbackOriginal().slice().reverse();
-  container.innerHTML = '';
+  try {
+    const feedback = await dbService.getAllReviews();
+    container.innerHTML = '';
 
-  const lang = getCurrentLang();
-  const t = translations[lang]; // Use original translations
+    const lang = getCurrentLang();
+    const t = translations[lang];
 
-  if(feedback.length === 0){
-    container.innerHTML = '<div class="card"><p style="text-align:center;color:var(--warm-gray)">' + (t.noFeedback || 'No reviews yet') + '</p></div>';
-    return;
-  }
+    if(feedback.length === 0){
+      container.innerHTML = '<div class="card"><p style="text-align:center;color:var(--warm-gray)">' + (t.noFeedback || 'No reviews yet') + '</p></div>';
+      return;
+    }
 
-  feedback.forEach(fb => {
-    const card = document.createElement('div');
-    card.className = 'feedback-card';
+    feedback.forEach(fb => {
+      const card = document.createElement('div');
+      card.className = 'feedback-card';
 
-    const stars = '★'.repeat(fb.rating) + '☆'.repeat(5 - fb.rating);
+      const stars = '★'.repeat(fb.rating) + '☆'.repeat(5 - fb.rating);
+      const date = fb.createdAt ? new Date(fb.createdAt.toDate ? fb.createdAt.toDate() : fb.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'en-US') : 'N/A';
 
-    card.innerHTML = `
-      <div class="feedback-header">
-        <div>
-          <strong>${fb.customerName || fb.name || 'Anonymous'}</strong>
+      card.innerHTML = `
+        <div class="feedback-header">
+          <div>
+            <strong>${fb.customerName || fb.name || 'Anonymous'}</strong>
+          </div>
+          <div class="feedback-stars">${stars}</div>
         </div>
-        <div class="feedback-stars">${stars}</div>
-      </div>
-      <p class="feedback-comment">${fb.comment}</p>
-      <div class="feedback-date">${new Date(fb.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'en-US')}</div>
-    `;
+        <p class="feedback-comment">${fb.comment}</p>
+        <div class="feedback-date">${date}</div>
+      `;
 
-    container.appendChild(card);
-  });
+      container.appendChild(card);
+    });
+  } catch (error) {
+    console.error('Error loading feedback:', error);
+    const container = document.getElementById('feedback-list');
+    if(container) container.innerHTML = '<div class="card"><p style="text-align:center;color:var(--warm-gray)">Error loading reviews</p></div>';
+  }
 }
 
 // Populate feedback item select (Original)
