@@ -486,13 +486,13 @@ function initScrollButton() {
 async function loadMenuItemsFromFirebase() {
   try {
     console.log('📋 Loading menu items from Firestore...');
-    
+
     // Load both categories and menu items
     [categories, menuItems] = await Promise.all([
       getCategoriesFromFirebase(),
       getMenuFromFirebase()
     ]);
-    
+
     console.log('✅ Menu items loaded:', menuItems.length);
     console.log('✅ Categories loaded:', categories.length);
 
@@ -547,7 +547,8 @@ function renderMenu(filterCategory = null, searchQuery = '') {
       const categoryObj = categories.find(c => c.id === cat);
       categoryLabel = lang === 'ar' ? (categoryObj?.nameAr || categoryObj?.name || cat) : (categoryObj?.name || cat);
     }
-    return `<button class="tab ${isActive ? 'active' : ''}" onclick="filterByCategory('${cat}')">${categoryLabel}</button>`;
+    // Use a class 'tab-btn' for easier selection and manipulation
+    return `<button class="tab tab-btn ${isActive ? 'active' : ''}" onclick="filterByCategory('${cat}')">${categoryLabel}</button>`;
   }).join('');
 
   // Filter items
@@ -606,10 +607,28 @@ function renderMenu(filterCategory = null, searchQuery = '') {
   }
 }
 
-// Filter by category
-window.filterByCategory = function(category) {
-  const actualCategory = category === 'all' ? null : category;
-  renderMenu(actualCategory);
+// Filter menu by category
+function filterByCategory(category) {
+  console.log('🎯 Filtering by category:', category);
+
+  // Update active state on tabs
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach(tab => {
+    tab.classList.remove('active');
+  });
+
+  // Set active tab
+  const activeTab = Array.from(tabs).find(tab => {
+    const onclick = tab.getAttribute('onclick');
+    return onclick && onclick.includes(`'${category}'`);
+  });
+
+  if (activeTab) {
+    activeTab.classList.add('active');
+  }
+
+  // Re-render menu with filter
+  renderMenu(category);
 }
 
 // Setup search
@@ -1886,7 +1905,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     const isHomePage = window.location.pathname === '/' || 
                        window.location.pathname === '/index.html' || 
                        window.location.pathname.endsWith('/');
-    
+
     if (isMenuPage) {
       await initMenu(); // Use updated initMenu
     } else if (isHomePage) {
@@ -1985,8 +2004,13 @@ function applyTranslationsOriginal() {
 
   // Example: Translate navigation links
   document.querySelectorAll('.nav-link-home').forEach(link => link.textContent = t.ar.navHome || t.en.navHome);
+  document.querySelectorAll('.nav-link-about').forEach(link => link.textContent = t.ar.navAbout || t.en.navAbout);
   document.querySelectorAll('.nav-link-menu').forEach(link => link.textContent = t.ar.navMenu || t.en.navMenu);
-  // ... add translations for other nav links as needed based on original code
+  document.querySelectorAll('.nav-link-orders').forEach(link => link.textContent = t.ar.navOrders || t.en.navOrders);
+  document.querySelectorAll('.nav-link-contact').forEach(link => link.textContent = t.ar.navContact || t.en.navContact);
+  document.querySelectorAll('.nav-link-faq').forEach(link => link.textContent = t.ar.navFaq || t.en.navFaq);
+  document.querySelectorAll('.nav-link-feedback').forEach(link => link.textContent = t.ar.navFeedback || t.en.navFeedback);
+  // Add translations for other nav links as needed based on original code
 }
 
 function updateQuantity(itemId, delta) {
@@ -2093,9 +2117,3 @@ window.renderMenu = renderMenu;
 window.filterByCategory = filterByCategory;
 window.setupSearch = setupSearch;
 window.renderHomeMenuPreview = renderHomeMenuPreview;
-
-
-// Final check: Ensure all original functions are either called correctly or replaced by updated ones.
-// The merging strategy here is to keep the updated functions for core logic (menu, cart, checkout)
-// and retain original functions for auxiliary tasks (admin, feedback, FAQ, translations) unless explicitly modified.
-// The global scope exposure is also adjusted to reflect both updated and original functions.
