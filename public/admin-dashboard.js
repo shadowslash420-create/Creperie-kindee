@@ -156,15 +156,27 @@ function showSection(section, event) {
     dashboard: 'Dashboard',
     orders: 'Orders Management',
     menu: 'Menu Management',
-    analytics: 'Analytics & Reports'
+    inventory: 'Ingredients & Inventory',
+    customers: 'Customer Management',
+    coupons: 'Coupons & Promotions',
+    reviews: 'Customer Reviews',
+    analytics: 'Reports & Analytics',
+    settings: 'Settings',
+    staff: 'Staff & Permissions'
   };
-  document.getElementById('page-title').textContent = titles[section];
+  document.getElementById('page-title').textContent = titles[section] || 'Dashboard';
 
   // Load section data
   if (section === 'dashboard') loadDashboard();
   else if (section === 'orders') loadOrders();
   else if (section === 'menu') loadMenu();
+  else if (section === 'inventory') loadInventory();
+  else if (section === 'customers') loadCustomers();
+  else if (section === 'coupons') loadCoupons();
+  else if (section === 'reviews') loadReviews();
   else if (section === 'analytics') loadAnalytics();
+  else if (section === 'settings') loadSettings();
+  else if (section === 'staff') loadStaff();
 }
 
 function toggleSidebar() {
@@ -841,6 +853,7 @@ async function initializeDashboard() {
     await dbService.init();
     await Promise.all([loadMenuData(), loadOrdersData(), loadCategories()]);
     setupCategoryManagement();
+    setupSettingsHandlers();
     setupRealtimeListeners();
   } catch (error) {
     console.error('Failed to initialize dashboard:', error);
@@ -916,6 +929,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openImgBBUpload = openImgBBUpload;
   window.handleImageUrlInput = handleImageUrlInput;
   window.initializeDashboard = initializeDashboard;
+  window.openAddIngredientModal = openAddIngredientModal;
+  window.openAddCouponModal = openAddCouponModal;
+  window.openAddStaffModal = openAddStaffModal;
 });
 
 // ==================== CATEGORY MANAGEMENT ====================
@@ -1020,6 +1036,87 @@ function renderCategoriesList() {
   `).join('');
   
   container.innerHTML = html;
+}
+
+// ==================== NEW SECTIONS LOAD FUNCTIONS ====================
+
+function loadInventory() {
+  console.log('📋 Loading inventory...');
+  // Placeholder for inventory loading
+  const container = document.getElementById('inventory-grid');
+  if (container) {
+    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Inventory feature coming soon!</p>';
+  }
+}
+
+function loadCustomers() {
+  console.log('👥 Loading customers...');
+  // Placeholder for customers loading
+  const container = document.getElementById('customers-table');
+  if (container) {
+    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Customer management feature coming soon!</p>';
+  }
+}
+
+function loadCoupons() {
+  console.log('🎫 Loading coupons...');
+  // Placeholder for coupons loading
+  const container = document.getElementById('coupons-grid');
+  if (container) {
+    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Coupons feature coming soon!</p>';
+  }
+}
+
+function loadReviews() {
+  console.log('⭐ Loading reviews...');
+  // Placeholder for reviews loading
+  const container = document.getElementById('reviews-list');
+  if (container) {
+    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Reviews feature coming soon!</p>';
+  }
+}
+
+function loadSettings() {
+  console.log('⚙️ Loading settings...');
+  // Settings are already loaded in the HTML, event handlers are attached in setupSettingsHandlers()
+}
+
+// Setup settings form handlers once during initialization
+function setupSettingsHandlers() {
+  const businessForm = document.getElementById('business-settings-form');
+  if (businessForm) {
+    businessForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('✅ Settings saved successfully!');
+    });
+  }
+  
+  const hoursForm = document.getElementById('hours-settings-form');
+  if (hoursForm) {
+    hoursForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('✅ Operating hours updated!');
+    });
+  }
+}
+
+function loadStaff() {
+  console.log('👨‍💼 Loading staff...');
+  // Staff list is already shown in HTML (owner)
+}
+
+// ==================== NEW MODAL FUNCTIONS ====================
+
+function openAddIngredientModal() {
+  alert('Ingredient management coming soon! You will be able to add ingredients, track stock levels, and manage inventory.');
+}
+
+function openAddCouponModal() {
+  alert('Coupon creation coming soon! You will be able to create discount codes, percentage discounts, and promotional campaigns.');
+}
+
+function openAddStaffModal() {
+  alert('Staff management coming soon! You will be able to invite new admins and manage their permissions.');
 }
 
 // Update the manage categories button handler

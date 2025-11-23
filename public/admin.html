@@ -51,11 +51,35 @@
         </a>
         <a href="#" class="nav-item" onclick="showSection('menu', event)">
           <span class="nav-icon">🍽️</span>
-          <span class="nav-text">Menu</span>
+          <span class="nav-text">Menu Items</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('inventory', event)">
+          <span class="nav-icon">📋</span>
+          <span class="nav-text">Ingredients / Inventory</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('customers', event)">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Customers</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('coupons', event)">
+          <span class="nav-icon">🎫</span>
+          <span class="nav-text">Coupons & Promotions</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('reviews', event)">
+          <span class="nav-icon">⭐</span>
+          <span class="nav-text">Reviews</span>
         </a>
         <a href="#" class="nav-item" onclick="showSection('analytics', event)">
           <span class="nav-icon">📈</span>
-          <span class="nav-text">Analytics</span>
+          <span class="nav-text">Reports & Analytics</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('settings', event)">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">Settings</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showSection('staff', event)">
+          <span class="nav-icon">👨‍💼</span>
+          <span class="nav-text">Staff & Permissions</span>
         </a>
       </nav>
       <div class="sidebar-footer">
@@ -336,10 +360,75 @@
         </div>
       </div>
 
+      <!-- Inventory Section -->
+      <section class="content-section" id="section-inventory">
+        <div class="inventory-container">
+          <div class="section-header">
+            <h2>📋 Ingredients & Inventory Management</h2>
+            <button class="btn-primary" onclick="openAddIngredientModal()">
+              <span>➕</span> Add Ingredient
+            </button>
+          </div>
+          <div class="inventory-grid" id="inventory-grid">
+            <p style="text-align:center;color:#999;padding:40px;">No ingredients added yet. Click "Add Ingredient" to get started.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Customers Section -->
+      <section class="content-section" id="section-customers">
+        <div class="customers-container">
+          <div class="section-header">
+            <h2>👥 Customer Management</h2>
+            <input type="text" placeholder="Search customers..." class="search-input" id="customer-search">
+          </div>
+          <div class="customers-table" id="customers-table">
+            <p style="text-align:center;color:#999;padding:40px;">No customers found.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Coupons & Promotions Section -->
+      <section class="content-section" id="section-coupons">
+        <div class="coupons-container">
+          <div class="section-header">
+            <h2>🎫 Coupons & Promotions</h2>
+            <button class="btn-primary" onclick="openAddCouponModal()">
+              <span>➕</span> Create Coupon
+            </button>
+          </div>
+          <div class="coupons-grid" id="coupons-grid">
+            <p style="text-align:center;color:#999;padding:40px;">No active coupons. Create one to start offering discounts.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reviews Section -->
+      <section class="content-section" id="section-reviews">
+        <div class="reviews-container">
+          <div class="section-header">
+            <h2>⭐ Customer Reviews & Ratings</h2>
+            <div class="review-stats">
+              <div class="stat-badge">
+                <span class="stat-label">Average Rating</span>
+                <span class="stat-value" id="avg-rating">4.5 ⭐</span>
+              </div>
+              <div class="stat-badge">
+                <span class="stat-label">Total Reviews</span>
+                <span class="stat-value" id="total-reviews">0</span>
+              </div>
+            </div>
+          </div>
+          <div class="reviews-list" id="reviews-list">
+            <p style="text-align:center;color:#999;padding:40px;">No reviews yet.</p>
+          </div>
+        </div>
+      </section>
+
       <!-- Analytics Section -->
       <section class="content-section" id="section-analytics">
         <div class="analytics-container">
-          <h2>Analytics & Reports</h2>
+          <h2>📈 Reports & Analytics</h2>
           <div class="analytics-grid">
             <div class="analytics-card">
               <h3>Revenue Analytics</h3>
@@ -352,6 +441,87 @@
             <div class="analytics-card">
               <h3>Popular Items</h3>
               <div class="analytics-content" id="popular-items"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section class="content-section" id="section-settings">
+        <div class="settings-container">
+          <h2>⚙️ Restaurant Settings</h2>
+          <div class="settings-grid">
+            <div class="settings-card">
+              <h3>Business Information</h3>
+              <form id="business-settings-form">
+                <div class="form-group">
+                  <label>Restaurant Name</label>
+                  <input type="text" id="restaurant-name" value="Creperie Kinder" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Phone Number</label>
+                  <input type="tel" id="restaurant-phone" placeholder="+213 555 1234" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Address</label>
+                  <textarea id="restaurant-address" rows="3" class="form-input" placeholder="Enter restaurant address"></textarea>
+                </div>
+                <button type="submit" class="btn-primary">Save Changes</button>
+              </form>
+            </div>
+            <div class="settings-card">
+              <h3>Operating Hours</h3>
+              <form id="hours-settings-form">
+                <div class="form-group">
+                  <label>Opening Time</label>
+                  <input type="time" id="opening-time" value="09:00" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Closing Time</label>
+                  <input type="time" id="closing-time" value="22:00" class="form-input">
+                </div>
+                <button type="submit" class="btn-primary">Save Hours</button>
+              </form>
+            </div>
+            <div class="settings-card">
+              <h3>Payment Methods</h3>
+              <div class="payment-methods">
+                <label class="checkbox-label">
+                  <input type="checkbox" checked> Cash on Delivery
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox"> Credit Card
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox"> Mobile Payment
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Staff & Permissions Section -->
+      <section class="content-section" id="section-staff">
+        <div class="staff-container">
+          <div class="section-header">
+            <h2>👨‍💼 Staff & Permissions</h2>
+            <button class="btn-primary" onclick="openAddStaffModal()">
+              <span>➕</span> Add Staff Member
+            </button>
+          </div>
+          <div class="staff-table" id="staff-table">
+            <div class="staff-member">
+              <div class="staff-info">
+                <div class="staff-avatar">👤</div>
+                <div>
+                  <h4>oussamaanis2005@gmail.com</h4>
+                  <span class="badge badge-primary">Owner</span>
+                </div>
+              </div>
+              <div class="staff-permissions">
+                <span class="permission-badge">Full Access</span>
+              </div>
             </div>
           </div>
         </div>
