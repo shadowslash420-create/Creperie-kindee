@@ -378,18 +378,28 @@
     };
 
     // Check authentication on page load
-    onAuthChange((user) => {
+    onAuthChange(async (user) => {
       if (!user) {
-        // Not authenticated - redirect to login
-        window.location.href = 'login.html?redirect=admin';
+        // Not authenticated - show login section
+        document.getElementById('login-section').classList.remove('hidden');
+        document.getElementById('admin-section').classList.add('hidden');
       } else if (!ADMIN_EMAILS.includes(user.email)) {
         // Authenticated but not an admin - redirect to home
         alert('Access denied. Admin privileges required.');
         window.location.href = 'index.html';
       } else {
         // Admin user is authenticated - show admin section, hide login
+        console.log('✅ Admin user auto-logged in:', user.email);
         document.getElementById('login-section').classList.add('hidden');
         document.getElementById('admin-section').classList.remove('hidden');
+        
+        // Initialize dashboard if function is available
+        if (window.initializeDashboard) {
+          await window.initializeDashboard();
+          if (window.showSection) {
+            window.showSection('dashboard');
+          }
+        }
       }
     });
   </script>

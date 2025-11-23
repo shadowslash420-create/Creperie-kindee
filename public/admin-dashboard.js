@@ -915,6 +915,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.deleteCategory = deleteCategory;
   window.openImgBBUpload = openImgBBUpload;
   window.handleImageUrlInput = handleImageUrlInput;
+  window.initializeDashboard = initializeDashboard;
 });
 
 // ==================== CATEGORY MANAGEMENT ====================
