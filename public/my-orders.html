@@ -359,14 +359,9 @@
         const date = orderDate.toLocaleString(lang === 'ar' ? 'ar-DZ' : 'en-US');
 
         card.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-            <div>
-              <h3 style="margin:0 0 8px 0;color:var(--warm-gold);">${order.id}</h3>
-              <div style="font-size:14px;color:#999;">${date}</div>
-            </div>
-            <div style="background:${statusColor};color:#fff;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;">
-              ${statusLabel}
-            </div>
+          <div style="margin-bottom:16px;">
+            <h3 style="margin:0 0 8px 0;color:var(--warm-gold);">${order.id}</h3>
+            <div style="font-size:14px;color:#999;">${date}</div>
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-bottom:16px;">
             <div>

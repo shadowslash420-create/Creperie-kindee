@@ -112,7 +112,7 @@ function saveCart() {
 }
 
 // Add item to cart
-window.addToCart = function(itemId) {
+window.addToCart = function(itemId, event) {
   const menuItem = menuItems.find(item => item.id === itemId);
   if (!menuItem) {
     console.error('Menu item not found:', itemId);
@@ -120,6 +120,8 @@ window.addToCart = function(itemId) {
   }
 
   const existing = cart.find(c => c.id === itemId);
+  const wasInCart = !!existing;
+  
   if (existing) {
     existing.qty++;
   } else {
@@ -135,6 +137,85 @@ window.addToCart = function(itemId) {
     cartIcon.style.transform = 'scale(1.2)';
     setTimeout(() => { cartIcon.style.transform = 'scale(1)'; }, 200);
   }
+
+  // Animate the button that was clicked
+  let button = null;
+  if (event && event.target) {
+    button = event.target.closest('button');
+  } else if (document.activeElement && document.activeElement.tagName === 'BUTTON') {
+    button = document.activeElement;
+  }
+  
+  if (button) {
+    button.style.transform = 'scale(0.9)';
+    button.style.transition = 'transform 0.1s';
+    setTimeout(() => {
+      button.style.transform = 'scale(1)';
+    }, 100);
+  }
+
+  // Show toast notification
+  const t = getT();
+  const isArabic = currentLang === 'ar';
+  const message = wasInCart 
+    ? (isArabic ? `✅ تم زيادة الكمية: ${menuItem.name}` : `✅ Quantity increased: ${menuItem.name}`)
+    : (isArabic ? `✅ تمت الإضافة للسلة: ${menuItem.name}` : `✅ Added to cart: ${menuItem.name}`);
+  
+  showToast(message, 'success');
+}
+
+// Show toast notification
+function showToast(message, type = 'success') {
+  // Remove existing toasts
+  const existingToast = document.getElementById('cart-toast');
+  if (existingToast) {
+    existingToast.remove();
+  }
+
+  const toast = document.createElement('div');
+  toast.id = 'cart-toast';
+  toast.textContent = message;
+  
+  const colors = {
+    success: '#52C41A',
+    error: '#E30613',
+    info: '#FF6B35'
+  };
+  
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: ${colors[type] || colors.success};
+    color: white;
+    padding: 16px 24px;
+    border-radius: 50px;
+    z-index: 9999;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    max-width: 90%;
+    text-align: center;
+    pointer-events: none;
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Animate in
+  setTimeout(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  }, 10);
+  
+  // Animate out and remove
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(100px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
 }
 
 // Update cart display
@@ -961,7 +1042,7 @@ function renderMenu(filterCategory = null, searchQuery = '') {
             ${item.desc ? `<p class="item-desc">${item.desc}</p>` : ''}
             <div class="item-footer">
               <span class="price">${item.price.toFixed(2)} DZD</span>
-              <button class="cta" onclick="addToCart('${item.id}')">${t.addToCart}</button>
+              <button class="cta" onclick="addToCart('${item.id}', event)">${t.addToCart}</button>
             </div>
           </div>
         `).join('')}
@@ -1041,7 +1122,7 @@ function renderHomeMenuPreview() {
         <p class="menu-card-desc">${item.desc || ''}</p>
         <div class="menu-card-footer">
           <span class="menu-card-price">${item.price ? item.price.toFixed(2) : '0.00'} DZD</span>
-          <button class="menu-card-btn" onclick="addToCart('${item.id}')">
+          <button class="menu-card-btn" onclick="addToCart('${item.id}', event)">
             ${t.addToCart}
           </button>
         </div>
@@ -2245,7 +2326,7 @@ async function renderHomeMenuPreviewOriginal() {
           <p class="menu-card-desc">${item.desc}</p>
           <div class="menu-card-footer">
             <span class="menu-card-price">${item.price.toFixed(2)} DZD</span>
-            <button class="menu-card-btn" onclick="addToCart('${item.id}')">
+            <button class="menu-card-btn" onclick="addToCart('${item.id}', event)">
               ${addToCartText}
             </button>
           </div>
