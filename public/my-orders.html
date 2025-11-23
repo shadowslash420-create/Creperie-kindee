@@ -504,54 +504,74 @@
         window.history.replaceState({}, document.title, 'my-orders.html');
       }
 
-      // Check if user is logged in
+      // Show loading state initially
+      const ordersList = document.getElementById('orders-list');
+      if (ordersList) {
+        ordersList.innerHTML = `
+          <div class="card" style="text-align:center;padding:40px;">
+            <div style="font-size: 40px; margin-bottom: 16px;">⏳</div>
+            <p style="color: #666;">
+              ${getCurrentLang() === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+            </p>
+          </div>
+        `;
+      }
+
+      // Wait for Firebase auth to be ready using onAuthStateChanged
       try {
         const auth = await getAuthInstance();
-        if (auth && auth.currentUser) {
-          const userEmail = auth.currentUser.email;
-          console.log('📦 Auto-loading orders for user:', userEmail);
-          
-          // Load user's orders by email
-          loadUserOrders(userEmail).then(() => {
-            // Highlight the recent order if it exists
-            if (recentOrderId) {
-              setTimeout(() => {
-                const orderCard = document.querySelector(`[data-order-id="${recentOrderId}"]`);
-                if (orderCard) {
-                  orderCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  orderCard.style.animation = 'highlight 2s ease-in-out';
-                  
-                  const highlightStyle = document.createElement('style');
-                  highlightStyle.textContent = `
-                    @keyframes highlight {
-                      0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-                      50% { box-shadow: 0 0 30px rgba(255, 107, 53, 0.6); }
-                    }
-                  `;
-                  document.head.appendChild(highlightStyle);
-                }
-              }, 500);
-            }
-          });
-        } else {
-          // User not logged in - show login prompt
-          const ordersList = document.getElementById('orders-list');
-          if (ordersList) {
-            ordersList.innerHTML = `
-              <div class="card" style="text-align:center;padding:40px;">
-                <h3 style="margin-bottom: 16px; color: var(--warm-gold);">
-                  ${getCurrentLang() === 'ar' ? '🔒 يجب تسجيل الدخول' : '🔒 Sign In Required'}
-                </h3>
-                <p style="color: #666; margin-bottom: 20px;">
-                  ${getCurrentLang() === 'ar' ? 'يجب تسجيل الدخول لعرض طلباتك' : 'You must sign in to view your orders'}
-                </p>
-                <button onclick="window.location.href='login.html'" class="cta">
-                  ${getCurrentLang() === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
-                </button>
-              </div>
-            `;
-          }
+        if (!auth) {
+          throw new Error('Firebase auth not initialized');
         }
+
+        // Use onAuthStateChanged to wait for auth to be ready
+        auth.onAuthStateChanged((user) => {
+          if (user && user.email) {
+            const userEmail = user.email;
+            console.log('📦 Auto-loading orders for user:', userEmail);
+            
+            // Load user's orders by email
+            loadUserOrders(userEmail).then(() => {
+              // Highlight the recent order if it exists
+              if (recentOrderId) {
+                setTimeout(() => {
+                  const orderCard = document.querySelector(`[data-order-id="${recentOrderId}"]`);
+                  if (orderCard) {
+                    orderCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    orderCard.style.animation = 'highlight 2s ease-in-out';
+                    
+                    const highlightStyle = document.createElement('style');
+                    highlightStyle.textContent = `
+                      @keyframes highlight {
+                        0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+                        50% { box-shadow: 0 0 30px rgba(255, 107, 53, 0.6); }
+                      }
+                    `;
+                    document.head.appendChild(highlightStyle);
+                  }
+                }, 500);
+              }
+            });
+          } else {
+            // User not logged in - show login prompt
+            const ordersList = document.getElementById('orders-list');
+            if (ordersList) {
+              ordersList.innerHTML = `
+                <div class="card" style="text-align:center;padding:40px;">
+                  <h3 style="margin-bottom: 16px; color: var(--warm-gold);">
+                    ${getCurrentLang() === 'ar' ? '🔒 يجب تسجيل الدخول' : '🔒 Sign In Required'}
+                  </h3>
+                  <p style="color: #666; margin-bottom: 20px;">
+                    ${getCurrentLang() === 'ar' ? 'يجب تسجيل الدخول لعرض طلباتك' : 'You must sign in to view your orders'}
+                  </p>
+                  <button onclick="window.location.href='login.html'" class="cta">
+                    ${getCurrentLang() === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
+                  </button>
+                </div>
+              `;
+            }
+          }
+        });
       } catch (error) {
         console.error('Error checking authentication:', error);
         const ordersList = document.getElementById('orders-list');
