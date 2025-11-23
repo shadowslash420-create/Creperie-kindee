@@ -314,6 +314,7 @@ function renderOrdersTable() {
   if (searchTerm) {
     filtered = filtered.filter(o => 
       (o.customerName || '').toLowerCase().includes(searchTerm) ||
+      (o.phone || '').includes(searchTerm) ||
       (o.id || '').toString().includes(searchTerm)
     );
   }
@@ -324,47 +325,121 @@ function renderOrdersTable() {
   }
 
   const html = `
-    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
-      <thead>
-        <tr style="background: #f7fafc; text-align: left;">
-          <th style="padding: 16px;">Order ID</th>
-          <th style="padding: 16px;">Customer</th>
-          <th style="padding: 16px;">Phone</th>
-          <th style="padding: 16px;">Items</th>
-          <th style="padding: 16px;">Total</th>
-          <th style="padding: 16px;">Status</th>
-          <th style="padding: 16px;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${filtered.map(order => `
-          <tr style="border-bottom: 1px solid #e2e8f0;">
-            <td style="padding: 16px; font-weight: 600;">#${order.id || 'N/A'}</td>
-            <td style="padding: 16px;">${order.customerName || 'Anonymous'}</td>
-            <td style="padding: 16px;">${order.customerPhone || '-'}</td>
-            <td style="padding: 16px;">${(order.items || []).length} items</td>
-            <td style="padding: 16px; font-weight: 600;">${(order.total || 0).toFixed(2)} DZD</td>
-            <td style="padding: 16px;">
-              <select onchange="updateOrderStatus('${order.id}', this.value)" 
-                style="padding: 6px 12px; border: 1px solid #cbd5e0; border-radius: 6px; background: white;">
-                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                <option value="in-progress" ${order.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
-                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-              </select>
-            </td>
-            <td style="padding: 16px;">
-              <button onclick="deleteOrder('${order.id}')" 
-                style="padding: 6px 12px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                🗑️ Delete
-              </button>
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
+    <div style="background: white; border-radius: 8px; overflow: hidden;">
+      ${filtered.map(order => renderOrderCard(order)).join('')}
+    </div>
   `;
   container.innerHTML = html;
+}
+
+function renderOrderCard(order) {
+  const orderId = order.id || 'N/A';
+  const items = order.items || [];
+  const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString() : 'N/A';
+  
+  return `
+    <div class="order-card" style="border-bottom: 2px solid #e2e8f0; padding: 20px; transition: background 0.2s;" 
+         onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'">
+      
+      <!-- Order Header -->
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; flex-wrap: wrap; gap: 16px;">
+        <div style="flex: 1; min-width: 200px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+            <h3 style="margin: 0; color: #FF6B35; font-size: 18px;">Order #${orderId}</h3>
+            <span style="padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: ${getStatusColor(order.status)};">
+              ${order.status || 'pending'}
+            </span>
+          </div>
+          <p style="margin: 4px 0; color: #666; font-size: 13px;">📅 ${date}</p>
+        </div>
+        
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <select onchange="updateOrderStatus('${orderId}', this.value)" 
+            style="padding: 8px 12px; border: 2px solid #cbd5e0; border-radius: 6px; background: white; font-weight: 600; cursor: pointer;">
+            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+            <option value="in-progress" ${order.status === 'in-progress' ? 'selected' : ''}>🔄 In Progress</option>
+            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>✅ Delivered</option>
+            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+          </select>
+          <button onclick="deleteOrder('${orderId}')" 
+            style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+
+      <!-- Customer Information -->
+      <div style="background: #f7fafc; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+        <h4 style="margin: 0 0 12px 0; color: #2d3748; font-size: 15px;">👤 Customer Information</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+          <div>
+            <p style="margin: 0; color: #666; font-size: 12px;">Name</p>
+            <p style="margin: 4px 0 0 0; font-weight: 600; color: #2d3748;">${order.customerName || 'Anonymous'}</p>
+          </div>
+          <div>
+            <p style="margin: 0; color: #666; font-size: 12px;">Phone</p>
+            <p style="margin: 4px 0 0 0; font-weight: 600; color: #2d3748;">📞 ${order.phone || order.customerPhone || 'N/A'}</p>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <p style="margin: 0; color: #666; font-size: 12px;">Address</p>
+            <p style="margin: 4px 0 0 0; font-weight: 600; color: #2d3748;">📍 ${order.address || 'N/A'}</p>
+          </div>
+          ${order.specialInstructions ? `
+            <div style="grid-column: 1 / -1;">
+              <p style="margin: 0; color: #666; font-size: 12px;">Special Instructions</p>
+              <p style="margin: 4px 0 0 0; color: #2d3748; font-style: italic;">💬 ${order.specialInstructions}</p>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div style="background: white; border: 2px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+        <h4 style="margin: 0 0 12px 0; color: #2d3748; font-size: 15px;">🛒 Order Items</h4>
+        ${items.length > 0 ? `
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid #e2e8f0;">
+                <th style="padding: 8px; text-align: left; color: #666; font-size: 12px; font-weight: 600;">ITEM</th>
+                <th style="padding: 8px; text-align: center; color: #666; font-size: 12px; font-weight: 600;">QTY</th>
+                <th style="padding: 8px; text-align: right; color: #666; font-size: 12px; font-weight: 600;">PRICE</th>
+                <th style="padding: 8px; text-align: right; color: #666; font-size: 12px; font-weight: 600;">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(item => `
+                <tr style="border-bottom: 1px solid #f0f0f0;">
+                  <td style="padding: 12px 8px;">
+                    <p style="margin: 0; font-weight: 600; color: #2d3748;">${item.name || 'Unknown Item'}</p>
+                    ${item.desc ? `<p style="margin: 4px 0 0 0; font-size: 12px; color: #666;">${item.desc}</p>` : ''}
+                  </td>
+                  <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #FF6B35;">×${item.quantity || 1}</td>
+                  <td style="padding: 12px 8px; text-align: right; color: #2d3748;">${(item.price || 0).toFixed(2)} DZD</td>
+                  <td style="padding: 12px 8px; text-align: right; font-weight: 600; color: #2d3748;">${((item.price || 0) * (item.quantity || 1)).toFixed(2)} DZD</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '<p style="color: #666; text-align: center;">No items</p>'}
+      </div>
+
+      <!-- Order Summary -->
+      <div style="background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%); padding: 16px; border-radius: 8px; color: white;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span>Subtotal:</span>
+          <span style="font-weight: 600;">${(order.subtotal || 0).toFixed(2)} DZD</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+          <span>Delivery Fee:</span>
+          <span style="font-weight: 600;">${(order.deliveryFee || 0).toFixed(2)} DZD</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.3); font-size: 18px;">
+          <span style="font-weight: bold;">Total:</span>
+          <span style="font-weight: bold;">${(order.total || 0).toFixed(2)} DZD</span>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 async function updateOrderStatus(orderId, newStatus) {
