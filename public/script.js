@@ -2405,6 +2405,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     highlightActivePageOriginal(); // Call original highlight function
     initScrollButtonOriginal(); // Call original initScrollButton
     updatePageIndicatorOriginal(); // Call original updatePageIndicator
+    initSecretAdminAccessOriginal(); // Call original initSecretAdminAccess
   } catch(error) {
     console.error('Error during DOMContentLoaded initialization:', error);
   }
