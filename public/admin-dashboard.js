@@ -229,6 +229,17 @@ function showSection(section, event) {
   });
   document.getElementById('section-' + section)?.classList.add('active');
 
+  // Close sidebar on mobile after navigation
+  if (window.innerWidth <= 768) {
+    const sidebar = document.getElementById('dashboard-sidebar');
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar) sidebar.classList.remove('active');
+    if (mobileMenuBtn) mobileMenuBtn.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+  }
+
   // Update page title
   const titles = {
     dashboard: 'Dashboard',
@@ -256,7 +267,26 @@ function showSection(section, event) {
 
 function toggleSidebar() {
   const sidebar = document.getElementById('dashboard-sidebar');
+  const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+  const overlay = document.querySelector('.sidebar-overlay');
+  
   sidebar.classList.toggle('active');
+  
+  // Toggle active state on mobile menu button
+  if (mobileMenuBtn) {
+    mobileMenuBtn.classList.toggle('active');
+  }
+  
+  // Show/hide overlay
+  if (overlay) {
+    overlay.classList.toggle('active');
+  } else if (sidebar.classList.contains('active')) {
+    // Create overlay if it doesn't exist
+    const newOverlay = document.createElement('div');
+    newOverlay.className = 'sidebar-overlay active';
+    newOverlay.onclick = () => toggleSidebar();
+    document.body.appendChild(newOverlay);
+  }
 }
 
 // ==================== DASHBOARD SECTION ====================
