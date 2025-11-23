@@ -12,20 +12,27 @@ let db = null;
 let storage = null;
 let initPromise = null;
 
-// Firebase configuration object
-// Replace these values with your actual Firebase project credentials
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+// Firebase configuration object - will be loaded from backend
+let firebaseConfig = null;
 
-// Load Firebase config
+// Load Firebase config from backend API
 async function loadFirebaseConfig() {
-  return firebaseConfig;
+  if (firebaseConfig) {
+    return firebaseConfig;
+  }
+  
+  try {
+    const response = await fetch('/api/firebase-config');
+    if (!response.ok) {
+      throw new Error('Failed to load Firebase config');
+    }
+    firebaseConfig = await response.json();
+    console.log('Firebase config loaded successfully');
+    return firebaseConfig;
+  } catch (error) {
+    console.error('Error loading Firebase config:', error);
+    throw error;
+  }
 }
 
 // Initialize Firebase (singleton pattern)
