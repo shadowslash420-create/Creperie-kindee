@@ -462,59 +462,6 @@ class DatabaseService {
     });
   }
 
-  // ==================== COUPONS MANAGEMENT ====================
-  
-  async getAllCoupons() {
-    await this.init();
-    const ref = collection(this.db, 'coupons');
-    const snapshot = await getDocs(query(ref, orderBy('createdAt', 'desc')));
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  }
-
-  async addCoupon(coupon) {
-    await this.init();
-    const ref = collection(this.db, 'coupons');
-    const docRef = await addDoc(ref, {
-      ...coupon,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now()
-    });
-    return docRef.id;
-  }
-
-  async updateCoupon(id, data) {
-    await this.init();
-    const docRef = doc(this.db, 'coupons', id);
-    await updateDoc(docRef, {
-      ...data,
-      updatedAt: Timestamp.now()
-    });
-  }
-
-  async deleteCoupon(id) {
-    await this.init();
-    const docRef = doc(this.db, 'coupons', id);
-    await deleteDoc(docRef);
-  }
-
-  async getCouponByCode(code) {
-    await this.init();
-    const ref = collection(this.db, 'coupons');
-    const q = query(ref, where('code', '==', code.toUpperCase()));
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return null;
-    return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-  }
-
-  listenToCouponChanges(callback) {
-    if (!this.db) return () => {};
-    const ref = collection(this.db, 'coupons');
-    return onSnapshot(query(ref, orderBy('createdAt', 'desc')), (snapshot) => {
-      const coupons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      callback(coupons);
-    });
-  }
-
   // ==================== REVIEWS MANAGEMENT ====================
   
   async getAllReviews() {

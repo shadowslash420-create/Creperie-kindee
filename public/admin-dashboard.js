@@ -236,7 +236,6 @@ function showSection(section, event) {
     menu: 'Menu Management',
     inventory: 'Ingredients & Inventory',
     customers: 'Customer Management',
-    coupons: 'Coupons & Promotions',
     reviews: 'Customer Reviews',
     analytics: 'Reports & Analytics',
     settings: 'Settings',
@@ -250,7 +249,6 @@ function showSection(section, event) {
   else if (section === 'menu') loadMenu();
   else if (section === 'inventory') loadInventory();
   else if (section === 'customers') loadCustomers();
-  else if (section === 'coupons') loadCoupons();
   else if (section === 'reviews') loadReviews();
   else if (section === 'analytics') loadAnalytics();
   else if (section === 'settings') loadSettings();
@@ -425,11 +423,11 @@ function renderOrderCard(order) {
   const orderId = order.id || 'N/A';
   const items = order.items || [];
   const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString() : 'N/A';
-  
+
   return `
     <div class="order-card" style="border-bottom: 2px solid #e2e8f0; padding: 20px; transition: background 0.2s;" 
          onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'">
-      
+
       <!-- Order Header -->
       <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; flex-wrap: wrap; gap: 16px;">
         <div style="flex: 1; min-width: 200px;">
@@ -441,7 +439,7 @@ function renderOrderCard(order) {
           </div>
           <p style="margin: 4px 0; color: #666; font-size: 13px;">📅 ${date}</p>
         </div>
-        
+
         <div style="display: flex; gap: 8px; align-items: center;">
           <select onchange="updateOrderStatus('${orderId}', this.value)" 
             style="padding: 8px 12px; border: 2px solid #cbd5e0; border-radius: 6px; background: white; font-weight: 600; cursor: pointer;">
@@ -801,11 +799,11 @@ function closeModal() {
 function openImgBBUpload() {
   // Open ImgBB in a new tab
   window.open('https://imgbb.com/', '_blank');
-  
+
   // Show the URL input section
   document.getElementById('upload-placeholder').style.display = 'none';
   document.getElementById('image-url-input-container').style.display = 'block';
-  
+
   // Focus on the input field
   setTimeout(() => {
     document.getElementById('image-url-input').focus();
@@ -814,21 +812,21 @@ function openImgBBUpload() {
 
 function handleImageUrlInput(event) {
   const url = event.target.value.trim();
-  
+
   if (!url) {
     resetImageUpload();
     return;
   }
-  
+
   // Basic URL validation
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     alert('❌ Please enter a valid URL starting with http:// or https://');
     return;
   }
-  
+
   // Store the URL
   state.uploadedImageUrl = url;
-  
+
   // Sync the URL to both input fields
   const visibleInput = document.getElementById('item-image-url');
   const hiddenInput = document.getElementById('image-url-input');
@@ -838,14 +836,14 @@ function handleImageUrlInput(event) {
   if (hiddenInput && event.target.id !== 'image-url-input') {
     hiddenInput.value = url;
   }
-  
+
   // Show preview
   document.getElementById('upload-placeholder').style.display = 'none';
   document.getElementById('image-url-input-container').style.display = 'none';
   document.getElementById('image-preview-container').style.display = 'block';
   document.getElementById('image-preview-img').src = url;
   document.getElementById('image-upload-area').style.borderColor = '#48bb78';
-  
+
   console.log('✅ Image URL set:', url);
 }
 
@@ -870,7 +868,7 @@ function resetImageUpload() {
       🌐 Open ImgBB
     </button>
     <p style="color: #718096; font-size: 13px; margin-top: 12px;">Upload your image on ImgBB, then paste the link below</p>
-    
+
     <!-- Link Input Field - Always Visible -->
     <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #cbd5e0;">
       <label for="item-image-url" style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748; font-size: 14px;">📎 Or paste image URL directly:</label>
@@ -912,7 +910,7 @@ function updateAnalytics() {
     const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
     dayStats[dayName] = (dayStats[dayName] || 0) + 1;
   });
-  
+
   const bestDay = Object.entries(dayStats).sort((a, b) => b[1] - a[1])[0];
 
   document.getElementById('total-revenue').textContent = totalRevenue.toFixed(2) + ' DZD';
@@ -976,7 +974,7 @@ async function initializeDashboard() {
 
 function setupRealtimeListeners() {
   console.log('👂 Setting up real-time listeners for admin dashboard...');
-  
+
   // Listen to menu changes
   dbService.listenToMenuChanges((updatedMenu) => {
     console.log('🔄 Admin: Menu updated in real-time:', updatedMenu.length, 'items');
@@ -988,7 +986,7 @@ function setupRealtimeListeners() {
       renderBestSellers();
     }
   });
-  
+
   // Listen to order changes
   dbService.listenToOrderChanges((updatedOrders) => {
     console.log('🔄 Admin: Orders updated in real-time:', updatedOrders.length, 'orders');
@@ -1001,7 +999,7 @@ function setupRealtimeListeners() {
       renderRecentOrders();
     }
   });
-  
+
   // Listen to category changes
   dbService.listenToCategoryChanges((updatedCategories) => {
     console.log('🔄 Admin: Categories updated in real-time:', updatedCategories.length, 'categories');
@@ -1121,45 +1119,45 @@ function closeCategoryModal() {
 
 async function addCategory(event) {
   event.preventDefault();
-  
+
   const categoryId = document.getElementById('category-id').value.trim().toLowerCase();
   const categoryName = document.getElementById('category-name').value.trim();
-  
+
   if (!categoryId || !categoryName) {
     alert('❌ Please fill all fields');
     return;
   }
-  
+
   // Validate ID format
   if (!/^[a-z0-9_-]+$/.test(categoryId)) {
     alert('❌ Category ID must contain only lowercase letters, numbers, hyphens, and underscores');
     return;
   }
-  
+
   // Check if category already exists
   if (state.categories.find(cat => cat.id === categoryId)) {
     alert('❌ Category ID already exists');
     return;
   }
-  
+
   try {
     const newCategory = {
       id: categoryId,
       name: categoryName,
       order: state.categories.length
     };
-    
+
     await dbService.addCategory(newCategory);
-    
+
     state.categories.push(newCategory);
-    
+
     // Clear form
     document.getElementById('category-id').value = '';
     document.getElementById('category-name').value = '';
-    
+
     renderCategoriesList();
     renderCategoryFilters();
-    
+
     alert('✅ Category added successfully!');
   } catch (error) {
     console.error('Failed to add category:', error);
@@ -1171,15 +1169,15 @@ async function deleteCategory(categoryId) {
   if (!confirm('Are you sure you want to delete this category?\n\nNote: Menu items in this category will remain but may need reassignment.')) {
     return;
   }
-  
+
   try {
     await dbService.deleteCategory(categoryId);
-    
+
     state.categories = state.categories.filter(cat => cat.id !== categoryId);
-    
+
     renderCategoriesList();
     renderCategoryFilters();
-    
+
     alert('✅ Category deleted successfully!');
   } catch (error) {
     console.error('Failed to delete category:', error);
@@ -1190,12 +1188,12 @@ async function deleteCategory(categoryId) {
 function renderCategoriesList() {
   const container = document.getElementById('categories-list');
   if (!container) return;
-  
+
   if (state.categories.length === 0) {
     container.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">No categories yet</p>';
     return;
   }
-  
+
   const html = state.categories.map(cat => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border:2px solid #e2e8f0;border-radius:8px;margin-bottom:8px;background:white;">
       <div>
@@ -1208,7 +1206,7 @@ function renderCategoriesList() {
       </button>
     </div>
   `).join('');
-  
+
   container.innerHTML = html;
 }
 
@@ -1247,7 +1245,7 @@ function renderInventoryGrid() {
     const stockLevel = ingredient.currentStock || 0;
     const minStock = ingredient.minStock || 0;
     const isLowStock = stockLevel <= minStock;
-    
+
     return `
       <div class="inventory-card" style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
         <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
@@ -1294,7 +1292,7 @@ async function loadCustomers() {
   try {
     // Extract unique customers from orders
     const customersMap = new Map();
-    
+
     state.orders.forEach(order => {
       const email = order.email || order.customerEmail || 'unknown';
       if (!customersMap.has(email)) {
@@ -1307,20 +1305,20 @@ async function loadCustomers() {
           lastOrder: null
         });
       }
-      
+
       const customer = customersMap.get(email);
       customer.totalOrders++;
       customer.totalSpent += order.total || 0;
-      
+
       const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt || Date.now());
       if (!customer.lastOrder || orderDate > customer.lastOrder) {
         customer.lastOrder = orderDate;
       }
     });
-    
+
     state.customers = Array.from(customersMap.values())
       .sort((a, b) => b.totalSpent - a.totalSpent);
-    
+
     renderCustomersTable();
   } catch (error) {
     console.error('Failed to load customers:', error);
@@ -1362,7 +1360,7 @@ function renderCustomersTable() {
       </tbody>
     </table>
   `;
-  
+
   container.innerHTML = html;
 }
 
@@ -1398,7 +1396,7 @@ function renderCouponsGrid() {
   const html = state.coupons.map(coupon => {
     const isActive = coupon.active !== false;
     const isExpired = coupon.expiresAt && new Date(coupon.expiresAt) < new Date();
-    
+
     return `
       <div class="coupon-card" style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
         <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
@@ -1467,7 +1465,7 @@ function renderReviewsList() {
   const html = state.reviews.map(review => {
     const stars = '★'.repeat(review.rating || 0) + '☆'.repeat(5 - (review.rating || 0));
     const date = review.createdAt ? new Date(review.createdAt.toDate ? review.createdAt.toDate() : review.createdAt).toLocaleDateString() : 'N/A';
-    
+
     return `
       <div style="background:white;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
         <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
@@ -1520,7 +1518,7 @@ function setupSettingsHandlers() {
   if (businessForm) {
     businessForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const settings = {
         businessName: document.getElementById('business-name')?.value,
         businessEmail: document.getElementById('business-email')?.value,
@@ -1530,7 +1528,7 @@ function setupSettingsHandlers() {
         freeDeliveryMin: parseFloat(document.getElementById('free-delivery-min')?.value) || 0,
         taxRate: parseFloat(document.getElementById('tax-rate')?.value) || 0
       };
-      
+
       try {
         await dbService.updateSettings(settings);
         state.settings = { ...state.settings, ...settings };
@@ -1541,18 +1539,18 @@ function setupSettingsHandlers() {
       }
     });
   }
-  
+
   const hoursForm = document.getElementById('hours-settings-form');
   if (hoursForm) {
     hoursForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
       const hours = {
         openTime: document.getElementById('open-time')?.value,
         closeTime: document.getElementById('close-time')?.value,
         workingDays: Array.from(document.querySelectorAll('input[name="working-days"]:checked')).map(cb => cb.value)
       };
-      
+
       try {
         await dbService.updateSettings({ hours });
         state.settings.hours = hours;
@@ -1567,7 +1565,7 @@ function setupSettingsHandlers() {
 
 function populateSettingsForm() {
   if (!state.settings) return;
-  
+
   if (state.settings.businessName) document.getElementById('business-name').value = state.settings.businessName;
   if (state.settings.businessEmail) document.getElementById('business-email').value = state.settings.businessEmail;
   if (state.settings.businessPhone) document.getElementById('business-phone').value = state.settings.businessPhone;
@@ -1575,7 +1573,7 @@ function populateSettingsForm() {
   if (state.settings.deliveryFee !== undefined) document.getElementById('delivery-fee').value = state.settings.deliveryFee;
   if (state.settings.freeDeliveryMin !== undefined) document.getElementById('free-delivery-min').value = state.settings.freeDeliveryMin;
   if (state.settings.taxRate !== undefined) document.getElementById('tax-rate').value = state.settings.taxRate;
-  
+
   if (state.settings.hours) {
     if (state.settings.hours.openTime) document.getElementById('open-time').value = state.settings.hours.openTime;
     if (state.settings.hours.closeTime) document.getElementById('close-time').value = state.settings.hours.closeTime;
@@ -1642,7 +1640,7 @@ function renderStaffTable() {
       </tbody>
     </table>
   `;
-  
+
   container.innerHTML = html;
 }
 
@@ -1848,10 +1846,10 @@ function closeCouponModal() {
 function openAddStaffModal() {
   const name = prompt('Enter staff member name:');
   if (!name) return;
-  
+
   const email = prompt('Enter staff member email:');
   if (!email) return;
-  
+
   const role = prompt('Enter role (e.g., Manager, Delivery, Chef):');
   if (!role) return;
 
