@@ -684,18 +684,18 @@ html{
 }
 
 .tab-btn{
-  padding:12px 24px;
-  border:2px solid #e5e7eb;
+  padding:14px 28px;
+  border:2px solid rgba(227,6,19,0.2);
   background:#fff;
   color:var(--text-primary);
-  font-size:15px;
+  font-size:16px;
   font-weight:600;
-  letter-spacing:0.3px;
+  letter-spacing:0.5px;
   cursor:pointer;
   white-space:nowrap;
   text-align:center;
-  border-radius:8px;
-  transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius:12px;
+  transition:all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   font-family:'Cormorant Garamond', serif;
   position:relative;
   flex-shrink:0;
@@ -704,7 +704,7 @@ html{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 1px 3px rgba(0,0,0,0.08);
+  box-shadow:0 2px 8px rgba(227,6,19,0.08), 0 1px 3px rgba(0,0,0,0.06);
   overflow:hidden;
 }
 
@@ -715,9 +715,9 @@ html{
   left:0;
   right:0;
   bottom:0;
-  background:linear-gradient(135deg, rgba(227,6,19,0.03) 0%, rgba(227,6,19,0.06) 100%);
+  background:linear-gradient(135deg, rgba(227,6,19,0.05) 0%, rgba(227,6,19,0.08) 100%);
   opacity:0;
-  transition:opacity 0.3s ease;
+  transition:opacity 0.35s ease;
   z-index:0;
 }
 
@@ -727,11 +727,11 @@ html{
   bottom:0;
   left:50%;
   transform:translateX(-50%) scaleX(0);
-  width:80%;
-  height:2px;
+  width:90%;
+  height:3px;
   background:var(--gradient-primary);
-  border-radius:2px 2px 0 0;
-  transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius:3px 3px 0 0;
+  transition:transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   z-index:1;
 }
 
@@ -742,10 +742,10 @@ html{
 
 .tab-btn:hover{
   color:var(--primary);
-  background:#fff;
-  border-color:rgba(227,6,19,0.3);
-  transform:translateY(-1px);
-  box-shadow:0 3px 12px rgba(227,6,19,0.12);
+  background:rgba(255,255,255,0.95);
+  border-color:rgba(227,6,19,0.4);
+  transform:translateY(-2px);
+  box-shadow:0 4px 16px rgba(227,6,19,0.15), 0 2px 6px rgba(0,0,0,0.08);
 }
 
 .tab-btn:hover::before{
@@ -753,7 +753,7 @@ html{
 }
 
 .tab-btn:hover::after{
-  transform:translateX(-50%) scaleX(0.6);
+  transform:translateX(-50%) scaleX(0.7);
 }
 
 .tab-btn.active{
@@ -761,8 +761,8 @@ html{
   font-weight:700;
   background:var(--gradient-primary);
   border-color:var(--primary);
-  box-shadow:0 4px 16px rgba(227,6,19,0.3), 0 2px 8px rgba(0,0,0,0.1);
-  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(227,6,19,0.35), 0 3px 10px rgba(0,0,0,0.12);
+  transform:translateY(-3px);
 }
 
 .tab-btn.active::before{
@@ -772,12 +772,12 @@ html{
 .tab-btn.active::after{
   transform:translateX(-50%) scaleX(1);
   background:#fff;
-  height:3px;
-  box-shadow:0 -1px 4px rgba(255,255,255,0.3);
+  height:4px;
+  box-shadow:0 -2px 6px rgba(255,255,255,0.4);
 }
 
 .tab-btn:active{
-  transform:translateY(0) scale(0.97);
+  transform:translateY(-1px) scale(0.98);
 }
 
 .tab-btn:first-child{
@@ -786,9 +786,9 @@ html{
 
 @media(max-width:768px){
   .tab-btn{
-    padding:10px 20px;
-    font-size:14px;
-    border-radius:6px;
+    padding:12px 22px;
+    font-size:15px;
+    border-radius:10px;
   }
 }
 
