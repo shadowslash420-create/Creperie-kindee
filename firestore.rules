@@ -71,9 +71,9 @@ service cloud.firestore {
     // ORDERS COLLECTION RULES
     // ============================================
     match /orders/{orderId} {
-      // Allow anyone to read orders (customers need to query by phone number)
-      // Security is maintained because customers must know the exact phone number
-      allow read: if true;
+      // Read access restricted to admin and delivery personnel only
+      // Customer phone lookup is handled via secure server-side API endpoint
+      allow read: if isAdmin() || isDelivery();
 
       allow create: if (isAuthenticated() || request.auth == null) && 
                        isValidOrder() &&

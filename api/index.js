@@ -4,8 +4,22 @@ const formidable = require('formidable');
 const fs = require('fs').promises;
 const path = require('path');
 const cors = require('cors');
+const admin = require('firebase-admin');
 
 const app = express();
+
+// Initialize Firebase Admin SDK for Vercel
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+    })
+  });
+}
+
+const db = admin.firestore();
 
 // Middleware
 app.use(cors());
@@ -71,6 +85,58 @@ app.get('/api/feedback', async (req, res) => {
 app.post('/api/feedback', async (req, res) => {
   await saveJSON(FEEDBACK_FILE, req.body);
   res.json({ success: true });
+});
+
+// Secure phone lookup endpoint
+app.get('/api/orders-by-phone', async (req, res) => {
+  try {
+    const { phone } = req.query;
+    
+    if (!phone) {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+
+    // Normalize phone number
+    const normalizePhone = (phoneStr) => {
+      if (!phoneStr) return '';
+      let cleaned = phoneStr.replace(/\D/g, '');
+      if (cleaned.startsWith('00213')) {
+        cleaned = cleaned.substring(5);
+      } else if (cleaned.startsWith('213')) {
+        cleaned = cleaned.substring(3);
+      }
+      if (!cleaned.startsWith('0')) {
+        cleaned = '0' + cleaned;
+      }
+      return cleaned;
+    };
+
+    const normalizedPhone = normalizePhone(phone);
+
+    // Query Firestore using Admin SDK
+    const ordersRef = db.collection('orders');
+    const snapshot = await ordersRef.where('phone', '==', normalizedPhone).get();
+
+    const orders = [];
+    snapshot.forEach(doc => {
+      orders.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    // Sort by creation date (newest first)
+    orders.sort((a, b) => {
+      const dateA = a.createdAt?._seconds || 0;
+      const dateB = b.createdAt?._seconds || 0;
+      return dateB - dateA;
+    });
+
+    res.json(orders);
+  } catch (error) {
+    console.error('Error fetching orders by phone:', error);
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
 });
 
 // Image upload endpoint

@@ -233,7 +233,25 @@
       searchBtn.textContent = t.searching || 'جاري البحث...';
       
       try {
-        const orders = await dbService.getOrdersByPhone(phone);
+        // Use secure server-side API endpoint instead of direct Firestore query
+        const response = await fetch(`/api/orders-by-phone?phone=${encodeURIComponent(phone)}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch orders');
+        }
+        
+        const orders = await response.json();
+        
+        // Convert Firestore timestamps to JavaScript Date objects
+        orders.forEach(order => {
+          if (order.createdAt && order.createdAt._seconds) {
+            order.createdAt = new Date(order.createdAt._seconds * 1000);
+          }
+          if (order.updatedAt && order.updatedAt._seconds) {
+            order.updatedAt = new Date(order.updatedAt._seconds * 1000);
+          }
+        });
+        
         cachedOrders = orders;
         displayOrders(orders);
       } catch (error) {
