@@ -48,7 +48,9 @@ const translations = {
     'faq-q4': 'هل يمكنني تخصيص طلبي؟', 'faq-a4': 'نعم، يمكنك إضافة ملاحظات خاصة عند الطلب وسنقوم بتلبية طلبك حسب الإمكان',
     'faq-q5': 'هل لديكم خيارات نباتية؟', 'faq-a5': 'نعم، لدينا كريب نباتي مع التوت والكريمة النباتية',
     'faq-q6': 'كم يستغرق التحضير والتوصيل؟', 'faq-a6': 'عادة يستغرق التحضير 10-15 دقيقة، والتوصيل 20-30 دقيقة حسب موقعك',
-    selectItem: 'اختر منتج', noFeedback: 'لا توجد تقييمات حتى الآن', feedbackSuccess: 'شكراً لتقييمك!'
+    selectItem: 'اختر منتج', noFeedback: 'لا توجد تقييمات حتى الآن', feedbackSuccess: 'شكراً لتقييمك!',
+    feedbackFormTitle: 'شاركنا تجربتك', feedbackNameLabel: 'اسمك:', feedbackRatingLabel: 'التقييم:', feedbackCommentLabel: 'تعليقك:',
+    feedbackSubmitBtn: 'إرسال التقييم', feedbackReviewsTitle: 'تقييمات العملاء'
   },
   en: {
     home: 'Home', about: 'About Us', menu: 'Menu', orders: 'My Orders', faq: 'FAQ', feedback: 'Feedback', contact: 'Contact',
@@ -81,7 +83,9 @@ const translations = {
     'faq-q4': 'Can I customize my order?', 'faq-a4': 'Yes, you can add special notes when ordering and we will fulfill your request as best as we can',
     'faq-q5': 'Do you have vegetarian options?', 'faq-a5': 'Yes, we have vegetarian crepes with berries and vegan cream',
     'faq-q6': 'How long does preparation and delivery take?', 'faq-a6': 'Usually preparation takes 10-15 minutes, and delivery takes 20-30 minutes depending on your location',
-    selectItem: 'Select Product', noFeedback: 'No reviews yet', feedbackSuccess: 'Thank you for your review!'
+    selectItem: 'Select Product', noFeedback: 'No reviews yet', feedbackSuccess: 'Thank you for your review!',
+    feedbackFormTitle: 'Share Your Experience', feedbackNameLabel: 'Your Name:', feedbackRatingLabel: 'Rating:', feedbackCommentLabel: 'Your Comment:',
+    feedbackSubmitBtn: 'Submit Feedback', feedbackReviewsTitle: 'Customer Reviews'
   }
 };
 
@@ -1234,12 +1238,20 @@ function applyFaqTranslations() {
 // Apply translations to Feedback page
 function applyFeedbackTranslations() {
   const t = getT();
-  const el = document.getElementById('feedback-title');
-  if (el) el.textContent = t.feedbackTitle || 'Feedback';
-  const el2 = document.getElementById('feedback-form-title');
-  if (el2) el2.textContent = (t.feedbackComment ? 'Share your experience' : 'شاركنا تجربتك');
-  const el3 = document.getElementById('feedback-reviews-title');
-  if (el3) el3.textContent = (t.feedbackTitle ? 'Customer Reviews' : 'تقييمات العملاء');
+  const elements = {
+    'feedback-title': t.feedbackTitle,
+    'feedback-form-title': t.feedbackFormTitle,
+    'feedback-name-label': t.feedbackNameLabel,
+    'feedback-rating-label': t.feedbackRatingLabel,
+    'feedback-comment-label': t.feedbackCommentLabel,
+    'feedback-submit': t.feedbackSubmitBtn,
+    'feedback-reviews-title': t.feedbackReviewsTitle
+  };
+  
+  for (const [id, text] of Object.entries(elements)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
 }
 
 // Call on page load
@@ -2125,58 +2137,47 @@ function saveFeedbackOriginal(f){ localStorage.setItem(FEEDBACK_KEY, JSON.string
 async function submitFeedbackOriginal(e){
   e.preventDefault();
   const lang = getCurrentLang();
-  const t = translations[lang]; // Use original translations
+  const t = translations[lang];
 
   const nameInput = document.getElementById('feedback-name');
-  const itemIdInput = document.getElementById('feedback-item');
   const ratingInput = document.getElementById('feedback-rating');
   const commentInput = document.getElementById('feedback-comment');
 
-  const name = nameInput ? nameInput.value : '';
-  const itemId = itemIdInput ? itemIdInput.value : '';
+  const name = nameInput ? nameInput.value.trim() : '';
   const rating = ratingInput ? parseInt(ratingInput.value) : 0;
-  const comment = commentInput ? commentInput.value : '';
+  const comment = commentInput ? commentInput.value.trim() : '';
 
-  if(!rating){
-    return alert(lang === 'ar' ? 'الرجاء اختيار تقييم' : 'Please select a rating');
+  if (!name) {
+    alert(lang === 'ar' ? 'الرجاء إدخال اسمك' : 'Please enter your name');
+    return;
   }
-  if (!itemId) {
-      alert(lang === 'ar' ? 'الرجاء اختيار منتج' : 'Please select a product');
-      return;
+  if (!rating) {
+    alert(lang === 'ar' ? 'الرجاء اختيار تقييم' : 'Please select a rating');
+    return;
+  }
+  if (!comment) {
+    alert(lang === 'ar' ? 'الرجاء إدخال تعليق' : 'Please enter a comment');
+    return;
   }
 
-  const item = menuItems.find(m => m.id === itemId); // Use updated menuItems
-
-  // Save to Firestore
   const reviewData = {
     customerName: name,
-    itemId: itemId,
-    itemName: item ? item.name : '',
     rating: rating,
-    comment: comment
+    comment: comment,
+    createdAt: new Date().toISOString()
   };
 
-  // Import dbService dynamically
-  import('./db-service.js').then(async (module) => {
-    const dbService = module.default;
-    try {
-      await dbService.addReview(reviewData);
-      alert(lang === 'ar' ? 'شكراً لك! تم إرسال تقييمك بنجاح' : 'Thank you! Your review has been submitted successfully');
-      
-      // Reset form
-      if(e.target) e.target.reset();
-      if(ratingInput) ratingInput.value = '';
-      document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
+  const feedback = getFeedbackOriginal();
+  feedback.push(reviewData);
+  saveFeedbackOriginal(feedback);
 
-      showToastOriginal(t.ar.feedbackSuccess); // Use original showToast and translation key
-      renderFeedbackListOriginal(); // Use original render function
-    } catch (error) {
-      console.error('Error adding review:', error);
-      alert(lang === 'ar' ? 'حدث خطأ أثناء إرسال التقييم' : 'Error submitting review');
-    }
-  }).catch(error => {
-    console.error('Error loading db-service:', error);
-  });
+  alert(lang === 'ar' ? 'شكراً لك! تم إرسال تقييمك بنجاح' : 'Thank you! Your review has been submitted successfully');
+  
+  if(e.target) e.target.reset();
+  if(ratingInput) ratingInput.value = '';
+  document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
+
+  renderFeedbackListOriginal();
 }
 
 function renderFeedbackListOriginal(){

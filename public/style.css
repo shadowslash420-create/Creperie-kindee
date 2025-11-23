@@ -1900,21 +1900,27 @@ label{
 /* Feedback Styles */
 .star-rating{
   display:flex;
-  gap:10px;
-  margin-top:16px;
+  gap:12px;
+  margin-top:12px;
   margin-bottom:16px;
 }
 
 .star{
-  font-size:36px;
-  color:var(--warm-gold);
+  font-size:44px;
+  color:#ddd;
   cursor:pointer;
-  transition:all 0.3s;
+  transition:all 0.2s ease;
   user-select:none;
+  line-height:1;
 }
 
 .star:hover{
-  transform:scale(1.2);
+  color:var(--primary);
+  transform:scale(1.15);
+}
+
+.star:active{
+  transform:scale(0.95);
 }
 
 .feedback-list{
