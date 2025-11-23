@@ -194,7 +194,7 @@ function updateDashboardStats() {
   });
 
   const todayRevenue = todayOrders.reduce((sum, order) => sum + (order.total || 0), 0);
-  const pending = state.orders.filter(o => o.status === 'pending').length;
+  const pending = state.orders.filter(o => o.status === 'pending' || o.status === 'unconfirmed').length;
   const completed = todayOrders.filter(o => o.status === 'delivered').length;
 
   document.getElementById('stat-revenue').textContent = todayRevenue.toFixed(2) + ' DZD';
@@ -267,10 +267,9 @@ function renderBestSellers() {
 
 function getStatusColor(status) {
   const colors = {
+    'unconfirmed': '#FFE0E0',
     'pending': '#FFF3CD',
-    'in-progress': '#D1ECF1',
-    'delivered': '#D4EDDA',
-    'cancelled': '#F8D7DA'
+    'delivered': '#D4EDDA'
   };
   return colors[status] || '#E2E8F0';
 }
@@ -356,10 +355,9 @@ function renderOrderCard(order) {
         <div style="display: flex; gap: 8px; align-items: center;">
           <select onchange="updateOrderStatus('${orderId}', this.value)" 
             style="padding: 8px 12px; border: 2px solid #cbd5e0; border-radius: 6px; background: white; font-weight: 600; cursor: pointer;">
+            <option value="unconfirmed" ${order.status === 'unconfirmed' ? 'selected' : ''}>🔴 Unconfirmed</option>
             <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-            <option value="in-progress" ${order.status === 'in-progress' ? 'selected' : ''}>🔄 In Progress</option>
             <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>✅ Delivered</option>
-            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
           </select>
           <button onclick="deleteOrder('${orderId}')" 
             style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">

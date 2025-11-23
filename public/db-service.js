@@ -279,7 +279,7 @@ class DatabaseService {
     const order = {
       ...orderData,
       phone: this.normalizePhone(orderData.phone),
-      status: orderData.status || 'pending',
+      status: orderData.status || 'unconfirmed',
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     };
