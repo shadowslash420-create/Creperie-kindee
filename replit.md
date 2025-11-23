@@ -45,6 +45,7 @@ Creperie Kinder is a modern, elegant cloud-powered website for a crepe restauran
     - Add items to cart, adjust quantities, and remove items.
     - Place orders with customer details (name, phone, address) and COD payment.
     - Shopping cart data temporarily stored in browser's `localStorage`.
+    - **Order Confirmation:** After checkout, customers are automatically redirected to the orders page where they can see their newly placed order with a success message, visual highlighting, and all order details including status tracking.
 - **Admin Features:**
     - Secure login (username `admin`, password `kinder123`).
     - **Orders Management:** View, search, filter (by status), update status, and export orders to CSV.
