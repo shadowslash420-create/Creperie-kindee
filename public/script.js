@@ -608,7 +608,7 @@ function renderMenu(filterCategory = null, searchQuery = '') {
 }
 
 // Filter menu by category
-function filterByCategory(category) {
+window.filterByCategory = function(category) {
   console.log('🎯 Filtering by category:', category);
 
   // Update active state on tabs
@@ -628,7 +628,8 @@ function filterByCategory(category) {
   }
 
   // Re-render menu with filter
-  renderMenu(category);
+  const actualCategory = category === 'all' ? null : category;
+  renderMenu(actualCategory);
 }
 
 // Setup search
@@ -2114,6 +2115,5 @@ window.initScrollButton = initScrollButton;
 window.loadMenuItemsFromFirebase = loadMenuItemsFromFirebase;
 window.initMenu = initMenu;
 window.renderMenu = renderMenu;
-window.filterByCategory = filterByCategory;
 window.setupSearch = setupSearch;
 window.renderHomeMenuPreview = renderHomeMenuPreview;
