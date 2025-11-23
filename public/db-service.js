@@ -502,6 +502,31 @@ class DatabaseService {
     });
   }
 
+  // ==================== CONTACT MESSAGES MANAGEMENT ====================
+  
+  async getAllContactMessages() {
+    await this.init();
+    const ref = collection(this.db, 'contact_messages');
+    const snapshot = await getDocs(query(ref, orderBy('createdAt', 'desc')));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  async addContactMessage(message) {
+    await this.init();
+    const ref = collection(this.db, 'contact_messages');
+    const docRef = await addDoc(ref, {
+      ...message,
+      createdAt: Timestamp.now()
+    });
+    return docRef.id;
+  }
+
+  async deleteContactMessage(id) {
+    await this.init();
+    const docRef = doc(this.db, 'contact_messages', id);
+    await deleteDoc(docRef);
+  }
+
   // ==================== STAFF MANAGEMENT ====================
   
   async getAllStaff() {

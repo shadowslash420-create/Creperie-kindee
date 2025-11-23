@@ -1352,6 +1352,71 @@ async function loadReviews() {
   }
 }
 
+async function loadMessages() {
+  console.log('📧 Loading contact messages...');
+  try {
+    state.messages = await dbService.getAllContactMessages();
+    renderMessagesList();
+  } catch (error) {
+    console.error('Failed to load messages:', error);
+  }
+}
+
+function renderMessagesList() {
+  const container = document.getElementById('messages-list');
+  if (!container) return;
+
+  if (state.messages.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">No contact messages yet</p>';
+    return;
+  }
+
+  document.getElementById('total-messages').textContent = state.messages.length;
+
+  const html = state.messages.map((message) => {
+    const date = message.createdAt ? new Date(message.createdAt.toDate ? message.createdAt.toDate() : message.createdAt).toLocaleDateString() : 'N/A';
+    const time = message.createdAt ? new Date(message.createdAt.toDate ? message.createdAt.toDate() : message.createdAt).toLocaleTimeString() : '';
+
+    return `
+      <div style="background:white;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+              <h4 style="margin:0;color:#2d3748;font-size:16px;font-weight:600;">${message.name || 'Anonymous'}</h4>
+              <span style="color:#666;font-size:13px;">✉️ ${message.email || 'N/A'}</span>
+            </div>
+            <p style="margin:0;color:#666;font-size:14px;">📅 ${date} ${time}</p>
+          </div>
+          <button onclick="deleteMessage('${message.id}')" 
+            style="padding:8px 16px;background:#e53e3e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;white-space:nowrap;">
+            🗑️ Delete
+          </button>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:#f7fafc;border-radius:8px;border-left:4px solid #FF6B35;">
+          <p style="margin:0;color:#2d3748;line-height:1.6;white-space:pre-wrap;word-wrap:break-word;">
+            ${message.message || 'N/A'}
+          </p>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+async function deleteMessage(messageId) {
+  if (!confirm('Are you sure you want to delete this message?')) return;
+
+  try {
+    await dbService.deleteContactMessage(messageId);
+    await loadMessages();
+    alert('✅ Message deleted successfully!');
+  } catch (error) {
+    console.error('❌ Failed to delete message:', error);
+    alert('❌ Failed to delete message');
+  }
+}
+
 function renderReviewsList() {
   const container = document.getElementById('reviews-list');
   if (!container) return;

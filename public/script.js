@@ -2114,15 +2114,28 @@ function updateOrderStatusOriginal(id, status){
 }
 
 // Contact form (Original)
-function submitContactOriginal(e){
+async function submitContactOriginal(e){
   e.preventDefault();
   const name = document.getElementById('contact-name').value;
   const email = document.getElementById('contact-email').value;
   const msg = document.getElementById('contact-msg').value;
   const lang = getCurrentLang();
   const t = translations[lang];
-  showToastOriginal(t.ar.contactSuccess.replace('{name}', name)); // Use original translation key
-  e.target.reset();
+  
+  try {
+    const contactData = {
+      name: name,
+      email: email,
+      message: msg
+    };
+    
+    await dbService.addContactMessage(contactData);
+    showToastOriginal(t.ar.contactSuccess.replace('{name}', name));
+    e.target.reset();
+  } catch (error) {
+    console.error('Error submitting contact message:', error);
+    alert(lang === 'ar' ? 'حدث خطأ في إرسال الرسالة' : 'Error sending message');
+  }
 }
 
 // FAQ Functions (Original)

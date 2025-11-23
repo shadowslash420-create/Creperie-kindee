@@ -75,5 +75,15 @@ service cloud.firestore {
       allow create: if true;  // Anyone can submit reviews (customers + guests)
       allow update, delete: if isAdmin();  // Only admin can modify/delete reviews
     }
+    
+    // ==================== CONTACT MESSAGES COLLECTION ====================
+    // Used by: submitContact(), loadMessages(), deleteMessage()
+    // Firebase functions: dbService.addContactMessage(), dbService.getAllContactMessages(),
+    //                     dbService.deleteContactMessage()
+    match /contact_messages/{messageId} {
+      allow read: if isAdmin();  // Only admin can read messages
+      allow create: if true;  // Anyone can submit contact messages (customers + guests)
+      allow delete: if isAdmin();  // Only admin can delete messages
+    }
   }
 }
