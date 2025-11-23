@@ -53,15 +53,11 @@
           <span class="nav-icon">🍽️</span>
           <span class="nav-text">Menu Items</span>
         </a>
-        <a href="#" class="nav-item" onclick="showSection('inventory', event)">
-          <span class="nav-icon">📋</span>
-          <span class="nav-text">Ingredients / Inventory</span>
-        </a>
         <a href="#" class="nav-item" onclick="showSection('customers', event)">
           <span class="nav-icon">👥</span>
           <span class="nav-text">Customers</span>
         </a>
-        
+
         <a href="#" class="nav-item" onclick="showSection('reviews', event)">
           <span class="nav-icon">⭐</span>
           <span class="nav-text">Reviews</span>
@@ -213,14 +209,14 @@
 
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="category-id" style="font-weight: 600; color: #2d3748; margin-bottom: 8px; display: block;">Category ID *</label>
-              <input type="text" id="category-id" required placeholder="e.g., desserts" 
+              <input type="text" id="category-id" required placeholder="e.g., desserts"
                 style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; box-sizing: border-box;" />
               <p style="color: #666; font-size: 12px; margin-top: 4px;">Use lowercase, no spaces (e.g., "sweet", "savory")</p>
             </div>
 
             <div class="form-group" style="margin-bottom: 16px;">
               <label for="category-name" style="font-weight: 600; color: #2d3748; margin-bottom: 8px; display: block;">Category Name *</label>
-              <input type="text" id="category-name" required placeholder="e.g., Desserts" 
+              <input type="text" id="category-name" required placeholder="e.g., Desserts"
                 style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; box-sizing: border-box;" />
             </div>
 
@@ -258,14 +254,14 @@
                     🌐 Open ImgBB
                   </button>
                   <p style="color: #718096; font-size: 13px; margin-top: 12px;">Upload your image on ImgBB, then paste the link below</p>
-                  
+
                   <!-- Link Input Field - Always Visible -->
                   <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #cbd5e0;">
                     <label for="item-image-url" style="display: block; font-weight: 600; margin-bottom: 8px; color: #2d3748; font-size: 14px;">📎 Or paste image URL directly:</label>
-                    <input 
-                      type="url" 
-                      id="item-image-url" 
-                      placeholder="https://i.ibb.co/xxxxx/image.jpg or any image URL" 
+                    <input
+                      type="url"
+                      id="item-image-url"
+                      placeholder="https://i.ibb.co/xxxxx/image.jpg or any image URL"
                       onchange="handleImageUrlInput(event)"
                       style="width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 8px; font-size: 14px; box-sizing: border-box;"
                     />
@@ -274,10 +270,10 @@
 
                 <div id="image-url-input-container" style="display: none;">
                   <p style="color: #FF6B35; font-weight: 600; margin-bottom: 16px; font-size: 16px;">📋 Paste your ImgBB image URL here:</p>
-                  <input 
-                    type="url" 
-                    id="image-url-input" 
-                    placeholder="https://i.ibb.co/xxxxx/image.jpg" 
+                  <input
+                    type="url"
+                    id="image-url-input"
+                    placeholder="https://i.ibb.co/xxxxx/image.jpg"
                     onchange="handleImageUrlInput(event)"
                     style="width: 100%; padding: 14px; border: 3px solid #FF6B35; border-radius: 8px; font-size: 15px; margin-bottom: 16px; box-sizing: border-box;"
                   />
@@ -330,21 +326,6 @@
           </form>
         </div>
       </div>
-
-      <!-- Inventory Section -->
-      <section class="content-section" id="section-inventory">
-        <div class="inventory-container">
-          <div class="section-header">
-            <h2>📋 Ingredients & Inventory Management</h2>
-            <button class="btn-primary" onclick="openAddIngredientModal()">
-              <span>➕</span> Add Ingredient
-            </button>
-          </div>
-          <div class="inventory-grid" id="inventory-grid">
-            <p style="text-align:center;color:#999;padding:40px;">No ingredients added yet. Click "Add Ingredient" to get started.</p>
-          </div>
-        </div>
-      </section>
 
       <!-- Customers Section -->
       <section class="content-section" id="section-customers">
@@ -518,7 +499,7 @@
         console.log('✅ Admin user auto-logged in:', user.email);
         document.getElementById('login-section').classList.add('hidden');
         document.getElementById('admin-section').classList.remove('hidden');
-        
+
         // Initialize dashboard if function is available
         if (window.initializeDashboard) {
           await window.initializeDashboard();

@@ -955,10 +955,9 @@ async function initializeDashboard() {
   try {
     await dbService.init();
     await Promise.all([
-      loadMenuData(), 
-      loadOrdersData(), 
+      loadMenuData(),
+      loadOrdersData(),
       loadCategories(),
-      loadIngredientsData(),
       loadCouponsData(),
       loadReviewsData(),
       loadStaffData(),
