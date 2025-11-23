@@ -9,6 +9,11 @@ const FEEDBACK_KEY = 'kc_feedback';
 import dbService from './db-service.js';
 import { getMenuFromFirebase, getCategoriesFromFirebase, placeOrderToFirebase, listenToMenuUpdates } from './firebase-customer.js';
 import { getAuthInstance } from './firebase-config.js';
+import { debounce, throttle, CacheStore, RequestDeduplicator, measurePerformance } from './perf-utils.js';
+
+// Initialize performance utilities
+const queryCache = new CacheStore(50);
+const requestDeduplicator = new RequestDeduplicator();
 
 // Translations
 const translations = {
@@ -1113,13 +1118,18 @@ window.filterByCategory = function(category) {
 // Alias for compatibility
 window.switchTab = window.filterByCategory;
 
-// Setup search
+// Setup search with debouncing
 function setupSearch() {
   const searchInput = document.getElementById('menu-search');
   if (!searchInput) return;
 
+  // Debounce search to reduce re-renders
+  const debouncedSearch = debounce((query) => {
+    renderMenu(null, query);
+  }, 300);
+
   searchInput.addEventListener('input', (e) => {
-    renderMenu(null, e.target.value);
+    debouncedSearch(e.target.value);
   });
 }
 
