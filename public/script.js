@@ -1196,10 +1196,10 @@ function markActiveFooterLink() {
   const footerLinks = document.querySelectorAll('.footer-links a');
   
   footerLinks.forEach(link => {
-    link.classList.remove('active');
+    link.classList.remove('active-page');
     const href = link.getAttribute('href');
     if (href === currentPage || (currentPage === '' && href === 'index.html')) {
-      link.classList.add('active');
+      link.classList.add('active-page');
     }
   });
 }

@@ -1598,10 +1598,12 @@ html{
 }
 
 .footer-links a.active-page{
-  background:rgba(212,165,116,0.35);
+  background:rgba(255,255,255,0.25);
   color:#fff;
-  font-weight:600;
-  border:1px solid rgba(212,165,116,0.5);
+  font-weight:700;
+  border:2px solid rgba(255,255,255,0.5);
+  box-shadow:0 8px 24px rgba(0,0,0,0.3), 0 4px 12px rgba(227,6,19,0.4);
+  transform:translateY(-3px);
 }
 
 @media(min-width:768px){
@@ -2159,16 +2161,3 @@ label{
   box-shadow: 0 8px 24px rgba(227,6,19,0.2);
 }
 
-/* Footer Navigation Active State */
-.footer-links a {
-  transition: all 0.3s ease;
-}
-
-.footer-links a.active {
-  color: var(--primary);
-  font-weight: 700;
-  text-decoration: underline;
-  text-decoration-color: var(--primary);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
-}
