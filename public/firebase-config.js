@@ -1,5 +1,5 @@
-// Firebase Configuration - fetches from server environment variables
-// This keeps your Firebase credentials secure
+// Firebase Configuration
+// Add your Firebase project credentials here
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
@@ -12,19 +12,20 @@ let db = null;
 let storage = null;
 let initPromise = null;
 
-// Fetch Firebase config from server
+// Firebase configuration object
+// Replace these values with your actual Firebase project credentials
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// Load Firebase config
 async function loadFirebaseConfig() {
-  try {
-    const response = await fetch('/api/firebase-config');
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Firebase config: ${response.status}`);
-    }
-    const config = await response.json();
-    return config;
-  } catch (error) {
-    console.error('Failed to load Firebase config:', error);
-    throw error;
-  }
+  return firebaseConfig;
 }
 
 // Initialize Firebase (singleton pattern)

@@ -6,8 +6,6 @@ const PORT = 5000;
 
 app.use(express.static('public'));
 
-app.use('/api', require('./api/index.js'));
-
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
