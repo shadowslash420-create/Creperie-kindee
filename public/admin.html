@@ -384,17 +384,33 @@
               <form id="business-settings-form">
                 <div class="form-group">
                   <label>Restaurant Name</label>
-                  <input type="text" id="restaurant-name" value="Creperie Kinder" class="form-input">
+                  <input type="text" id="business-name" value="Creperie Kinder" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" id="business-email" placeholder="info@creperie.com" class="form-input">
                 </div>
                 <div class="form-group">
                   <label>Phone Number</label>
-                  <input type="tel" id="restaurant-phone" placeholder="+213 555 1234" class="form-input">
+                  <input type="tel" id="business-phone" placeholder="+213 555 1234" class="form-input">
                 </div>
                 <div class="form-group">
                   <label>Address</label>
-                  <textarea id="restaurant-address" rows="3" class="form-input" placeholder="Enter restaurant address"></textarea>
+                  <textarea id="business-address" rows="3" class="form-input" placeholder="Enter restaurant address"></textarea>
                 </div>
-                <button type="submit" class="btn-primary">Save Changes</button>
+                <div class="form-group">
+                  <label>Delivery Fee (DZD)</label>
+                  <input type="number" id="delivery-fee" step="0.01" min="0" value="0" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Free Delivery Minimum (DZD)</label>
+                  <input type="number" id="free-delivery-min" step="0.01" min="0" value="0" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Tax Rate (%)</label>
+                  <input type="number" id="tax-rate" step="0.01" min="0" max="100" value="0" class="form-input">
+                </div>
+                <button type="submit" class="btn-primary">Save Business Settings</button>
               </form>
             </div>
             <div class="settings-card">
@@ -402,13 +418,39 @@
               <form id="hours-settings-form">
                 <div class="form-group">
                   <label>Opening Time</label>
-                  <input type="time" id="opening-time" value="09:00" class="form-input">
+                  <input type="time" id="open-time" value="09:00" class="form-input">
                 </div>
                 <div class="form-group">
                   <label>Closing Time</label>
-                  <input type="time" id="closing-time" value="22:00" class="form-input">
+                  <input type="time" id="close-time" value="22:00" class="form-input">
                 </div>
-                <button type="submit" class="btn-primary">Save Hours</button>
+                <div class="form-group">
+                  <label>Working Days</label>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="working-days" value="Monday" checked> Monday
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="working-days" value="Tuesday" checked> Tuesday
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="working-days" value="Wednesday" checked> Wednesday
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="working-days" value="Thursday" checked> Thursday
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="working-days" value="Friday" checked> Friday
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="working-days" value="Saturday" checked> Saturday
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" name="working-days" value="Sunday"> Sunday
+                    </label>
+                  </div>
+                </div>
+                <button type="submit" class="btn-primary">Save Operating Hours</button>
               </form>
             </div>
             <div class="settings-card">
