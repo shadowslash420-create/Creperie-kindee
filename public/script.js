@@ -2217,8 +2217,7 @@ function renderFeedbackListOriginal(){
     card.innerHTML = `
       <div class="feedback-header">
         <div>
-          <strong>${fb.name}</strong>
-          <div class="feedback-item-name">${fb.itemName}</div>
+          <strong>${fb.customerName || fb.name || 'Anonymous'}</strong>
         </div>
         <div class="feedback-stars">${stars}</div>
       </div>
