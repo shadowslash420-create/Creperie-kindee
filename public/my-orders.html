@@ -33,10 +33,9 @@
 
       <!-- Search Form -->
       <div class="card" style="margin-bottom:24px;padding:24px;">
-        <h3 id="search-title" style="margin-bottom:16px;">ابحث عن طلبك</h3>
-        <p id="search-description" style="margin-bottom:16px;color:#666;font-size:14px;">أدخل رقم الطلب ورقم الهاتف للبحث عن طلبك</p>
+        <h3 id="search-title" style="margin-bottom:16px;">ابحث عن طلباتك</h3>
+        <p id="search-description" style="margin-bottom:16px;color:#666;font-size:14px;">أدخل رقم الهاتف لعرض جميع طلباتك</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <input type="text" id="order-search" placeholder="" required style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
           <input type="tel" id="phone-search" placeholder="" required style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
           <button class="cta" onclick="searchOrders()" id="search-btn" style="padding:12px 24px;">بحث</button>
         </div>
@@ -112,8 +111,8 @@
     const orderTranslations = {
       ar: {
         ordersTitle: 'تتبع طلباتك',
-        searchTitle: 'ابحث عن طلبك',
-        searchDescription: 'أدخل رقم الطلب ورقم الهاتف للبحث عن طلبك',
+        searchTitle: 'ابحث عن طلباتك',
+        searchDescription: 'أدخل رقم الهاتف لعرض جميع طلباتك',
         orderNumber: 'رقم الطلب',
         customer: 'العميل',
         phone: 'الهاتف',
@@ -124,22 +123,24 @@
         total: 'المجموع',
         status: 'الحالة',
         pending: 'قيد الانتظار',
+        confirmed: 'تم التأكيد',
         'in-progress': 'قيد التوصيل',
         delivered: 'تم التسليم',
+        refused: 'مرفوض',
+        cancelled: 'ملغي',
         specialInstructions: 'تعليمات خاصة',
         noInstructions: 'لا توجد تعليمات خاصة',
-        noOrders: 'لم يتم العثور على طلبات بهذه المعلومات. يرجى التحقق من رقم الطلب ورقم الهاتف.',
-        orderIdPlaceholder: 'رقم الطلب (مثال: ORD-1234567890)',
+        noOrders: 'لم يتم العثور على طلبات بهذا الرقم. يرجى التحقق من رقم الهاتف.',
         phonePlaceholder: 'رقم الهاتف',
         date: 'التاريخ',
         viewDetails: 'عرض التفاصيل',
-        bothFieldsRequired: 'يرجى إدخال رقم الطلب ورقم الهاتف',
+        phoneRequired: 'يرجى إدخال رقم الهاتف',
         searchBtn: 'بحث'
       },
       en: {
         ordersTitle: 'Track Your Orders',
-        searchTitle: 'Search for Your Order',
-        searchDescription: 'Enter both your order number and phone number to track your order',
+        searchTitle: 'Search for Your Orders',
+        searchDescription: 'Enter your phone number to view all your orders',
         orderNumber: 'Order Number',
         customer: 'Customer',
         phone: 'Phone',
@@ -150,16 +151,18 @@
         total: 'Total',
         status: 'Status',
         pending: 'Pending',
+        confirmed: 'Confirmed',
         'in-progress': 'In Progress',
         delivered: 'Delivered',
+        refused: 'Refused',
+        cancelled: 'Cancelled',
         specialInstructions: 'Special Instructions',
         noInstructions: 'No special instructions',
-        noOrders: 'No orders found with this information. Please verify your order number and phone number.',
-        orderIdPlaceholder: 'Order Number (e.g., ORD-1234567890)',
+        noOrders: 'No orders found with this phone number. Please verify your phone number.',
         phonePlaceholder: 'Phone Number',
         date: 'Date',
         viewDetails: 'View Details',
-        bothFieldsRequired: 'Please enter both order number and phone number',
+        phoneRequired: 'Please enter your phone number',
         searchBtn: 'Search'
       }
     };
@@ -177,7 +180,6 @@
       const ordersTitle = document.getElementById('orders-title');
       const searchTitle = document.getElementById('search-title');
       const searchDesc = document.getElementById('search-description');
-      const orderSearch = document.getElementById('order-search');
       const phoneSearch = document.getElementById('phone-search');
       const searchBtn = document.getElementById('search-btn');
       const searchError = document.getElementById('search-error');
@@ -185,13 +187,12 @@
       if(ordersTitle) ordersTitle.textContent = t.ordersTitle;
       if(searchTitle) searchTitle.textContent = t.searchTitle;
       if(searchDesc) searchDesc.textContent = t.searchDescription;
-      if(orderSearch) orderSearch.placeholder = t.orderIdPlaceholder;
       if(phoneSearch) phoneSearch.placeholder = t.phonePlaceholder;
       if(searchBtn) searchBtn.textContent = t.searchBtn;
       
       // Update error message if visible
       if(searchError && searchError.style.display !== 'none' && searchError.textContent) {
-        searchError.textContent = t.bothFieldsRequired;
+        searchError.textContent = t.phoneRequired;
       }
       
       // Re-render cached orders with new translations only if a search has been performed
@@ -202,7 +203,6 @@
     }
 
     function searchOrders(){
-      const orderId = document.getElementById('order-search').value.trim();
       const phone = document.getElementById('phone-search').value.trim();
       const errorDiv = document.getElementById('search-error');
       const t = getOrderTranslations();
@@ -210,8 +210,8 @@
       errorDiv.style.display = 'none';
       errorDiv.textContent = '';
 
-      if(!orderId || !phone){
-        errorDiv.textContent = t.bothFieldsRequired;
+      if(!phone){
+        errorDiv.textContent = t.phoneRequired;
         errorDiv.style.display = 'block';
         cachedOrders = null;
         document.getElementById('orders-list').innerHTML = '';
@@ -220,18 +220,48 @@
 
       const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
       
-      // Helper function to normalize phone numbers
-      const normalizePhone = (phoneStr) => (phoneStr || '').replace(/[\s\-\(\)\+]/g, '');
+      // Helper function to normalize phone numbers to a canonical format
+      // Handles international (+213, 00213, 213) and local (0) Algerian formats
+      const normalizePhone = (phoneStr) => {
+        if(!phoneStr) return '';
+        
+        // Strip all non-digit characters
+        let cleaned = phoneStr.replace(/\D/g, '');
+        
+        // Remove international prefixes for Algeria
+        // 00213XXXXXXXXX → XXXXXXXXX
+        if(cleaned.startsWith('00213')){
+          cleaned = cleaned.substring(5);
+        }
+        // 213XXXXXXXXX → XXXXXXXXX
+        else if(cleaned.startsWith('213')){
+          cleaned = cleaned.substring(3);
+        }
+        
+        // Ensure it starts with 0 (local format)
+        if(!cleaned.startsWith('0')){
+          cleaned = '0' + cleaned;
+        }
+        
+        return cleaned;
+      };
+      
       const cleanedPhone = normalizePhone(phone);
 
+      // Find all orders matching the phone number
       const filtered = orders.filter(o => {
-        // Skip orders without valid ID or phone
-        if(!o.id || !o.phone) return false;
+        // Skip orders without phone
+        if(!o.phone) return false;
         
         const orderPhone = normalizePhone(o.phone);
-        const orderIdMatch = o.id.toLowerCase() === orderId.toLowerCase();
-        const phoneMatch = orderPhone === cleanedPhone;
-        return orderIdMatch && phoneMatch;
+        return orderPhone === cleanedPhone;
+      });
+
+      // Sort by date (newest first)
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.timestamp || a.createdAt || 0);
+        const dateB = new Date(b.timestamp || b.createdAt || 0);
+        return dateB - dateA;
       });
 
       cachedOrders = filtered;
@@ -257,14 +287,20 @@
 
         const statusColors = {
           'pending': '#e67e22',
-          'in-progress': '#3498db',
-          'delivered': '#27ae60'
+          'confirmed': '#3498db',
+          'in-progress': '#9b59b6',
+          'delivered': '#27ae60',
+          'refused': '#e74c3c',
+          'cancelled': '#95a5a6'
         };
 
         const statusLabels = {
           'pending': t.pending,
+          'confirmed': t.confirmed,
           'in-progress': t['in-progress'],
-          'delivered': t.delivered
+          'delivered': t.delivered,
+          'refused': t.refused,
+          'cancelled': t.cancelled
         };
 
         const status = order.status || 'pending';
@@ -337,18 +373,14 @@
       });
     }
 
-    // Check for order ID in URL
+    // Check for order ID or customer phone in URL
     window.addEventListener('DOMContentLoaded', () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const orderId = urlParams.get('order');
       const savedInfo = JSON.parse(localStorage.getItem('kc_customer_info') || '{}');
 
-      if(orderId){
-        document.getElementById('order-search').value = orderId;
-        if(savedInfo.phone){
-          document.getElementById('phone-search').value = savedInfo.phone;
-          searchOrders();
-        }
+      // Auto-fill phone from saved customer info and search automatically
+      if(savedInfo.phone){
+        document.getElementById('phone-search').value = savedInfo.phone;
+        searchOrders();
       }
 
       // Apply order translations immediately (using localStorage directly)
