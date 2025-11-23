@@ -2019,8 +2019,15 @@ async function submitFeedbackOriginal(e){
       if(ratingInput) ratingInput.value = '';
       document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
 
-  showToastOriginal(t.ar.feedbackSuccess); // Use original showToast and translation key
-  renderFeedbackListOriginal(); // Use original render function
+      showToastOriginal(t.ar.feedbackSuccess); // Use original showToast and translation key
+      renderFeedbackListOriginal(); // Use original render function
+    } catch (error) {
+      console.error('Error adding review:', error);
+      alert(lang === 'ar' ? 'حدث خطأ أثناء إرسال التقييم' : 'Error submitting review');
+    }
+  }).catch(error => {
+    console.error('Error loading db-service:', error);
+  });
 }
 
 function renderFeedbackListOriginal(){
