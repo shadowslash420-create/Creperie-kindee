@@ -293,14 +293,42 @@ window.closeAllSidebars = function() {
   if (overlay) overlay.classList.remove('active');
 }
 
-// Checkout flow
-window.checkoutFlow = async function() {
-  const t = getT();
+// Track checkout submission state
+let isCheckoutSubmitting = false;
 
-  if (cart.length === 0) {
-    alert(t.emptyCart);
+// Close checkout modal
+window.closeCheckoutModal = function() {
+  // Prevent closing during submission
+  if (isCheckoutSubmitting) {
     return;
   }
+  
+  const modal = document.getElementById('checkout-modal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+// Submit checkout form
+window.submitCheckoutForm = async function(event) {
+  event.preventDefault();
+  const t = getT();
+
+  // Get form values
+  const firstName = document.getElementById('checkout-firstname').value.trim();
+  const lastName = document.getElementById('checkout-lastname').value.trim();
+  const phone = document.getElementById('checkout-phone').value.trim();
+  const address = document.getElementById('checkout-address').value.trim();
+  const notes = document.getElementById('checkout-notes').value.trim();
+
+  // Validate
+  if (!firstName || !lastName || !phone || !address) {
+    alert(currentLang === 'ar' ? 'الرجاء ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
+    return;
+  }
+
+  // Combine first and last name
+  const fullName = `${firstName} ${lastName}`;
 
   // Get user email if logged in
   let userEmail = null;
@@ -313,21 +341,13 @@ window.checkoutFlow = async function() {
     console.log('User not logged in');
   }
 
-  const savedInfo = JSON.parse(localStorage.getItem('kc_customer_info') || '{}');
-
-  const name = prompt(t.yourName + ':', savedInfo.name || '');
-  if (!name) return;
-
-  const phone = prompt(t.phoneNumber + ':', savedInfo.phone || '');
-  if (!phone) return;
-
-  const address = prompt(t.deliveryAddress + ':', savedInfo.address || '');
-  if (!address) return;
-
-  const specialInstructions = prompt(t.specialInstructions + ':', '');
-
   // Save customer info
-  localStorage.setItem('kc_customer_info', JSON.stringify({ name, phone, address }));
+  localStorage.setItem('kc_customer_info', JSON.stringify({ 
+    firstName, 
+    lastName, 
+    phone, 
+    address 
+  }));
 
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
@@ -335,7 +355,9 @@ window.checkoutFlow = async function() {
   const total = subtotal + deliveryFee;
 
   const orderData = {
-    name,
+    name: fullName,
+    firstName,
+    lastName,
     phone,
     address,
     email: userEmail,
@@ -348,10 +370,33 @@ window.checkoutFlow = async function() {
     subtotal,
     deliveryFee,
     total,
-    specialInstructions: specialInstructions || '',
+    specialInstructions: notes || '',
     status: 'unconfirmed',
     timestamp: new Date().toISOString()
   };
+
+  // Set submission flag
+  isCheckoutSubmitting = true;
+
+  // Disable submit button and show loading state
+  const submitBtn = document.getElementById('checkout-submit-btn');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = currentLang === 'ar' ? '⏳ جاري الإرسال...' : '⏳ Submitting...';
+  }
+
+  // Disable close button
+  const closeBtn = document.querySelector('#checkout-modal button[onclick="closeCheckoutModal()"]');
+  if (closeBtn) {
+    closeBtn.style.opacity = '0.5';
+    closeBtn.style.cursor = 'not-allowed';
+  }
+
+  // Hide any previous error messages
+  const errorDiv = document.getElementById('checkout-error');
+  if (errorDiv) {
+    errorDiv.style.display = 'none';
+  }
 
   try {
     closeAllSidebars();
@@ -361,12 +406,19 @@ window.checkoutFlow = async function() {
 
     // Save order info for auto-display
     localStorage.setItem('kc_recent_order_id', orderId);
-    localStorage.setItem('kc_recent_order_phone', formattedPhone);
+    localStorage.setItem('kc_recent_order_phone', phone);
 
+    // Clear cart
     cart = [];
     saveCart();
     updateCart();
     renderCart();
+
+    // Reset submission flag
+    isCheckoutSubmitting = false;
+
+    // Close modal only after success
+    closeCheckoutModal();
 
     alert(t.orderPlaced + '\n' + t.orderConfirmation);
 
@@ -376,8 +428,322 @@ window.checkoutFlow = async function() {
     }, 1000);
   } catch (error) {
     console.error('Error placing order:', error);
-    alert('حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.');
+    
+    // Reset submission flag
+    isCheckoutSubmitting = false;
+
+    // Re-enable submit button
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = currentLang === 'ar' ? '✅ تأكيد الطلب' : '✅ Confirm Order';
+    }
+
+    // Re-enable close button
+    if (closeBtn) {
+      closeBtn.style.opacity = '1';
+      closeBtn.style.cursor = 'pointer';
+    }
+
+    // Show error message inline
+    let errorDiv = document.getElementById('checkout-error');
+    if (!errorDiv) {
+      errorDiv = document.createElement('div');
+      errorDiv.id = 'checkout-error';
+      errorDiv.style.cssText = `
+        background: #fee;
+        color: #c33;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        border: 2px solid #fcc;
+        font-weight: 600;
+      `;
+      const form = document.getElementById('checkout-form');
+      if (form) {
+        form.insertBefore(errorDiv, form.firstChild);
+      }
+    }
+    errorDiv.textContent = currentLang === 'ar' 
+      ? '❌ حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.' 
+      : '❌ Error placing order. Please try again.';
+    errorDiv.style.display = 'block';
+    
+    // Scroll error into view
+    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
+}
+
+// Checkout flow with modal
+window.checkoutFlow = async function() {
+  const t = getT();
+
+  if (cart.length === 0) {
+    alert(t.emptyCart);
+    return;
+  }
+
+  closeAllSidebars();
+
+  // Get saved info
+  const savedInfo = JSON.parse(localStorage.getItem('kc_customer_info') || '{}');
+
+  // Calculate totals
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const deliveryFee = subtotal >= 1000 ? 0 : 200;
+  const total = subtotal + deliveryFee;
+
+  // Create modal
+  const modal = document.createElement('div');
+  modal.id = 'checkout-modal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+  `;
+
+  const lang = currentLang;
+  const isArabic = lang === 'ar';
+
+  modal.innerHTML = `
+    <div style="
+      background: white;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    ">
+      <div style="
+        background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
+        padding: 24px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      ">
+        <h2 style="margin: 0; font-size: 24px; font-weight: 700;">
+          ${isArabic ? '🛒 إتمام الطلب' : '🛒 Complete Order'}
+        </h2>
+        <button onclick="closeCheckoutModal()" style="
+          background: none;
+          border: none;
+          color: white;
+          font-size: 32px;
+          cursor: pointer;
+          padding: 0;
+          line-height: 1;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">×</button>
+      </div>
+      
+      <div style="padding: 24px; overflow-y: auto; flex: 1;">
+        <form id="checkout-form" onsubmit="submitCheckoutForm(event); return false;">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #2C1810;">
+              ${isArabic ? 'الاسم الأول' : 'First Name'} <span style="color: #E30613;">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="checkout-firstname" 
+              required
+              value="${savedInfo.firstName || ''}"
+              style="
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #FFE4E1;
+                border-radius: 8px;
+                font-size: 16px;
+                font-family: 'Cormorant Garamond', serif;
+                transition: border-color 0.3s;
+              "
+              onfocus="this.style.borderColor='#E30613'"
+              onblur="this.style.borderColor='#FFE4E1'"
+            />
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #2C1810;">
+              ${isArabic ? 'اسم العائلة' : 'Last Name'} <span style="color: #E30613;">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="checkout-lastname" 
+              required
+              value="${savedInfo.lastName || ''}"
+              style="
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #FFE4E1;
+                border-radius: 8px;
+                font-size: 16px;
+                font-family: 'Cormorant Garamond', serif;
+                transition: border-color 0.3s;
+              "
+              onfocus="this.style.borderColor='#E30613'"
+              onblur="this.style.borderColor='#FFE4E1'"
+            />
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #2C1810;">
+              ${isArabic ? 'رقم الهاتف' : 'Phone Number'} <span style="color: #E30613;">*</span>
+            </label>
+            <input 
+              type="tel" 
+              id="checkout-phone" 
+              required
+              value="${savedInfo.phone || ''}"
+              placeholder="${isArabic ? 'مثال: 0555123456' : 'Example: 0555123456'}"
+              style="
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #FFE4E1;
+                border-radius: 8px;
+                font-size: 16px;
+                font-family: 'Cormorant Garamond', serif;
+                transition: border-color 0.3s;
+              "
+              onfocus="this.style.borderColor='#E30613'"
+              onblur="this.style.borderColor='#FFE4E1'"
+            />
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #2C1810;">
+              ${isArabic ? 'عنوان التوصيل' : 'Delivery Address'} <span style="color: #E30613;">*</span>
+            </label>
+            <textarea 
+              id="checkout-address" 
+              required
+              rows="3"
+              style="
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #FFE4E1;
+                border-radius: 8px;
+                font-size: 16px;
+                font-family: 'Cormorant Garamond', serif;
+                resize: vertical;
+                transition: border-color 0.3s;
+              "
+              onfocus="this.style.borderColor='#E30613'"
+              onblur="this.style.borderColor='#FFE4E1'"
+            >${savedInfo.address || ''}</textarea>
+          </div>
+
+          <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #2C1810;">
+              ${isArabic ? 'ملاحظات (اختياري)' : 'Notes (Optional)'}
+            </label>
+            <textarea 
+              id="checkout-notes" 
+              rows="3"
+              placeholder="${isArabic ? 'أي تعليمات خاصة...' : 'Any special instructions...'}"
+              style="
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #FFE4E1;
+                border-radius: 8px;
+                font-size: 16px;
+                font-family: 'Cormorant Garamond', serif;
+                resize: vertical;
+                transition: border-color 0.3s;
+              "
+              onfocus="this.style.borderColor='#E30613'"
+              onblur="this.style.borderColor='#FFE4E1'"
+            ></textarea>
+          </div>
+
+          <div style="
+            background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+          ">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>${isArabic ? 'المجموع الفرعي:' : 'Subtotal:'}</span>
+              <strong>${subtotal.toFixed(2)} DZD</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span>${isArabic ? 'رسوم التوصيل:' : 'Delivery Fee:'}</span>
+              <strong style="color: ${deliveryFee === 0 ? '#52C41A' : '#2C1810'};">
+                ${deliveryFee === 0 ? (isArabic ? 'مجاناً!' : 'Free!') : deliveryFee.toFixed(2) + ' DZD'}
+              </strong>
+            </div>
+            <div style="
+              display: flex;
+              justify-content: space-between;
+              padding-top: 12px;
+              border-top: 2px solid #FFE4E1;
+              font-size: 20px;
+              color: #E30613;
+            ">
+              <strong>${isArabic ? 'الإجمالي:' : 'Total:'}</strong>
+              <strong>${total.toFixed(2)} DZD</strong>
+            </div>
+            ${deliveryFee > 0 ? `
+              <div style="margin-top: 8px; font-size: 14px; color: #5C4033;">
+                ${isArabic ? `💡 احصل على توصيل مجاني عند الطلب بقيمة 1000 دج أو أكثر` : `💡 Get free delivery on orders of 1000 DZD or more`}
+              </div>
+            ` : ''}
+          </div>
+
+          <button 
+            type="submit" 
+            id="checkout-submit-btn"
+            style="
+              width: 100%;
+              padding: 16px;
+              background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
+              color: white;
+              border: none;
+              border-radius: 8px;
+              font-size: 18px;
+              font-weight: 700;
+              cursor: pointer;
+              transition: transform 0.2s, box-shadow 0.2s;
+              box-shadow: 0 4px 12px rgba(227, 6, 19, 0.4);
+            "
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(227, 6, 19, 0.5)';"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(227, 6, 19, 0.4)';"
+          >
+            ${isArabic ? '✅ تأكيد الطلب' : '✅ Confirm Order'}
+          </button>
+        </form>
+      </div>
+    </div>
+  `;
+
+  // Close on background click (but not during submission)
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal && !isCheckoutSubmitting) {
+      closeCheckoutModal();
+    }
+  });
+
+  document.body.appendChild(modal);
+
+  // Focus first input
+  setTimeout(() => {
+    const firstInput = document.getElementById('checkout-firstname');
+    if (firstInput) firstInput.focus();
+  }, 100);
 }
 
 // Toggle language
