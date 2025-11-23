@@ -291,18 +291,30 @@ class DatabaseService {
   async getOrdersByEmail(email) {
     await this.init();
     const ordersRef = collection(this.db, 'orders');
-    const q = query(ordersRef, where('email', '==', email), orderBy('createdAt', 'desc'));
+    const q = query(ordersRef, where('email', '==', email));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort by createdAt in JavaScript to avoid needing Firestore composite index
+    return orders.sort((a, b) => {
+      const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return timeB - timeA; // Descending order (newest first)
+    });
   }
 
   listenToOrdersByEmail(email, callback) {
     this.init().then(() => {
       const ordersRef = collection(this.db, 'orders');
-      const q = query(ordersRef, where('email', '==', email), orderBy('createdAt', 'desc'));
+      const q = query(ordersRef, where('email', '==', email));
       return onSnapshot(q, (snapshot) => {
         const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        callback(orders);
+        // Sort by createdAt in JavaScript to avoid needing Firestore composite index
+        const sortedOrders = orders.sort((a, b) => {
+          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return timeB - timeA; // Descending order (newest first)
+        });
+        callback(sortedOrders);
       });
     });
   }
