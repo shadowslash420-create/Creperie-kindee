@@ -41,7 +41,14 @@ const translations = {
     offering3Title: 'قائمة متنوعة للجميع', offering3Desc: 'خيارات متعددة تناسب جميع الأعمار من الأطفال إلى الكبار، حلو أو مالح',
     offering4Title: 'توصيل سريع للمنزل', offering4Desc: 'استمتع بطعمنا الشهي في منزلك مع خدمة توصيل سريعة وموثوقة',
     offering5Title: 'عروض عائلية', offering5Desc: 'باقات خاصة للعائلات بأسعار مميزة وتوصيل مجاني للطلبات الكبيرة',
-    offering6Title: 'خدمة طوال اليوم', offering6Desc: 'نعمل من 9 صباحاً حتى 11 مساءً لنكون دائماً في خدمتكم'
+    offering6Title: 'خدمة طوال اليوم', offering6Desc: 'نعمل من 9 صباحاً حتى 11 مساءً لنكون دائماً في خدمتكم',
+    'faq-q1': 'ما هي ساعات العمل؟', 'faq-a1': 'نحن مفتوحون يومياً من الساعة 9 صباحاً حتى 11 مساءً',
+    'faq-q2': 'هل توفرون توصيل مجاني؟', 'faq-a2': 'نعم، نوفر توصيل مجاني للطلبات التي تزيد عن 1000 DZD',
+    'faq-q3': 'هل تستخدمون شوكولاتة كيندر الأصلية؟', 'faq-a3': 'بالتأكيد! نستخدم فقط شوكولاتة كيندر الأصلية ومكونات طازجة يومياً',
+    'faq-q4': 'هل يمكنني تخصيص طلبي؟', 'faq-a4': 'نعم، يمكنك إضافة ملاحظات خاصة عند الطلب وسنقوم بتلبية طلبك حسب الإمكان',
+    'faq-q5': 'هل لديكم خيارات نباتية؟', 'faq-a5': 'نعم، لدينا كريب نباتي مع التوت والكريمة النباتية',
+    'faq-q6': 'كم يستغرق التحضير والتوصيل؟', 'faq-a6': 'عادة يستغرق التحضير 10-15 دقيقة، والتوصيل 20-30 دقيقة حسب موقعك',
+    selectItem: 'اختر منتج', noFeedback: 'لا توجد تقييمات حتى الآن', feedbackSuccess: 'شكراً لتقييمك!'
   },
   en: {
     home: 'Home', about: 'About Us', menu: 'Menu', orders: 'My Orders', faq: 'FAQ', feedback: 'Feedback', contact: 'Contact',
@@ -67,7 +74,14 @@ const translations = {
     offering3Title: 'Diverse Menu for All', offering3Desc: 'Multiple options suitable for all ages from children to adults, sweet or savory',
     offering4Title: 'Fast Home Delivery', offering4Desc: 'Enjoy our delicious food at home with fast and reliable delivery service',
     offering5Title: 'Family Packages', offering5Desc: 'Special bundles for families at great prices with free delivery on large orders',
-    offering6Title: 'All-Day Service', offering6Desc: 'We\'re open from 9 AM to 11 PM to always be at your service'
+    offering6Title: 'All-Day Service', offering6Desc: 'We\'re open from 9 AM to 11 PM to always be at your service',
+    'faq-q1': 'What are your opening hours?', 'faq-a1': 'We are open daily from 9 AM to 11 PM',
+    'faq-q2': 'Do you offer free delivery?', 'faq-a2': 'Yes, we offer free delivery for orders over 1000 DZD',
+    'faq-q3': 'Do you use original Kinder chocolate?', 'faq-a3': 'Absolutely! We only use original Kinder chocolate and fresh ingredients daily',
+    'faq-q4': 'Can I customize my order?', 'faq-a4': 'Yes, you can add special notes when ordering and we will fulfill your request as best as we can',
+    'faq-q5': 'Do you have vegetarian options?', 'faq-a5': 'Yes, we have vegetarian crepes with berries and vegan cream',
+    'faq-q6': 'How long does preparation and delivery take?', 'faq-a6': 'Usually preparation takes 10-15 minutes, and delivery takes 20-30 minutes depending on your location',
+    selectItem: 'Select Product', noFeedback: 'No reviews yet', feedbackSuccess: 'Thank you for your review!'
   }
 };
 
@@ -1204,8 +1218,42 @@ function markActiveFooterLink() {
   });
 }
 
+// Apply translations to FAQ page
+function applyFaqTranslations() {
+  const t = getT();
+  for (let i = 1; i <= 6; i++) {
+    const qId = `faq-q${i}`;
+    const aId = `faq-a${i}`;
+    const qEl = document.getElementById(qId);
+    const aEl = document.getElementById(aId);
+    if (qEl) qEl.textContent = t[qId] || '';
+    if (aEl) aEl.textContent = t[aId] || '';
+  }
+}
+
+// Apply translations to Feedback page
+function applyFeedbackTranslations() {
+  const t = getT();
+  const el = document.getElementById('feedback-title');
+  if (el) el.textContent = t.feedbackTitle || 'Feedback';
+  const el2 = document.getElementById('feedback-form-title');
+  if (el2) el2.textContent = (t.feedbackComment ? 'Share your experience' : 'شاركنا تجربتك');
+  const el3 = document.getElementById('feedback-reviews-title');
+  if (el3) el3.textContent = (t.feedbackTitle ? 'Customer Reviews' : 'تقييمات العملاء');
+}
+
 // Call on page load
-document.addEventListener('DOMContentLoaded', markActiveFooterLink);
+document.addEventListener('DOMContentLoaded', async () => {
+  markActiveFooterLink();
+  if (document.getElementById('faq-q1')) applyFaqTranslations();
+  if (document.getElementById('feedback-item')) {
+    await loadMenuItemsFromFirebase();
+    applyFeedbackTranslations();
+    populateFeedbackItemsOriginal();
+    initStarRatingOriginal();
+    renderFeedbackListOriginal();
+  }
+});
 // Also call when page is shown (after navigation)
 window.addEventListener('pageshow', markActiveFooterLink);
 
@@ -2142,7 +2190,7 @@ function renderFeedbackListOriginal(){
   const t = translations[lang]; // Use original translations
 
   if(feedback.length === 0){
-    container.innerHTML = '<div class="card"><p style="text-align:center;color:var(--warm-gray)">' + (lang === 'ar' ? t.ar.noFeedback : t.en.noFeedback) + '</p></div>'; // Use original translation keys
+    container.innerHTML = '<div class="card"><p style="text-align:center;color:var(--warm-gray)">' + (t.noFeedback || 'No reviews yet') + '</p></div>';
     return;
   }
 
@@ -2177,7 +2225,7 @@ async function populateFeedbackItemsOriginal(){
   const lang = getCurrentLang();
   const t = translations[lang]; // Use original translations
 
-  select.innerHTML = '<option value="">' + (lang === 'ar' ? t.ar.selectItem : t.en.selectItem) + '</option>'; // Use original translation keys
+  select.innerHTML = '<option value="">' + (t.selectItem || 'Select Product') + '</option>';
 
   menu.forEach(item => {
     const option = document.createElement('option');
