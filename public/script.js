@@ -1264,12 +1264,13 @@ function applyFeedbackTranslations() {
 document.addEventListener('DOMContentLoaded', async () => {
   markActiveFooterLink();
   if (document.getElementById('faq-q1')) applyFaqTranslations();
-  if (document.getElementById('feedback-item')) {
+  if (document.getElementById('feedback-form')) {
     await loadMenuItemsFromFirebase();
     applyFeedbackTranslations();
-    populateFeedbackItemsOriginal();
-    initStarRatingOriginal();
-    renderFeedbackListOriginal();
+    setTimeout(() => {
+      initStarRatingOriginal();
+      renderFeedbackListOriginal();
+    }, 100);
   }
 });
 // Also call when page is shown (after navigation)
@@ -2246,46 +2247,42 @@ async function populateFeedbackItemsOriginal(){
 function initStarRatingOriginal(){
   const stars = document.querySelectorAll('.star');
   const ratingInput = document.getElementById('feedback-rating');
+  const starRating = document.getElementById('star-rating');
 
-  if(!stars.length || !ratingInput) return;
+  if(!stars.length || !ratingInput) {
+    console.log('⭐ Star rating not available');
+    return;
+  }
 
+  // Click handler for setting rating
   stars.forEach(star => {
-    star.addEventListener('click', function(){
+    star.addEventListener('click', function(e) {
+      e.stopPropagation();
       const rating = parseInt(this.getAttribute('data-rating'));
       ratingInput.value = rating;
-
-      stars.forEach((s, index) => {
-        if(index < rating){
-          s.textContent = '★';
-        } else {
-          s.textContent = '☆';
-        }
-      });
+      updateStarDisplay(rating);
+      console.log('⭐ Rating set to:', rating);
     });
 
-    star.addEventListener('mouseenter', function(){
+    // Hover preview
+    star.addEventListener('mouseenter', function() {
       const rating = parseInt(this.getAttribute('data-rating'));
-      stars.forEach((s, index) => {
-        if(index < rating){
-          s.textContent = '★';
-        } else {
-          s.textContent = '☆';
-        }
-      });
+      updateStarDisplay(rating);
     });
   });
 
-  const starRating = document.getElementById('star-rating');
+  // Reset on mouse leave
   if(starRating){
     starRating.addEventListener('mouseleave', function(){
       const currentRating = parseInt(ratingInput.value) || 0;
-      stars.forEach((s, index) => {
-        if(index < currentRating){
-          s.textContent = '★';
-        } else {
-          s.textContent = '☆';
-        }
-      });
+      updateStarDisplay(currentRating);
+    });
+  }
+
+  function updateStarDisplay(rating) {
+    stars.forEach((s, index) => {
+      s.textContent = (index < rating) ? '★' : '☆';
+      s.style.color = (index < rating) ? 'var(--primary)' : '#ddd';
     });
   }
 }
