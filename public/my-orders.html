@@ -173,8 +173,12 @@
       }
     };
 
+    function getCurrentLang(){
+      return localStorage.getItem('kc_lang') || 'ar';
+    }
+
     function getOrderTranslations(){
-      const lang = localStorage.getItem('kc_lang') || 'ar';
+      const lang = getCurrentLang();
       return orderTranslations[lang] || orderTranslations.en;
     }
 
