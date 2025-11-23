@@ -15,7 +15,7 @@ import { debounce, throttle, CacheStore, RequestDeduplicator, measurePerformance
 const queryCache = new CacheStore(50);
 const requestDeduplicator = new RequestDeduplicator();
 
-// Comprehensive Translations
+// Comprehensive Translations - All pages covered
 const translations = {
   ar: {
     home: 'الرئيسية', about: 'من نحن', menu: 'القائمة', orders: 'طلباتي', faq: 'الأسئلة الشائعة', feedback: 'التقييمات', contact: 'تواصل معنا',
@@ -35,7 +35,13 @@ const translations = {
     connect: 'تابعنا', copyright: '© Creperie Kinder — طعم ممتع لعائلتك', callUs: 'اتصل: +213 5X XXX XXXX',
     orderNow: 'اطلب الآن', discoverMenu: 'استكشف القائمة', whatWeOffer: 'ماذا نقدم لعائلتك', ourMenu: 'من قائمتنا',
     discoverProducts: 'اكتشف بعض من أشهى منتجاتنا', fullMenu: 'شاهد القائمة الكاملة', readyForExperience: 'جاهز لتجربة لا تُنسى؟',
-    orderNowDescription: 'اطلب الآن واستمتع بطعم كيندر الأصيل'
+    orderNowDescription: 'اطلب الآن واستمتع بطعم كيندر الأصيل', whatWeOfferSubtitle: 'في كريبري كيندر، نؤمن بأن كل لحظة مع العائلة تستحق أن تكون مميزة. لهذا نقدم لكم تجربة فريدة تجمع بين الجودة والراحة والسعادة',
+    offering1Title: 'أجواء عائلية دافئة', offering1Desc: 'مساحة مريحة وآمنة للعائلات مع مقاعد مخصصة للأطفال وجو مرحب للجميع',
+    offering2Title: 'احتفالات خاصة', offering2Desc: 'نساعدك في تنظيم حفلات أعياد الميلاد والمناسبات العائلية بخيارات مخصصة',
+    offering3Title: 'قائمة متنوعة للجميع', offering3Desc: 'خيارات متعددة تناسب جميع الأعمار من الأطفال إلى الكبار، حلو أو مالح',
+    offering4Title: 'توصيل سريع للمنزل', offering4Desc: 'استمتع بطعمنا الشهي في منزلك مع خدمة توصيل سريعة وموثوقة',
+    offering5Title: 'عروض عائلية', offering5Desc: 'باقات خاصة للعائلات بأسعار مميزة وتوصيل مجاني للطلبات الكبيرة',
+    offering6Title: 'خدمة طوال اليوم', offering6Desc: 'نعمل من 9 صباحاً حتى 11 مساءً لنكون دائماً في خدمتكم'
   },
   en: {
     home: 'Home', about: 'About Us', menu: 'Menu', orders: 'My Orders', faq: 'FAQ', feedback: 'Feedback', contact: 'Contact',
@@ -55,7 +61,13 @@ const translations = {
     connect: 'Follow Us', copyright: '© Creperie Kinder — Delicious taste for your family', callUs: 'Call: +213 5X XXX XXXX',
     orderNow: 'Order Now', discoverMenu: 'Discover Menu', whatWeOffer: 'What We Offer Your Family', ourMenu: 'From Our Menu',
     discoverProducts: 'Discover some of our finest products', fullMenu: 'View Full Menu', readyForExperience: 'Ready for an unforgettable experience?',
-    orderNowDescription: 'Order now and enjoy authentic Kinder taste'
+    orderNowDescription: 'Order now and enjoy authentic Kinder taste', whatWeOfferSubtitle: 'At Creperie Kinder, we believe every moment with family deserves to be special. That\'s why we offer you a unique experience that combines quality, comfort, and happiness.',
+    offering1Title: 'Warm Family Atmosphere', offering1Desc: 'A comfortable and safe space for families with dedicated children\'s seating and a welcoming atmosphere for all',
+    offering2Title: 'Special Celebrations', offering2Desc: 'We help you organize birthday parties and family events with custom options',
+    offering3Title: 'Diverse Menu for All', offering3Desc: 'Multiple options suitable for all ages from children to adults, sweet or savory',
+    offering4Title: 'Fast Home Delivery', offering4Desc: 'Enjoy our delicious food at home with fast and reliable delivery service',
+    offering5Title: 'Family Packages', offering5Desc: 'Special bundles for families at great prices with free delivery on large orders',
+    offering6Title: 'All-Day Service', offering6Desc: 'We\'re open from 9 AM to 11 PM to always be at your service'
   }
 };
 
@@ -860,7 +872,7 @@ window.toggleLanguage = function() {
   }
 }
 
-// Apply translations to all pages
+// Apply translations to ALL pages including index sections
 window.applyTranslations = function() {
   const t = getT();
   
@@ -873,21 +885,34 @@ window.applyTranslations = function() {
   document.querySelectorAll('.nav-link-feedback').forEach(el => el.textContent = t.feedback);
   document.querySelectorAll('.nav-link-contact').forEach(el => el.textContent = t.contact);
 
-  // Translate all elements by ID that match translation keys
+  // Translate all elements by ID for all pages
   const elementIds = {
+    'page-indicator': t.home,
     'cart-title': t.cart,
     'total-label': t.total + ':',
     'checkout-btn': t.checkout,
+    'hero-btn': t.discoverMenu,
+    'what-we-offer-title': t.whatWeOffer,
+    'what-we-offer-subtitle': t.whatWeOfferSubtitle,
+    'offering1-title': t.offering1Title,
+    'offering1-desc': t.offering1Desc,
+    'offering2-title': t.offering2Title,
+    'offering2-desc': t.offering2Desc,
+    'offering3-title': t.offering3Title,
+    'offering3-desc': t.offering3Desc,
+    'offering4-title': t.offering4Title,
+    'offering4-desc': t.offering4Desc,
+    'offering5-title': t.offering5Title,
+    'offering5-desc': t.offering5Desc,
+    'offering6-title': t.offering6Title,
+    'offering6-desc': t.offering6Desc,
     'menu-preview-title': t.ourMenu,
+    'view-full-menu-btn': t.fullMenu,
     'cta-title': t.readyForExperience,
     'cta-desc': t.orderNowDescription,
     'cta-btn': t.orderNow,
-    'what-we-offer-title': t.whatWeOffer,
-    'hero-btn': t.discoverMenu,
-    'hero-desc': 'تجربة فاخرة مستوحاة من نكهات كيندر الشهيرة',
-    'view-full-menu-btn': t.fullMenu,
-    'order-now-btn': t.orderNow,
-    'page-indicator': t.home,
+    'footer-copyright': t.copyright,
+    'footer-connect': t.connect,
     'about-title': t.aboutTitle,
     'about-desc1': t.aboutDesc1,
     'about-desc2': t.aboutDesc2,
@@ -899,8 +924,6 @@ window.applyTranslations = function() {
     'contact-title': t.contactTitle,
     'faq-title': t.faqTitle,
     'feedback-title': t.feedbackTitle,
-    'cart-title': t.cart,
-    'footer-connect': t.connect,
     'menu-search': t.searchPlaceholder,
   };
 
@@ -908,7 +931,6 @@ window.applyTranslations = function() {
   Object.entries(elementIds).forEach(([id, text]) => {
     const el = document.getElementById(id);
     if (el && text) {
-      // Don't overwrite placeholders
       if (el.tagName === 'INPUT' && el.type === 'text') {
         el.placeholder = text;
       } else {
