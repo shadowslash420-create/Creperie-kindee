@@ -379,15 +379,14 @@ let isCheckoutSubmitting = false;
 
 // Close checkout modal
 window.closeCheckoutModal = function() {
-  // Prevent closing during submission
-  if (isCheckoutSubmitting) {
-    return;
-  }
-  
+  // Allow closing even during submission (user choice)
   const modal = document.getElementById('checkout-modal');
   if (modal) {
     modal.remove();
   }
+  
+  // Reset submission flag
+  isCheckoutSubmitting = false;
 }
 
 // Submit checkout form
@@ -465,11 +464,12 @@ window.submitCheckoutForm = async function(event) {
     submitBtn.textContent = currentLang === 'ar' ? '⏳ جاري الإرسال...' : '⏳ Submitting...';
   }
 
-  // Disable close button
-  const closeBtn = document.querySelector('#checkout-modal button[onclick="closeCheckoutModal()"]');
+  // Disable close button during submission
+  const closeBtn = document.getElementById('checkout-close-btn');
   if (closeBtn) {
     closeBtn.style.opacity = '0.5';
     closeBtn.style.cursor = 'not-allowed';
+    closeBtn.disabled = true;
   }
 
   // Hide any previous error messages
@@ -509,7 +509,7 @@ window.submitCheckoutForm = async function(event) {
   } catch (error) {
     console.error('Error placing order:', error);
     
-    // Reset submission flag
+    // Reset submission flag immediately
     isCheckoutSubmitting = false;
 
     // Re-enable submit button
@@ -522,6 +522,7 @@ window.submitCheckoutForm = async function(event) {
     if (closeBtn) {
       closeBtn.style.opacity = '1';
       closeBtn.style.cursor = 'pointer';
+      closeBtn.disabled = false;
     }
 
     // Show error message inline
@@ -537,15 +538,26 @@ window.submitCheckoutForm = async function(event) {
         margin-bottom: 16px;
         border: 2px solid #fcc;
         font-weight: 600;
+        text-align: center;
       `;
       const form = document.getElementById('checkout-form');
       if (form) {
         form.insertBefore(errorDiv, form.firstChild);
       }
     }
-    errorDiv.textContent = currentLang === 'ar' 
+    
+    // Show more specific error message
+    let errorMessage = currentLang === 'ar' 
       ? '❌ حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.' 
       : '❌ Error placing order. Please try again.';
+    
+    if (error.code === 'permission-denied') {
+      errorMessage = currentLang === 'ar'
+        ? '❌ عذراً، لا يمكن إتمام الطلب حالياً. يرجى الاتصال بنا مباشرة.'
+        : '❌ Sorry, cannot complete order now. Please contact us directly.';
+    }
+    
+    errorDiv.textContent = errorMessage;
     errorDiv.style.display = 'block';
     
     // Scroll error into view
@@ -616,7 +628,7 @@ window.checkoutFlow = async function() {
         <h2 style="margin: 0; font-size: 24px; font-weight: 700;">
           ${isArabic ? '🛒 إتمام الطلب' : '🛒 Complete Order'}
         </h2>
-        <button onclick="closeCheckoutModal()" style="
+        <button onclick="closeCheckoutModal()" id="checkout-close-btn" style="
           background: none;
           border: none;
           color: white;
