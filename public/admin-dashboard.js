@@ -1414,7 +1414,7 @@ function deleteFeedback(index) {
 
   try {
     const feedback = getFeedbackFromStorage();
-    feedback.splice(index, 0); 
+    feedback.splice(index, 1); 
     
     localStorage.setItem('creperie_feedback', JSON.stringify(feedback));
     loadReviews();
