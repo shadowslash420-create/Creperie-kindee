@@ -3,49 +3,77 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check if user is admin
+    // ==================== HELPER FUNCTIONS ====================
+    
+    // Check if current user is admin
+    // Used by: updateSettings(), deleteMenuItem(), updateMenuItem(), addMenuItem(), 
+    //          updateCategory(), deleteCategory(), addCategory(), renderAdminOrders(), updateOrderStatus()
     function isAdmin() {
       return request.auth != null && 
              request.auth.token.email == 'oussamaanis2005@gmail.com';
     }
     
-    // Menu items - public read, admin write
+    // ==================== MENU COLLECTION ====================
+    // Used by: renderMenu(), renderHomeMenuPreview(), initMenu(), getMenuFromFirebase(), 
+    //          loadMenuItemsFromFirebase(), addToCart(), checkoutFlow()
+    // Firebase functions: dbService.getAllMenuItems(), dbService.getMenuItemsByCategory(), 
+    //                     dbService.getMenuItem(), dbService.addMenuItem(), 
+    //                     dbService.updateMenuItem(), dbService.deleteMenuItem(),
+    //                     dbService.listenToMenuChanges()
     match /menu/{menuId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow read: if true;  // Public can view menu
+      allow create, update, delete: if isAdmin();  // Only admin can modify menu
     }
     
-    // Categories - public read, admin write
+    // ==================== CATEGORIES COLLECTION ====================
+    // Used by: renderMenu(), initMenu(), getCategoriesFromFirebase(), loadMenuItemsFromFirebase(),
+    //          renderHomeMenuPreview()
+    // Firebase functions: dbService.getAllCategories(), dbService.addCategory(),
+    //                     dbService.updateCategory(), dbService.deleteCategory()
     match /categories/{categoryId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow read: if true;  // Public can view categories
+      allow create, update, delete: if isAdmin();  // Only admin can modify categories
     }
     
-    // Orders - clients can create and read their own, admin can do everything
+    // ==================== ORDERS COLLECTION ====================
+    // Used by: checkoutFlow(), submitCheckoutForm(), placeOrderToFirebase(), 
+    //          loadMyOrders(), renderAdminOrders(), updateOrderStatus()
+    // Firebase functions: dbService.createOrder(), dbService.getOrdersByEmail(),
+    //                     dbService.getAllOrders(), dbService.updateOrderStatus(),
+    //                     dbService.deleteOrder(), dbService.listenToOrders()
     match /orders/{orderId} {
-      // Anyone can create an order (guest checkout)
+      // Anyone can create an order (customers + guest checkout)
+      // Function: submitCheckoutForm() -> placeOrderToFirebase() -> dbService.createOrder()
       allow create: if true;
       
-      // Users can read their own orders by email or phone
+      // Users can read their own orders; admin can read all orders
+      // Functions: loadMyOrders(), renderAdminOrders()
       allow read: if isAdmin() || 
                      (request.auth != null && request.auth.token.email == resource.data.email) ||
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
       // Only admin can update or delete orders
+      // Functions: updateOrderStatus(), deleteOrder()
       allow update, delete: if isAdmin();
     }
     
-    // Settings - public read, admin write
+    // ==================== SETTINGS COLLECTION ====================
+    // Used by: loadSettingsData(), updateSettings(), getSettings()
+    // Firebase functions: dbService.getSettings(), dbService.updateSettings()
+    // Document ID: 'restaurant' contains business info (name, phone, address, hours, payment methods)
     match /settings/{settingId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow read: if true;  // Public can view settings (business hours, info)
+      allow create, update, delete: if isAdmin();  // Only admin can modify settings
     }
     
-    // Reviews/Feedback - public read, authenticated users can create
+    // ==================== REVIEWS/FEEDBACK COLLECTION ====================
+    // Used by: submitFeedback(), renderFeedbackList(), populateFeedbackItems()
+    // Firebase functions: dbService.addReview(), dbService.getAllReviews(),
+    //                     dbService.deleteReview()
     match /reviews/{reviewId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if isAdmin();
+      allow read: if true;  // Public can read all reviews
+      allow create: if request.auth != null;  // Only logged-in users can submit reviews
+      allow update, delete: if isAdmin();  // Only admin can modify/delete reviews
     }
   }
 }
