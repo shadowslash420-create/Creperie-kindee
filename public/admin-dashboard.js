@@ -904,21 +904,48 @@ function updateAnalytics() {
   const totalRevenue = state.orders.reduce((sum, order) => sum + (order.total || 0), 0);
   const avgOrder = state.orders.length > 0 ? totalRevenue / state.orders.length : 0;
 
+  // Calculate best day
+  const dayStats = {};
+  state.orders.forEach(order => {
+    if (!order.createdAt) return;
+    const date = new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt);
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+    dayStats[dayName] = (dayStats[dayName] || 0) + 1;
+  });
+  
+  const bestDay = Object.entries(dayStats).sort((a, b) => b[1] - a[1])[0];
+
   document.getElementById('total-revenue').textContent = totalRevenue.toFixed(2) + ' DZD';
   document.getElementById('avg-order').textContent = avgOrder.toFixed(2) + ' DZD';
-  document.getElementById('best-day').textContent = '-';
+  document.getElementById('best-day').textContent = bestDay ? `${bestDay[0]} (${bestDay[1]} orders)` : 'No data';
 
-  // Popular items
+  // Popular items from actual orders
+  const itemStats = {};
+  state.orders.forEach(order => {
+    if (!order.items) return;
+    order.items.forEach(item => {
+      if (!itemStats[item.name]) {
+        itemStats[item.name] = { count: 0, revenue: 0 };
+      }
+      itemStats[item.name].count += item.quantity || item.qty || 1;
+      itemStats[item.name].revenue += (item.price || 0) * (item.quantity || item.qty || 1);
+    });
+  });
+
+  const topItems = Object.entries(itemStats)
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 5);
+
   const popularContainer = document.getElementById('popular-items');
-  const topItems = state.menuItems.slice(0, 5);
-
   if (topItems.length === 0) {
-    popularContainer.innerHTML = '<p style="color: #666;">No menu items yet</p>';
+    popularContainer.innerHTML = '<p style="color: #666;">No order data yet</p>';
   } else {
-    popularContainer.innerHTML = topItems.map((item, index) => `
+    popularContainer.innerHTML = topItems.map(([name, stats], index) => `
       <div style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
-        <p style="margin: 0; font-weight: 600;">${index + 1}. ${item.name}</p>
-        <p style="margin: 4px 0 0 0; color: #666; font-size: 14px;">${item.price} DZD</p>
+        <p style="margin: 0; font-weight: 600;">${index + 1}. ${name}</p>
+        <p style="margin: 4px 0 0 0; color: #666; font-size: 14px;">
+          ${stats.count} sold • ${stats.revenue.toFixed(2)} DZD
+        </p>
       </div>
     `).join('');
   }
@@ -1062,8 +1089,23 @@ document.addEventListener('DOMContentLoaded', () => {
   window.handleImageUrlInput = handleImageUrlInput;
   window.initializeDashboard = initializeDashboard;
   window.openAddIngredientModal = openAddIngredientModal;
+  window.editIngredient = editIngredient;
+  window.saveIngredient = saveIngredient;
+  window.deleteIngredient = deleteIngredient;
+  window.closeIngredientModal = closeIngredientModal;
   window.openAddCouponModal = openAddCouponModal;
+  window.editCoupon = editCoupon;
+  window.saveCoupon = saveCoupon;
+  window.deleteCoupon = deleteCoupon;
+  window.closeCouponModal = closeCouponModal;
   window.openAddStaffModal = openAddStaffModal;
+  window.deleteStaff = deleteStaff;
+  window.deleteReview = deleteReview;
+  window.renderInventoryGrid = renderInventoryGrid;
+  window.renderCouponsGrid = renderCouponsGrid;
+  window.renderReviewsList = renderReviewsList;
+  window.renderStaffTable = renderStaffTable;
+  window.renderCustomersTable = renderCustomersTable;
 });
 
 // ==================== CATEGORY MANAGEMENT ====================
@@ -1172,39 +1214,298 @@ function renderCategoriesList() {
 
 // ==================== NEW SECTIONS LOAD FUNCTIONS ====================
 
-function loadInventory() {
+async function loadInventory() {
   console.log('📋 Loading inventory...');
-  // Placeholder for inventory loading
+  try {
+    await loadIngredientsData();
+    renderInventoryGrid();
+  } catch (error) {
+    console.error('Failed to load inventory:', error);
+  }
+}
+
+function renderInventoryGrid() {
   const container = document.getElementById('inventory-grid');
-  if (container) {
-    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Inventory feature coming soon!</p>';
+  if (!container) return;
+
+  if (state.ingredients.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;">
+        <div style="font-size:64px;margin-bottom:16px;">📦</div>
+        <h3 style="color:#2d3748;margin-bottom:8px;">No ingredients yet</h3>
+        <p style="color:#718096;margin-bottom:24px;">Start tracking your inventory</p>
+        <button class="btn-primary" onclick="openAddIngredientModal()" 
+          style="padding:12px 24px;background:linear-gradient(135deg,#FF6B35,#FF8C42);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
+          ➕ Add Ingredient
+        </button>
+      </div>
+    `;
+    return;
   }
+
+  const html = state.ingredients.map(ingredient => {
+    const stockLevel = ingredient.currentStock || 0;
+    const minStock = ingredient.minStock || 0;
+    const isLowStock = stockLevel <= minStock;
+    
+    return `
+      <div class="inventory-card" style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+          <h3 style="margin:0;color:#2d3748;font-size:18px;">${ingredient.name}</h3>
+          <span style="padding:4px 12px;background:${isLowStock ? '#FEE' : '#E8F5E9'};color:${isLowStock ? '#C00' : '#2E7D32'};border-radius:12px;font-size:12px;font-weight:600;">
+            ${isLowStock ? '⚠️ Low Stock' : '✅ In Stock'}
+          </span>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:#666;font-size:14px;">Current Stock:</span>
+            <strong style="color:#2d3748;">${stockLevel} ${ingredient.unit || 'units'}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:#666;font-size:14px;">Min Stock:</span>
+            <strong style="color:#666;">${minStock} ${ingredient.unit || 'units'}</strong>
+          </div>
+          ${ingredient.supplier ? `
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#666;font-size:14px;">Supplier:</span>
+              <span style="color:#2d3748;font-weight:500;">${ingredient.supplier}</span>
+            </div>
+          ` : ''}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="editIngredient('${ingredient.id}')" 
+            style="flex:1;padding:8px;background:#4299e1;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
+            ✏️ Edit
+          </button>
+          <button onclick="deleteIngredient('${ingredient.id}')" 
+            style="flex:1;padding:8px;background:#e53e3e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
 }
 
-function loadCustomers() {
+async function loadCustomers() {
   console.log('👥 Loading customers...');
-  // Placeholder for customers loading
+  try {
+    // Extract unique customers from orders
+    const customersMap = new Map();
+    
+    state.orders.forEach(order => {
+      const email = order.email || order.customerEmail || 'unknown';
+      if (!customersMap.has(email)) {
+        customersMap.set(email, {
+          email: email,
+          name: order.customerName || order.name || 'Anonymous',
+          phone: order.customerPhone || order.phone || 'N/A',
+          totalOrders: 0,
+          totalSpent: 0,
+          lastOrder: null
+        });
+      }
+      
+      const customer = customersMap.get(email);
+      customer.totalOrders++;
+      customer.totalSpent += order.total || 0;
+      
+      const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt || Date.now());
+      if (!customer.lastOrder || orderDate > customer.lastOrder) {
+        customer.lastOrder = orderDate;
+      }
+    });
+    
+    state.customers = Array.from(customersMap.values())
+      .sort((a, b) => b.totalSpent - a.totalSpent);
+    
+    renderCustomersTable();
+  } catch (error) {
+    console.error('Failed to load customers:', error);
+  }
+}
+
+function renderCustomersTable() {
   const container = document.getElementById('customers-table');
-  if (container) {
-    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Customer management feature coming soon!</p>';
+  if (!container) return;
+
+  if (state.customers.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">No customers yet</p>';
+    return;
   }
+
+  const html = `
+    <table style="width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;">
+      <thead>
+        <tr style="background:#f7fafc;text-align:left;">
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Name</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Email</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Phone</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Total Orders</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Total Spent</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Last Order</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${state.customers.map(customer => `
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:12px;font-weight:600;color:#2d3748;">${customer.name}</td>
+            <td style="padding:12px;color:#666;">${customer.email}</td>
+            <td style="padding:12px;color:#666;">${customer.phone}</td>
+            <td style="padding:12px;text-align:center;font-weight:600;color:#FF6B35;">${customer.totalOrders}</td>
+            <td style="padding:12px;font-weight:600;color:#2d3748;">${customer.totalSpent.toFixed(2)} DZD</td>
+            <td style="padding:12px;color:#666;">${customer.lastOrder ? customer.lastOrder.toLocaleDateString() : 'N/A'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  
+  container.innerHTML = html;
 }
 
-function loadCoupons() {
+async function loadCoupons() {
   console.log('🎫 Loading coupons...');
-  // Placeholder for coupons loading
-  const container = document.getElementById('coupons-grid');
-  if (container) {
-    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Coupons feature coming soon!</p>';
+  try {
+    await loadCouponsData();
+    renderCouponsGrid();
+  } catch (error) {
+    console.error('Failed to load coupons:', error);
   }
 }
 
-function loadReviews() {
+function renderCouponsGrid() {
+  const container = document.getElementById('coupons-grid');
+  if (!container) return;
+
+  if (state.coupons.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;">
+        <div style="font-size:64px;margin-bottom:16px;">🎫</div>
+        <h3 style="color:#2d3748;margin-bottom:8px;">No coupons yet</h3>
+        <p style="color:#718096;margin-bottom:24px;">Create promotional codes for your customers</p>
+        <button class="btn-primary" onclick="openAddCouponModal()" 
+          style="padding:12px 24px;background:linear-gradient(135deg,#FF6B35,#FF8C42);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
+          ➕ Create Coupon
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const html = state.coupons.map(coupon => {
+    const isActive = coupon.active !== false;
+    const isExpired = coupon.expiresAt && new Date(coupon.expiresAt) < new Date();
+    
+    return `
+      <div class="coupon-card" style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+          <div style="flex:1;">
+            <h3 style="margin:0 0 4px 0;color:#FF6B35;font-size:20px;font-family:monospace;font-weight:700;">${coupon.code}</h3>
+            <p style="margin:0;color:#666;font-size:14px;">${coupon.description || 'No description'}</p>
+          </div>
+          <span style="padding:4px 12px;background:${isExpired ? '#FEE' : isActive ? '#E8F5E9' : '#F5F5F5'};color:${isExpired ? '#C00' : isActive ? '#2E7D32' : '#666'};border-radius:12px;font-size:12px;font-weight:600;">
+            ${isExpired ? '⏰ Expired' : isActive ? '✅ Active' : '❌ Inactive'}
+          </span>
+        </div>
+        <div style="background:#f7fafc;padding:12px;border-radius:8px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="color:#666;font-size:14px;">Discount:</span>
+            <strong style="color:#FF6B35;font-size:16px;">${coupon.discountType === 'percentage' ? coupon.discountValue + '%' : coupon.discountValue + ' DZD'}</strong>
+          </div>
+          ${coupon.minOrderAmount ? `
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+              <span style="color:#666;font-size:14px;">Min Order:</span>
+              <strong style="color:#2d3748;">${coupon.minOrderAmount} DZD</strong>
+            </div>
+          ` : ''}
+          ${coupon.expiresAt ? `
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#666;font-size:14px;">Expires:</span>
+              <span style="color:#2d3748;font-weight:500;">${new Date(coupon.expiresAt).toLocaleDateString()}</span>
+            </div>
+          ` : ''}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="editCoupon('${coupon.id}')" 
+            style="flex:1;padding:8px;background:#4299e1;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
+            ✏️ Edit
+          </button>
+          <button onclick="deleteCoupon('${coupon.id}')" 
+            style="flex:1;padding:8px;background:#e53e3e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+async function loadReviews() {
   console.log('⭐ Loading reviews...');
-  // Placeholder for reviews loading
+  try {
+    await loadReviewsData();
+    renderReviewsList();
+  } catch (error) {
+    console.error('Failed to load reviews:', error);
+  }
+}
+
+function renderReviewsList() {
   const container = document.getElementById('reviews-list');
-  if (container) {
-    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">Reviews feature coming soon!</p>';
+  if (!container) return;
+
+  if (state.reviews.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">No reviews yet</p>';
+    return;
+  }
+
+  const html = state.reviews.map(review => {
+    const stars = '★'.repeat(review.rating || 0) + '☆'.repeat(5 - (review.rating || 0));
+    const date = review.createdAt ? new Date(review.createdAt.toDate ? review.createdAt.toDate() : review.createdAt).toLocaleDateString() : 'N/A';
+    
+    return `
+      <div style="background:white;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+              <h4 style="margin:0;color:#2d3748;font-size:16px;font-weight:600;">${review.customerName || review.name || 'Anonymous'}</h4>
+              <span style="color:#FF6B35;font-size:18px;">${stars}</span>
+            </div>
+            <p style="margin:0 0 4px 0;color:#666;font-size:14px;">📅 ${date}</p>
+            ${review.itemName ? `<p style="margin:0;color:#666;font-size:14px;">🍽️ ${review.itemName}</p>` : ''}
+          </div>
+          <button onclick="deleteReview('${review.id}')" 
+            style="padding:8px 16px;background:#e53e3e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
+            🗑️ Delete
+          </button>
+        </div>
+        ${review.comment ? `
+          <p style="margin:12px 0 0 0;color:#2d3748;line-height:1.6;padding:12px;background:#f7fafc;border-radius:8px;">
+            "${review.comment}"
+          </p>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+async function deleteReview(reviewId) {
+  if (!confirm('Are you sure you want to delete this review?')) return;
+
+  try {
+    await dbService.deleteReview(reviewId);
+    await loadReviews();
+    alert('✅ Review deleted successfully!');
+  } catch (error) {
+    console.error('❌ Failed to delete review:', error);
+    alert('❌ Failed to delete review: ' + error.message);
   }
 }
 
@@ -1217,38 +1518,360 @@ function loadSettings() {
 function setupSettingsHandlers() {
   const businessForm = document.getElementById('business-settings-form');
   if (businessForm) {
-    businessForm.addEventListener('submit', (e) => {
+    businessForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      alert('✅ Settings saved successfully!');
+      
+      const settings = {
+        businessName: document.getElementById('business-name')?.value,
+        businessEmail: document.getElementById('business-email')?.value,
+        businessPhone: document.getElementById('business-phone')?.value,
+        businessAddress: document.getElementById('business-address')?.value,
+        deliveryFee: parseFloat(document.getElementById('delivery-fee')?.value) || 0,
+        freeDeliveryMin: parseFloat(document.getElementById('free-delivery-min')?.value) || 0,
+        taxRate: parseFloat(document.getElementById('tax-rate')?.value) || 0
+      };
+      
+      try {
+        await dbService.updateSettings(settings);
+        state.settings = { ...state.settings, ...settings };
+        alert('✅ Business settings saved successfully!');
+      } catch (error) {
+        console.error('Failed to save settings:', error);
+        alert('❌ Failed to save settings');
+      }
     });
   }
   
   const hoursForm = document.getElementById('hours-settings-form');
   if (hoursForm) {
-    hoursForm.addEventListener('submit', (e) => {
+    hoursForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      alert('✅ Operating hours updated!');
+      
+      const hours = {
+        openTime: document.getElementById('open-time')?.value,
+        closeTime: document.getElementById('close-time')?.value,
+        workingDays: Array.from(document.querySelectorAll('input[name="working-days"]:checked')).map(cb => cb.value)
+      };
+      
+      try {
+        await dbService.updateSettings({ hours });
+        state.settings.hours = hours;
+        alert('✅ Operating hours updated successfully!');
+      } catch (error) {
+        console.error('Failed to update hours:', error);
+        alert('❌ Failed to update operating hours');
+      }
     });
   }
 }
 
-function loadStaff() {
+function populateSettingsForm() {
+  if (!state.settings) return;
+  
+  if (state.settings.businessName) document.getElementById('business-name').value = state.settings.businessName;
+  if (state.settings.businessEmail) document.getElementById('business-email').value = state.settings.businessEmail;
+  if (state.settings.businessPhone) document.getElementById('business-phone').value = state.settings.businessPhone;
+  if (state.settings.businessAddress) document.getElementById('business-address').value = state.settings.businessAddress;
+  if (state.settings.deliveryFee !== undefined) document.getElementById('delivery-fee').value = state.settings.deliveryFee;
+  if (state.settings.freeDeliveryMin !== undefined) document.getElementById('free-delivery-min').value = state.settings.freeDeliveryMin;
+  if (state.settings.taxRate !== undefined) document.getElementById('tax-rate').value = state.settings.taxRate;
+  
+  if (state.settings.hours) {
+    if (state.settings.hours.openTime) document.getElementById('open-time').value = state.settings.hours.openTime;
+    if (state.settings.hours.closeTime) document.getElementById('close-time').value = state.settings.hours.closeTime;
+  }
+}
+
+async function loadStaff() {
   console.log('👨‍💼 Loading staff...');
-  // Staff list is already shown in HTML (owner)
+  try {
+    await loadStaffData();
+    renderStaffTable();
+  } catch (error) {
+    console.error('Failed to load staff:', error);
+  }
+}
+
+function renderStaffTable() {
+  const container = document.getElementById('staff-table');
+  if (!container) return;
+
+  if (state.staff.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px 20px;">
+        <p style="color:#666;margin-bottom:20px;">No additional staff members yet</p>
+        <button class="btn-primary" onclick="openAddStaffModal()" 
+          style="padding:12px 24px;background:linear-gradient(135deg,#FF6B35,#FF8C42);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
+          ➕ Add Staff Member
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const html = `
+    <table style="width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;">
+      <thead>
+        <tr style="background:#f7fafc;text-align:left;">
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Name</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Email</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Role</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Permissions</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${state.staff.map(member => `
+          <tr style="border-bottom:1px solid #e2e8f0;">
+            <td style="padding:12px;font-weight:600;color:#2d3748;">${member.name}</td>
+            <td style="padding:12px;color:#666;">${member.email}</td>
+            <td style="padding:12px;">
+              <span style="padding:4px 12px;background:#FFF3CD;color:#856404;border-radius:12px;font-size:12px;font-weight:600;">
+                ${member.role || 'Staff'}
+              </span>
+            </td>
+            <td style="padding:12px;color:#666;font-size:14px;">${(member.permissions || []).join(', ') || 'None'}</td>
+            <td style="padding:12px;">
+              <button onclick="deleteStaff('${member.id}')" 
+                style="padding:6px 12px;background:#e53e3e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;">
+                🗑️ Remove
+              </button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  
+  container.innerHTML = html;
+}
+
+async function deleteStaff(staffId) {
+  if (!confirm('Are you sure you want to remove this staff member?')) return;
+
+  try {
+    await dbService.deleteStaff(staffId);
+    await loadStaff();
+    alert('✅ Staff member removed successfully!');
+  } catch (error) {
+    console.error('❌ Failed to remove staff:', error);
+    alert('❌ Failed to remove staff: ' + error.message);
+  }
 }
 
 // ==================== NEW MODAL FUNCTIONS ====================
 
 function openAddIngredientModal() {
-  alert('Ingredient management coming soon! You will be able to add ingredients, track stock levels, and manage inventory.');
+  state.editingIngredient = null;
+  document.getElementById('ingredient-modal-title').textContent = '➕ Add New Ingredient';
+  document.getElementById('ingredient-id').value = '';
+  document.getElementById('ingredient-name').value = '';
+  document.getElementById('ingredient-current-stock').value = '';
+  document.getElementById('ingredient-min-stock').value = '';
+  document.getElementById('ingredient-unit').value = 'kg';
+  document.getElementById('ingredient-supplier').value = '';
+  document.getElementById('ingredient-modal').classList.add('active');
+}
+
+function editIngredient(ingredientId) {
+  const ingredient = state.ingredients.find(i => i.id === ingredientId);
+  if (!ingredient) return;
+
+  state.editingIngredient = ingredient;
+  document.getElementById('ingredient-modal-title').textContent = '✏️ Edit Ingredient';
+  document.getElementById('ingredient-id').value = ingredient.id;
+  document.getElementById('ingredient-name').value = ingredient.name;
+  document.getElementById('ingredient-current-stock').value = ingredient.currentStock || 0;
+  document.getElementById('ingredient-min-stock').value = ingredient.minStock || 0;
+  document.getElementById('ingredient-unit').value = ingredient.unit || 'kg';
+  document.getElementById('ingredient-supplier').value = ingredient.supplier || '';
+  document.getElementById('ingredient-modal').classList.add('active');
+}
+
+async function saveIngredient(event) {
+  event.preventDefault();
+
+  const ingredientId = document.getElementById('ingredient-id').value;
+  const name = document.getElementById('ingredient-name').value.trim();
+  const currentStock = parseFloat(document.getElementById('ingredient-current-stock').value);
+  const minStock = parseFloat(document.getElementById('ingredient-min-stock').value);
+  const unit = document.getElementById('ingredient-unit').value;
+  const supplier = document.getElementById('ingredient-supplier').value.trim();
+
+  if (!name || isNaN(currentStock) || isNaN(minStock)) {
+    alert('❌ Please fill all required fields correctly');
+    return;
+  }
+
+  const saveBtn = document.getElementById('save-ingredient-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '💾 Saving...';
+
+  try {
+    const ingredientData = { name, currentStock, minStock, unit, supplier };
+
+    if (ingredientId) {
+      await dbService.updateIngredient(ingredientId, ingredientData);
+    } else {
+      await dbService.addIngredient(ingredientData);
+    }
+
+    closeIngredientModal();
+    await loadInventory();
+    alert('✅ Ingredient saved successfully!');
+  } catch (error) {
+    console.error('❌ Failed to save ingredient:', error);
+    alert('❌ Failed to save ingredient: ' + error.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '💾 Save Ingredient';
+  }
+}
+
+async function deleteIngredient(ingredientId) {
+  if (!confirm('Are you sure you want to delete this ingredient?')) return;
+
+  try {
+    await dbService.deleteIngredient(ingredientId);
+    await loadInventory();
+    alert('✅ Ingredient deleted successfully!');
+  } catch (error) {
+    console.error('❌ Failed to delete ingredient:', error);
+    alert('❌ Failed to delete ingredient: ' + error.message);
+  }
+}
+
+function closeIngredientModal() {
+  document.getElementById('ingredient-modal').classList.remove('active');
+  state.editingIngredient = null;
 }
 
 function openAddCouponModal() {
-  alert('Coupon creation coming soon! You will be able to create discount codes, percentage discounts, and promotional campaigns.');
+  state.editingCoupon = null;
+  document.getElementById('coupon-modal-title').textContent = '➕ Create New Coupon';
+  document.getElementById('coupon-id').value = '';
+  document.getElementById('coupon-code').value = '';
+  document.getElementById('coupon-description').value = '';
+  document.getElementById('coupon-discount-type').value = 'percentage';
+  document.getElementById('coupon-discount-value').value = '';
+  document.getElementById('coupon-min-order').value = '';
+  document.getElementById('coupon-expires-at').value = '';
+  document.getElementById('coupon-active').checked = true;
+  document.getElementById('coupon-modal').classList.add('active');
+}
+
+function editCoupon(couponId) {
+  const coupon = state.coupons.find(c => c.id === couponId);
+  if (!coupon) return;
+
+  state.editingCoupon = coupon;
+  document.getElementById('coupon-modal-title').textContent = '✏️ Edit Coupon';
+  document.getElementById('coupon-id').value = coupon.id;
+  document.getElementById('coupon-code').value = coupon.code;
+  document.getElementById('coupon-description').value = coupon.description || '';
+  document.getElementById('coupon-discount-type').value = coupon.discountType || 'percentage';
+  document.getElementById('coupon-discount-value').value = coupon.discountValue;
+  document.getElementById('coupon-min-order').value = coupon.minOrderAmount || '';
+  document.getElementById('coupon-expires-at').value = coupon.expiresAt ? new Date(coupon.expiresAt).toISOString().split('T')[0] : '';
+  document.getElementById('coupon-active').checked = coupon.active !== false;
+  document.getElementById('coupon-modal').classList.add('active');
+}
+
+async function saveCoupon(event) {
+  event.preventDefault();
+
+  const couponId = document.getElementById('coupon-id').value;
+  const code = document.getElementById('coupon-code').value.trim().toUpperCase();
+  const description = document.getElementById('coupon-description').value.trim();
+  const discountType = document.getElementById('coupon-discount-type').value;
+  const discountValue = parseFloat(document.getElementById('coupon-discount-value').value);
+  const minOrderAmount = parseFloat(document.getElementById('coupon-min-order').value) || null;
+  const expiresAt = document.getElementById('coupon-expires-at').value || null;
+  const active = document.getElementById('coupon-active').checked;
+
+  if (!code || isNaN(discountValue) || discountValue <= 0) {
+    alert('❌ Please fill all required fields correctly');
+    return;
+  }
+
+  const saveBtn = document.getElementById('save-coupon-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '💾 Saving...';
+
+  try {
+    const couponData = {
+      code,
+      description,
+      discountType,
+      discountValue,
+      minOrderAmount,
+      expiresAt,
+      active
+    };
+
+    if (couponId) {
+      await dbService.updateCoupon(couponId, couponData);
+    } else {
+      await dbService.addCoupon(couponData);
+    }
+
+    closeCouponModal();
+    await loadCoupons();
+    alert('✅ Coupon saved successfully!');
+  } catch (error) {
+    console.error('❌ Failed to save coupon:', error);
+    alert('❌ Failed to save coupon: ' + error.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '💾 Save Coupon';
+  }
+}
+
+async function deleteCoupon(couponId) {
+  if (!confirm('Are you sure you want to delete this coupon?')) return;
+
+  try {
+    await dbService.deleteCoupon(couponId);
+    await loadCoupons();
+    alert('✅ Coupon deleted successfully!');
+  } catch (error) {
+    console.error('❌ Failed to delete coupon:', error);
+    alert('❌ Failed to delete coupon: ' + error.message);
+  }
+}
+
+function closeCouponModal() {
+  document.getElementById('coupon-modal').classList.remove('active');
+  state.editingCoupon = null;
 }
 
 function openAddStaffModal() {
-  alert('Staff management coming soon! You will be able to invite new admins and manage their permissions.');
+  const name = prompt('Enter staff member name:');
+  if (!name) return;
+  
+  const email = prompt('Enter staff member email:');
+  if (!email) return;
+  
+  const role = prompt('Enter role (e.g., Manager, Delivery, Chef):');
+  if (!role) return;
+
+  const staffData = {
+    name,
+    email,
+    role,
+    permissions: [],
+    addedAt: new Date().toISOString()
+  };
+
+  dbService.addStaff(staffData)
+    .then(() => {
+      loadStaff();
+      alert('✅ Staff member added successfully!');
+    })
+    .catch(error => {
+      console.error('Failed to add staff:', error);
+      alert('❌ Failed to add staff member');
+    });
 }
 
 // Update the manage categories button handler
