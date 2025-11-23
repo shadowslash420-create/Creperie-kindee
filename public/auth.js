@@ -1,13 +1,13 @@
 // Authentication Logic
 import { getAuthInstance } from './firebase-config.js';
-import { 
-  GoogleAuthProvider, 
+import {
+  GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  signOut, 
-  onAuthStateChanged 
+  signOut as firebaseSignOut, // Alias to avoid naming conflict
+  onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 const provider = new GoogleAuthProvider();
@@ -19,7 +19,7 @@ export async function signInWithGoogle() {
     if (!auth) {
       throw new Error('Firebase authentication not initialized');
     }
-    
+
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     console.log('User signed in:', user.displayName);
@@ -38,7 +38,7 @@ export async function signInWithEmail(email, password) {
     if (!auth) {
       throw new Error('Firebase authentication not initialized');
     }
-    
+
     const result = await signInWithEmailAndPassword(auth, email, password);
     const user = result.user;
     console.log('User signed in with email:', user.email);
@@ -56,15 +56,15 @@ export async function signUpWithEmail(email, password, displayName) {
     if (!auth) {
       throw new Error('Firebase authentication not initialized');
     }
-    
+
     const result = await createUserWithEmailAndPassword(auth, email, password);
     const user = result.user;
-    
+
     // Update user profile with display name
     if (displayName) {
       await updateProfile(user, { displayName });
     }
-    
+
     console.log('User signed up with email:', user.email);
     return user;
   } catch (error) {
@@ -80,8 +80,8 @@ export async function signOutUser() {
     if (!auth) {
       throw new Error('Firebase authentication not initialized');
     }
-    
-    await signOut(auth);
+
+    await firebaseSignOut(auth); // Use the aliased function
     console.log('User signed out');
   } catch (error) {
     console.error('Error signing out:', error.message);
@@ -97,7 +97,7 @@ export async function onAuthChange(callback) {
       console.error('Firebase authentication not initialized');
       return () => {}; // Return empty unsubscribe function
     }
-    
+
     return onAuthStateChanged(auth, callback);
   } catch (error) {
     console.error('Error setting up auth state listener:', error);

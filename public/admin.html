@@ -59,7 +59,7 @@
         </a>
       </nav>
       <div class="sidebar-footer">
-        <button onclick="adminLogout()" class="logout-btn" id="admin-logout-btn">
+        <button onclick="handleAdminLogout()" class="logout-btn" id="admin-logout-btn">
           <span>🚪</span> Logout
         </button>
       </div>
@@ -361,10 +361,21 @@
   </div>
 
   <script type="module">
-    import { onAuthChange } from './auth.js';
+    import { onAuthChange, signOut } from './auth.js';
 
     // Admin emails that can access this panel
     const ADMIN_EMAILS = ['oussamaanis2005@gmail.com'];
+
+    // Logout handler
+    window.handleAdminLogout = async function() {
+      try {
+        await signOut();
+        window.location.href = 'login.html';
+      } catch (error) {
+        console.error('Logout failed:', error);
+        alert('Logout failed. Please try again.');
+      }
+    };
 
     // Check authentication on page load
     onAuthChange((user) => {

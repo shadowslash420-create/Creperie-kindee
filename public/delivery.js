@@ -17,6 +17,13 @@ function deliveryLogout() {
   window.location.href = 'index.html';
 }
 
+// Global logout handler
+window.handleDeliveryLogout = function() {
+  if (confirm('Are you sure you want to logout?')) {
+    deliveryLogout();
+  }
+};
+
 function isDeliveryLoggedIn() {
   return localStorage.getItem('kc_delivery') === '1';
 }
