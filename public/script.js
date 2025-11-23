@@ -280,6 +280,11 @@ function toggleLanguage(){
   if (isFeedbackPage && typeof renderFeedbackList === 'function') {
     renderFeedbackList();
   }
+  
+  // Apply order page translations if on my-orders page
+  if (typeof window.applyOrderTranslations === 'function') {
+    window.applyOrderTranslations();
+  }
 }
 
 function applyTranslations(){

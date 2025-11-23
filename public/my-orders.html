@@ -34,11 +34,13 @@
       <!-- Search Form -->
       <div class="card" style="margin-bottom:24px;padding:24px;">
         <h3 id="search-title" style="margin-bottom:16px;">ابحث عن طلبك</h3>
+        <p id="search-description" style="margin-bottom:16px;color:#666;font-size:14px;">أدخل رقم الطلب ورقم الهاتف للبحث عن طلبك</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <input type="text" id="order-search" placeholder="رقم الطلب (مثال: ORD-1234567890)" style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
-          <input type="tel" id="phone-search" placeholder="رقم الهاتف" style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
+          <input type="text" id="order-search" placeholder="" required style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
+          <input type="tel" id="phone-search" placeholder="" required style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
           <button class="cta" onclick="searchOrders()" id="search-btn" style="padding:12px 24px;">بحث</button>
         </div>
+        <div id="search-error" style="margin-top:12px;color:#e74c3c;font-size:14px;display:none;"></div>
       </div>
 
       <!-- Orders List -->
@@ -111,6 +113,7 @@
       ar: {
         ordersTitle: 'تتبع طلباتك',
         searchTitle: 'ابحث عن طلبك',
+        searchDescription: 'أدخل رقم الطلب ورقم الهاتف للبحث عن طلبك',
         orderNumber: 'رقم الطلب',
         customer: 'العميل',
         phone: 'الهاتف',
@@ -125,14 +128,18 @@
         delivered: 'تم التسليم',
         specialInstructions: 'تعليمات خاصة',
         noInstructions: 'لا توجد تعليمات خاصة',
-        noOrders: 'لم يتم العثور على طلبات',
-        searchPlaceholder: 'رقم الطلب أو رقم الهاتف',
+        noOrders: 'لم يتم العثور على طلبات بهذه المعلومات. يرجى التحقق من رقم الطلب ورقم الهاتف.',
+        orderIdPlaceholder: 'رقم الطلب (مثال: ORD-1234567890)',
+        phonePlaceholder: 'رقم الهاتف',
         date: 'التاريخ',
-        viewDetails: 'عرض التفاصيل'
+        viewDetails: 'عرض التفاصيل',
+        bothFieldsRequired: 'يرجى إدخال رقم الطلب ورقم الهاتف',
+        searchBtn: 'بحث'
       },
       en: {
         ordersTitle: 'Track Your Orders',
         searchTitle: 'Search for Your Order',
+        searchDescription: 'Enter both your order number and phone number to track your order',
         orderNumber: 'Order Number',
         customer: 'Customer',
         phone: 'Phone',
@@ -147,40 +154,88 @@
         delivered: 'Delivered',
         specialInstructions: 'Special Instructions',
         noInstructions: 'No special instructions',
-        noOrders: 'No orders found',
-        searchPlaceholder: 'Order number or phone number',
+        noOrders: 'No orders found with this information. Please verify your order number and phone number.',
+        orderIdPlaceholder: 'Order Number (e.g., ORD-1234567890)',
+        phonePlaceholder: 'Phone Number',
         date: 'Date',
-        viewDetails: 'View Details'
+        viewDetails: 'View Details',
+        bothFieldsRequired: 'Please enter both order number and phone number',
+        searchBtn: 'Search'
       }
     };
 
     function getOrderTranslations(){
-      const lang = getCurrentLang();
+      const lang = localStorage.getItem('kc_lang') || 'ar';
       return orderTranslations[lang] || orderTranslations.en;
+    }
+
+    let cachedOrders = null;
+
+    window.applyOrderTranslations = function(){
+      const t = getOrderTranslations();
+      
+      const ordersTitle = document.getElementById('orders-title');
+      const searchTitle = document.getElementById('search-title');
+      const searchDesc = document.getElementById('search-description');
+      const orderSearch = document.getElementById('order-search');
+      const phoneSearch = document.getElementById('phone-search');
+      const searchBtn = document.getElementById('search-btn');
+      const searchError = document.getElementById('search-error');
+      
+      if(ordersTitle) ordersTitle.textContent = t.ordersTitle;
+      if(searchTitle) searchTitle.textContent = t.searchTitle;
+      if(searchDesc) searchDesc.textContent = t.searchDescription;
+      if(orderSearch) orderSearch.placeholder = t.orderIdPlaceholder;
+      if(phoneSearch) phoneSearch.placeholder = t.phonePlaceholder;
+      if(searchBtn) searchBtn.textContent = t.searchBtn;
+      
+      // Update error message if visible
+      if(searchError && searchError.style.display !== 'none' && searchError.textContent) {
+        searchError.textContent = t.bothFieldsRequired;
+      }
+      
+      // Re-render cached orders with new translations only if a search has been performed
+      // This includes both successful searches (with results) and searches with no matches (empty array)
+      if(cachedOrders !== null) {
+        displayOrders(cachedOrders);
+      }
     }
 
     function searchOrders(){
       const orderId = document.getElementById('order-search').value.trim();
       const phone = document.getElementById('phone-search').value.trim();
-      const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
+      const errorDiv = document.getElementById('search-error');
       const t = getOrderTranslations();
 
-      let filtered = [];
+      errorDiv.style.display = 'none';
+      errorDiv.textContent = '';
 
-      if(orderId){
-        filtered = orders.filter(o => o.id.toLowerCase().includes(orderId.toLowerCase()));
-      } else if(phone){
-        const cleanedPhone = phone.replace(/[\s\-\(\)]/g, '');
-        filtered = orders.filter(o => {
-          const orderPhone = (o.phone || '').replace(/[\s\-\(\)]/g, '');
-          return orderPhone.includes(cleanedPhone) || cleanedPhone.includes(orderPhone);
-        });
-      } else {
-        // Show all orders if no search
-        filtered = orders;
+      if(!orderId || !phone){
+        errorDiv.textContent = t.bothFieldsRequired;
+        errorDiv.style.display = 'block';
+        cachedOrders = null;
+        document.getElementById('orders-list').innerHTML = '';
+        return;
       }
 
-      displayOrders(filtered.reverse());
+      const orders = JSON.parse(localStorage.getItem('kc_orders') || '[]');
+      
+      // Helper function to normalize phone numbers
+      const normalizePhone = (phoneStr) => (phoneStr || '').replace(/[\s\-\(\)\+]/g, '');
+      const cleanedPhone = normalizePhone(phone);
+
+      const filtered = orders.filter(o => {
+        // Skip orders without valid ID or phone
+        if(!o.id || !o.phone) return false;
+        
+        const orderPhone = normalizePhone(o.phone);
+        const orderIdMatch = o.id.toLowerCase() === orderId.toLowerCase();
+        const phoneMatch = orderPhone === cleanedPhone;
+        return orderIdMatch && phoneMatch;
+      });
+
+      cachedOrders = filtered;
+      displayOrders(filtered);
     }
 
     function displayOrders(orders){
@@ -286,17 +341,19 @@
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       const orderId = urlParams.get('order');
+      const savedInfo = JSON.parse(localStorage.getItem('kc_customer_info') || '{}');
 
       if(orderId){
         document.getElementById('order-search').value = orderId;
-        searchOrders();
-      } else {
-        // Try to load from saved customer info
-        const savedInfo = JSON.parse(localStorage.getItem('kc_customer_info') || '{}');
         if(savedInfo.phone){
           document.getElementById('phone-search').value = savedInfo.phone;
           searchOrders();
         }
+      }
+
+      // Apply order translations immediately (using localStorage directly)
+      if (typeof window.applyOrderTranslations === 'function') {
+        window.applyOrderTranslations();
       }
 
       // Wait for script.js module to load
