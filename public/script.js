@@ -860,10 +860,11 @@ window.toggleLanguage = function() {
   }
 }
 
-// Apply translations
+// Apply translations to all pages
 window.applyTranslations = function() {
   const t = getT();
-
+  
+  // Navigation and menu links
   document.querySelectorAll('.nav-link-home').forEach(el => el.textContent = t.home);
   document.querySelectorAll('.nav-link-about').forEach(el => el.textContent = t.about);
   document.querySelectorAll('.nav-link-menu').forEach(el => el.textContent = t.menu);
@@ -872,15 +873,51 @@ window.applyTranslations = function() {
   document.querySelectorAll('.nav-link-feedback').forEach(el => el.textContent = t.feedback);
   document.querySelectorAll('.nav-link-contact').forEach(el => el.textContent = t.contact);
 
-  const cartTitle = document.getElementById('cart-title');
-  if (cartTitle) cartTitle.textContent = t.cart;
+  // Translate all elements by ID that match translation keys
+  const elementIds = {
+    'cart-title': t.cart,
+    'total-label': t.total + ':',
+    'checkout-btn': t.checkout,
+    'menu-preview-title': t.ourMenu,
+    'cta-title': t.readyForExperience,
+    'cta-desc': t.orderNowDescription,
+    'cta-btn': t.orderNow,
+    'what-we-offer-title': t.whatWeOffer,
+    'hero-btn': t.discoverMenu,
+    'hero-desc': 'تجربة فاخرة مستوحاة من نكهات كيندر الشهيرة',
+    'view-full-menu-btn': t.fullMenu,
+    'order-now-btn': t.orderNow,
+    'page-indicator': t.home,
+    'about-title': t.aboutTitle,
+    'about-desc1': t.aboutDesc1,
+    'about-desc2': t.aboutDesc2,
+    'about-team-title': t.aboutTeamTitle,
+    'about-chef': t.aboutChef,
+    'about-chef-desc': t.aboutChefDesc,
+    'about-manager': t.aboutManager,
+    'about-manager-desc': t.aboutManagerDesc,
+    'contact-title': t.contactTitle,
+    'faq-title': t.faqTitle,
+    'feedback-title': t.feedbackTitle,
+    'cart-title': t.cart,
+    'footer-connect': t.connect,
+    'menu-search': t.searchPlaceholder,
+  };
 
-  const totalLabel = document.getElementById('total-label');
-  if (totalLabel) totalLabel.textContent = t.total + ':';
+  // Apply translations by ID
+  Object.entries(elementIds).forEach(([id, text]) => {
+    const el = document.getElementById(id);
+    if (el && text) {
+      // Don't overwrite placeholders
+      if (el.tagName === 'INPUT' && el.type === 'text') {
+        el.placeholder = text;
+      } else {
+        el.textContent = text;
+      }
+    }
+  });
 
-  const checkoutBtn = document.getElementById('checkout-btn');
-  if (checkoutBtn) checkoutBtn.textContent = t.checkout;
-
+  // Save translations for later use
   localStorage.setItem('kc_saved_subtotal_label', t.subtotal);
   localStorage.setItem('kc_saved_delivery_label', t.deliveryFee);
   localStorage.setItem('kc_saved_free_delivery_label', t.freeDelivery);
