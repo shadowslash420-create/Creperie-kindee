@@ -327,6 +327,19 @@ class DatabaseService {
     });
   }
 
+  listenToOrdersByPhone(phoneNumber, callback) {
+    return this.init().then(() => {
+      const normalizedPhone = this.normalizePhone(phoneNumber);
+      const ordersRef = collection(this.db, 'orders');
+      const q = query(ordersRef, where('phone', '==', normalizedPhone), orderBy('createdAt', 'desc'));
+      
+      return onSnapshot(q, (snapshot) => {
+        const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(orders);
+      });
+    });
+  }
+
   async getCustomers() {
     await this.init();
     const orders = await this.getAllOrders();

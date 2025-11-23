@@ -124,7 +124,8 @@
         deliveryFee: 'رسوم التوصيل',
         total: 'المجموع',
         status: 'الحالة',
-        pending: 'قيد الانتظار',
+        unconfirmed: 'غير مؤكد',
+        pending: 'قيد التحضير',
         confirmed: 'تم التأكيد',
         'in-progress': 'قيد التوصيل',
         delivered: 'تم التسليم',
@@ -139,7 +140,8 @@
         phoneRequired: 'يرجى إدخال رقم الهاتف',
         searchBtn: 'بحث',
         searching: 'جاري البحث...',
-        errorFetching: 'حدث خطأ أثناء جلب الطلبات. يرجى المحاولة مرة أخرى.'
+        errorFetching: 'حدث خطأ أثناء جلب الطلبات. يرجى المحاولة مرة أخرى.',
+        statusUpdated: 'تم تحديث حالة الطلب!'
       },
       en: {
         ordersTitle: 'Track Your Orders',
@@ -154,7 +156,8 @@
         deliveryFee: 'Delivery Fee',
         total: 'Total',
         status: 'Status',
-        pending: 'Pending',
+        unconfirmed: 'Unconfirmed',
+        pending: 'In Preparation',
         confirmed: 'Confirmed',
         'in-progress': 'In Progress',
         delivered: 'Delivered',
@@ -169,7 +172,8 @@
         phoneRequired: 'Please enter your phone number',
         searchBtn: 'Search',
         searching: 'Searching...',
-        errorFetching: 'Error fetching orders. Please try again.'
+        errorFetching: 'Error fetching orders. Please try again.',
+        statusUpdated: 'Order status updated!'
       }
     };
 
@@ -183,6 +187,8 @@
     }
 
     let cachedOrders = null;
+    let orderListenerUnsubscribe = null;
+    let currentSearchPhone = null;
 
     window.applyOrderTranslations = function(){
       const t = getOrderTranslations();
@@ -225,7 +231,13 @@
         errorDiv.textContent = t.phoneRequired;
         errorDiv.style.display = 'block';
         cachedOrders = null;
+        currentSearchPhone = null;
         document.getElementById('orders-list').innerHTML = '';
+        
+        if (orderListenerUnsubscribe) {
+          orderListenerUnsubscribe();
+          orderListenerUnsubscribe = null;
+        }
         return;
       }
 
@@ -233,6 +245,8 @@
       searchBtn.textContent = t.searching || 'جاري البحث...';
       
       try {
+        currentSearchPhone = phone;
+        
         // Use secure server-side API endpoint instead of direct Firestore query
         const response = await fetch(`/api/orders-by-phone?phone=${encodeURIComponent(phone)}`);
         
@@ -254,6 +268,9 @@
         
         cachedOrders = orders;
         displayOrders(orders);
+        
+        // Set up real-time listener for order updates
+        setupRealtimeOrderListener(phone);
       } catch (error) {
         console.error('Error fetching orders:', error);
         errorDiv.textContent = t.errorFetching || 'حدث خطأ أثناء جلب الطلبات. يرجى المحاولة مرة أخرى.';
@@ -264,6 +281,75 @@
         searchBtn.disabled = false;
         searchBtn.textContent = t.searchBtn;
       }
+    }
+
+    function setupRealtimeOrderListener(phone) {
+      // Clean up previous listener if exists
+      if (orderListenerUnsubscribe) {
+        orderListenerUnsubscribe();
+      }
+
+      // Set up real-time listener using dbService
+      orderListenerUnsubscribe = dbService.listenToOrdersByPhone(phone, (updatedOrders) => {
+        console.log('📲 Real-time order update received:', updatedOrders.length, 'orders');
+        
+        // Only update if we're still viewing the same phone number
+        if (currentSearchPhone === phone) {
+          const previousOrders = cachedOrders || [];
+          cachedOrders = updatedOrders;
+          
+          // Check if there were any status changes
+          const statusChanged = previousOrders.some((prevOrder, idx) => {
+            const newOrder = updatedOrders.find(o => o.id === prevOrder.id);
+            return newOrder && newOrder.status !== prevOrder.status;
+          });
+          
+          if (statusChanged) {
+            const t = getOrderTranslations();
+            showStatusUpdateNotification(t.statusUpdated);
+          }
+          
+          displayOrders(updatedOrders);
+        }
+      });
+    }
+
+    function showStatusUpdateNotification(message) {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: linear-gradient(135deg, #FF6B35, #FF8C42);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(255, 107, 53, 0.4);
+        z-index: 10000;
+        font-weight: 600;
+        font-size: 14px;
+        animation: slideIn 0.3s ease-out;
+      `;
+      notification.textContent = '🔔 ' + message;
+      
+      // Add animation
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideIn {
+          from { transform: translateX(400px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.transition = 'opacity 0.3s, transform 0.3s';
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(400px)';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
     }
 
     window.searchOrders = searchOrders;
@@ -286,6 +372,7 @@
         card.style.marginBottom = '20px';
 
         const statusColors = {
+          'unconfirmed': '#e74c3c',
           'pending': '#e67e22',
           'confirmed': '#3498db',
           'in-progress': '#9b59b6',
@@ -295,6 +382,7 @@
         };
 
         const statusLabels = {
+          'unconfirmed': t.unconfirmed,
           'pending': t.pending,
           'confirmed': t.confirmed,
           'in-progress': t['in-progress'],
@@ -303,9 +391,9 @@
           'cancelled': t.cancelled
         };
 
-        const status = order.status || 'pending';
-        const statusColor = statusColors[status] || statusColors.pending;
-        const statusLabel = statusLabels[status] || t.pending;
+        const status = order.status || 'unconfirmed';
+        const statusColor = statusColors[status] || statusColors.unconfirmed;
+        const statusLabel = statusLabels[status] || statusLabels.unconfirmed || t.unconfirmed;
 
         const itemsList = order.items.map(item => 
           `${item.qty}x ${item.name} - ${item.price.toFixed(2)} DZD`
