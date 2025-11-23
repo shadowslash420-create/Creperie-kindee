@@ -1089,24 +1089,35 @@ function renderMenu(filterCategory = null, searchQuery = '') {
     grouped[item.category].push(item);
   });
 
-  // Render sections
+  // Render sections with category headers
   container.innerHTML = '';
   Object.keys(grouped).forEach(category => {
     const section = document.createElement('section');
-    section.className = 'section';
+    section.className = 'category-section';
 
     const categoryLabel = t[category] || category;
+    const categoryObj = categories.find(c => c.id === category);
+    const categoryEmoji = categoryObj?.emoji || '🍽️';
+    
     section.innerHTML = `
-      <h2 class="section-title">${categoryLabel}</h2>
-      <div class="grid">
+      <div class="category-header">
+        <span class="category-emoji">${categoryEmoji}</span>
+        <h2 class="category-title">${categoryLabel}</h2>
+        <span class="category-count">${grouped[category].length} ${t.items || 'items'}</span>
+      </div>
+      <div class="category-items-grid">
         ${grouped[category].map(item => `
-          <div class="card menu-item">
-            ${item.img ? `<img src="${item.img}" alt="${item.name}" class="menu-item-img">` : ''}
-            <h3 class="item-name">${item.name}</h3>
-            ${item.desc ? `<p class="item-desc">${item.desc}</p>` : ''}
-            <div class="item-footer">
-              <span class="price">${item.price.toFixed(2)} DZD</span>
-              <button class="cta" onclick="addToCart('${item.id}', event)">${t.addToCart}</button>
+          <div class="menu-item-card">
+            <div class="menu-item-image-wrapper">
+              ${item.img ? `<img src="${item.img}" alt="${item.name}" class="menu-item-image">` : '<div class="menu-item-image-placeholder">🍽️</div>'}
+            </div>
+            <div class="menu-item-details">
+              <h3 class="menu-item-title">${item.name}</h3>
+              ${item.desc ? `<p class="menu-item-description">${item.desc}</p>` : ''}
+              <div class="menu-item-actions">
+                <span class="menu-item-price">${item.price.toFixed(2)} DZD</span>
+                <button class="add-to-cart-btn" onclick="addToCart('${item.id}', event)">${t.addToCart}</button>
+              </div>
             </div>
           </div>
         `).join('')}
