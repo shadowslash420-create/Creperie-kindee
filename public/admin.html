@@ -361,7 +361,7 @@
   </div>
 
   <script type="module">
-    import { onAuthChange, signOut } from './auth.js';
+    import { onAuthChange, signOutUser } from './auth.js';
 
     // Admin emails that can access this panel
     const ADMIN_EMAILS = ['oussamaanis2005@gmail.com'];
@@ -369,7 +369,7 @@
     // Logout handler
     window.handleAdminLogout = async function() {
       try {
-        await signOut();
+        await signOutUser();
         window.location.href = 'login.html';
       } catch (error) {
         console.error('Logout failed:', error);
