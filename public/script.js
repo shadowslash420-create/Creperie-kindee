@@ -944,6 +944,12 @@ window.applyTranslations = function() {
     'contact-title': t.contactTitle,
     'faq-title': t.faqTitle,
     'feedback-title': t.feedbackTitle,
+    'feedback-form-title': t.feedbackFormTitle,
+    'feedback-name-label': t.feedbackNameLabel,
+    'feedback-rating-label': t.feedbackRatingLabel,
+    'feedback-comment-label': t.feedbackCommentLabel,
+    'feedback-submit': t.feedbackSubmitBtn,
+    'feedback-reviews-title': t.feedbackReviewsTitle,
     'menu-search': t.searchPlaceholder,
   };
 
