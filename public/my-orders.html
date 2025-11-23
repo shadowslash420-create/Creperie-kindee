@@ -31,16 +31,7 @@
     <section class="section">
       <h2 class="section-title" id="orders-title" style="text-align:center">تتبع طلباتك</h2>
 
-      <!-- Search Form -->
-      <div class="card" style="margin-bottom:24px;padding:24px;">
-        <h3 id="search-title" style="margin-bottom:16px;">ابحث عن طلباتك</h3>
-        <p id="search-description" style="margin-bottom:16px;color:#666;font-size:14px;">أدخل رقم الهاتف لعرض جميع طلباتك</p>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <input type="tel" id="phone-search" placeholder="" required style="flex:1;min-width:200px;padding:12px;border:1px solid var(--border);border-radius:4px;">
-          <button class="cta" onclick="searchOrders()" id="search-btn" style="padding:12px 24px;">بحث</button>
-        </div>
-        <div id="search-error" style="margin-top:12px;color:#e74c3c;font-size:14px;display:none;"></div>
-      </div>
+      <!-- Orders will be displayed automatically -->
 
       <!-- Orders List -->
       <div id="orders-list"></div>
@@ -501,61 +492,27 @@
       const searchForm = document.querySelector('.card'); // The search form card
       const t = getOrderTranslations();
 
-      // Check if there's a recent order in URL params or localStorage
-      const urlParams = new URLSearchParams(window.location.search);
-      const orderIdFromUrl = urlParams.get('order');
-      const recentOrderId = localStorage.getItem('kc_recent_order_id');
+      // Check if there's a recent order phone in localStorage
       const recentOrderPhone = localStorage.getItem('kc_recent_order_phone');
 
-      // If there's a recent order, automatically show it
-      if ((orderIdFromUrl || recentOrderId) && recentOrderPhone) {
-        console.log('📦 Auto-loading recent order:', orderIdFromUrl || recentOrderId);
+      // If there's a recent order phone, automatically show all orders for that number
+      if (recentOrderPhone) {
+        console.log('📦 Auto-loading orders for phone:', recentOrderPhone);
         
-        // Hide search form initially
-        if (searchForm) searchForm.style.display = 'none';
-        
-        // Auto-search by phone number
+        // Auto-search by phone number to show all order history
         searchOrdersByPhone(recentOrderPhone);
-        
-        // Clear the recent order after displaying
-        if (!orderIdFromUrl) {
-          localStorage.removeItem('kc_recent_order_id');
-          localStorage.removeItem('kc_recent_order_phone');
-        }
-        
-        // Show a button to search again
+      } else {
+        // Show message that no order history is available
         const ordersList = document.getElementById('orders-list');
         if (ordersList) {
-          setTimeout(() => {
-            const searchAgainBtn = document.createElement('div');
-            searchAgainBtn.style.cssText = 'text-align:center;margin-top:20px;';
-            searchAgainBtn.innerHTML = `
-              <button class="cta" onclick="showSearchForm()" style="padding:12px 24px;">
-                ${t.searchBtn}
-              </button>
-            `;
-            ordersList.appendChild(searchAgainBtn);
-          }, 500);
+          ordersList.innerHTML = `
+            <div class="card" style="text-align:center;padding:40px;color:#999;">
+              <p>${t.noOrders}</p>
+            </div>
+          `;
         }
-      } else {
-        // Show the search form for manual search
-        if (searchForm) searchForm.style.display = 'block';
       }
       
-      const phoneSearch = document.getElementById('phone-search');
-      const searchDesc = document.getElementById('search-description');
-      if(phoneSearch) phoneSearch.placeholder = t.phonePlaceholder;
-      if(searchDesc) searchDesc.textContent = t.searchDescription;
-
-      // Add event listener for the search button
-      const searchBtn = document.getElementById('search-btn');
-      if (searchBtn) {
-        searchBtn.onclick = () => {
-          const phone = document.getElementById('phone-search').value.trim();
-          searchOrdersByPhone(phone);
-        };
-      }
-
       // Apply order translations immediately
       if (typeof window.applyOrderTranslations === 'function') {
         window.applyOrderTranslations();
@@ -568,18 +525,6 @@
         if (typeof updatePageIndicator === 'function') updatePageIndicator();
       }, 100);
     });
-    
-    // Function to show search form again
-    window.showSearchForm = function() {
-      const searchForm = document.querySelector('.card');
-      if (searchForm) searchForm.style.display = 'block';
-      document.getElementById('orders-list').innerHTML = '';
-      cachedOrders = null;
-      if (orderListenerUnsubscribe) {
-        orderListenerUnsubscribe();
-        orderListenerUnsubscribe = null;
-      }
-    };
   </script>
   <script type="module" src="auth.js"></script>
 </body>
