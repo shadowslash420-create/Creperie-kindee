@@ -279,12 +279,32 @@ class DatabaseService {
     const order = {
       ...orderData,
       phone: this.normalizePhone(orderData.phone),
+      email: orderData.email || null,
       status: orderData.status || 'unconfirmed',
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     };
     const docRef = await addDoc(ordersRef, order);
     return docRef.id;
+  }
+
+  async getOrdersByEmail(email) {
+    await this.init();
+    const ordersRef = collection(this.db, 'orders');
+    const q = query(ordersRef, where('email', '==', email), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  listenToOrdersByEmail(email, callback) {
+    this.init().then(() => {
+      const ordersRef = collection(this.db, 'orders');
+      const q = query(ordersRef, where('email', '==', email), orderBy('createdAt', 'desc'));
+      return onSnapshot(q, (snapshot) => {
+        const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(orders);
+      });
+    });
   }
 
   async updateOrder(id, updates) {
