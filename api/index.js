@@ -62,7 +62,7 @@ async function saveJSON(filename, data) {
 }
 
 // API Routes
-app.get('/api/firebase-config', (req, res) => {
+app.get('/firebase-config', (req, res) => {
   const config = {
     apiKey: process.env.FIREBASE_API_KEY || '',
     authDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
@@ -74,38 +74,38 @@ app.get('/api/firebase-config', (req, res) => {
   res.json(config);
 });
 
-app.get('/api/menu', async (req, res) => {
+app.get('/menu', async (req, res) => {
   const menu = await loadJSON(MENU_FILE, []);
   res.json(menu);
 });
 
-app.post('/api/menu', async (req, res) => {
+app.post('/menu', async (req, res) => {
   await saveJSON(MENU_FILE, req.body);
   res.json({ success: true });
 });
 
-app.get('/api/orders', async (req, res) => {
+app.get('/orders', async (req, res) => {
   const orders = await loadJSON(ORDERS_FILE, []);
   res.json(orders);
 });
 
-app.post('/api/orders', async (req, res) => {
+app.post('/orders', async (req, res) => {
   await saveJSON(ORDERS_FILE, req.body);
   res.json({ success: true });
 });
 
-app.get('/api/feedback', async (req, res) => {
+app.get('/feedback', async (req, res) => {
   const feedback = await loadJSON(FEEDBACK_FILE, []);
   res.json(feedback);
 });
 
-app.post('/api/feedback', async (req, res) => {
+app.post('/feedback', async (req, res) => {
   await saveJSON(FEEDBACK_FILE, req.body);
   res.json({ success: true });
 });
 
 // Secure phone lookup endpoint
-app.get('/api/orders-by-phone', async (req, res) => {
+app.get('/orders-by-phone', async (req, res) => {
   try {
     const { phone } = req.query;
     
@@ -157,7 +157,7 @@ app.get('/api/orders-by-phone', async (req, res) => {
 });
 
 // Image upload endpoint
-app.post('/api/upload-image', express.urlencoded({ extended: true, limit: '10mb' }), async (req, res) => {
+app.post('/upload-image', express.urlencoded({ extended: true, limit: '10mb' }), async (req, res) => {
   try {
     console.log('📤 Upload request received');
     console.log('📊 Request body keys:', Object.keys(req.body));
