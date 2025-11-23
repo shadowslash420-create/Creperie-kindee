@@ -10,17 +10,35 @@ const app = express();
 const PORT = 5000;
 
 // Initialize Firebase Admin SDK
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-    })
-  });
+let db;
+try {
+  if (!admin.apps.length) {
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    
+    console.log('Initializing Firebase Admin with:', {
+      projectId,
+      clientEmail,
+      hasPrivateKey: !!privateKey
+    });
+    
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey
+      })
+    });
+    
+    console.log('✅ Firebase Admin initialized successfully');
+  }
+  
+  db = admin.firestore();
+} catch (error) {
+  console.error('❌ Failed to initialize Firebase Admin:', error.message);
+  db = null;
 }
-
-const db = admin.firestore();
 
 // Middleware
 app.use(cors());
