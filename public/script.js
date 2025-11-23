@@ -7,7 +7,7 @@ const FEEDBACK_KEY = 'kc_feedback';
 
 // Import Firebase services
 import dbService from './db-service.js';
-import { getMenuFromFirebase, placeOrderToFirebase, listenToMenuUpdates } from './firebase-customer.js';
+import { getMenuFromFirebase, getCategoriesFromFirebase, placeOrderToFirebase, listenToMenuUpdates } from './firebase-customer.js';
 import { getAuthInstance } from './firebase-config.js';
 
 // Translations
@@ -86,6 +86,7 @@ const translations = {
 
 let cart = [];
 let menuItems = [];
+let categories = [];
 let currentLang = localStorage.getItem(LANG_KEY) || 'ar';
 
 // Get current auth user
@@ -485,8 +486,15 @@ function initScrollButton() {
 async function loadMenuItemsFromFirebase() {
   try {
     console.log('📋 Loading menu items from Firestore...');
-    menuItems = await getMenuFromFirebase();
+    
+    // Load both categories and menu items
+    [categories, menuItems] = await Promise.all([
+      getCategoriesFromFirebase(),
+      getMenuFromFirebase()
+    ]);
+    
     console.log('✅ Menu items loaded:', menuItems.length);
+    console.log('✅ Categories loaded:', categories.length);
 
     // Listen for real-time updates
     listenToMenuUpdates((updatedMenu) => {
@@ -505,6 +513,7 @@ async function loadMenuItemsFromFirebase() {
   } catch (error) {
     console.error('Error loading menu items:', error);
     menuItems = [];
+    categories = [];
   }
 }
 
@@ -525,13 +534,19 @@ function renderMenu(filterCategory = null, searchQuery = '') {
   const t = getT();
   const lang = getCurrentLang();
 
-  // Get unique categories
-  const categories = ['all', ...new Set(menuItems.map(item => item.category))];
+  // Use categories from Firebase
+  const allCategories = ['all', ...categories.map(c => c.id)];
 
   // Render category tabs
-  tabNav.innerHTML = categories.map(cat => {
+  tabNav.innerHTML = allCategories.map(cat => {
     const isActive = filterCategory === cat || (!filterCategory && cat === 'all');
-    const categoryLabel = cat === 'all' ? t.allCategories : (t[cat] || cat);
+    let categoryLabel;
+    if (cat === 'all') {
+      categoryLabel = t.allCategories;
+    } else {
+      const categoryObj = categories.find(c => c.id === cat);
+      categoryLabel = lang === 'ar' ? (categoryObj?.nameAr || categoryObj?.name || cat) : (categoryObj?.name || cat);
+    }
     return `<button class="tab ${isActive ? 'active' : ''}" onclick="filterByCategory('${cat}')">${categoryLabel}</button>`;
   }).join('');
 

@@ -3,6 +3,34 @@ import dbService from './db-service.js';
 let menuCache = null;
 let menuListener = null;
 
+let categoriesCache = null;
+
+export async function getCategoriesFromFirebase() {
+  try {
+    console.log('📂 Loading categories from Firestore...');
+    
+    if (!dbService || typeof dbService.getAllCategories !== 'function') {
+      console.error('❌ dbService is not properly initialized');
+      return [];
+    }
+    
+    if (categoriesCache) {
+      console.log('📦 Returning cached categories:', categoriesCache.length);
+      return categoriesCache;
+    }
+    
+    const categories = await dbService.getAllCategories();
+    console.log('✅ Categories loaded:', categories.length);
+    console.log('📊 Category IDs:', categories.map(c => c.id));
+    categoriesCache = categories;
+    
+    return categories;
+  } catch (error) {
+    console.error('❌ Failed to load categories from Firebase:', error);
+    return [];
+  }
+}
+
 export async function getMenuFromFirebase() {
   try {
     console.log('🔍 firebase-customer.js: Fetching menu from dbService...');
@@ -66,6 +94,7 @@ export function listenToMenuUpdates(callback) {
 
 window.FirebaseCustomer = {
   getMenu: getMenuFromFirebase,
+  getCategories: getCategoriesFromFirebase,
   placeOrder: placeOrderToFirebase,
   getMenuItem: getMenuItemById,
   listenToMenuUpdates
