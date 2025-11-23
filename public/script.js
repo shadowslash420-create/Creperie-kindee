@@ -908,6 +908,7 @@ window.applyTranslations = function() {
     'offering6-title': t.offering6Title,
     'offering6-desc': t.offering6Desc,
     'menu-preview-title': t.ourMenu,
+    'discover-products': t.discoverProducts,
     'view-full-menu-btn': t.fullMenu,
     'cta-title': t.readyForExperience,
     'cta-desc': t.orderNowDescription,
