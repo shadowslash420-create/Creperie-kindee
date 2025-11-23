@@ -28,9 +28,15 @@
     </div>
   </header>
 
-  <!-- Tab Navigation -->
-  <div class="tab-nav" id="tab-nav">
-    <!-- Category tabs will be dynamically generated from Firebase -->
+  <!-- Tab Carousel Navigation -->
+  <div class="tab-carousel-container">
+    <button class="tab-carousel-btn tab-carousel-prev" id="tab-prev" onclick="scrollTabCarousel('left')">‹</button>
+    <div class="tab-carousel-wrapper">
+      <div class="tab-nav" id="tab-nav">
+        <!-- Category tabs will be dynamically generated from Firebase -->
+      </div>
+    </div>
+    <button class="tab-carousel-btn tab-carousel-next" id="tab-next" onclick="scrollTabCarousel('right')">›</button>
   </div>
 
   <!-- Main Content -->

@@ -1038,6 +1038,38 @@ async function initMenu() {
   setupSearch();
 }
 
+// Scroll tab carousel
+window.scrollTabCarousel = function(direction) {
+  const tabNav = document.getElementById('tab-nav');
+  if (!tabNav) return;
+  
+  const scrollAmount = 200;
+  const currentScroll = tabNav.scrollLeft;
+  
+  if (direction === 'left') {
+    tabNav.scrollLeft = currentScroll - scrollAmount;
+  } else {
+    tabNav.scrollLeft = currentScroll + scrollAmount;
+  }
+  
+  updateCarouselButtons();
+}
+
+// Update carousel button states
+function updateCarouselButtons() {
+  const tabNav = document.getElementById('tab-nav');
+  const prevBtn = document.getElementById('tab-prev');
+  const nextBtn = document.getElementById('tab-next');
+  
+  if (!tabNav || !prevBtn || !nextBtn) return;
+  
+  const canScrollLeft = tabNav.scrollLeft > 0;
+  const canScrollRight = tabNav.scrollLeft < (tabNav.scrollWidth - tabNav.clientWidth - 10);
+  
+  prevBtn.disabled = !canScrollLeft;
+  nextBtn.disabled = !canScrollRight;
+}
+
 // Render menu
 function renderMenu(filterCategory = null, searchQuery = '') {
   const container = document.getElementById('menu-container');
@@ -1064,6 +1096,12 @@ function renderMenu(filterCategory = null, searchQuery = '') {
     // Use a class 'tab-btn' for easier selection and manipulation
     return `<button class="tab tab-btn ${isActive ? 'active' : ''}" onclick="filterByCategory('${cat}')">${categoryLabel}</button>`;
   }).join('');
+  
+  // Update carousel buttons after rendering
+  setTimeout(updateCarouselButtons, 100);
+  
+  // Add scroll listener
+  tabNav.addEventListener('scroll', updateCarouselButtons);
 
   // Filter items
   let filtered = menuItems;
