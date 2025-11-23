@@ -394,6 +394,34 @@ window.submitCheckoutForm = async function(event) {
   event.preventDefault();
   const t = getT();
 
+  // Check if user is logged in (REQUIRED)
+  let userEmail = null;
+  let currentUser = null;
+  try {
+    const auth = await getAuthInstance();
+    if (auth && auth.currentUser) {
+      userEmail = auth.currentUser.email;
+      currentUser = auth.currentUser;
+    }
+  } catch (error) {
+    console.log('Error checking auth:', error);
+  }
+
+  // Require authentication to place orders
+  if (!userEmail || !currentUser) {
+    alert(currentLang === 'ar' 
+      ? 'يجب تسجيل الدخول أولاً لتقديم الطلب\n\nسيتم توجيهك إلى صفحة تسجيل الدخول...' 
+      : 'You must sign in to place an order\n\nRedirecting to login page...');
+    
+    closeCheckoutModal();
+    
+    // Redirect to login page
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 500);
+    return;
+  }
+
   // Get form values
   const firstName = document.getElementById('checkout-firstname').value.trim();
   const lastName = document.getElementById('checkout-lastname').value.trim();
@@ -409,17 +437,6 @@ window.submitCheckoutForm = async function(event) {
 
   // Combine first and last name
   const fullName = `${firstName} ${lastName}`;
-
-  // Get user email if logged in
-  let userEmail = null;
-  try {
-    const auth = await getAuthInstance();
-    if (auth && auth.currentUser) {
-      userEmail = auth.currentUser.email;
-    }
-  } catch (error) {
-    console.log('User not logged in');
-  }
 
   // Save customer info
   localStorage.setItem('kc_customer_info', JSON.stringify({ 
@@ -486,7 +503,6 @@ window.submitCheckoutForm = async function(event) {
 
     // Save order info for auto-display
     localStorage.setItem('kc_recent_order_id', orderId);
-    localStorage.setItem('kc_recent_order_phone', phone);
 
     // Clear cart
     cart = [];

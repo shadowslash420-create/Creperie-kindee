@@ -29,7 +29,7 @@
 
   <div class="container">
     <section class="section">
-      <h2 class="section-title" id="orders-title" style="text-align:center">تتبع طلباتك</h2>
+      <h2 class="section-title" id="orders-title" style="text-align:center">طلباتي</h2>
 
       <!-- Orders will be displayed automatically -->
 
@@ -99,13 +99,12 @@
   <script type="module" src="script.js"></script>
   <script type="module">
     import dbService from './db-service.js';
+    import { getAuthInstance } from './firebase-config.js';
 
     // Translations for my-orders page
     const orderTranslations = {
       ar: {
-        ordersTitle: 'تتبع طلباتك',
-        searchTitle: 'ابحث عن طلباتك',
-        searchDescription: 'أدخل رقم الهاتف لعرض جميع طلباتك',
+        ordersTitle: 'طلباتي',
         orderNumber: 'رقم الطلب',
         orderPlaced: 'تم تقديم طلبك بنجاح!',
         customer: 'العميل',
@@ -125,20 +124,14 @@
         cancelled: 'ملغي',
         specialInstructions: 'تعليمات خاصة',
         noInstructions: 'لا توجد تعليمات خاصة',
-        noOrders: 'لم يتم العثور على طلبات بهذا الرقم. يرجى التحقق من رقم الهاتف.',
-        phonePlaceholder: 'رقم الهاتف',
+        noOrders: 'لا توجد طلبات حالياً',
         date: 'التاريخ',
         viewDetails: 'عرض التفاصيل',
-        phoneRequired: 'يرجى إدخال رقم الهاتف',
-        searchBtn: 'بحث',
-        searching: 'جاري البحث...',
         errorFetching: 'حدث خطأ أثناء جلب الطلبات. يرجى المحاولة مرة أخرى.',
         statusUpdated: 'تم تحديث حالة الطلب!'
       },
       en: {
-        ordersTitle: 'Track Your Orders',
-        searchTitle: 'Search for Your Orders',
-        searchDescription: 'Enter your phone number to view all your orders',
+        ordersTitle: 'My Orders',
         orderNumber: 'Order Number',
         orderPlaced: 'Your order has been placed successfully!',
         customer: 'Customer',
@@ -158,13 +151,9 @@
         cancelled: 'Cancelled',
         specialInstructions: 'Special Instructions',
         noInstructions: 'No special instructions',
-        noOrders: 'No orders found with this phone number. Please verify your phone number.',
-        phonePlaceholder: 'Phone Number',
+        noOrders: 'No orders yet',
         date: 'Date',
         viewDetails: 'View Details',
-        phoneRequired: 'Please enter your phone number',
-        searchBtn: 'Search',
-        searching: 'Searching...',
         errorFetching: 'Error fetching orders. Please try again.',
         statusUpdated: 'Order status updated!'
       }
@@ -187,25 +176,9 @@
       const t = getOrderTranslations();
 
       const ordersTitle = document.getElementById('orders-title');
-      const searchTitle = document.getElementById('search-title');
-      const searchDesc = document.getElementById('search-description');
-      const phoneSearch = document.getElementById('phone-search');
-      const searchBtn = document.getElementById('search-btn');
-      const searchError = document.getElementById('search-error');
-
       if(ordersTitle) ordersTitle.textContent = t.ordersTitle;
-      if(searchTitle) searchTitle.textContent = t.searchTitle;
-      if(searchDesc) searchDesc.textContent = t.searchDescription;
-      if(phoneSearch) phoneSearch.placeholder = t.phonePlaceholder;
-      if(searchBtn) searchBtn.textContent = t.searchBtn;
 
-      // Update error message if visible
-      if(searchError && searchError.style.display !== 'none' && searchError.textContent) {
-        searchError.textContent = t.phoneRequired;
-      }
-
-      // Re-render cached orders with new translations only if a search has been performed
-      // This includes both successful searches (with results) and searches with no matches (empty array)
+      // Re-render cached orders with new translations if they exist
       if(cachedOrders !== null) {
         displayOrders(cachedOrders);
       }
@@ -485,15 +458,13 @@
     window.searchOrdersByPhone = searchOrdersByPhone;
 
     // Check for logged-in user and load their orders
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       const authBtn = document.getElementById('auth-btn');
-      const searchForm = document.querySelector('.card'); // The search form card
       const t = getOrderTranslations();
 
-      // Check if there's a recent order from URL parameter or localStorage
+      // Check for recent order from URL parameter
       const urlParams = new URLSearchParams(window.location.search);
       const recentOrderId = urlParams.get('order') || localStorage.getItem('kc_recent_order_id');
-      const recentOrderPhone = localStorage.getItem('kc_recent_order_phone');
 
       // Show success message if coming from checkout
       if (urlParams.get('order') && recentOrderId) {
@@ -533,39 +504,61 @@
         window.history.replaceState({}, document.title, 'my-orders.html');
       }
 
-      // If there's a recent order phone, automatically show all orders for that number
-      if (recentOrderPhone) {
-        console.log('📦 Auto-loading orders for phone:', recentOrderPhone);
-        
-        // Auto-search by phone number to show all order history
-        searchOrdersByPhone(recentOrderPhone).then(() => {
-          // Highlight the recent order if it exists
-          if (recentOrderId) {
-            setTimeout(() => {
-              const orderCard = document.querySelector(`[data-order-id="${recentOrderId}"]`);
-              if (orderCard) {
-                orderCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                orderCard.style.animation = 'highlight 2s ease-in-out';
-                
-                const highlightStyle = document.createElement('style');
-                highlightStyle.textContent = `
-                  @keyframes highlight {
-                    0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-                    50% { box-shadow: 0 0 30px rgba(255, 107, 53, 0.6); }
-                  }
-                `;
-                document.head.appendChild(highlightStyle);
-              }
-            }, 500);
+      // Check if user is logged in
+      try {
+        const auth = await getAuthInstance();
+        if (auth && auth.currentUser) {
+          const userEmail = auth.currentUser.email;
+          console.log('📦 Auto-loading orders for user:', userEmail);
+          
+          // Load user's orders by email
+          loadUserOrders(userEmail).then(() => {
+            // Highlight the recent order if it exists
+            if (recentOrderId) {
+              setTimeout(() => {
+                const orderCard = document.querySelector(`[data-order-id="${recentOrderId}"]`);
+                if (orderCard) {
+                  orderCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  orderCard.style.animation = 'highlight 2s ease-in-out';
+                  
+                  const highlightStyle = document.createElement('style');
+                  highlightStyle.textContent = `
+                    @keyframes highlight {
+                      0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+                      50% { box-shadow: 0 0 30px rgba(255, 107, 53, 0.6); }
+                    }
+                  `;
+                  document.head.appendChild(highlightStyle);
+                }
+              }, 500);
+            }
+          });
+        } else {
+          // User not logged in - show login prompt
+          const ordersList = document.getElementById('orders-list');
+          if (ordersList) {
+            ordersList.innerHTML = `
+              <div class="card" style="text-align:center;padding:40px;">
+                <h3 style="margin-bottom: 16px; color: var(--warm-gold);">
+                  ${getCurrentLang() === 'ar' ? '🔒 يجب تسجيل الدخول' : '🔒 Sign In Required'}
+                </h3>
+                <p style="color: #666; margin-bottom: 20px;">
+                  ${getCurrentLang() === 'ar' ? 'يجب تسجيل الدخول لعرض طلباتك' : 'You must sign in to view your orders'}
+                </p>
+                <button onclick="window.location.href='login.html'" class="cta">
+                  ${getCurrentLang() === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
+                </button>
+              </div>
+            `;
           }
-        });
-      } else {
-        // Show message that no order history is available
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
         const ordersList = document.getElementById('orders-list');
         if (ordersList) {
           ordersList.innerHTML = `
             <div class="card" style="text-align:center;padding:40px;color:#999;">
-              <p>${t.noOrders}</p>
+              <p>${getCurrentLang() === 'ar' ? 'حدث خطأ في تحميل الطلبات' : 'Error loading orders'}</p>
             </div>
           `;
         }
