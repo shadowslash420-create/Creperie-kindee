@@ -248,6 +248,7 @@ function showSection(section, event) {
     inventory: 'Ingredients & Inventory',
     customers: 'Customer Management',
     reviews: 'Customer Reviews',
+    messages: 'Contact Messages',
     analytics: 'Reports & Analytics',
     settings: 'Settings',
     staff: 'Staff & Permissions'
@@ -260,6 +261,7 @@ function showSection(section, event) {
   else if (section === 'menu') loadMenu();
   else if (section === 'customers') loadCustomers();
   else if (section === 'reviews') loadReviews();
+  else if (section === 'messages') loadMessages();
   else if (section === 'analytics') loadAnalytics();
   else if (section === 'settings') loadSettings();
   else if (section === 'staff') loadStaff();
