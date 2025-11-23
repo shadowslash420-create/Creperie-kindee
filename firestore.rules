@@ -72,7 +72,7 @@ service cloud.firestore {
     //                     dbService.deleteReview()
     match /reviews/{reviewId} {
       allow read: if true;  // Public can read all reviews
-      allow create: if request.auth != null;  // Only logged-in users can submit reviews
+      allow create: if true;  // Anyone can submit reviews (customers + guests)
       allow update, delete: if isAdmin();  // Only admin can modify/delete reviews
     }
   }
