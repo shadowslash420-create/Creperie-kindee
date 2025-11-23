@@ -12,9 +12,17 @@ const state = {
   menuItems: [],
   orders: [],
   categories: [],
+  ingredients: [],
+  customers: [],
+  coupons: [],
+  reviews: [],
+  staff: [],
+  settings: {},
   selectedImage: null,
   uploadedImageUrl: null,
   editingItem: null,
+  editingIngredient: null,
+  editingCoupon: null,
   menuFilter: 'all',
   orderFilter: 'all'
 };
@@ -61,6 +69,76 @@ async function saveOrdersData(ordersData) {
   console.log('⚠️ saveOrdersData is deprecated - orders are updated individually through dbService');
   // This function is no longer needed as orders are updated individually
   return { success: true };
+}
+
+async function loadIngredientsData() {
+  try {
+    console.log('📋 Admin: Loading ingredients from Firestore...');
+    const data = await dbService.getAllIngredients();
+    console.log('✅ Admin: Ingredients loaded:', data.length);
+    state.ingredients = data || [];
+    return data;
+  } catch (error) {
+    console.error('❌ Admin: Failed to load ingredients:', error);
+    state.ingredients = [];
+    return [];
+  }
+}
+
+async function loadCouponsData() {
+  try {
+    console.log('🎫 Admin: Loading coupons from Firestore...');
+    const data = await dbService.getAllCoupons();
+    console.log('✅ Admin: Coupons loaded:', data.length);
+    state.coupons = data || [];
+    return data;
+  } catch (error) {
+    console.error('❌ Admin: Failed to load coupons:', error);
+    state.coupons = [];
+    return [];
+  }
+}
+
+async function loadReviewsData() {
+  try {
+    console.log('⭐ Admin: Loading reviews from Firestore...');
+    const data = await dbService.getAllReviews();
+    console.log('✅ Admin: Reviews loaded:', data.length);
+    state.reviews = data || [];
+    return data;
+  } catch (error) {
+    console.error('❌ Admin: Failed to load reviews:', error);
+    state.reviews = [];
+    return [];
+  }
+}
+
+async function loadStaffData() {
+  try {
+    console.log('👨‍💼 Admin: Loading staff from Firestore...');
+    const data = await dbService.getAllStaff();
+    console.log('✅ Admin: Staff loaded:', data.length);
+    state.staff = data || [];
+    return data;
+  } catch (error) {
+    console.error('❌ Admin: Failed to load staff:', error);
+    state.staff = [];
+    return [];
+  }
+}
+
+async function loadSettingsData() {
+  try {
+    console.log('⚙️ Admin: Loading settings from Firestore...');
+    const data = await dbService.getSettings();
+    console.log('✅ Admin: Settings loaded');
+    state.settings = data;
+    return data;
+  } catch (error) {
+    console.error('❌ Admin: Failed to load settings:', error);
+    state.settings = {};
+    return {};
+  }
 }
 
 // ==================== AUTHENTICATION ====================
@@ -851,7 +929,16 @@ function updateAnalytics() {
 async function initializeDashboard() {
   try {
     await dbService.init();
-    await Promise.all([loadMenuData(), loadOrdersData(), loadCategories()]);
+    await Promise.all([
+      loadMenuData(), 
+      loadOrdersData(), 
+      loadCategories(),
+      loadIngredientsData(),
+      loadCouponsData(),
+      loadReviewsData(),
+      loadStaffData(),
+      loadSettingsData()
+    ]);
     setupCategoryManagement();
     setupSettingsHandlers();
     setupRealtimeListeners();
@@ -894,6 +981,51 @@ function setupRealtimeListeners() {
     state.categories = updatedCategories.sort((a, b) => (a.order || 0) - (b.order || 0));
     if (state.currentSection === 'menu') {
       renderCategoryFilters();
+    }
+  });
+
+  // Listen to ingredients changes
+  dbService.listenToIngredientChanges((updated) => {
+    console.log('🔄 Admin: Ingredients updated:', updated.length);
+    state.ingredients = updated;
+    if (state.currentSection === 'inventory') {
+      renderInventoryGrid();
+    }
+  });
+
+  // Listen to coupons changes
+  dbService.listenToCouponChanges((updated) => {
+    console.log('🔄 Admin: Coupons updated:', updated.length);
+    state.coupons = updated;
+    if (state.currentSection === 'coupons') {
+      renderCouponsGrid();
+    }
+  });
+
+  // Listen to reviews changes
+  dbService.listenToReviewChanges((updated) => {
+    console.log('🔄 Admin: Reviews updated:', updated.length);
+    state.reviews = updated;
+    if (state.currentSection === 'reviews') {
+      renderReviewsList();
+    }
+  });
+
+  // Listen to staff changes
+  dbService.listenToStaffChanges((updated) => {
+    console.log('🔄 Admin: Staff updated:', updated.length);
+    state.staff = updated;
+    if (state.currentSection === 'staff') {
+      renderStaffTable();
+    }
+  });
+
+  // Listen to settings changes
+  dbService.listenToSettingsChanges((updated) => {
+    console.log('🔄 Admin: Settings updated');
+    state.settings = updated;
+    if (state.currentSection === 'settings') {
+      populateSettingsForm();
     }
   });
 }

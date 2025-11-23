@@ -417,6 +417,225 @@ class DatabaseService {
     }
     return batch;
   }
+
+  // ==================== INGREDIENTS MANAGEMENT ====================
+  
+  async getAllIngredients() {
+    await this.init();
+    const ref = collection(this.db, 'ingredients');
+    const snapshot = await getDocs(query(ref, orderBy('name')));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  async addIngredient(ingredient) {
+    await this.init();
+    const ref = collection(this.db, 'ingredients');
+    const docRef = await addDoc(ref, {
+      ...ingredient,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    });
+    return docRef.id;
+  }
+
+  async updateIngredient(id, data) {
+    await this.init();
+    const docRef = doc(this.db, 'ingredients', id);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: Timestamp.now()
+    });
+  }
+
+  async deleteIngredient(id) {
+    await this.init();
+    const docRef = doc(this.db, 'ingredients', id);
+    await deleteDoc(docRef);
+  }
+
+  listenToIngredientChanges(callback) {
+    if (!this.db) return () => {};
+    const ref = collection(this.db, 'ingredients');
+    return onSnapshot(query(ref, orderBy('name')), (snapshot) => {
+      const ingredients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(ingredients);
+    });
+  }
+
+  // ==================== COUPONS MANAGEMENT ====================
+  
+  async getAllCoupons() {
+    await this.init();
+    const ref = collection(this.db, 'coupons');
+    const snapshot = await getDocs(query(ref, orderBy('createdAt', 'desc')));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  async addCoupon(coupon) {
+    await this.init();
+    const ref = collection(this.db, 'coupons');
+    const docRef = await addDoc(ref, {
+      ...coupon,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
+    });
+    return docRef.id;
+  }
+
+  async updateCoupon(id, data) {
+    await this.init();
+    const docRef = doc(this.db, 'coupons', id);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: Timestamp.now()
+    });
+  }
+
+  async deleteCoupon(id) {
+    await this.init();
+    const docRef = doc(this.db, 'coupons', id);
+    await deleteDoc(docRef);
+  }
+
+  async getCouponByCode(code) {
+    await this.init();
+    const ref = collection(this.db, 'coupons');
+    const q = query(ref, where('code', '==', code.toUpperCase()));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return null;
+    return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+  }
+
+  listenToCouponChanges(callback) {
+    if (!this.db) return () => {};
+    const ref = collection(this.db, 'coupons');
+    return onSnapshot(query(ref, orderBy('createdAt', 'desc')), (snapshot) => {
+      const coupons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(coupons);
+    });
+  }
+
+  // ==================== REVIEWS MANAGEMENT ====================
+  
+  async getAllReviews() {
+    await this.init();
+    const ref = collection(this.db, 'reviews');
+    const snapshot = await getDocs(query(ref, orderBy('createdAt', 'desc')));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  async addReview(review) {
+    await this.init();
+    const ref = collection(this.db, 'reviews');
+    const docRef = await addDoc(ref, {
+      ...review,
+      createdAt: Timestamp.now()
+    });
+    return docRef.id;
+  }
+
+  async updateReview(id, data) {
+    await this.init();
+    const docRef = doc(this.db, 'reviews', id);
+    await updateDoc(docRef, data);
+  }
+
+  async deleteReview(id) {
+    await this.init();
+    const docRef = doc(this.db, 'reviews', id);
+    await deleteDoc(docRef);
+  }
+
+  listenToReviewChanges(callback) {
+    if (!this.db) return () => {};
+    const ref = collection(this.db, 'reviews');
+    return onSnapshot(query(ref, orderBy('createdAt', 'desc')), (snapshot) => {
+      const reviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(reviews);
+    });
+  }
+
+  // ==================== STAFF MANAGEMENT ====================
+  
+  async getAllStaff() {
+    await this.init();
+    const ref = collection(this.db, 'staff');
+    const snapshot = await getDocs(ref);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  async addStaff(staff) {
+    await this.init();
+    const ref = collection(this.db, 'staff');
+    const docRef = await addDoc(ref, {
+      ...staff,
+      createdAt: Timestamp.now()
+    });
+    return docRef.id;
+  }
+
+  async updateStaff(id, data) {
+    await this.init();
+    const docRef = doc(this.db, 'staff', id);
+    await updateDoc(docRef, data);
+  }
+
+  async deleteStaff(id) {
+    await this.init();
+    const docRef = doc(this.db, 'staff', id);
+    await deleteDoc(docRef);
+  }
+
+  listenToStaffChanges(callback) {
+    if (!this.db) return () => {};
+    const ref = collection(this.db, 'staff');
+    return onSnapshot(ref, (snapshot) => {
+      const staff = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(staff);
+    });
+  }
+
+  // ==================== SETTINGS MANAGEMENT ====================
+  
+  async getSettings() {
+    await this.init();
+    const docRef = doc(this.db, 'settings', 'restaurant');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+    return {
+      name: 'Creperie Kinder',
+      phone: '',
+      address: '',
+      openingTime: '09:00',
+      closingTime: '22:00',
+      paymentMethods: {
+        cash: true,
+        card: false,
+        mobile: false
+      }
+    };
+  }
+
+  async updateSettings(settings) {
+    await this.init();
+    const docRef = doc(this.db, 'settings', 'restaurant');
+    await setDoc(docRef, {
+      ...settings,
+      updatedAt: Timestamp.now()
+    }, { merge: true });
+  }
+
+  listenToSettingsChanges(callback) {
+    if (!this.db) return () => {};
+    const docRef = doc(this.db, 'settings', 'restaurant');
+    return onSnapshot(docRef, (snapshot) => {
+      if (snapshot.exists()) {
+        callback(snapshot.data());
+      }
+    });
+  }
 }
 
 const dbService = new DatabaseService();
