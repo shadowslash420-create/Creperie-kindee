@@ -1,3 +1,10 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
 # Python
 __pycache__/
 *.py[cod]
@@ -11,6 +18,11 @@ ENV/
 dist/
 build/
 
+# Environment variables
+.env
+.env.local
+.env.*.local
+
 # OS
 .DS_Store
 Thumbs.db
@@ -21,3 +33,13 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Vercel
+.vercel
+
+# Cache
+.cache
+
+# Local data files
+orders_data.json
+feedback_data.json

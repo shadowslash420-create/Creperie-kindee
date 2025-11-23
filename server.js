@@ -43,7 +43,7 @@ try {
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(__dirname));
 
 // File paths
 const MENU_FILE = path.join(__dirname, 'menu_data.json');
@@ -228,7 +228,7 @@ app.post('/api/upload-image', express.urlencoded({ extended: true, limit: '10mb'
 
 // Serve index.html for root
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Export for Vercel serverless
@@ -238,6 +238,6 @@ module.exports = app;
 if (require.main === module) {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running at http://0.0.0.0:${PORT}/`);
-    console.log(`Serving directory: ${path.join(__dirname, 'public')}`);
+    console.log(`Serving directory: ${__dirname}`);
   });
 }
