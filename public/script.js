@@ -2402,7 +2402,6 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 // Make functions globally accessible (Original)
 // These are kept from the original to maintain compatibility if other scripts rely on them.
 // However, the primary logic now uses the updated functions.
-window.switchTab = switchTab; // Updated function
 window.addToCart = addToCart; // Updated function
 window.removeFromCart = removeFromCart; // Updated function
 window.updateQuantity = updateQuantity; // Updated function (assuming this exists in updated code)
@@ -2454,13 +2453,15 @@ function applyTranslationsOriginal() {
   const t = translations[currentLang]; // Use original translations
 
   // Example: Translate navigation links
-  document.querySelectorAll('.nav-link-home').forEach(link => link.textContent = t.ar.navHome || t.en.navHome);
-  document.querySelectorAll('.nav-link-about').forEach(link => link.textContent = t.ar.navAbout || t.en.navAbout);
-  document.querySelectorAll('.nav-link-menu').forEach(link => link.textContent = t.ar.navMenu || t.en.navMenu);
-  document.querySelectorAll('.nav-link-orders').forEach(link => link.textContent = t.ar.navOrders || t.en.navOrders);
-  document.querySelectorAll('.nav-link-contact').forEach(link => link.textContent = t.ar.navContact || t.en.navContact);
-  document.querySelectorAll('.nav-link-faq').forEach(link => link.textContent = t.ar.navFaq || t.en.navFaq);
-  document.querySelectorAll('.nav-link-feedback').forEach(link => link.textContent = t.ar.navFeedback || t.en.navFeedback);
+  if (t) {
+    document.querySelectorAll('.nav-link-home').forEach(link => link.textContent = t.navHome || 'Home');
+    document.querySelectorAll('.nav-link-about').forEach(link => link.textContent = t.navAbout || 'About');
+    document.querySelectorAll('.nav-link-menu').forEach(link => link.textContent = t.navMenu || 'Menu');
+    document.querySelectorAll('.nav-link-orders').forEach(link => link.textContent = t.navOrders || 'Orders');
+    document.querySelectorAll('.nav-link-contact').forEach(link => link.textContent = t.navContact || 'Contact');
+    document.querySelectorAll('.nav-link-faq').forEach(link => link.textContent = t.navFaq || 'FAQ');
+    document.querySelectorAll('.nav-link-feedback').forEach(link => link.textContent = t.navFeedback || 'Feedback');
+  }
   // Add translations for other nav links as needed based on original code
 }
 
@@ -2539,8 +2540,6 @@ window.toggleLanguage = toggleLanguage; // Updated
 window.updateCart = updateCart; // Updated
 
 // Ensure the updated functions are also globally accessible if needed
-window.switchTab = switchTab;
-window.filterByCategory = filterByCategory;
 window.setupSearch = setupSearch;
 window.loadMenuItemsFromFirebase = loadMenuItemsFromFirebase;
 window.initMenu = initMenu;
