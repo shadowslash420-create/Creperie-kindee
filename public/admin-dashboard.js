@@ -1343,12 +1343,23 @@ function renderCouponsGrid() {
 }
 
 async function loadReviews() {
-  console.log('⭐ Loading reviews...');
+  console.log('⭐ Loading customer feedback...');
   try {
-    await loadReviewsData();
+    const feedback = getFeedbackFromStorage();
+    state.reviews = feedback;
     renderReviewsList();
   } catch (error) {
     console.error('Failed to load reviews:', error);
+  }
+}
+
+function getFeedbackFromStorage() {
+  try {
+    const data = localStorage.getItem('creperie_feedback');
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error reading feedback from storage:', error);
+    return [];
   }
 }
 
@@ -1356,14 +1367,20 @@ function renderReviewsList() {
   const container = document.getElementById('reviews-list');
   if (!container) return;
 
-  if (state.reviews.length === 0) {
-    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">No reviews yet</p>';
+  const feedback = getFeedbackFromStorage();
+  
+  if (feedback.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">No customer feedback yet</p>';
     return;
   }
 
-  const html = state.reviews.map(review => {
+  const avgRating = feedback.reduce((sum, f) => sum + (f.rating || 0), 0) / feedback.length;
+  document.getElementById('total-reviews').textContent = feedback.length;
+  document.getElementById('avg-rating').textContent = avgRating.toFixed(1) + ' ⭐';
+
+  const html = feedback.slice().reverse().map((review, index) => {
     const stars = '★'.repeat(review.rating || 0) + '☆'.repeat(5 - (review.rating || 0));
-    const date = review.createdAt ? new Date(review.createdAt.toDate ? review.createdAt.toDate() : review.createdAt).toLocaleDateString() : 'N/A';
+    const date = review.createdAt ? new Date(review.createdAt).toLocaleDateString() : 'N/A';
 
     return `
       <div style="background:white;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
@@ -1373,11 +1390,10 @@ function renderReviewsList() {
               <h4 style="margin:0;color:#2d3748;font-size:16px;font-weight:600;">${review.customerName || review.name || 'Anonymous'}</h4>
               <span style="color:#FF6B35;font-size:18px;">${stars}</span>
             </div>
-            <p style="margin:0 0 4px 0;color:#666;font-size:14px;">📅 ${date}</p>
-            ${review.itemName ? `<p style="margin:0;color:#666;font-size:14px;">🍽️ ${review.itemName}</p>` : ''}
+            <p style="margin:0;color:#666;font-size:14px;">📅 ${date}</p>
           </div>
-          <button onclick="deleteReview('${review.id}')" 
-            style="padding:8px 16px;background:#e53e3e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
+          <button onclick="deleteFeedback(${index})" 
+            style="padding:8px 16px;background:#e53e3e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;white-space:nowrap;">
             🗑️ Delete
           </button>
         </div>
@@ -1393,16 +1409,19 @@ function renderReviewsList() {
   container.innerHTML = html;
 }
 
-async function deleteReview(reviewId) {
-  if (!confirm('Are you sure you want to delete this review?')) return;
+function deleteFeedback(index) {
+  if (!confirm('Are you sure you want to delete this feedback?')) return;
 
   try {
-    await dbService.deleteReview(reviewId);
-    await loadReviews();
-    alert('✅ Review deleted successfully!');
+    const feedback = getFeedbackFromStorage();
+    feedback.splice(index, 0); 
+    
+    localStorage.setItem('creperie_feedback', JSON.stringify(feedback));
+    loadReviews();
+    alert('✅ Feedback deleted successfully!');
   } catch (error) {
-    console.error('❌ Failed to delete review:', error);
-    alert('❌ Failed to delete review: ' + error.message);
+    console.error('❌ Failed to delete feedback:', error);
+    alert('❌ Failed to delete feedback');
   }
 }
 
