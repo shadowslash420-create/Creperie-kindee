@@ -280,7 +280,7 @@ class DatabaseService {
       ...orderData,
       phone: this.normalizePhone(orderData.phone),
       email: orderData.email || null,
-      status: orderData.status || 'unconfirmed',
+      status: orderData.status || 'pending',
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     };

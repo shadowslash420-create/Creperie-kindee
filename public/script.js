@@ -371,8 +371,7 @@ window.submitCheckoutForm = async function(event) {
     deliveryFee,
     total,
     specialInstructions: notes || '',
-    status: 'unconfirmed',
-    timestamp: new Date().toISOString()
+    status: 'pending'
   };
 
   // Set submission flag
