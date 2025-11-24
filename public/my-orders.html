@@ -17,6 +17,7 @@
       }
     }
   </style>
+  <script type="module" src="script.js"></script>
 </head>
 <body dir="ltr">
   <header class="header">
@@ -42,6 +43,18 @@
   <div class="container">
     <section class="section">
       <h2 class="section-title" id="orders-title" style="text-align:center">طلباتي</h2>
+
+      <!-- Role Selector for Staff -->
+      <div id="role-selector" style="display:none;margin-bottom:24px;padding:20px;background:linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);border-radius:12px;border:1px solid #FFE4E1;">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center;">
+          <span style="font-weight:700;color:#E30613;">👤 View as:</span>
+          <button onclick="switchRole('customer')" class="role-btn active" id="role-customer" style="background:#E30613;color:#fff;">👥 Customer</button>
+          <button onclick="switchRole('staff')" class="role-btn" id="role-staff" style="background:#9b59b6;color:#fff;">👨‍🍳 Staff</button>
+          <button onclick="switchRole('delivery')" class="role-btn" id="role-delivery" style="background:#3498db;color:#fff;">🚚 Delivery</button>
+          <button onclick="switchRole('admin')" class="role-btn" id="role-admin" style="background:#2c3e50;color:#fff;">⚙️ Admin</button>
+          <button onclick="logoutRole()" class="role-btn" id="logout-role" style="background:#e74c3c;color:#fff;">🚪 Logout</button>
+        </div>
+      </div>
 
       <!-- Orders Table -->
       <div id="orders-list"></div>
@@ -114,7 +127,6 @@
 
   <div class="menu-overlay" id="menu-overlay" onclick="closeAllSidebars()"></div>
 
-  <script type="module" src="script.js"></script>
   <script type="module">
     import dbService from './db-service.js';
     import { getAuthInstance } from './firebase-config.js';
@@ -189,6 +201,46 @@
     let cachedOrders = null;
     let orderListenerUnsubscribe = null;
     let currentSearchPhone = null;
+    let currentUserRole = 'customer';
+    let currentUser = null;
+
+    window.switchRole = function(role) {
+      currentUserRole = role;
+      document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('role-' + role).classList.add('active');
+      if (cachedOrders) {
+        displayOrders(cachedOrders);
+      }
+    }
+
+    window.logoutRole = function() {
+      currentUserRole = 'customer';
+      currentUser = null;
+      document.getElementById('role-selector').style.display = 'none';
+      document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('role-customer').classList.add('active');
+      if (cachedOrders) {
+        displayOrders(cachedOrders);
+      }
+    }
+
+    window.updateOrderStatus = async function(orderId, newStatus) {
+      try {
+        const order = cachedOrders.find(o => o.id === orderId);
+        if (!order) return;
+        
+        await dbService.updateOrder(orderId, { status: newStatus });
+        console.log('✅ Order status updated to:', newStatus);
+        
+        // Refresh orders
+        if (currentUser?.email) {
+          loadUserOrders(currentUser.email);
+        }
+      } catch (error) {
+        console.error('Error updating order status:', error);
+        alert('Error updating order status');
+      }
+    }
 
     window.applyOrderTranslations = function(){
       const t = getOrderTranslations();
@@ -425,6 +477,26 @@
 
       const date = orderDate.toLocaleString(lang === 'ar' ? 'ar-DZ' : 'en-US');
 
+      // Generate role-specific actions
+      let actionButtons = '';
+      if (currentUserRole === 'staff') {
+        if (status === 'confirmed' || status === 'pending') {
+          actionButtons = `<button class="status-action-btn" style="background:#27ae60;color:#fff;" onclick="updateOrderStatus('${order.id}', 'ready-for-delivery')">✅ Mark Ready for Delivery</button>`;
+        }
+      } else if (currentUserRole === 'delivery') {
+        if (status === 'ready-for-delivery' || status === 'in-progress') {
+          actionButtons = `<button class="status-action-btn" style="background:#27ae60;color:#fff;" onclick="updateOrderStatus('${order.id}', 'delivered')">🚚 Mark Delivered</button>`;
+        }
+      } else if (currentUserRole === 'admin') {
+        actionButtons = `
+          <button class="status-action-btn" style="background:#3498db;color:#fff;" onclick="updateOrderStatus('${order.id}', 'confirmed')">✓ Confirm</button>
+          <button class="status-action-btn" style="background:#e67e22;color:#fff;" onclick="updateOrderStatus('${order.id}', 'pending')">⏳ Pending</button>
+          <button class="status-action-btn" style="background:#9b59b6;color:#fff;" onclick="updateOrderStatus('${order.id}', 'in-progress')">📦 In Progress</button>
+          <button class="status-action-btn" style="background:#27ae60;color:#fff;" onclick="updateOrderStatus('${order.id}', 'delivered')">✅ Delivered</button>
+          <button class="status-action-btn" style="background:#e74c3c;color:#fff;" onclick="updateOrderStatus('${order.id}', 'cancelled')">❌ Cancel</button>
+        `;
+      }
+
       modalBody.innerHTML = `
         <div style="margin-bottom:24px;">
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px;">
@@ -505,10 +577,11 @@
             </strong>
           </div>
           ` : ''}
-          <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:800;color:#fff;font-family:'Playfair Display',serif;letter-spacing:0.5px;">
+          <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:800;color:#fff;font-family:'Playfair Display',serif;letter-spacing:0.5px;margin-bottom:16px;">
             <span>${t.total}:</span>
             <strong style="text-shadow:0 2px 8px rgba(0,0,0,0.2);">${order.total.toFixed(2)} DZD</strong>
           </div>
+          ${actionButtons ? `<div style="padding-top:16px;border-top:2px solid rgba(255,255,255,0.3);">${actionButtons}</div>` : ''}
         </div>
       `;
 
@@ -614,10 +687,14 @@
 
       if (user && user.email) {
         console.log('✅ User logged in:', user.email);
+        currentUser = user;
         authBtn.textContent = '👤 ' + user.email.split('@')[0];
+        // Show role selector for staff/delivery access
+        document.getElementById('role-selector').style.display = 'flex';
         loadUserOrders(user.email);
       } else {
         console.log('User not logged in');
+        document.getElementById('role-selector').style.display = 'none';
       }
     });
   </script>
