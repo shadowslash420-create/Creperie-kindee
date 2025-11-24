@@ -1057,6 +1057,14 @@ window.applyTranslations = function() {
     'contact-message-label': t.contactMessageLabel,
     'contact-submit': t.contactSubmitBtn,
     'faq-title': t.faqTitle,
+    'faq-q1': t['faq-q1'],
+    'faq-q2': t['faq-q2'],
+    'faq-q3': t['faq-q3'],
+    'faq-q4': t['faq-q4'],
+    'faq-q5': t['faq-q5'],
+    'faq-a3': t['faq-a3'],
+    'faq-a4': t['faq-a4'],
+    'faq-a5': t['faq-a5'],
     'feedback-title': t.feedbackTitle,
     'feedback-form-title': t.feedbackFormTitle,
     'feedback-name-label': t.feedbackNameLabel,
@@ -1078,6 +1086,9 @@ window.applyTranslations = function() {
       }
     }
   });
+
+  // Update FAQ with dynamic settings (hours, delivery fee)
+  updateFAQSettings();
 
   // Save translations for later use
   localStorage.setItem('kc_saved_subtotal_label', t.subtotal);
