@@ -704,25 +704,27 @@ async function updateOrderStatus(orderId, newStatus) {
     await loadOrdersData();
     renderOrdersTable();
     loadDashboard();
+    showStyledAlert('Success', `Order status updated to <strong>${newStatus}</strong>`);
   } catch (error) {
     console.error('❌ Failed to update order status:', error);
-    alert('Failed to update order status: ' + error.message);
+    showStyledAlert('Error', 'Failed to update order status: ' + error.message);
   }
 }
 
 async function deleteOrder(orderId) {
-  if (!confirm('Are you sure you want to delete this order?')) return;
-
-  try {
-    console.log('🗑️ Deleting order:', orderId);
-    await dbService.deleteOrder(orderId);
-    await loadOrdersData();
-    renderOrdersTable();
-    loadDashboard();
-  } catch (error) {
-    console.error('❌ Failed to delete order:', error);
-    alert('Failed to delete order: ' + error.message);
-  }
+  showStyledConfirm('Delete Order', `Are you sure you want to delete this order? This action cannot be undone.`, async () => {
+    try {
+      console.log('🗑️ Deleting order:', orderId);
+      await dbService.deleteOrder(orderId);
+      await loadOrdersData();
+      renderOrdersTable();
+      loadDashboard();
+      showStyledAlert('Deleted', 'Order deleted successfully!');
+    } catch (error) {
+      console.error('❌ Failed to delete order:', error);
+      showStyledAlert('Error', 'Failed to delete order: ' + error.message);
+    }
+  });
 }
 
 // ==================== MENU SECTION ====================
@@ -1584,16 +1586,16 @@ function renderMessagesList() {
 }
 
 async function deleteMessage(messageId) {
-  if (!confirm('Are you sure you want to delete this message?')) return;
-
-  try {
-    await dbService.deleteContactMessage(messageId);
-    await loadMessages();
-    alert('✅ Message deleted successfully!');
-  } catch (error) {
-    console.error('❌ Failed to delete message:', error);
-    alert('❌ Failed to delete message');
-  }
+  showStyledConfirm('Delete Message', 'Are you sure you want to delete this message?', async () => {
+    try {
+      await dbService.deleteContactMessage(messageId);
+      await loadMessages();
+      showStyledAlert('Deleted', 'Message deleted successfully!');
+    } catch (error) {
+      console.error('❌ Failed to delete message:', error);
+      showStyledAlert('Error', 'Failed to delete message');
+    }
+  });
 }
 
 function renderReviewsList() {
@@ -1679,11 +1681,11 @@ function setupSettingsHandlers() {
         await dbService.updateSettings(settings);
         state.settings = { ...state.settings, ...settings };
         console.log('✅ Business settings saved successfully!');
-        alert('✅ Business settings saved successfully!');
+        showStyledAlert('Saved', 'Business settings saved successfully!');
         sessionStorage.setItem('admin_current_section', 'settings');
       } catch (error) {
         console.error('❌ Failed to save settings:', error);
-        alert('❌ Failed to save settings: ' + error.message);
+        showStyledAlert('Error', 'Failed to save settings: ' + error.message);
       }
     });
   }
@@ -1704,11 +1706,11 @@ function setupSettingsHandlers() {
         await dbService.updateSettings({ hours });
         state.settings.hours = hours;
         console.log('✅ Operating hours saved successfully!');
-        alert('✅ Operating hours updated successfully!');
+        showStyledAlert('Saved', 'Operating hours updated successfully!');
         sessionStorage.setItem('admin_current_section', 'settings');
       } catch (error) {
         console.error('❌ Failed to update hours:', error);
-        alert('❌ Failed to update operating hours: ' + error.message);
+        showStyledAlert('Error', 'Failed to update operating hours: ' + error.message);
       }
     });
   }
@@ -1805,16 +1807,16 @@ function renderStaffTable() {
 }
 
 async function deleteStaff(staffId) {
-  if (!confirm('Are you sure you want to remove this staff member?')) return;
-
-  try {
-    await dbService.deleteStaff(staffId);
-    await loadStaff();
-    alert('✅ Staff member removed successfully!');
-  } catch (error) {
-    console.error('❌ Failed to remove staff:', error);
-    alert('❌ Failed to remove staff: ' + error.message);
-  }
+  showStyledConfirm('Remove Staff', 'Are you sure you want to remove this staff member?', async () => {
+    try {
+      await dbService.deleteStaff(staffId);
+      await loadStaff();
+      showStyledAlert('Removed', 'Staff member removed successfully!');
+    } catch (error) {
+      console.error('❌ Failed to remove staff:', error);
+      showStyledAlert('Error', 'Failed to remove staff: ' + error.message);
+    }
+  });
 }
 
 function openAddStaffModal() {
@@ -1854,11 +1856,11 @@ async function saveStaffMember(event) {
     document.getElementById('staff-name').value = '';
     document.getElementById('staff-role').value = '';
     await loadStaff();
-    alert(`✅ Staff member "${name}" added as ${role}!`);
+    showStyledAlert('Added', `Staff member "<strong>${name}</strong>" added as <strong>${role}</strong>!`);
     sessionStorage.setItem('admin_current_section', 'staff');
   } catch (error) {
     console.error('❌ Failed to add staff:', error);
-    alert('❌ Failed to add staff: ' + error.message);
+    showStyledAlert('Error', 'Failed to add staff: ' + error.message);
   }
 }
 
