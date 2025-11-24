@@ -264,6 +264,7 @@ function showSection(section, event) {
   else if (section === 'messages') loadMessages();
   else if (section === 'analytics') loadAnalytics();
   else if (section === 'settings') loadSettings();
+  else if (section === 'staff') loadStaff();
 }
 
 function toggleSidebar() {
@@ -1493,8 +1494,7 @@ function setupSettingsHandlers() {
         businessPhone: document.getElementById('business-phone')?.value,
         businessAddress: document.getElementById('business-address')?.value,
         deliveryFee: parseFloat(document.getElementById('delivery-fee')?.value) || 0,
-        freeDeliveryMin: parseFloat(document.getElementById('free-delivery-min')?.value) || 0,
-        taxRate: parseFloat(document.getElementById('tax-rate')?.value) || 0
+        freeDeliveryMin: parseFloat(document.getElementById('free-delivery-min')?.value) || 0
       };
 
       try {
@@ -1540,7 +1540,6 @@ function populateSettingsForm() {
   if (state.settings.businessAddress) document.getElementById('business-address').value = state.settings.businessAddress;
   if (state.settings.deliveryFee !== undefined) document.getElementById('delivery-fee').value = state.settings.deliveryFee;
   if (state.settings.freeDeliveryMin !== undefined) document.getElementById('free-delivery-min').value = state.settings.freeDeliveryMin;
-  if (state.settings.taxRate !== undefined) document.getElementById('tax-rate').value = state.settings.taxRate;
 
   if (state.settings.hours) {
     if (state.settings.hours.openTime) document.getElementById('open-time').value = state.settings.hours.openTime;
@@ -1548,6 +1547,130 @@ function populateSettingsForm() {
   }
 }
 
+// ==================== STAFF MANAGEMENT ====================
+
+async function loadStaff() {
+  console.log('👨‍💼 Loading staff...');
+  try {
+    await loadStaffData();
+    renderStaffTable();
+  } catch (error) {
+    console.error('Failed to load staff:', error);
+  }
+}
+
+function renderStaffTable() {
+  const container = document.getElementById('staff-table');
+  if (!container) return;
+
+  const adminRow = `
+    <tr style="border-bottom:1px solid #e2e8f0;background:#f0f7ff;">
+      <td style="padding:12px;font-weight:600;color:#2d3748;">Admin (Owner)</td>
+      <td style="padding:12px;color:#666;">oussamaanis2005@gmail.com</td>
+      <td style="padding:12px;">
+        <span style="padding:4px 12px;background:#E30613;color:white;border-radius:12px;font-size:12px;font-weight:600;">
+          Owner
+        </span>
+      </td>
+      <td style="padding:12px;color:#666;font-size:14px;">Full Access</td>
+      <td style="padding:12px;">
+        <span style="color:#999;font-size:12px;">Default</span>
+      </td>
+    </tr>
+  `;
+
+  const staffRows = state.staff.map(member => `
+    <tr style="border-bottom:1px solid #e2e8f0;">
+      <td style="padding:12px;font-weight:600;color:#2d3748;">${member.name}</td>
+      <td style="padding:12px;color:#666;">${member.email}</td>
+      <td style="padding:12px;">
+        <span style="padding:4px 12px;background:${member.role === 'Staff A' ? '#4299E1' : '#48BB78'};color:white;border-radius:12px;font-size:12px;font-weight:600;">
+          ${member.role || 'Staff'}
+        </span>
+      </td>
+      <td style="padding:12px;color:#666;font-size:14px;">
+        ${member.role === 'Staff A' ? 'Read Messages & Reviews' : member.role === 'Staff B' ? 'Manage Orders' : 'None'}
+      </td>
+      <td style="padding:12px;">
+        <button onclick="deleteStaff('${member.id}')" 
+          style="padding:6px 12px;background:#e53e3e;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;">
+          🗑️ Remove
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  const html = `
+    <table style="width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;">
+      <thead>
+        <tr style="background:#f7fafc;text-align:left;">
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Name</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Email</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Role</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Permissions</th>
+          <th style="padding:12px;font-weight:600;color:#2d3748;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${adminRow}
+        ${staffRows}
+      </tbody>
+    </table>
+  `;
+
+  container.innerHTML = html;
+}
+
+async function deleteStaff(staffId) {
+  if (!confirm('Are you sure you want to remove this staff member?')) return;
+
+  try {
+    await dbService.deleteStaff(staffId);
+    await loadStaff();
+    alert('✅ Staff member removed successfully!');
+  } catch (error) {
+    console.error('❌ Failed to remove staff:', error);
+    alert('❌ Failed to remove staff: ' + error.message);
+  }
+}
+
+function openAddStaffModal() {
+  document.getElementById('staff-email').value = '';
+  document.getElementById('staff-name').value = '';
+  document.getElementById('staff-role').value = '';
+  document.getElementById('staff-modal-title').textContent = '➕ Add Staff Member';
+  document.getElementById('staff-modal').style.display = 'flex';
+}
+
+async function saveStaffMember(event) {
+  event.preventDefault();
+  
+  const email = document.getElementById('staff-email').value.trim();
+  const name = document.getElementById('staff-name').value.trim();
+  const role = document.getElementById('staff-role').value;
+  
+  if (!email || !name || !role) {
+    alert('❌ Please fill all fields');
+    return;
+  }
+  
+  try {
+    const staffData = {
+      email,
+      name,
+      role,
+      createdAt: new Date().toISOString()
+    };
+    
+    await dbService.addStaff(staffData);
+    document.getElementById('staff-modal').style.display = 'none';
+    await loadStaff();
+    alert(`✅ Staff member "${name}" added as ${role}!`);
+  } catch (error) {
+    console.error('Failed to add staff:', error);
+    alert('❌ Failed to add staff: ' + error.message);
+  }
+}
 
 // ==================== NEW MODAL FUNCTIONS ====================
 
