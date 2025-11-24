@@ -23,7 +23,17 @@ let restaurantSettings = {
 async function loadRestaurantSettings() {
   try {
     const settings = await dbService.getSettings();
-    restaurantSettings = { ...restaurantSettings, ...settings };
+    
+    // Map admin field names to our expected names
+    const normalizedSettings = {
+      businessPhone: settings.businessPhone || settings.phone || '+213 5X XXX XXXX',
+      businessEmail: settings.businessEmail || 'contact@creperie.com',
+      openingTime: settings.openingTime || settings.hours?.openTime || '09:00',
+      closingTime: settings.closingTime || settings.hours?.closeTime || '22:00',
+      deliveryFee: settings.deliveryFee || 0
+    };
+    
+    restaurantSettings = { ...restaurantSettings, ...normalizedSettings };
     updateAllFooters();
     updateFAQSettings();
     updateDeliverySettings();
@@ -85,7 +95,16 @@ document.addEventListener('DOMContentLoaded', loadRestaurantSettings);
 
 // Listen for real-time settings changes
 dbService.listenToSettingsChanges((settings) => {
-  restaurantSettings = { ...restaurantSettings, ...settings };
+  // Map admin field names to our expected names
+  const normalizedSettings = {
+    businessPhone: settings.businessPhone || settings.phone || '+213 5X XXX XXXX',
+    businessEmail: settings.businessEmail || 'contact@creperie.com',
+    openingTime: settings.openingTime || settings.hours?.openTime || '09:00',
+    closingTime: settings.closingTime || settings.hours?.closeTime || '22:00',
+    deliveryFee: settings.deliveryFee || 0
+  };
+  
+  restaurantSettings = { ...restaurantSettings, ...normalizedSettings };
   updateAllFooters();
   updateFAQSettings();
   updateDeliverySettings();

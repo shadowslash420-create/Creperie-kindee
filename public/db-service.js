@@ -578,10 +578,12 @@ class DatabaseService {
     }
     return {
       name: 'Creperie Kinder',
-      phone: '',
+      businessPhone: '+213 5X XXX XXXX',
+      businessEmail: 'contact@creperie.com',
       address: '',
       openingTime: '09:00',
       closingTime: '22:00',
+      deliveryFee: 0,
       paymentMethods: {
         cash: true,
         card: false,
