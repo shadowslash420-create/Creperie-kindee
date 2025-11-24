@@ -1728,32 +1728,41 @@ function closeCouponModal() {
 }
 
 function openAddStaffModal() {
-  const name = prompt('Enter staff member name:');
-  if (!name) return;
+  document.getElementById('staff-email').value = '';
+  document.getElementById('staff-name').value = '';
+  document.getElementById('staff-role').value = '';
+  document.getElementById('staff-modal-title').textContent = '➕ Add Staff Member';
+  document.getElementById('staff-modal').style.display = 'flex';
+}
 
-  const email = prompt('Enter staff member email:');
-  if (!email) return;
-
-  const role = prompt('Enter role (e.g., Manager, Delivery, Chef):');
-  if (!role) return;
-
-  const staffData = {
-    name,
-    email,
-    role,
-    permissions: [],
-    addedAt: new Date().toISOString()
-  };
-
-  dbService.addStaff(staffData)
-    .then(() => {
-      loadStaff();
-      alert('✅ Staff member added successfully!');
-    })
-    .catch(error => {
-      console.error('Failed to add staff:', error);
-      alert('❌ Failed to add staff member');
-    });
+async function saveStaffMember(event) {
+  event.preventDefault();
+  
+  const email = document.getElementById('staff-email').value.trim();
+  const name = document.getElementById('staff-name').value.trim();
+  const role = document.getElementById('staff-role').value;
+  
+  if (!email || !name || !role) {
+    alert('❌ Please fill all fields');
+    return;
+  }
+  
+  try {
+    const staffData = {
+      email,
+      name,
+      role,
+      createdAt: new Date().toISOString()
+    };
+    
+    await dbService.addStaff(staffData);
+    document.getElementById('staff-modal').style.display = 'none';
+    await loadStaff();
+    alert(`✅ Staff member "${name}" added as ${role}!`);
+  } catch (error) {
+    console.error('Failed to add staff:', error);
+    alert('❌ Failed to add staff: ' + error.message);
+  }
 }
 
 // Update the manage categories button handler

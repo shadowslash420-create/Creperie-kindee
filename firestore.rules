@@ -78,9 +78,18 @@ service cloud.firestore {
     // Firebase functions: dbService.addContactMessage(), dbService.getAllContactMessages(),
     //                     dbService.deleteContactMessage()
     match /contact_messages/{messageId} {
-      allow read: if isAdmin();  // Only admin can read messages
+      allow read: if isAdmin() || isStaffA();  // Admin and Staff A can read messages
       allow create: if true;  // Anyone can submit contact messages (customers + guests)
       allow delete: if isAdmin();  // Only admin can delete messages
+    }
+    
+    // ==================== STAFF COLLECTION ====================
+    // Used by: loadStaffData(), renderStaffTable(), addStaffMember(), deleteStaff()
+    // Firebase functions: dbService.getAllStaff(), dbService.addStaff(), 
+    //                     dbService.updateStaff(), dbService.deleteStaff()
+    match /staff/{staffId} {
+      allow read: if isAdmin();  // Only admin can view staff
+      allow create, update, delete: if isAdmin();  // Only admin can manage staff
     }
   }
 }
