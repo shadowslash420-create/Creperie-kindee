@@ -72,15 +72,9 @@ function updateFAQSettings() {
   // Update FAQ answer 2 for delivery fee
   const q2 = document.getElementById('faq-a2');
   if (q2) {
-    if (deliveryFee === 0) {
-      q2.textContent = isArabic 
-        ? 'نعم، نوفر توصيل مجاني لجميع الطلبات'
-        : 'Yes, we offer free delivery for all orders';
-    } else {
-      q2.textContent = isArabic 
-        ? `نعم، رسوم التوصيل ${deliveryFee} DZD`
-        : `Yes, delivery fee is ${deliveryFee} DZD`;
-    }
+    q2.textContent = isArabic 
+      ? `نعم، رسوم التوصيل ${deliveryFee} DZD`
+      : `Yes, delivery fee ${deliveryFee} DZD`;
   }
 }
 
@@ -146,8 +140,7 @@ const translations = {
     'faq-q2': 'هل توفرون توصيل مجاني؟', 'faq-a2': 'نعم، نوفر توصيل مجاني للطلبات التي تزيد عن 1000 DZD',
     'faq-q3': 'هل تستخدمون شوكولاتة كيندر الأصلية؟', 'faq-a3': 'بالتأكيد! نستخدم فقط شوكولاتة كيندر الأصلية ومكونات طازجة يومياً',
     'faq-q4': 'هل يمكنني تخصيص طلبي؟', 'faq-a4': 'نعم، يمكنك إضافة ملاحظات خاصة عند الطلب وسنقوم بتلبية طلبك حسب الإمكان',
-    'faq-q5': 'هل لديكم خيارات نباتية؟', 'faq-a5': 'نعم، لدينا كريب نباتي مع التوت والكريمة النباتية',
-    'faq-q6': 'كم يستغرق التحضير والتوصيل؟', 'faq-a6': 'عادة يستغرق التحضير 10-15 دقيقة، والتوصيل 20-30 دقيقة حسب موقعك',
+    'faq-q5': 'كم يستغرق التحضير والتوصيل؟', 'faq-a5': 'عادة يستغرق التحضير 10-15 دقيقة، والتوصيل 20-30 دقيقة حسب موقعك',
     selectItem: 'اختر منتج', noFeedback: 'لا توجد تقييمات حتى الآن', feedbackSuccess: 'شكراً لتقييمك!',
     feedbackFormTitle: 'شاركنا تجربتك', feedbackNameLabel: 'اسمك:', feedbackRatingLabel: 'التقييم:', feedbackCommentLabel: 'تعليقك:',
     feedbackSubmitBtn: 'إرسال التقييم', feedbackReviewsTitle: 'تقييمات العملاء'
@@ -182,8 +175,7 @@ const translations = {
     'faq-q2': 'Do you offer free delivery?', 'faq-a2': 'Yes, we offer free delivery for orders over 1000 DZD',
     'faq-q3': 'Do you use original Kinder chocolate?', 'faq-a3': 'Absolutely! We only use original Kinder chocolate and fresh ingredients daily',
     'faq-q4': 'Can I customize my order?', 'faq-a4': 'Yes, you can add special notes when ordering and we will fulfill your request as best as we can',
-    'faq-q5': 'Do you have vegetarian options?', 'faq-a5': 'Yes, we have vegetarian crepes with berries and vegan cream',
-    'faq-q6': 'How long does preparation and delivery take?', 'faq-a6': 'Usually preparation takes 10-15 minutes, and delivery takes 20-30 minutes depending on your location',
+    'faq-q5': 'How long does preparation and delivery take?', 'faq-a5': 'Usually preparation takes 10-15 minutes, and delivery takes 20-30 minutes depending on your location',
     selectItem: 'Select Product', noFeedback: 'No reviews yet', feedbackSuccess: 'Thank you for your review!',
     feedbackFormTitle: 'Share Your Experience', feedbackNameLabel: 'Your Name:', feedbackRatingLabel: 'Rating:', feedbackCommentLabel: 'Your Comment:',
     feedbackSubmitBtn: 'Submit Feedback', feedbackReviewsTitle: 'Customer Reviews'
