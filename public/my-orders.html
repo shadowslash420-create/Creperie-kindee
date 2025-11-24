@@ -258,10 +258,11 @@
       const t = getOrderTranslations();
 
       try {
-        console.log('📦 Loading orders for user:', userEmail);
+        const normalizedEmail = userEmail ? userEmail.toLowerCase().trim() : null;
+        console.log('📦 Loading orders for user:', normalizedEmail);
 
         // Use dbService to get orders by email
-        const orders = await dbService.getOrdersByEmail(userEmail);
+        const orders = await dbService.getOrdersByEmail(normalizedEmail);
 
         console.log('✅ Orders loaded for user:', orders.length);
 

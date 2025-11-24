@@ -515,8 +515,9 @@ window.submitCheckoutForm = async function(event) {
   try {
     const auth = await getAuthInstance();
     if (auth && auth.currentUser) {
-      userEmail = auth.currentUser.email;
+      userEmail = auth.currentUser.email ? auth.currentUser.email.toLowerCase().trim() : null;
       currentUser = auth.currentUser;
+      console.log('✅ User logged in with email:', userEmail);
     }
   } catch (error) {
     console.log('Error checking auth:', error);

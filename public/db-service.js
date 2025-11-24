@@ -276,24 +276,30 @@ class DatabaseService {
   async createOrder(orderData) {
     await this.init();
     const ordersRef = collection(this.db, 'orders');
+    const normalizedEmail = orderData.email ? orderData.email.toLowerCase().trim() : null;
     const order = {
       ...orderData,
       phone: this.normalizePhone(orderData.phone),
-      email: orderData.email || null,
+      email: normalizedEmail,
       status: orderData.status || 'pending',
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     };
+    console.log('📝 Creating order with email:', normalizedEmail);
     const docRef = await addDoc(ordersRef, order);
+    console.log('✅ Order created with ID:', docRef.id, 'for email:', normalizedEmail);
     return docRef.id;
   }
 
   async getOrdersByEmail(email) {
     await this.init();
+    const normalizedEmail = email ? email.toLowerCase().trim() : null;
+    console.log('🔍 Searching orders for email:', normalizedEmail);
     const ordersRef = collection(this.db, 'orders');
-    const q = query(ordersRef, where('email', '==', email));
+    const q = query(ordersRef, where('email', '==', normalizedEmail));
     const snapshot = await getDocs(q);
     const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log('✅ Found', orders.length, 'orders for email:', normalizedEmail);
     // Sort by createdAt in JavaScript to avoid needing Firestore composite index
     return orders.sort((a, b) => {
       const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
@@ -304,8 +310,9 @@ class DatabaseService {
 
   listenToOrdersByEmail(email, callback) {
     return this.init().then(() => {
+      const normalizedEmail = email ? email.toLowerCase().trim() : null;
       const ordersRef = collection(this.db, 'orders');
-      const q = query(ordersRef, where('email', '==', email));
+      const q = query(ordersRef, where('email', '==', normalizedEmail));
       return onSnapshot(q, (snapshot) => {
         const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         // Sort by createdAt in JavaScript to avoid needing Firestore composite index
