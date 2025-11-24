@@ -494,14 +494,49 @@
         <div class="staff-container">
           <div class="section-header">
             <h2>👨‍💼 Staff & Permissions</h2>
-            <button class="btn-primary" onclick="window.location.href='staff-management.html'">
-              <span>➕</span> Manage Staff
+            <button class="btn-primary" onclick="openAddStaffModal()">
+              <span>➕</span> Add Staff Member
             </button>
           </div>
           <div class="staff-table" id="staff-table">
             <div style="padding: 40px; text-align: center; color: #999;">
-              <p>📋 Click "Manage Staff" button above to view and manage all staff members</p>
+              <p>Loading staff members...</p>
             </div>
+          </div>
+        </div>
+
+        <!-- Add Staff Modal -->
+        <div id="staff-modal" class="modal" style="display:none;">
+          <div class="modal-content" style="max-width:500px;">
+            <div class="modal-header">
+              <h2 id="staff-modal-title">➕ Add Staff Member</h2>
+              <button class="modal-close" onclick="closeAddStaffModal()">✕</button>
+            </div>
+            <form onsubmit="saveStaffMember(event)" style="padding:24px;">
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="display:block;margin-bottom:8px;font-weight:600;">Staff Email</label>
+                <input type="email" id="staff-email" placeholder="staff@example.com" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;"/>
+              </div>
+              
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="display:block;margin-bottom:8px;font-weight:600;">Staff Name</label>
+                <input type="text" id="staff-name" placeholder="John Doe" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;"/>
+              </div>
+              
+              <div class="form-group" style="margin-bottom:20px;">
+                <label style="display:block;margin-bottom:8px;font-weight:600;">Role</label>
+                <select id="staff-role" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;">
+                  <option value="">-- Select Role --</option>
+                  <option value="Staff A">Staff A (Read Messages & Reviews)</option>
+                  <option value="Staff B">Staff B (Manage Orders by Status)</option>
+                </select>
+              </div>
+              
+              <div style="display:flex;gap:10px;justify-content:flex-end;">
+                <button type="button" onclick="closeAddStaffModal()" style="padding:10px 20px;background:#ccc;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Cancel</button>
+                <button type="submit" class="btn-primary" style="padding:10px 24px;">Add Staff Member</button>
+              </div>
+            </form>
           </div>
         </div>
       </section>

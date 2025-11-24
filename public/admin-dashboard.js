@@ -1320,8 +1320,10 @@ document.addEventListener('DOMContentLoaded', () => {
   window.deleteCoupon = deleteCoupon;
   window.closeCouponModal = closeCouponModal;
   window.openAddStaffModal = openAddStaffModal;
+  window.closeAddStaffModal = closeAddStaffModal;
   window.deleteStaff = deleteStaff;
   window.deleteReview = deleteReview;
+  window.saveStaffMember = saveStaffMember;
   window.renderCouponsGrid = renderCouponsGrid;
   window.renderReviewsList = renderReviewsList;
   window.renderStaffTable = renderStaffTable;
@@ -1897,6 +1899,10 @@ function openAddStaffModal() {
   document.getElementById('staff-modal').style.display = 'flex';
 }
 
+function closeAddStaffModal() {
+  document.getElementById('staff-modal').style.display = 'none';
+}
+
 async function saveStaffMember(event) {
   event.preventDefault();
   
@@ -1911,7 +1917,6 @@ async function saveStaffMember(event) {
   
   console.log('👨‍💼 Adding staff member:', { email, name, role });
   try {
-    // Generate consistent ID from email (for Firestore document key)
     const staffId = email.replace(/[^a-z0-9]/g, '_').substring(0, 64);
     
     const staffData = {
@@ -1924,13 +1929,13 @@ async function saveStaffMember(event) {
     console.log('📝 Staff data to save with ID:', staffId, staffData);
     await dbService.addStaffWithId(staffId, staffData);
     console.log('✅ Staff member added to database with ID:', staffId);
-    document.getElementById('staff-modal').style.display = 'none';
+    
+    closeAddStaffModal();
     document.getElementById('staff-email').value = '';
     document.getElementById('staff-name').value = '';
     document.getElementById('staff-role').value = '';
     await loadStaff();
     showStyledAlert('Added', `Staff member "<strong>${name}</strong>" added as <strong>${role}</strong>!`);
-    sessionStorage.setItem('admin_current_section', 'staff');
   } catch (error) {
     console.error('❌ Failed to add staff:', error);
     showStyledAlert('Error', 'Failed to add staff: ' + error.message);
