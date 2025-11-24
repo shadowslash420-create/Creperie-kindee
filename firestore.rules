@@ -10,20 +10,32 @@ service cloud.firestore {
              request.auth.token.email == 'oussamaanis2005@gmail.com';
     }
     
-    // Check if current user is staff with role A
-    function isStaffA() {
-      let staffDoc = get(/databases/$(database)/documents/staff/$(request.auth.uid));
-      return request.auth != null &&
-             staffDoc.data.role == 'Staff A' &&
-             staffDoc.data.email == request.auth.token.email;
+    // Helper to find staff by normalized email
+    function getStaffByEmail(email) {
+      return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data;
     }
     
-    // Check if current user is staff with role B
-    function isStaffB() {
-      let staffDoc = get(/databases/$(database)/documents/staff/$(request.auth.uid));
+    // Check if current user is staff with role A (view orders & messages)
+    function isStaffA() {
       return request.auth != null &&
-             staffDoc.data.role == 'Staff B' &&
-             staffDoc.data.email == request.auth.token.email;
+             exists(/databases/$(database)/documents/staff/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role == 'Staff A' &&
+             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.email.lower() == request.auth.token.email.lower();
+    }
+    
+    // Check if current user is staff with role B (manage messages & reviews)
+    function isStaffB() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/staff/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role == 'Staff B' &&
+             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.email.lower() == request.auth.token.email.lower();
+    }
+    
+    // Check if staff document exists for this user's email
+    function isStaffByEmail() {
+      let staff = get(/databases/$(database)/documents/staff/$(request.auth.uid));
+      return request.auth != null &&
+             staff.data.email.lower() == request.auth.token.email.lower();
     }
     
     // ==================== MENU COLLECTION ====================
@@ -42,10 +54,17 @@ service cloud.firestore {
     match /orders/{orderId} {
       allow create: if true;
       
-      allow read: if isAdmin() || isStaffB() ||
-                     (request.auth != null && request.auth.token.email == resource.data.email) ||
+      // Admin: full read access
+      // Staff A: read-only access to view orders
+      // Staff B: read/update access to manage orders
+      // Customers: read own orders by email or userId
+      allow read: if isAdmin() || 
+                     isStaffA() || 
+                     isStaffB() ||
+                     (request.auth != null && request.auth.token.email.lower() == resource.data.email.lower()) ||
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
+      // Only Admin and Staff B can update order status
       allow update: if isAdmin() || 
                        (isStaffB() && request.resource.data.status != null && 
                         request.resource.data.keys().size() <= 2);
@@ -63,14 +82,20 @@ service cloud.firestore {
     match /reviews/{reviewId} {
       allow read: if true;
       allow create: if true;
-      allow update, delete: if isAdmin();
+      
+      // Admin: full access
+      // Staff B: can read and edit/delete reviews
+      allow update, delete: if isAdmin() || isStaffB();
     }
     
     // ==================== CONTACT MESSAGES COLLECTION ====================
     match /contact_messages/{messageId} {
-      allow read: if isAdmin() || isStaffA();
+      allow read: if isAdmin() || isStaffA() || isStaffB();
       allow create: if true;
-      allow delete: if isAdmin();
+      
+      // Admin: full access
+      // Staff B: can edit and delete messages
+      allow update, delete: if isAdmin() || isStaffB();
     }
     
     // ==================== STAFF COLLECTION ====================
