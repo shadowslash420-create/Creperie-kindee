@@ -504,6 +504,31 @@ window.closeCheckoutModal = function() {
   isCheckoutSubmitting = false;
 }
 
+// Check staff role and redirect
+async function checkStaffRoleAndRedirect() {
+  try {
+    const auth = await getAuthInstance();
+    if (!auth.currentUser) return;
+
+    const email = auth.currentUser.email.toLowerCase().trim();
+    const staffId = email.replace(/[^a-z0-9]/g, '_').substring(0, 64);
+    
+    const staff = await dbService.getAllStaff();
+    const staffMember = staff.find(s => s.id === staffId);
+    
+    if (staffMember) {
+      console.log('👨‍💼 Staff member detected:', staffMember.role);
+      if (staffMember.role === 'Staff A') {
+        window.location.href = 'staff-a.html';
+      } else if (staffMember.role === 'Staff B') {
+        window.location.href = 'staff-b.html';
+      }
+    }
+  } catch (error) {
+    console.error('Error checking staff role:', error);
+  }
+}
+
 // Submit checkout form
 window.submitCheckoutForm = async function(event) {
   event.preventDefault();
@@ -518,6 +543,9 @@ window.submitCheckoutForm = async function(event) {
       userEmail = auth.currentUser.email ? auth.currentUser.email.toLowerCase().trim() : null;
       currentUser = auth.currentUser;
       console.log('✅ User logged in with email:', userEmail);
+      
+      // Check if this is a staff member and redirect
+      checkStaffRoleAndRedirect();
     }
   } catch (error) {
     console.log('Error checking auth:', error);

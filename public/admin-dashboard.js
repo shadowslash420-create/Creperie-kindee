@@ -1233,7 +1233,6 @@ function setupRealtimeListeners() {
     }
     if (state.currentSection === 'dashboard') {
       updateDashboardStats();
-      renderRecentOrders();
     }
   });
 
