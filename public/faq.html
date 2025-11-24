@@ -115,7 +115,8 @@
       </div>
       <div id="footer-copyright" style="margin-top:30px;font-size:13px;color:#fff">
         © Creperie Kinder — طعم ممتع لعائلتك<br>
-        اتصل: +213 5X XXX XXXX
+        اتصل: +213 5X XXX XXXX<br>
+        البريد: contact@creperie.com
       </div>
     </footer>
   </div>
@@ -165,5 +166,24 @@
 
   <script type="module" src="script.js"></script>
   <script type="module" src="auth.js"></script>
+  <script>
+    // Update FAQ with dynamic settings
+    function updateFAQDynamic() {
+      const translations = JSON.parse(localStorage.getItem('faqTranslations') || '{}');
+      if (window.restaurantSettings) {
+        const openTime = window.restaurantSettings.openingTime || '09:00';
+        const closeTime = window.restaurantSettings.closingTime || '22:00';
+        const q1 = document.getElementById('faq-a1');
+        if (q1) {
+          const lang = localStorage.getItem('kc_lang') || 'ar';
+          q1.textContent = lang === 'ar'
+            ? `نحن مفتوحون يومياً من الساعة ${openTime} حتى ${closeTime}`
+            : `We are open daily from ${openTime} to ${closeTime}`;
+        }
+      }
+    }
+    setTimeout(updateFAQDynamic, 500);
+    window.addEventListener('settingsUpdated', updateFAQDynamic);
+  </script>
 </body>
 </html>

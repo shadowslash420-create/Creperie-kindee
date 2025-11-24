@@ -11,6 +11,71 @@ import { getMenuFromFirebase, getCategoriesFromFirebase, placeOrderToFirebase, l
 import { getAuthInstance } from './firebase-config.js';
 import { debounce, throttle, CacheStore, RequestDeduplicator, measurePerformance } from './perf-utils.js';
 
+// ==================== SETTINGS LOADER ====================
+let restaurantSettings = {
+  businessPhone: '+213 5X XXX XXXX',
+  businessEmail: 'contact@creperie.com',
+  openingTime: '09:00',
+  closingTime: '22:00',
+  deliveryFee: 0
+};
+
+async function loadRestaurantSettings() {
+  try {
+    const settings = await dbService.getSettings();
+    restaurantSettings = { ...restaurantSettings, ...settings };
+    updateAllFooters();
+    updateFAQSettings();
+    updateDeliverySettings();
+  } catch (error) {
+    console.error('Error loading settings:', error);
+  }
+}
+
+function updateAllFooters() {
+  const footers = document.querySelectorAll('#footer-copyright');
+  footers.forEach(footer => {
+    const phone = restaurantSettings.businessPhone || '+213 5X XXX XXXX';
+    const email = restaurantSettings.businessEmail || 'contact@creperie.com';
+    footer.innerHTML = `© Creperie Kinder — طعم ممتع لعائلتك<br>
+      اتصل: ${phone}<br>
+      البريد: ${email}`;
+  });
+}
+
+function updateFAQSettings() {
+  const openTime = restaurantSettings.openingTime || '09:00';
+  const closeTime = restaurantSettings.closingTime || '22:00';
+  
+  const lang = localStorage.getItem(LANG_KEY) || 'ar';
+  const isArabic = lang === 'ar';
+  
+  // Update FAQ answer 1 for hours
+  const q1 = document.getElementById('faq-a1');
+  if (q1) {
+    q1.textContent = isArabic 
+      ? `نحن مفتوحون يومياً من الساعة ${openTime} حتى ${closeTime}`
+      : `We are open daily from ${openTime} to ${closeTime}`;
+  }
+}
+
+function updateDeliverySettings() {
+  const fee = restaurantSettings.deliveryFee || 0;
+  const feeText = document.getElementById('delivery-fee-display');
+  if (feeText) feeText.textContent = `${fee} DZD`;
+}
+
+// Load settings on page load
+document.addEventListener('DOMContentLoaded', loadRestaurantSettings);
+
+// Listen for real-time settings changes
+dbService.listenToSettingsChanges((settings) => {
+  restaurantSettings = { ...restaurantSettings, ...settings };
+  updateAllFooters();
+  updateFAQSettings();
+  updateDeliverySettings();
+});
+
 // Initialize performance utilities
 const queryCache = new CacheStore(50);
 const requestDeduplicator = new RequestDeduplicator();
