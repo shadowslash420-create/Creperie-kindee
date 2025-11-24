@@ -1456,6 +1456,32 @@ function renderHomeMenuPreview() {
   `).join('');
 }
 
+// Setup footer 7-click admin redirect
+function setupFooterAdminClick() {
+  const footerConnect = document.querySelector('.footer-connect');
+  if (footerConnect) {
+    let clickCount = 0;
+    let clickTimeout;
+    
+    footerConnect.addEventListener('click', function() {
+      clickCount++;
+      
+      // Reset counter after 3 seconds of no clicks
+      clearTimeout(clickTimeout);
+      clickTimeout = setTimeout(() => {
+        clickCount = 0;
+      }, 3000);
+      
+      // After 7 clicks, redirect to admin dashboard
+      if (clickCount === 7) {
+        clickCount = 0;
+        console.log('🔐 Admin access granted!');
+        window.location.href = 'admin.html';
+      }
+    });
+  }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
   const langBtn = document.getElementById('lang-btn');
@@ -1474,6 +1500,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.log('Not logged in');
   }
+
+  // Setup footer admin 7-click feature
+  setupFooterAdminClick();
 
   // Only initialize menu if we're on the menu page
   const isMenuPage = window.location.pathname.includes('menu.html');

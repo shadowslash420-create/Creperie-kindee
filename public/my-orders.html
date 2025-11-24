@@ -694,8 +694,8 @@
         }
       }
 
-      const auth = getAuthInstance();
-      const user = auth.currentUser;
+      const auth = await getAuthInstance();
+      const user = auth && auth.currentUser;
 
       if (user && user.email) {
         console.log('✅ User logged in:', user.email);
