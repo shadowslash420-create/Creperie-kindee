@@ -6,55 +6,52 @@ service cloud.firestore {
     // ==================== HELPER FUNCTIONS ====================
     
     // Check if current user is admin
-    // Used by: updateSettings(), deleteMenuItem(), updateMenuItem(), addMenuItem(), 
-    //          updateCategory(), deleteCategory(), addCategory(), renderAdminOrders(), updateOrderStatus()
     function isAdmin() {
       return request.auth != null && 
              request.auth.token.email == 'oussamaanis2005@gmail.com';
     }
     
+    // Check if current user is staff with role A (can read messages and reviews)
+    function isStaffA() {
+      return request.auth != null &&
+             exists(/databases/{database}/documents/staff/{request.auth.uid}) &&
+             get(/databases/{database}/documents/staff/{request.auth.uid}).data.role == 'Staff A' &&
+             get(/databases/{database}/documents/staff/{request.auth.uid}).data.email == request.auth.token.email;
+    }
+    
+    // Check if current user is staff with role B (can manage orders by status)
+    function isStaffB() {
+      return request.auth != null &&
+             exists(/databases/{database}/documents/staff/{request.auth.uid}) &&
+             get(/databases/{database}/documents/staff/{request.auth.uid}).data.role == 'Staff B' &&
+             get(/databases/{database}/documents/staff/{request.auth.uid}).data.email == request.auth.token.email;
+    }
+    
     // ==================== MENU COLLECTION ====================
-    // Used by: renderMenu(), renderHomeMenuPreview(), initMenu(), getMenuFromFirebase(), 
-    //          loadMenuItemsFromFirebase(), addToCart(), checkoutFlow()
-    // Firebase functions: dbService.getAllMenuItems(), dbService.getMenuItemsByCategory(), 
-    //                     dbService.getMenuItem(), dbService.addMenuItem(), 
-    //                     dbService.updateMenuItem(), dbService.deleteMenuItem(),
-    //                     dbService.listenToMenuChanges()
     match /menu/{menuId} {
       allow read: if true;  // Public can view menu
       allow create, update, delete: if isAdmin();  // Only admin can modify menu
     }
     
     // ==================== CATEGORIES COLLECTION ====================
-    // Used by: renderMenu(), initMenu(), getCategoriesFromFirebase(), loadMenuItemsFromFirebase(),
-    //          renderHomeMenuPreview()
-    // Firebase functions: dbService.getAllCategories(), dbService.addCategory(),
-    //                     dbService.updateCategory(), dbService.deleteCategory()
     match /categories/{categoryId} {
       allow read: if true;  // Public can view categories
       allow create, update, delete: if isAdmin();  // Only admin can modify categories
     }
     
     // ==================== ORDERS COLLECTION ====================
-    // Used by: checkoutFlow(), submitCheckoutForm(), placeOrderToFirebase(), 
-    //          loadMyOrders(), renderAdminOrders(), updateOrderStatus()
-    // Firebase functions: dbService.createOrder(), dbService.getOrdersByEmail(),
-    //                     dbService.getAllOrders(), dbService.updateOrderStatus(),
-    //                     dbService.deleteOrder(), dbService.listenToOrders()
     match /orders/{orderId} {
-      // Anyone can create an order (customers + guest checkout)
-      // Function: submitCheckoutForm() -> placeOrderToFirebase() -> dbService.createOrder()
+      // Anyone can create an order
       allow create: if true;
       
-      // Users can read their own orders; admin can read all orders
-      // Functions: loadMyOrders(), renderAdminOrders()
-      allow read: if isAdmin() || 
+      // Users read own orders; admin reads all; Staff B reads all
+      allow read: if isAdmin() || isStaffB() ||
                      (request.auth != null && request.auth.token.email == resource.data.email) ||
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
-      // Only admin can update or delete orders
-      // Functions: updateOrderStatus(), deleteOrder()
-      allow update, delete: if isAdmin();
+      // Admin can update/delete; Staff B can only update order status (no delete)
+      allow update: if isAdmin() || (isStaffB() && request.resource.data.keys().hasOnly(['status', 'updatedAt']));
+      allow delete: if isAdmin();
     }
     
     // ==================== SETTINGS COLLECTION ====================
