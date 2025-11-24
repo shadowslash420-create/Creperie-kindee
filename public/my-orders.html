@@ -675,11 +675,22 @@
       const authBtn = document.getElementById('auth-btn');
       const t = getOrderTranslations();
 
-      // Check for recent order from URL parameter
+      // Check for recent order from URL parameter (from just-placed order)
       const urlParams = new URLSearchParams(window.location.search);
       const recentOrderId = urlParams.get('order');
       if (recentOrderId) {
         console.log('Recent order ID from URL:', recentOrderId);
+        try {
+          const order = await dbService.getOrder(recentOrderId);
+          if (order) {
+            console.log('✅ Loaded recent order:', order);
+            cachedOrders = [order];
+            displayOrders([order]);
+            return; // Show only the recent order
+          }
+        } catch (error) {
+          console.error('Error loading recent order:', error);
+        }
       }
 
       const auth = getAuthInstance();
