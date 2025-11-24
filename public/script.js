@@ -17,7 +17,8 @@ let restaurantSettings = {
   businessEmail: 'contact@creperie.com',
   openingTime: '09:00',
   closingTime: '22:00',
-  deliveryFee: 0
+  deliveryFee: 0,
+  freeDeliveryMin: 800
 };
 
 async function loadRestaurantSettings() {
@@ -30,7 +31,8 @@ async function loadRestaurantSettings() {
       businessEmail: settings.businessEmail || 'contact@creperie.com',
       openingTime: settings.openingTime || settings.hours?.openTime || '09:00',
       closingTime: settings.closingTime || settings.hours?.closeTime || '22:00',
-      deliveryFee: settings.deliveryFee || 0
+      deliveryFee: settings.deliveryFee || 0,
+      freeDeliveryMin: settings.freeDeliveryMin || 800
     };
     
     restaurantSettings = { ...restaurantSettings, ...normalizedSettings };
@@ -69,12 +71,13 @@ function updateFAQSettings() {
       : `We are open daily from ${openTime} to ${closeTime}`;
   }
   
-  // Update FAQ answer 2 for delivery fee
+  // Update FAQ answer 2 for free delivery threshold
   const q2 = document.getElementById('faq-a2');
   if (q2) {
+    const freeDeliveryMin = restaurantSettings.freeDeliveryMin || 800;
     q2.textContent = isArabic 
-      ? `نعم، رسوم التوصيل ${deliveryFee} DZD`
-      : `Yes, delivery fee ${deliveryFee} DZD`;
+      ? `نعم، نوفر توصيل مجاني للطلبات التي تزيد عن ${freeDeliveryMin} DZD`
+      : `Yes, we offer free delivery for orders over ${freeDeliveryMin} DZD`;
   }
 }
 
@@ -95,7 +98,8 @@ dbService.listenToSettingsChanges((settings) => {
     businessEmail: settings.businessEmail || 'contact@creperie.com',
     openingTime: settings.openingTime || settings.hours?.openTime || '09:00',
     closingTime: settings.closingTime || settings.hours?.closeTime || '22:00',
-    deliveryFee: settings.deliveryFee || 0
+    deliveryFee: settings.deliveryFee || 0,
+    freeDeliveryMin: settings.freeDeliveryMin || 800
   };
   
   restaurantSettings = { ...restaurantSettings, ...normalizedSettings };
@@ -103,6 +107,7 @@ dbService.listenToSettingsChanges((settings) => {
   updateFAQSettings();
   updateDeliverySettings();
 });
+
 
 // Initialize performance utilities
 const queryCache = new CacheStore(50);
