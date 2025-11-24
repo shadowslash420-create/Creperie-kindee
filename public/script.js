@@ -2532,63 +2532,11 @@ function initScrollButtonOriginal(){
   }
 }
 
-// Secret Admin Access (Original)
+// Secret Admin Access DISABLED - Use role-based access in My Orders instead
 function initSecretAdminAccessOriginal(){
-  document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'K') {
-      e.preventDefault();
-      window.location.href = 'admin.html';
-    }
-    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-      e.preventDefault();
-      window.location.href = 'delivery.html';
-    }
-  });
-
-  const copyrightElement = document.getElementById('footer-copyright');
-  if(copyrightElement) {
-    let adminTapCount = 0;
-    let adminTapTimer = null;
-
-    copyrightElement.addEventListener('click', () => {
-      adminTapCount++;
-
-      if(adminTapTimer) clearTimeout(adminTapTimer);
-
-      if(adminTapCount >= 7) {
-        window.location.href = 'admin.html';
-        adminTapCount = 0;
-        return;
-      }
-
-      adminTapTimer = setTimeout(() => {
-        adminTapCount = 0;
-      }, 2000);
-    });
-  }
-
-  const connectText = document.querySelector('.footer-connect');
-  if(connectText) {
-    let deliveryTapCount = 0;
-    let deliveryTapTimer = null;
-
-    connectText.addEventListener('click', (e) => {
-      e.preventDefault();
-      deliveryTapCount++;
-
-      if(deliveryTapTimer) clearTimeout(deliveryTapTimer);
-
-      if(deliveryTapCount >= 7) {
-        window.location.href = 'delivery.html';
-        deliveryTapCount = 0;
-        return;
-      }
-
-      deliveryTapTimer = setTimeout(() => {
-        deliveryTapCount = 0;
-      }, 2000);
-    });
-  }
+  // Secret keyboard shortcuts and tap counters have been disabled
+  // Staff/Admin access is now managed through the My Orders page role selector
+  console.log('ℹ️ Staff/Admin access is now managed through role-based system in My Orders page');
 }
 
 // Page loading (Original)
