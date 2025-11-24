@@ -46,6 +46,7 @@ function updateAllFooters() {
 function updateFAQSettings() {
   const openTime = restaurantSettings.openingTime || '09:00';
   const closeTime = restaurantSettings.closingTime || '22:00';
+  const deliveryFee = restaurantSettings.deliveryFee || 0;
   
   const lang = localStorage.getItem(LANG_KEY) || 'ar';
   const isArabic = lang === 'ar';
@@ -56,6 +57,20 @@ function updateFAQSettings() {
     q1.textContent = isArabic 
       ? `نحن مفتوحون يومياً من الساعة ${openTime} حتى ${closeTime}`
       : `We are open daily from ${openTime} to ${closeTime}`;
+  }
+  
+  // Update FAQ answer 2 for delivery fee
+  const q2 = document.getElementById('faq-a2');
+  if (q2) {
+    if (deliveryFee === 0) {
+      q2.textContent = isArabic 
+        ? 'نعم، نوفر توصيل مجاني لجميع الطلبات'
+        : 'Yes, we offer free delivery for all orders';
+    } else {
+      q2.textContent = isArabic 
+        ? `نعم، رسوم التوصيل ${deliveryFee} DZD`
+        : `Yes, delivery fee is ${deliveryFee} DZD`;
+    }
   }
 }
 
