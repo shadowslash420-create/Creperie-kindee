@@ -1876,6 +1876,140 @@ button:disabled{
   cursor:not-allowed;
 }
 
+/* Orders Table Styles */
+.orders-table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  box-shadow:var(--soft-shadow);
+  border-radius:8px;
+  overflow:hidden;
+  animation:fadeIn 0.5s ease-out;
+}
+
+.orders-table thead{
+  background:linear-gradient(135deg, #E30613 0%, #B30510 100%);
+  color:#fff;
+}
+
+.orders-table th{
+  padding:18px 20px;
+  text-align:left;
+  font-weight:700;
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  font-family:'Inter', sans-serif;
+  border-bottom:2px solid rgba(227,6,19,0.2);
+}
+
+.orders-table tbody tr{
+  border-bottom:1px solid var(--border);
+  transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.orders-table-row:hover{
+  background:#FFF5F5;
+  box-shadow:inset 0 0 0 1px #FFE4E1;
+  transform:translateX(2px);
+}
+
+.orders-table td{
+  padding:18px 20px;
+  font-size:15px;
+  color:var(--text-primary);
+  word-break:break-word;
+}
+
+.status-badge{
+  display:inline-block;
+  color:#fff;
+  padding:8px 16px;
+  border-radius:20px;
+  font-weight:700;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Order Modal Styles */
+.order-modal{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  z-index:10000;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  overflow-y:auto;
+}
+
+.order-modal-content{
+  background:#fff;
+  border-radius:12px;
+  padding:40px;
+  max-width:700px;
+  width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  position:relative;
+  animation:slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp{
+  from{
+    opacity:0;
+    transform:translateY(30px) scale(0.95);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+.order-modal-close{
+  position:absolute;
+  top:16px;
+  right:16px;
+  background:none;
+  border:none;
+  font-size:32px;
+  color:#999;
+  cursor:pointer;
+  transition:all 0.2s;
+  width:40px;
+  height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:6px;
+}
+
+.order-modal-close:hover{
+  background:#FFF5F5;
+  color:#E30613;
+  transform:rotate(90deg);
+}
+
+@media(max-width:640px){
+  .orders-table{
+    font-size:13px;
+  }
+
+  .orders-table th, .orders-table td{
+    padding:12px 10px;
+  }
+
+  .order-modal-content{
+    padding:24px;
+    max-width:90vw;
+  }
+}
+
 /* FAQ Styles */
 .faq-container{
   display:flex;

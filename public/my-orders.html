@@ -43,9 +43,7 @@
     <section class="section">
       <h2 class="section-title" id="orders-title" style="text-align:center">طلباتي</h2>
 
-      <!-- Orders will be displayed automatically -->
-
-      <!-- Orders List -->
+      <!-- Orders Table -->
       <div id="orders-list"></div>
     </section>
 
@@ -74,6 +72,14 @@
         البريد: contact@creperie.com
       </div>
     </footer>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div id="order-modal" class="order-modal">
+    <div class="order-modal-content">
+      <button class="order-modal-close" onclick="closeOrderModal()">×</button>
+      <div id="order-modal-body"></div>
+    </div>
   </div>
 
   <div class="cart-side" id="cart-side">
@@ -301,41 +307,50 @@
         return;
       }
 
+      // Create table
+      const table = document.createElement('table');
+      table.className = 'orders-table';
+      
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      headerRow.innerHTML = `
+        <th>${t.orderNumber}</th>
+        <th>${t.date}</th>
+        <th>${t.customer}</th>
+        <th>${t.phone}</th>
+        <th>${t.total}</th>
+        <th>${t.status}</th>
+      `;
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+
+      const statusColors = {
+        'unconfirmed': '#e74c3c',
+        'pending': '#e67e22',
+        'confirmed': '#3498db',
+        'in-progress': '#9b59b6',
+        'delivered': '#27ae60',
+        'refused': '#e74c3c',
+        'cancelled': '#95a5a6'
+      };
+
+      const statusLabels = {
+        'unconfirmed': t.unconfirmed,
+        'pending': t.pending,
+        'confirmed': t.confirmed,
+        'in-progress': t['in-progress'],
+        'delivered': t.delivered,
+        'refused': t.refused,
+        'cancelled': t.cancelled
+      };
+
       orders.forEach(order => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.marginBottom = '20px';
-        card.style.maxWidth = '100%';
-        card.style.overflowX = 'hidden';
-        card.setAttribute('data-order-id', order.id);
-
-        const statusColors = {
-          'unconfirmed': '#e74c3c',
-          'pending': '#e67e22',
-          'confirmed': '#3498db',
-          'in-progress': '#9b59b6',
-          'delivered': '#27ae60',
-          'refused': '#e74c3c',
-          'cancelled': '#95a5a6'
-        };
-
-        const statusLabels = {
-          'unconfirmed': t.unconfirmed,
-          'pending': t.pending,
-          'confirmed': t.confirmed,
-          'in-progress': t['in-progress'],
-          'delivered': t.delivered,
-          'refused': t.refused,
-          'cancelled': t.cancelled
-        };
-
-        const status = order.status || 'unconfirmed';
-        const statusColor = statusColors[status] || statusColors.unconfirmed;
-        const statusLabel = statusLabels[status] || statusLabels.unconfirmed || t.unconfirmed;
-
-        const itemsList = order.items.map(item => 
-          `${item.qty}x ${item.name} - ${item.price.toFixed(2)} DZD`
-        ).join('<br>');
+        const row = document.createElement('tr');
+        row.className = 'orders-table-row';
+        row.style.cursor = 'pointer';
+        row.onclick = () => openOrderModal(order, t, lang);
 
         let orderDate;
         if (order.createdAt && order.createdAt.toDate) {
@@ -348,134 +363,171 @@
           orderDate = new Date();
         }
 
-        const date = orderDate.toLocaleString(lang === 'ar' ? 'ar-DZ' : 'en-US');
+        const date = orderDate.toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'en-US');
+        const status = order.status || 'unconfirmed';
+        const statusColor = statusColors[status] || statusColors.unconfirmed;
+        const statusLabel = statusLabels[status] || statusLabels.unconfirmed || t.unconfirmed;
 
-        card.innerHTML = `
-          <div style="margin-bottom:24px;border-bottom:2px solid #FFE4E1;padding-bottom:20px;">
-            <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-              <div>
-                <h3 style="margin:0 0 8px 0;color:#E30613;font-family:'Playfair Display',serif;font-size:24px;font-weight:700;letter-spacing:0.5px;">${order.id}</h3>
-                <div style="font-size:14px;color:#666;font-weight:500;">
-                  <svg style="width:14px;height:14px;vertical-align:middle;margin-right:4px;" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                  </svg>
-                  ${date}
-                </div>
-              </div>
-              <div style="
-                background:linear-gradient(135deg, ${statusColor} 0%, ${statusColor}dd 100%);
-                color:white;
-                padding:10px 24px;
-                border-radius:25px;
-                font-weight:700;
-                font-size:13px;
-                text-transform:uppercase;
-                letter-spacing:1px;
-                box-shadow:0 4px 12px ${statusColor}40, 0 2px 6px rgba(0,0,0,0.1);
-                animation:pulse 2s ease-in-out infinite;
-                border:2px solid rgba(255,255,255,0.3);
-              ">
-                ${statusLabel}
-              </div>
-            </div>
-          </div>
-          
-          <div style="background:linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);padding:20px;border-radius:12px;margin-bottom:20px;border:1px solid #FFE4E1;overflow-x:hidden;">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:16px;overflow-x:hidden;">
-              <div>
-                <div style="font-size:12px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:'Inter',sans-serif;">
-                  ${t.customer}
-                </div>
-                <div style="font-size:16px;color:#2C1810;font-weight:600;">${order.name}</div>
-              </div>
-              <div>
-                <div style="font-size:12px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:'Inter',sans-serif;">
-                  ${t.phone}
-                </div>
-                <div style="font-size:16px;color:#2C1810;font-weight:600;">${order.phone}</div>
-              </div>
-              <div style="grid-column:1/-1;">
-                <div style="font-size:12px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:'Inter',sans-serif;">
-                  ${t.address}
-                </div>
-                <div style="font-size:16px;color:#2C1810;font-weight:600;line-height:1.5;word-wrap:break-word;overflow-wrap:break-word;">${order.address}</div>
-              </div>
-            </div>
-          </div>
-          
-          <div style="margin-bottom:20px;">
-            <div style="font-size:14px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-family:'Inter',sans-serif;">
-              ${t.items}
-            </div>
-            <div style="background:#fff;border:2px solid #FFE4E1;border-radius:8px;overflow:hidden;">
-              ${order.items.map((item, idx) => `
-                <div style="padding:14px 16px;border-bottom:${idx < order.items.length - 1 ? '1px solid #FFE4E1' : 'none'};display:flex;justify-content:space-between;align-items:center;">
-                  <div>
-                    <span style="font-weight:700;color:#2C1810;font-size:15px;">${item.qty}×</span>
-                    <span style="color:#5C4033;font-size:15px;margin-left:8px;">${item.name}</span>
-                  </div>
-                  <span style="color:#E30613;font-weight:700;font-size:15px;">${item.price.toFixed(2)} DZD</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-          
-          ${order.specialInstructions ? `
-          <div style="margin-bottom:20px;">
-            <div style="font-size:14px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-family:'Inter',sans-serif;">
-              ${t.specialInstructions}
-            </div>
-            <div style="background:#FFF9F3;padding:16px;border-radius:8px;border-left:4px solid #E30613;">
-              <div style="color:#5C4033;font-size:15px;font-style:italic;line-height:1.6;">
-                <svg style="width:16px;height:16px;vertical-align:middle;margin-right:6px;color:#E30613;" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                </svg>
-                ${order.specialInstructions}
-              </div>
-            </div>
-          </div>
-          ` : ''}
-          
-          <div style="background:linear-gradient(135deg, #E30613 0%, #C10510 100%);padding:24px;border-radius:12px;box-shadow:0 8px 24px rgba(227,6,19,0.3),0 4px 12px rgba(0,0,0,0.15);">
-            <div style="display:flex;justify-content:space-between;margin-bottom:12px;color:rgba(255,255,255,0.9);font-size:15px;">
-              <span style="font-weight:500;">${t.subtotal}:</span>
-              <strong style="font-weight:700;font-size:16px;color:#fff;">${(order.subtotal || order.total || 0).toFixed(2)} DZD</strong>
-            </div>
-            ${order.deliveryFee !== undefined ? `
-            <div style="display:flex;justify-content:space-between;margin-bottom:12px;color:rgba(255,255,255,0.9);font-size:15px;">
-              <span style="font-weight:500;">${t.deliveryFee}:</span>
-              <strong style="font-weight:700;font-size:16px;color:${order.deliveryFee === 0 ? '#52C41A' : '#fff'};">
-                ${order.deliveryFee === 0 ? '✨ ' + (lang === 'ar' ? 'توصيل مجاني!' : 'Free Delivery!') : order.deliveryFee.toFixed(2) + ' DZD'}
-              </strong>
-            </div>
-            ` : ''}
-            <div style="
-              display:flex;
-              justify-content:space-between;
-              padding-top:16px;
-              border-top:2px solid rgba(255,255,255,0.3);
-              margin-top:8px;
-            ">
-              <span style="font-weight:800;font-size:18px;color:#fff;font-family:'Playfair Display',serif;letter-spacing:0.5px;">
-                ${t.total}:
-              </span>
-              <strong style="
-                color:#fff;
-                font-size:26px;
-                font-weight:800;
-                font-family:'Playfair Display',serif;
-                text-shadow:0 2px 8px rgba(0,0,0,0.2);
-                letter-spacing:0.5px;
-              ">
-                ${order.total.toFixed(2)} DZD
-              </strong>
-            </div>
-          </div>
+        row.innerHTML = `
+          <td><strong>${order.id}</strong></td>
+          <td>${date}</td>
+          <td>${order.name}</td>
+          <td>${order.phone}</td>
+          <td><strong>${order.total.toFixed(2)} DZD</strong></td>
+          <td><span class="status-badge" style="background-color:${statusColor}">${statusLabel}</span></td>
         `;
 
-        container.appendChild(card);
+        tbody.appendChild(row);
       });
+
+      table.appendChild(tbody);
+      container.appendChild(table);
     }
+
+    window.openOrderModal = function(order, t, lang) {
+      const modal = document.getElementById('order-modal');
+      const modalBody = document.getElementById('order-modal-body');
+
+      const statusColors = {
+        'unconfirmed': '#e74c3c',
+        'pending': '#e67e22',
+        'confirmed': '#3498db',
+        'in-progress': '#9b59b6',
+        'delivered': '#27ae60',
+        'refused': '#e74c3c',
+        'cancelled': '#95a5a6'
+      };
+
+      const statusLabels = {
+        'unconfirmed': t.unconfirmed,
+        'pending': t.pending,
+        'confirmed': t.confirmed,
+        'in-progress': t['in-progress'],
+        'delivered': t.delivered,
+        'refused': t.refused,
+        'cancelled': t.cancelled
+      };
+
+      const status = order.status || 'unconfirmed';
+      const statusColor = statusColors[status] || statusColors.unconfirmed;
+      const statusLabel = statusLabels[status] || statusLabels.unconfirmed || t.unconfirmed;
+
+      let orderDate;
+      if (order.createdAt && order.createdAt.toDate) {
+        orderDate = order.createdAt.toDate();
+      } else if (order.createdAt) {
+        orderDate = new Date(order.createdAt);
+      } else if (order.timestamp) {
+        orderDate = new Date(order.timestamp);
+      } else {
+        orderDate = new Date();
+      }
+
+      const date = orderDate.toLocaleString(lang === 'ar' ? 'ar-DZ' : 'en-US');
+
+      modalBody.innerHTML = `
+        <div style="margin-bottom:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px;">
+            <div>
+              <h2 style="margin:0 0 8px 0;color:#E30613;font-family:'Playfair Display',serif;font-size:28px;font-weight:700;">${order.id}</h2>
+              <div style="font-size:14px;color:#666;font-weight:500;">📅 ${date}</div>
+            </div>
+            <div style="
+              background:linear-gradient(135deg, ${statusColor} 0%, ${statusColor}dd 100%);
+              color:white;
+              padding:12px 28px;
+              border-radius:25px;
+              font-weight:700;
+              font-size:13px;
+              text-transform:uppercase;
+              letter-spacing:1px;
+              box-shadow:0 4px 12px ${statusColor}40;
+              border:2px solid rgba(255,255,255,0.3);
+            ">
+              ${statusLabel}
+            </div>
+          </div>
+        </div>
+
+        <div style="background:linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);padding:24px;border-radius:12px;margin-bottom:24px;border:1px solid #FFE4E1;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:20px;">
+            <div>
+              <div style="font-size:12px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-family:'Inter',sans-serif;">👤 ${t.customer}</div>
+              <div style="font-size:17px;color:#2C1810;font-weight:700;">${order.name}</div>
+            </div>
+            <div>
+              <div style="font-size:12px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-family:'Inter',sans-serif;">📞 ${t.phone}</div>
+              <div style="font-size:17px;color:#2C1810;font-weight:700;">${order.phone}</div>
+            </div>
+            <div style="grid-column:1/-1;">
+              <div style="font-size:12px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-family:'Inter',sans-serif;">📍 ${t.address}</div>
+              <div style="font-size:17px;color:#2C1810;font-weight:700;line-height:1.6;">${order.address}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <h3 style="font-size:14px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;font-family:'Inter',sans-serif;">🍽️ ${t.items}</h3>
+          <div style="background:#fff;border:2px solid #FFE4E1;border-radius:8px;overflow:hidden;">
+            ${order.items.map((item, idx) => `
+              <div style="padding:16px;border-bottom:${idx < order.items.length - 1 ? '1px solid #FFE4E1' : 'none'};display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <span style="font-weight:700;color:#2C1810;font-size:16px;">${item.qty}×</span>
+                  <span style="color:#5C4033;font-size:16px;margin-left:8px;">${item.name}</span>
+                </div>
+                <span style="color:#E30613;font-weight:700;font-size:16px;">${item.price.toFixed(2)} DZD</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        ${order.specialInstructions ? `
+        <div style="margin-bottom:24px;">
+          <h3 style="font-size:14px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-family:'Inter',sans-serif;">📝 ${t.specialInstructions}</h3>
+          <div style="background:#FFF9F3;padding:16px;border-radius:8px;border-left:4px solid #E30613;">
+            <div style="color:#5C4033;font-size:15px;font-style:italic;line-height:1.6;">
+              ${order.specialInstructions}
+            </div>
+          </div>
+        </div>
+        ` : ''}
+
+        <div style="background:linear-gradient(135deg, #E30613 0%, #C10510 100%);padding:28px;border-radius:12px;box-shadow:0 8px 24px rgba(227,6,19,0.3);">
+          <div style="display:flex;justify-content:space-between;margin-bottom:16px;color:rgba(255,255,255,0.9);font-size:16px;border-bottom:2px solid rgba(255,255,255,0.3);padding-bottom:16px;">
+            <span style="font-weight:600;">${t.subtotal}:</span>
+            <strong style="font-weight:700;font-size:18px;color:#fff;">${(order.subtotal || order.total || 0).toFixed(2)} DZD</strong>
+          </div>
+          ${order.deliveryFee !== undefined ? `
+          <div style="display:flex;justify-content:space-between;margin-bottom:16px;color:rgba(255,255,255,0.9);font-size:16px;">
+            <span style="font-weight:600;">${t.deliveryFee}:</span>
+            <strong style="font-weight:700;font-size:18px;color:${order.deliveryFee === 0 ? '#52C41A' : '#fff'};">
+              ${order.deliveryFee === 0 ? '✨ ' + (lang === 'ar' ? 'توصيل مجاني!' : 'Free Delivery!') : order.deliveryFee.toFixed(2) + ' DZD'}
+            </strong>
+          </div>
+          ` : ''}
+          <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:800;color:#fff;font-family:'Playfair Display',serif;letter-spacing:0.5px;">
+            <span>${t.total}:</span>
+            <strong style="text-shadow:0 2px 8px rgba(0,0,0,0.2);">${order.total.toFixed(2)} DZD</strong>
+          </div>
+        </div>
+      `;
+
+      modal.style.display = 'flex';
+      modal.style.animation = 'fadeIn 0.3s ease';
+    }
+
+    window.closeOrderModal = function() {
+      const modal = document.getElementById('order-modal');
+      modal.style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+      const modal = document.getElementById('order-modal');
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
 
     async function searchOrdersByPhone(phone) {
       const t = getOrderTranslations();
@@ -552,137 +604,21 @@
 
       // Check for recent order from URL parameter
       const urlParams = new URLSearchParams(window.location.search);
-      const recentOrderId = urlParams.get('order') || localStorage.getItem('kc_recent_order_id');
-
-      // Show success message if coming from checkout
-      if (urlParams.get('order') && recentOrderId) {
-        const successMsg = document.createElement('div');
-        successMsg.style.cssText = `
-          background: linear-gradient(135deg, #27ae60, #2ecc71);
-          color: white;
-          padding: 20px;
-          border-radius: 12px;
-          margin-bottom: 20px;
-          text-align: center;
-          font-weight: 600;
-          box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
-          animation: slideDown 0.5s ease-out;
-        `;
-        successMsg.innerHTML = `
-          <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
-          <div style="font-size: 18px; margin-bottom: 4px;">${t.orderPlaced || (getCurrentLang() === 'ar' ? 'تم تقديم طلبك بنجاح!' : 'Your order has been placed successfully!')}</div>
-          <div style="font-size: 14px; opacity: 0.9;">${t.orderNumber || (getCurrentLang() === 'ar' ? 'رقم الطلب' : 'Order Number')}: ${recentOrderId}</div>
-        `;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-          @keyframes slideDown {
-            from { transform: translateY(-100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-          }
-        `;
-        document.head.appendChild(style);
-        
-        const ordersList = document.getElementById('orders-list');
-        if (ordersList) {
-          ordersList.parentNode.insertBefore(successMsg, ordersList);
-        }
-        
-        // Clear the URL parameter after showing the message
-        window.history.replaceState({}, document.title, 'my-orders.html');
+      const recentOrderId = urlParams.get('order');
+      if (recentOrderId) {
+        console.log('Recent order ID from URL:', recentOrderId);
       }
 
-      // Show loading state initially
-      const ordersList = document.getElementById('orders-list');
-      if (ordersList) {
-        ordersList.innerHTML = `
-          <div class="card" style="text-align:center;padding:40px;">
-            <div style="font-size: 40px; margin-bottom: 16px;">⏳</div>
-            <p style="color: #666;">
-              ${getCurrentLang() === 'ar' ? 'جاري التحميل...' : 'Loading...'}
-            </p>
-          </div>
-        `;
-      }
+      const auth = getAuthInstance();
+      const user = auth.currentUser;
 
-      // Wait for Firebase auth to be ready using onAuthStateChanged
-      try {
-        const auth = await getAuthInstance();
-        if (!auth) {
-          throw new Error('Firebase auth not initialized');
-        }
-
-        // Use onAuthStateChanged to wait for auth to be ready
-        auth.onAuthStateChanged((user) => {
-          if (user && user.email) {
-            const userEmail = user.email;
-            console.log('📦 Auto-loading orders for user:', userEmail);
-            
-            // Load user's orders by email
-            loadUserOrders(userEmail).then(() => {
-              // Highlight the recent order if it exists
-              if (recentOrderId) {
-                setTimeout(() => {
-                  const orderCard = document.querySelector(`[data-order-id="${recentOrderId}"]`);
-                  if (orderCard) {
-                    orderCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    orderCard.style.animation = 'highlight 2s ease-in-out';
-                    
-                    const highlightStyle = document.createElement('style');
-                    highlightStyle.textContent = `
-                      @keyframes highlight {
-                        0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-                        50% { box-shadow: 0 0 30px rgba(255, 107, 53, 0.6); }
-                      }
-                    `;
-                    document.head.appendChild(highlightStyle);
-                  }
-                }, 500);
-              }
-            });
-          } else {
-            // User not logged in - show login prompt
-            const ordersList = document.getElementById('orders-list');
-            if (ordersList) {
-              ordersList.innerHTML = `
-                <div class="card" style="text-align:center;padding:40px;">
-                  <h3 style="margin-bottom: 16px; color: var(--warm-gold);">
-                    ${getCurrentLang() === 'ar' ? '🔒 يجب تسجيل الدخول' : '🔒 Sign In Required'}
-                  </h3>
-                  <p style="color: #666; margin-bottom: 20px;">
-                    ${getCurrentLang() === 'ar' ? 'يجب تسجيل الدخول لعرض طلباتك' : 'You must sign in to view your orders'}
-                  </p>
-                  <button onclick="window.location.href='login.html'" class="cta">
-                    ${getCurrentLang() === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
-                  </button>
-                </div>
-              `;
-            }
-          }
-        });
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-        const ordersList = document.getElementById('orders-list');
-        if (ordersList) {
-          ordersList.innerHTML = `
-            <div class="card" style="text-align:center;padding:40px;color:#999;">
-              <p>${getCurrentLang() === 'ar' ? 'حدث خطأ في تحميل الطلبات' : 'Error loading orders'}</p>
-            </div>
-          `;
-        }
+      if (user && user.email) {
+        console.log('✅ User logged in:', user.email);
+        authBtn.textContent = '👤 ' + user.email.split('@')[0];
+        loadUserOrders(user.email);
+      } else {
+        console.log('User not logged in');
       }
-      
-      // Apply order translations immediately
-      if (typeof window.applyOrderTranslations === 'function') {
-        window.applyOrderTranslations();
-      }
-
-      // Wait for script.js module to load
-      setTimeout(() => {
-        if (typeof applyTranslations === 'function') applyTranslations();
-        if (typeof renderCart === 'function') renderCart();
-        if (typeof updatePageIndicator === 'function') updatePageIndicator();
-      }, 100);
     });
   </script>
   <script type="module" src="auth.js"></script>
