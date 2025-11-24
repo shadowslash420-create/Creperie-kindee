@@ -1189,6 +1189,9 @@ function updateAnalytics() {
 async function initializeDashboard() {
   try {
     await dbService.init();
+    await checkUserStaffStatus();
+    console.log('✅ Staff status checked:', state.currentUserRole);
+    
     await Promise.all([
       loadMenuData(),
       loadOrdersData(),
