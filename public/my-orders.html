@@ -242,6 +242,35 @@
       }
     }
 
+    // Check staff role and redirect if needed
+    async function checkStaffRoleAndRedirectOnLoad() {
+      try {
+        const auth = await getAuthInstance();
+        if (!auth.currentUser) return;
+
+        const email = auth.currentUser.email.toLowerCase().trim();
+        const staffId = email.replace(/[^a-z0-9]/g, '_').substring(0, 64);
+        
+        console.log('🔍 Checking if user is staff member...', email);
+        const staff = await dbService.getAllStaff();
+        const staffMember = staff.find(s => s.id === staffId);
+        
+        if (staffMember) {
+          console.log('👨‍💼 Staff member detected:', staffMember.role, '- Redirecting...');
+          if (staffMember.role === 'Staff A') {
+            window.location.href = 'staff-a.html';
+          } else if (staffMember.role === 'Staff B') {
+            window.location.href = 'staff-b.html';
+          }
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Error checking staff role:', error);
+        return false;
+      }
+    }
+
     window.applyOrderTranslations = function(){
       const t = getOrderTranslations();
 
@@ -700,6 +729,13 @@
       if (user && user.email) {
         console.log('✅ User logged in:', user.email);
         currentUser = user;
+        
+        // Check if user is staff member and redirect if needed
+        const isStaff = await checkStaffRoleAndRedirectOnLoad();
+        if (isStaff) {
+          return; // User was redirected, stop here
+        }
+        
         authBtn.textContent = '👤 ' + user.email.split('@')[0];
         // Show role selector for staff/delivery access
         document.getElementById('role-selector').style.display = 'flex';
