@@ -534,6 +534,12 @@ class DatabaseService {
     await deleteDoc(docRef);
   }
 
+  async updateContactMessage(id, data) {
+    await this.init();
+    const docRef = doc(this.db, 'contact_messages', id);
+    await updateDoc(docRef, data);
+  }
+
   // ==================== STAFF MANAGEMENT ====================
   
   async getAllStaff() {

@@ -416,6 +416,34 @@
       document.getElementById('auth-error').style.display = 'none';
     };
 
+    // Check user role and get redirect URL
+    window.getUserRedirectUrl = async function(email) {
+      try {
+        const ADMIN_EMAILS = ['oussamaanis2005@gmail.com'];
+        if (ADMIN_EMAILS.includes(email)) {
+          return 'admin.html';
+        }
+        
+        // Check Firebase for staff role
+        const dbSvc = (await import('./db-service.js')).default;
+        await dbSvc.init();
+        const allStaff = await dbSvc.getAllStaff();
+        const staffMember = allStaff.find(s => s.email?.toLowerCase() === email?.toLowerCase());
+        
+        if (staffMember) {
+          if (staffMember.role === 'Staff A') {
+            return 'staff-a.html';
+          } else if (staffMember.role === 'Staff B') {
+            return 'staff-b.html';
+          }
+        }
+        return 'index.html';
+      } catch (error) {
+        console.error('Error checking user role:', error);
+        return 'index.html';
+      }
+    };
+
     // Email auth handler
     window.handleEmailAuth = async function(event) {
       event.preventDefault();
@@ -438,18 +466,9 @@
           user = await signInWithEmail(email, password);
         }
         
-        // Check if admin email
-        const ADMIN_EMAILS = ['oussamaanis2005@gmail.com'];
-        const urlParams = new URLSearchParams(window.location.search);
-        const redirect = urlParams.get('redirect');
-        
-        if (ADMIN_EMAILS.includes(user.email) && redirect === 'admin') {
-          window.location.href = 'admin.html';
-        } else if (ADMIN_EMAILS.includes(user.email)) {
-          window.location.href = 'admin.html';
-        } else {
-          window.location.href = 'index.html';
-        }
+        // Get redirect URL based on user role
+        const redirectUrl = await window.getUserRedirectUrl(user.email);
+        window.location.href = redirectUrl;
       } catch (error) {
         console.error('Auth failed:', error);
         errorDiv.textContent = getErrorMessage(error.code);
@@ -483,18 +502,9 @@
       try {
         const user = await signInWithGoogle();
         
-        // Check if admin email
-        const ADMIN_EMAILS = ['oussamaanis2005@gmail.com'];
-        const urlParams = new URLSearchParams(window.location.search);
-        const redirect = urlParams.get('redirect');
-        
-        if (ADMIN_EMAILS.includes(user.email) && redirect === 'admin') {
-          window.location.href = 'admin.html';
-        } else if (ADMIN_EMAILS.includes(user.email)) {
-          window.location.href = 'admin.html';
-        } else {
-          window.location.href = 'index.html';
-        }
+        // Get redirect URL based on user role
+        const redirectUrl = await window.getUserRedirectUrl(user.email);
+        window.location.href = redirectUrl;
       } catch (error) {
         console.error('Login failed:', error);
         googleSignInBtn.disabled = false;
