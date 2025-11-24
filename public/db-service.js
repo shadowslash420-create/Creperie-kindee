@@ -566,6 +566,23 @@ class DatabaseService {
     }
   }
 
+  async addStaffWithId(staffId, staff) {
+    await this.init();
+    console.log('📝 addStaffWithId called with ID:', staffId, 'data:', staff);
+    const docRef = doc(this.db, 'staff', staffId);
+    try {
+      await setDoc(docRef, {
+        ...staff,
+        createdAt: Timestamp.now()
+      });
+      console.log('✅ Staff member added with ID:', staffId);
+      return staffId;
+    } catch (error) {
+      console.error('❌ Error adding staff:', error.code, error.message);
+      throw error;
+    }
+  }
+
   async updateStaff(id, data) {
     await this.init();
     const docRef = doc(this.db, 'staff', id);

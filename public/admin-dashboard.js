@@ -1722,6 +1722,9 @@ async function deleteFeedback(reviewId) {
   }
 }
 
+// Alias for deleteReview (used globally)
+const deleteReview = deleteFeedback;
+
 function loadSettings() {
   console.log('⚙️ Loading settings...');
   // Settings are already loaded in the HTML, event handlers are attached in setupSettingsHandlers()
@@ -1897,7 +1900,7 @@ function openAddStaffModal() {
 async function saveStaffMember(event) {
   event.preventDefault();
   
-  const email = document.getElementById('staff-email').value.trim();
+  const email = document.getElementById('staff-email').value.trim().toLowerCase();
   const name = document.getElementById('staff-name').value.trim();
   const role = document.getElementById('staff-role').value;
   
@@ -1908,6 +1911,9 @@ async function saveStaffMember(event) {
   
   console.log('👨‍💼 Adding staff member:', { email, name, role });
   try {
+    // Generate consistent ID from email (for Firestore document key)
+    const staffId = email.replace(/[^a-z0-9]/g, '_').substring(0, 64);
+    
     const staffData = {
       email: email.toLowerCase(),
       name,
@@ -1915,9 +1921,9 @@ async function saveStaffMember(event) {
       createdAt: new Date().toISOString()
     };
     
-    console.log('📝 Staff data to save:', staffData);
-    await dbService.addStaff(staffData);
-    console.log('✅ Staff member added to database');
+    console.log('📝 Staff data to save with ID:', staffId, staffData);
+    await dbService.addStaffWithId(staffId, staffData);
+    console.log('✅ Staff member added to database with ID:', staffId);
     document.getElementById('staff-modal').style.display = 'none';
     document.getElementById('staff-email').value = '';
     document.getElementById('staff-name').value = '';
