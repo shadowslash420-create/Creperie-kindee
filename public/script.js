@@ -55,20 +55,32 @@ function updateAllFooters() {
   });
 }
 
+function formatTimeWithAMPM(time24) {
+  const [hours, minutes] = time24.split(':');
+  let hoursNum = parseInt(hours);
+  const meridiem = hoursNum >= 12 ? 'PM' : 'AM';
+  if (hoursNum > 12) hoursNum -= 12;
+  if (hoursNum === 0) hoursNum = 12;
+  return `${String(hoursNum).padStart(2, '0')}:${minutes} ${meridiem}`;
+}
+
 function updateFAQSettings() {
-  const openTime = restaurantSettings.openingTime || '09:00';
-  const closeTime = restaurantSettings.closingTime || '22:00';
+  const openTime = restaurantSettings.openingTime || '11:00';
+  const closeTime = restaurantSettings.closingTime || '01:00';
   const deliveryFee = restaurantSettings.deliveryFee || 0;
   
   const lang = localStorage.getItem(LANG_KEY) || 'ar';
   const isArabic = lang === 'ar';
   
+  const openTimeFormatted = formatTimeWithAMPM(openTime);
+  const closeTimeFormatted = formatTimeWithAMPM(closeTime);
+  
   // Update FAQ answer 1 for hours
   const q1 = document.getElementById('faq-a1');
   if (q1) {
     q1.textContent = isArabic 
-      ? `نحن مفتوحون يومياً من الساعة ${openTime} حتى ${closeTime}`
-      : `We are open daily from ${openTime} to ${closeTime}`;
+      ? `نحن مفتوحون يومياً من الساعة ${openTimeFormatted} حتى ${closeTimeFormatted}`
+      : `We are open daily from ${openTimeFormatted} to ${closeTimeFormatted}`;
   }
   
   // Update FAQ answer 2 for free delivery threshold
