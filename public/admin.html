@@ -575,21 +575,73 @@
       }
     };
 
+    // Check staff role
+    async function checkStaffRole(userId) {
+      try {
+        const { getFirestoreInstance } = await import('./firebase-config.js');
+        const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        
+        const db = await getFirestoreInstance();
+        const staffRef = doc(db, 'staff', userId);
+        const staffSnap = await getDoc(staffRef);
+        
+        if (staffSnap.exists()) {
+          return staffSnap.data().role;
+        }
+        return null;
+      } catch (error) {
+        console.error('Error checking staff role:', error);
+        return null;
+      }
+    }
+
+    // Show/hide nav items based on role
+    async function setupNavigation(userRole) {
+      const navItems = {
+        dashboard: document.querySelector('[onclick*="showSection(\'dashboard\'"]'),
+        orders: document.querySelector('[onclick*="showSection(\'orders\'"]'),
+        menu: document.querySelector('[onclick*="showSection(\'menu\'"]'),
+        customers: document.querySelector('[onclick*="showSection(\'customers\'"]'),
+        reviews: document.querySelector('[onclick*="showSection(\'reviews\'"]'),
+        messages: document.querySelector('[onclick*="showSection(\'messages\'"]'),
+        analytics: document.querySelector('[onclick*="showSection(\'analytics\'"]'),
+        settings: document.querySelector('[onclick*="showSection(\'settings\'"]'),
+        staff: document.querySelector('[onclick*="showSection(\'staff\'"]')
+      };
+
+      // Hide all by default
+      Object.values(navItems).forEach(item => {
+        if (item) item.style.display = 'none';
+      });
+
+      // Show based on role
+      if (userRole === 'Staff A') {
+        // Staff A: See Messages & Reviews only
+        if (navItems.messages) navItems.messages.style.display = 'block';
+        if (navItems.reviews) navItems.reviews.style.display = 'block';
+      } else if (userRole === 'Staff B') {
+        // Staff B: See Orders only
+        if (navItems.orders) navItems.orders.style.display = 'block';
+      } else {
+        // Admin: See all
+        Object.values(navItems).forEach(item => {
+          if (item) item.style.display = 'block';
+        });
+      }
+    }
+
     // Check authentication on page load
     onAuthChange(async (user) => {
       if (!user) {
         // Not authenticated - show login section
         document.getElementById('login-section').classList.remove('hidden');
         document.getElementById('admin-section').classList.add('hidden');
-      } else if (!ADMIN_EMAILS.includes(user.email)) {
-        // Authenticated but not an admin - redirect to home
-        alert('Access denied. Admin privileges required.');
-        window.location.href = 'index.html';
-      } else {
-        // Admin user is authenticated - show admin section, hide login
+      } else if (ADMIN_EMAILS.includes(user.email)) {
+        // Admin user is authenticated
         console.log('✅ Admin user auto-logged in:', user.email);
         document.getElementById('login-section').classList.add('hidden');
         document.getElementById('admin-section').classList.remove('hidden');
+        await setupNavigation('Admin');
 
         // Initialize dashboard if function is available
         if (window.initializeDashboard) {
@@ -597,6 +649,31 @@
           if (window.showSection) {
             window.showSection('dashboard');
           }
+        }
+      } else {
+        // Check if user is staff
+        const staffRole = await checkStaffRole(user.uid);
+        if (staffRole === 'Staff A' || staffRole === 'Staff B') {
+          console.log(`✅ ${staffRole} user auto-logged in:`, user.email);
+          document.getElementById('login-section').classList.add('hidden');
+          document.getElementById('admin-section').classList.remove('hidden');
+          await setupNavigation(staffRole);
+
+          // Initialize dashboard
+          if (window.initializeDashboard) {
+            await window.initializeDashboard();
+            if (window.showSection) {
+              if (staffRole === 'Staff A') {
+                window.showSection('messages');
+              } else if (staffRole === 'Staff B') {
+                window.showSection('orders');
+              }
+            }
+          }
+        } else {
+          // Not admin or staff - redirect to home
+          alert('Access denied. Admin or Staff privileges required.');
+          window.location.href = 'index.html';
         }
       }
     });
