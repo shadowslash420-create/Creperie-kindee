@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Staff & Permissions - Creperie Kinder</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="admin-dashboard.css" />
+  <style>
+    body {
+      background: #f5f5f5;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .staff-page-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .staff-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .staff-header h1 {
+      margin: 0;
+      color: #2d3748;
+      font-size: 28px;
+    }
+
+    .staff-header-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-back {
+      padding: 10px 20px;
+      background: #ccc;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+      background: #999;
+    }
+
+    .btn-add-staff {
+      padding: 10px 20px;
+      background: #FF6B35;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-add-staff:hover {
+      background: #E55A2B;
+    }
+
+    .staff-table-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .staff-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .staff-table thead {
+      background: #f7fafc;
+    }
+
+    .staff-table th {
+      padding: 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #2d3748;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .staff-table td {
+      padding: 16px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #2d3748;
+    }
+
+    .staff-table tbody tr:hover {
+      background: #f9fafb;
+    }
+
+    .staff-role-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+      display: inline-block;
+    }
+
+    .badge-staff-a {
+      background: #4299E1;
+    }
+
+    .badge-staff-b {
+      background: #48BB78;
+    }
+
+    .badge-admin {
+      background: #E30613;
+    }
+
+    .action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.3s ease;
+    }
+
+    .action-delete {
+      background: #e53e3e;
+      color: white;
+    }
+
+    .action-delete:hover {
+      background: #c53030;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      color: #2d3748;
+      font-size: 20px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #999;
+    }
+
+    .modal-close:hover {
+      color: #2d3748;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #FF6B35;
+      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 24px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .btn-cancel {
+      padding: 10px 20px;
+      background: #ccc;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-submit {
+      padding: 10px 24px;
+      background: #FF6B35;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-submit:hover {
+      background: #E55A2B;
+    }
+
+    .empty-state {
+      padding: 40px 20px;
+      text-align: center;
+      color: #999;
+    }
+
+    .loading {
+      padding: 20px;
+      text-align: center;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="staff-page-container">
+    <!-- Header -->
+    <div class="staff-header">
+      <h1>👨‍💼 Staff & Permissions</h1>
+      <div class="staff-header-buttons">
+        <button class="btn-back" onclick="goBack()">← Back</button>
+        <button class="btn-add-staff" onclick="openAddStaffModal()">➕ Add Staff Member</button>
+      </div>
+    </div>
+
+    <!-- Staff Table -->
+    <div class="staff-table-container">
+      <table class="staff-table" id="staffTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Permissions</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="staffTableBody">
+          <tr>
+            <td colspan="5" class="loading">Loading staff members...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add Staff Modal -->
+  <div id="staffModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">➕ Add Staff Member</h2>
+        <button class="modal-close" onclick="closeAddStaffModal()">✕</button>
+      </div>
+      <form onsubmit="saveStaffMember(event)" style="padding: 24px;">
+        <div class="form-group">
+          <label>Staff Email</label>
+          <input type="email" id="staffEmail" placeholder="staff@example.com" required />
+        </div>
+        <div class="form-group">
+          <label>Staff Name</label>
+          <input type="text" id="staffName" placeholder="John Doe" required />
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="staffRole" required>
+            <option value="">-- Select Role --</option>
+            <option value="Staff A">Staff A (Read Messages & Reviews)</option>
+            <option value="Staff B">Staff B (Manage Orders by Status)</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" onclick="closeAddStaffModal()">Cancel</button>
+          <button type="submit" class="btn-submit">Add Staff Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getAuthInstance, signOutUser } from './auth.js';
+    import DBService from './db-service.js';
+
+    let dbService;
+
+    // Initialize on page load
+    async function init() {
+      try {
+        const auth = await getAuthInstance();
+        if (!auth.currentUser) {
+          window.location.href = 'login.html';
+          return;
+        }
+
+        dbService = new DBService();
+        await loadStaff();
+      } catch (error) {
+        console.error('Init error:', error);
+      }
+    }
+
+    // Load and display staff
+    window.loadStaff = async function() {
+      try {
+        const staff = await dbService.getAllStaff();
+        renderStaffTable(staff);
+      } catch (error) {
+        console.error('Error loading staff:', error);
+      }
+    };
+
+    // Render staff table
+    window.renderStaffTable = function(staff) {
+      const tbody = document.getElementById('staffTableBody');
+      
+      const adminRow = `
+        <tr style="background:#f0f7ff;">
+          <td><strong>Admin (Owner)</strong></td>
+          <td>oussamaanis2005@gmail.com</td>
+          <td><span class="staff-role-badge badge-admin">Owner</span></td>
+          <td>Full Access</td>
+          <td><span style="color:#999;font-size:12px;">Default</span></td>
+        </tr>
+      `;
+
+      const staffRows = staff.map(member => `
+        <tr>
+          <td><strong>${member.name}</strong></td>
+          <td>${member.email}</td>
+          <td>
+            <span class="staff-role-badge ${member.role === 'Staff A' ? 'badge-staff-a' : 'badge-staff-b'}">
+              ${member.role || 'Staff'}
+            </span>
+          </td>
+          <td>
+            ${member.role === 'Staff A' ? 'Read Messages & Reviews' : member.role === 'Staff B' ? 'Manage Orders' : 'None'}
+          </td>
+          <td>
+            <button class="action-btn action-delete" onclick="deleteStaffMember('${member.id}')">
+              🗑️ Remove
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      tbody.innerHTML = adminRow + staffRows;
+    };
+
+    // Open add staff modal
+    window.openAddStaffModal = function() {
+      document.getElementById('staffEmail').value = '';
+      document.getElementById('staffName').value = '';
+      document.getElementById('staffRole').value = '';
+      document.getElementById('modalTitle').textContent = '➕ Add Staff Member';
+      document.getElementById('staffModal').classList.add('active');
+    };
+
+    // Close add staff modal
+    window.closeAddStaffModal = function() {
+      document.getElementById('staffModal').classList.remove('active');
+    };
+
+    // Save staff member
+    window.saveStaffMember = async function(event) {
+      event.preventDefault();
+
+      const email = document.getElementById('staffEmail').value.trim().toLowerCase();
+      const name = document.getElementById('staffName').value.trim();
+      const role = document.getElementById('staffRole').value;
+
+      if (!email || !name || !role) {
+        alert('❌ Please fill all fields');
+        return;
+      }
+
+      try {
+        console.log('👨‍💼 Adding staff member:', { email, name, role });
+        
+        const staffId = email.replace(/[^a-z0-9]/g, '_').substring(0, 64);
+        const staffData = {
+          email: email.toLowerCase(),
+          name,
+          role,
+          createdAt: new Date().toISOString()
+        };
+
+        await dbService.addStaffWithId(staffId, staffData);
+        console.log('✅ Staff member added with ID:', staffId);
+
+        // Close modal and refresh WITHOUT navigating away
+        closeAddStaffModal();
+        await loadStaff();
+        
+        alert('✅ Staff member "' + name + '" added as ' + role + '!');
+      } catch (error) {
+        console.error('❌ Failed to add staff:', error);
+        alert('❌ Failed to add staff: ' + error.message);
+      }
+    };
+
+    // Delete staff member
+    window.deleteStaffMember = async function(staffId) {
+      if (!confirm('Are you sure you want to remove this staff member?')) return;
+
+      try {
+        await dbService.deleteStaff(staffId);
+        await loadStaff();
+        alert('✅ Staff member removed successfully!');
+      } catch (error) {
+        console.error('❌ Failed to remove staff:', error);
+        alert('❌ Failed to remove staff: ' + error.message);
+      }
+    };
+
+    // Go back to admin dashboard
+    window.goBack = function() {
+      window.location.href = 'admin.html';
+    };
+
+    // Initialize on load
+    init();
+  </script>
+
+</body>
+</html>
