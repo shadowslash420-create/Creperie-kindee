@@ -9,6 +9,8 @@ import dbService from './db-service.js';
 const state = {
   currentSection: 'dashboard',
   currentUser: null,
+  currentUserRole: null,
+  isStaffUser: false,
   menuItems: [],
   orders: [],
   categories: [],
@@ -26,6 +28,45 @@ const state = {
   menuFilter: 'all',
   orderFilter: 'all'
 };
+
+// ==================== STAFF PERMISSIONS FROM FIREBASE ====================
+
+async function checkUserStaffStatus() {
+  try {
+    const auth = await getAuthInstance();
+    if (!auth || !auth.currentUser) {
+      state.isStaffUser = false;
+      state.currentUserRole = null;
+      return;
+    }
+    
+    const userEmail = auth.currentUser.email;
+    if (userEmail === 'oussamaanis2005@gmail.com') {
+      state.isStaffUser = true;
+      state.currentUserRole = 'Admin';
+      console.log('👑 Admin user detected:', userEmail);
+      return;
+    }
+    
+    await dbService.init();
+    const allStaff = await dbService.getAllStaff();
+    const staffMember = allStaff.find(s => s.email?.toLowerCase() === userEmail?.toLowerCase());
+    
+    if (staffMember) {
+      state.isStaffUser = true;
+      state.currentUserRole = staffMember.role;
+      console.log('👨‍💼 Staff user detected:', userEmail, 'Role:', staffMember.role);
+    } else {
+      state.isStaffUser = false;
+      state.currentUserRole = null;
+      console.log('❌ User is not staff:', userEmail);
+    }
+  } catch (error) {
+    console.error('Error checking staff status:', error);
+    state.isStaffUser = false;
+    state.currentUserRole = null;
+  }
+}
 
 // ==================== DATA LOADING ====================
 
@@ -376,36 +417,51 @@ function showStyledAlert(title, message) {
     padding: 20px;
   `;
   
-  modal.innerHTML = `
-    <div style="
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-      text-align: center;
-    ">
-      <h2 style="margin: 0 0 12px 0; color: #2d3748; font-size: 20px;">✅ ${title}</h2>
-      <p style="margin: 0; color: #666; line-height: 1.5;">${message}</p>
-      <button onclick="this.closest('div').parentElement.remove()" style="
-        margin-top: 20px;
-        padding: 10px 24px;
-        background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 14px;
-      ">OK</button>
-    </div>
+  const contentDiv = document.createElement('div');
+  contentDiv.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-height: 80vh;
+    overflow-y: auto;
   `;
+  
+  const titleEl = document.createElement('h2');
+  titleEl.style.cssText = 'margin: 0 0 12px 0; color: #2d3748; font-size: 20px;';
+  titleEl.textContent = '✅ ' + title;
+  
+  const contentEl = document.createElement('div');
+  contentEl.style.cssText = 'margin: 0; color: #666; line-height: 1.5; text-align: left;';
+  contentEl.innerHTML = message;
+  
+  const btn = document.createElement('button');
+  btn.textContent = 'OK';
+  btn.style.cssText = `
+    margin-top: 20px;
+    padding: 10px 24px;
+    background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+  `;
+  btn.onclick = () => modal.remove();
+  
+  contentDiv.appendChild(titleEl);
+  contentDiv.appendChild(contentEl);
+  contentDiv.appendChild(btn);
+  modal.appendChild(contentDiv);
   
   document.body.appendChild(modal);
   setTimeout(() => {
     if (modal.parentElement) modal.remove();
-  }, 4000);
+  }, 5000);
 }
 
 function showStyledConfirm(title, message, onConfirm) {
@@ -570,22 +626,30 @@ function renderOrdersTable() {
 }
 
 function viewOrderDetails(orderId) {
+  console.log('👁️ Viewing order details:', orderId);
   const order = state.orders.find(o => o.id === orderId);
-  if (!order) return;
+  if (!order) {
+    console.error('Order not found:', orderId);
+    showStyledAlert('Error', 'Order not found');
+    return;
+  }
   
-  const itemsDetail = (order.items || []).map(item => `${item.name} (×${item.qty})`).join(', ');
-  showStyledAlert('Order Details', `
-    <div style="text-align: left; font-size: 14px; line-height: 1.8;">
-      <strong>Order ID:</strong> ${orderId}<br>
-      <strong>Customer:</strong> ${order.name || order.customerName}<br>
-      <strong>Email:</strong> ${order.email || 'N/A'}<br>
-      <strong>Phone:</strong> ${order.phone || 'N/A'}<br>
-      <strong>Address:</strong> ${order.address || 'N/A'}<br>
-      <strong>Total:</strong> ${(order.total || 0).toFixed(2)} DZD<br>
-      <strong>Status:</strong> ${order.status}<br>
-      <strong>Items:</strong> ${itemsDetail || 'None'}
-    </div>
-  `);
+  console.log('Order found:', order);
+  const itemsDetail = (order.items || []).map(item => `${item.name} (×${item.qty || 1})`).join(', ');
+  const html = `
+    <strong>Order ID:</strong> ${orderId}<br><br>
+    <strong>Customer:</strong> ${order.name || order.customerName || 'N/A'}<br>
+    <strong>Email:</strong> ${order.email || 'N/A'}<br>
+    <strong>Phone:</strong> ${order.phone || order.customerPhone || 'N/A'}<br>
+    <strong>Address:</strong> ${order.address || 'N/A'}<br><br>
+    <strong>Items:</strong><br>${itemsDetail || 'None'}<br><br>
+    <strong>Subtotal:</strong> ${(order.subtotal || 0).toFixed(2)} DZD<br>
+    <strong>Delivery Fee:</strong> ${(order.deliveryFee || 0).toFixed(2)} DZD<br>
+    <strong>Total:</strong> <span style="color: #E30613; font-weight: bold; font-size: 16px;">${(order.total || 0).toFixed(2)} DZD</span><br><br>
+    <strong>Status:</strong> ${order.status}<br>
+    <strong>Date:</strong> ${order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString() : 'N/A'}
+  `;
+  showStyledAlert('Order Details', html);
 }
 
 function renderOrderCard(order) {
