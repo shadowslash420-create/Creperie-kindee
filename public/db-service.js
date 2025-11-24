@@ -544,9 +544,12 @@ class DatabaseService {
   
   async getAllStaff() {
     await this.init();
+    console.log('📚 getAllStaff: Fetching all staff from Firestore...');
     const ref = collection(this.db, 'staff');
     const snapshot = await getDocs(ref);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const staff = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log('✅ getAllStaff: Retrieved', staff.length, 'staff members:', staff);
+    return staff;
   }
 
   async addStaff(staff) {
@@ -571,14 +574,25 @@ class DatabaseService {
     console.log('📝 addStaffWithId called with ID:', staffId, 'data:', staff);
     const docRef = doc(this.db, 'staff', staffId);
     try {
-      await setDoc(docRef, {
+      const staffDataToSave = {
         ...staff,
         createdAt: Timestamp.now()
-      });
-      console.log('✅ Staff member added with ID:', staffId);
+      };
+      console.log('📝 Writing to Firestore:', staffDataToSave);
+      await setDoc(docRef, staffDataToSave);
+      console.log('✅ Staff member successfully saved to Firestore with ID:', staffId);
+      
+      // Verify write by reading back
+      const verifySnap = await getDoc(docRef);
+      if (verifySnap.exists()) {
+        console.log('✅ Verified: Staff member exists in Firestore:', verifySnap.data());
+      } else {
+        console.warn('⚠️ Staff member not found in Firestore after write');
+      }
+      
       return staffId;
     } catch (error) {
-      console.error('❌ Error adding staff:', error.code, error.message);
+      console.error('❌ Error adding staff to Firestore:', error.code, error.message, error);
       throw error;
     }
   }

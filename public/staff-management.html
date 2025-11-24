@@ -257,12 +257,6 @@
       background: #E55A2B;
     }
 
-    .empty-state {
-      padding: 40px 20px;
-      text-align: center;
-      color: #999;
-    }
-
     .loading {
       padding: 20px;
       text-align: center;
@@ -329,7 +323,7 @@
         </div>
         <div class="form-actions">
           <button type="button" id="cancelBtn" class="btn-cancel">Cancel</button>
-          <button type="submit" class="btn-submit">Add Staff Member</button>
+          <button type="submit" id="submitBtn" class="btn-submit">Add Staff Member</button>
         </div>
       </form>
     </div>
@@ -344,17 +338,20 @@
     // Initialize on page load
     async function init() {
       try {
+        console.log('🔄 Staff management page initializing...');
         const auth = await getAuthInstance();
         if (!auth.currentUser) {
+          console.warn('⚠️ No user logged in, redirecting to login...');
           window.location.href = 'login.html';
           return;
         }
 
+        console.log('✅ User logged in as:', auth.currentUser.email);
         dbService = new DBService();
         await loadStaff();
         setupEventListeners();
       } catch (error) {
-        console.error('Init error:', error);
+        console.error('❌ Init error:', error);
       }
     }
 
@@ -385,10 +382,13 @@
     // Load and display staff
     async function loadStaff() {
       try {
+        console.log('📚 Loading staff from Firestore...');
         const staff = await dbService.getAllStaff();
+        console.log('📊 Staff data received:', staff);
         renderStaffTable(staff);
       } catch (error) {
-        console.error('Error loading staff:', error);
+        console.error('❌ Error loading staff:', error);
+        alert('Error loading staff: ' + error.message);
       }
     }
 
@@ -405,6 +405,17 @@
           <td><span style="color:#999;font-size:12px;">Default</span></td>
         </tr>
       `;
+
+      if (staff.length === 0) {
+        tbody.innerHTML = adminRow + `
+          <tr>
+            <td colspan="5" style="text-align:center;padding:20px;color:#999;">
+              No staff members added yet
+            </td>
+          </tr>
+        `;
+        return;
+      }
 
       const staffRows = staff.map(member => `
         <tr>
@@ -463,9 +474,15 @@
       }
 
       try {
-        console.log('👨‍💼 Adding staff member:', { email, name, role });
+        console.log('👨‍💼 Step 1: Starting staff addition process...');
+        console.log('   Email:', email);
+        console.log('   Name:', name);
+        console.log('   Role:', role);
         
+        // Generate consistent ID from email
         const staffId = email.replace(/[^a-z0-9]/g, '_').substring(0, 64);
+        console.log('   Generated Staff ID:', staffId);
+        
         const staffData = {
           email: email.toLowerCase(),
           name,
@@ -473,15 +490,34 @@
           createdAt: new Date().toISOString()
         };
 
-        await dbService.addStaffWithId(staffId, staffData);
-        console.log('✅ Staff member added with ID:', staffId);
+        // Disable submit button while processing
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').textContent = 'Adding...';
 
+        console.log('👨‍💼 Step 2: Writing to Firestore...');
+        await dbService.addStaffWithId(staffId, staffData);
+        console.log('✅ Step 2 Complete: Staff written to Firestore');
+
+        console.log('👨‍💼 Step 3: Closing modal...');
         closeAddStaffModal();
+        console.log('✅ Step 3 Complete: Modal closed');
+
+        console.log('👨‍💼 Step 4: Reloading staff from Firestore...');
         await loadStaff();
-        
-        alert('✅ Staff member "' + name + '" added as ' + role + '!');
+        console.log('✅ Step 4 Complete: Staff reloaded');
+
+        // Reset button
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = 'Add Staff Member';
+
+        alert('✅ Staff member "' + name + '" added successfully as ' + role + '!');
       } catch (error) {
         console.error('❌ Failed to add staff:', error);
+        
+        // Reset button
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = 'Add Staff Member';
+        
         alert('❌ Failed to add staff: ' + error.message);
       }
     }
