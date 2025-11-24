@@ -398,7 +398,8 @@ function renderOrdersTable() {
     filtered = filtered.filter(o => 
       (o.customerName || '').toLowerCase().includes(searchTerm) ||
       (o.phone || '').includes(searchTerm) ||
-      (o.id || '').toString().includes(searchTerm)
+      (o.id || '').toString().includes(searchTerm) ||
+      (o.email || '').toLowerCase().includes(searchTerm)
     );
   }
 
@@ -407,12 +408,65 @@ function renderOrdersTable() {
     return;
   }
 
+  // Sort by date descending (newest first)
+  filtered.sort((a, b) => {
+    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+    return dateB - dateA;
+  });
+
   const html = `
-    <div style="background: white; border-radius: 8px; overflow: hidden;">
-      ${filtered.map(order => renderOrderCard(order)).join('')}
-    </div>
+    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+      <thead>
+        <tr style="background: #f7fafc; border-bottom: 2px solid #e2e8f0;">
+          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600; font-size: 13px;">Order ID</th>
+          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600; font-size: 13px;">Customer</th>
+          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600; font-size: 13px;">Email</th>
+          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600; font-size: 13px;">Phone</th>
+          <th style="padding: 12px; text-align: center; color: #2d3748; font-weight: 600; font-size: 13px;">Items</th>
+          <th style="padding: 12px; text-align: right; color: #2d3748; font-weight: 600; font-size: 13px;">Total</th>
+          <th style="padding: 12px; text-align: center; color: #2d3748; font-weight: 600; font-size: 13px;">Status</th>
+          <th style="padding: 12px; text-align: center; color: #2d3748; font-weight: 600; font-size: 13px;">Date</th>
+          <th style="padding: 12px; text-align: center; color: #2d3748; font-weight: 600; font-size: 13px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(order => {
+          const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString() : 'N/A';
+          const itemCount = (order.items || []).length;
+          return `
+            <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.2s;" onmouseover="this.style.background='#f7fafc'" onmouseout="this.style.background='white'">
+              <td style="padding: 12px; color: #FF6B35; font-weight: 600;">#${order.id || 'N/A'}</td>
+              <td style="padding: 12px; color: #2d3748; font-weight: 500;">${order.name || order.customerName || 'Anonymous'}</td>
+              <td style="padding: 12px; color: #666; font-size: 13px;">${order.email || 'N/A'}</td>
+              <td style="padding: 12px; color: #666;">📞 ${order.phone || order.customerPhone || 'N/A'}</td>
+              <td style="padding: 12px; text-align: center; color: #FF6B35; font-weight: 600;">${itemCount}</td>
+              <td style="padding: 12px; text-align: right; color: #2d3748; font-weight: 600;">${(order.total || 0).toFixed(2)} DZD</td>
+              <td style="padding: 12px; text-align: center;">
+                <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding: 6px 8px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                  <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                  <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>✅ Delivered</option>
+                </select>
+              </td>
+              <td style="padding: 12px; text-align: center; color: #666; font-size: 12px;">${date}</td>
+              <td style="padding: 12px; text-align: center;">
+                <button onclick="viewOrderDetails('${order.id}')" style="padding: 6px 12px; background: #4299E1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 4px;">👁️ View</button>
+                <button onclick="deleteOrder('${order.id}')" style="padding: 6px 12px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Delete</button>
+              </td>
+            </tr>
+          `;
+        }).join('')}
+      </tbody>
+    </table>
   `;
   container.innerHTML = html;
+}
+
+function viewOrderDetails(orderId) {
+  const order = state.orders.find(o => o.id === orderId);
+  if (!order) return;
+  
+  alert(`Order #${orderId}\nCustomer: ${order.name || order.customerName}\nEmail: ${order.email}\nPhone: ${order.phone}\nTotal: ${order.total} DZD\nStatus: ${order.status}\n\nItems: ${(order.items || []).length}`);
 }
 
 function renderOrderCard(order) {
@@ -1501,13 +1555,16 @@ function setupSettingsHandlers() {
         freeDeliveryMin: parseFloat(document.getElementById('free-delivery-min')?.value) || 0
       };
 
+      console.log('💾 Saving business settings:', settings);
       try {
         await dbService.updateSettings(settings);
         state.settings = { ...state.settings, ...settings };
+        console.log('✅ Business settings saved successfully!');
         alert('✅ Business settings saved successfully!');
+        sessionStorage.setItem('admin_current_section', 'settings');
       } catch (error) {
-        console.error('Failed to save settings:', error);
-        alert('❌ Failed to save settings');
+        console.error('❌ Failed to save settings:', error);
+        alert('❌ Failed to save settings: ' + error.message);
       }
     });
   }
@@ -1523,13 +1580,16 @@ function setupSettingsHandlers() {
         workingDays: Array.from(document.querySelectorAll('input[name="working-days"]:checked')).map(cb => cb.value)
       };
 
+      console.log('💾 Saving operating hours:', hours);
       try {
         await dbService.updateSettings({ hours });
         state.settings.hours = hours;
+        console.log('✅ Operating hours saved successfully!');
         alert('✅ Operating hours updated successfully!');
+        sessionStorage.setItem('admin_current_section', 'settings');
       } catch (error) {
-        console.error('Failed to update hours:', error);
-        alert('❌ Failed to update operating hours');
+        console.error('❌ Failed to update hours:', error);
+        alert('❌ Failed to update operating hours: ' + error.message);
       }
     });
   }
@@ -1658,20 +1718,27 @@ async function saveStaffMember(event) {
     return;
   }
   
+  console.log('👨‍💼 Adding staff member:', { email, name, role });
   try {
     const staffData = {
-      email,
+      email: email.toLowerCase(),
       name,
       role,
       createdAt: new Date().toISOString()
     };
     
+    console.log('📝 Staff data to save:', staffData);
     await dbService.addStaff(staffData);
+    console.log('✅ Staff member added to database');
     document.getElementById('staff-modal').style.display = 'none';
+    document.getElementById('staff-email').value = '';
+    document.getElementById('staff-name').value = '';
+    document.getElementById('staff-role').value = '';
     await loadStaff();
     alert(`✅ Staff member "${name}" added as ${role}!`);
+    sessionStorage.setItem('admin_current_section', 'staff');
   } catch (error) {
-    console.error('Failed to add staff:', error);
+    console.error('❌ Failed to add staff:', error);
     alert('❌ Failed to add staff: ' + error.message);
   }
 }

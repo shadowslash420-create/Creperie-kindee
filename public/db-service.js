@@ -545,12 +545,19 @@ class DatabaseService {
 
   async addStaff(staff) {
     await this.init();
+    console.log('📝 addStaff called with:', staff);
     const ref = collection(this.db, 'staff');
-    const docRef = await addDoc(ref, {
-      ...staff,
-      createdAt: Timestamp.now()
-    });
-    return docRef.id;
+    try {
+      const docRef = await addDoc(ref, {
+        ...staff,
+        createdAt: Timestamp.now()
+      });
+      console.log('✅ Staff member added with ID:', docRef.id);
+      return docRef.id;
+    } catch (error) {
+      console.error('❌ Error adding staff:', error.code, error.message);
+      throw error;
+    }
   }
 
   async updateStaff(id, data) {
@@ -602,11 +609,18 @@ class DatabaseService {
 
   async updateSettings(settings) {
     await this.init();
+    console.log('💾 updateSettings called with:', settings);
     const docRef = doc(this.db, 'settings', 'restaurant');
-    await setDoc(docRef, {
-      ...settings,
-      updatedAt: Timestamp.now()
-    }, { merge: true });
+    try {
+      await setDoc(docRef, {
+        ...settings,
+        updatedAt: Timestamp.now()
+      }, { merge: true });
+      console.log('✅ Settings updated successfully');
+    } catch (error) {
+      console.error('❌ Error updating settings:', error.code, error.message);
+      throw error;
+    }
   }
 
   listenToSettingsChanges(callback) {
