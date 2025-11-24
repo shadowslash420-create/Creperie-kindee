@@ -73,10 +73,6 @@
           <span class="nav-icon">⚙️</span>
           <span class="nav-text">Settings</span>
         </a>
-        <a href="#" class="nav-item" onclick="showSection('staff', event)">
-          <span class="nav-icon">👨‍💼</span>
-          <span class="nav-text">Staff & Permissions</span>
-        </a>
       </nav>
       <div class="sidebar-footer">
         <button onclick="handleAdminLogout()" class="logout-btn" id="admin-logout-btn">
@@ -493,67 +489,6 @@
         </div>
       </section>
 
-      <!-- Staff & Permissions Section -->
-      <section class="content-section" id="section-staff">
-        <div class="staff-container">
-          <div class="section-header">
-            <h2>👨‍💼 Staff & Permissions</h2>
-            <button class="btn-primary" onclick="openAddStaffModal()">
-              <span>➕</span> Add Staff Member
-            </button>
-          </div>
-          <div class="staff-table" id="staff-table">
-            <div class="staff-member">
-              <div class="staff-info">
-                <div class="staff-avatar">👤</div>
-                <div>
-                  <h4>oussamaanis2005@gmail.com</h4>
-                  <span class="badge badge-primary">Owner</span>
-                </div>
-              </div>
-              <div class="staff-permissions">
-                <span class="permission-badge">Full Access</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Add Staff Modal -->
-      <div id="staff-modal" class="modal" style="display:none;">
-        <div class="modal-content" style="max-width:500px;">
-          <div class="modal-header">
-            <h2 id="staff-modal-title">➕ Add Staff Member</h2>
-            <button class="modal-close" onclick="document.getElementById('staff-modal').style.display='none'">✕</button>
-          </div>
-          <form onsubmit="saveStaffMember(event)" style="padding:24px;">
-            <div class="form-group" style="margin-bottom:16px;">
-              <label style="display:block;margin-bottom:8px;font-weight:600;">Staff Email</label>
-              <input type="email" id="staff-email" placeholder="staff@example.com" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;"/>
-            </div>
-            
-            <div class="form-group" style="margin-bottom:16px;">
-              <label style="display:block;margin-bottom:8px;font-weight:600;">Staff Name</label>
-              <input type="text" id="staff-name" placeholder="John Doe" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;"/>
-            </div>
-            
-            <div class="form-group" style="margin-bottom:20px;">
-              <label style="display:block;margin-bottom:8px;font-weight:600;">Role</label>
-              <select id="staff-role" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
-                <option value="">-- Select Role --</option>
-                <option value="Staff A">Staff A (Read Messages & Reviews)</option>
-                <option value="Staff B">Staff B (Manage Orders by Status)</option>
-              </select>
-            </div>
-            
-            <div style="display:flex;gap:10px;justify-content:flex-end;">
-              <button type="button" onclick="document.getElementById('staff-modal').style.display='none'" 
-                style="padding:10px 20px;background:#ccc;border:none;border-radius:6px;cursor:pointer;">Cancel</button>
-              <button type="submit" class="btn-primary" style="padding:10px 24px;">Add Staff Member</button>
-            </div>
-          </form>
-        </div>
-      </div>
 
     </main>
   </div>
