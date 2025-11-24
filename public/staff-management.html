@@ -277,8 +277,8 @@
     <div class="staff-header">
       <h1>👨‍💼 Staff & Permissions</h1>
       <div class="staff-header-buttons">
-        <button class="btn-back" onclick="goBack()">← Back</button>
-        <button class="btn-add-staff" onclick="openAddStaffModal()">➕ Add Staff Member</button>
+        <button id="backBtn" class="btn-back">← Back</button>
+        <button id="addStaffBtn" class="btn-add-staff">➕ Add Staff Member</button>
       </div>
     </div>
 
@@ -308,9 +308,9 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="modalTitle">➕ Add Staff Member</h2>
-        <button class="modal-close" onclick="closeAddStaffModal()">✕</button>
+        <button id="modalCloseBtn" class="modal-close">✕</button>
       </div>
-      <form onsubmit="saveStaffMember(event)" style="padding: 24px;">
+      <form id="staffForm" style="padding: 24px;">
         <div class="form-group">
           <label>Staff Email</label>
           <input type="email" id="staffEmail" placeholder="staff@example.com" required />
@@ -328,7 +328,7 @@
           </select>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn-cancel" onclick="closeAddStaffModal()">Cancel</button>
+          <button type="button" id="cancelBtn" class="btn-cancel">Cancel</button>
           <button type="submit" class="btn-submit">Add Staff Member</button>
         </div>
       </form>
@@ -336,7 +336,7 @@
   </div>
 
   <script type="module">
-    import { getAuthInstance, signOutUser } from './auth.js';
+    import { getAuthInstance } from './firebase-config.js';
     import DBService from './db-service.js';
 
     let dbService;
@@ -352,23 +352,48 @@
 
         dbService = new DBService();
         await loadStaff();
+        setupEventListeners();
       } catch (error) {
         console.error('Init error:', error);
       }
     }
 
+    // Setup event listeners
+    function setupEventListeners() {
+      document.getElementById('backBtn').addEventListener('click', () => {
+        window.location.href = 'admin.html';
+      });
+
+      document.getElementById('addStaffBtn').addEventListener('click', () => {
+        openAddStaffModal();
+      });
+
+      document.getElementById('modalCloseBtn').addEventListener('click', () => {
+        closeAddStaffModal();
+      });
+
+      document.getElementById('cancelBtn').addEventListener('click', () => {
+        closeAddStaffModal();
+      });
+
+      document.getElementById('staffForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveStaffMember();
+      });
+    }
+
     // Load and display staff
-    window.loadStaff = async function() {
+    async function loadStaff() {
       try {
         const staff = await dbService.getAllStaff();
         renderStaffTable(staff);
       } catch (error) {
         console.error('Error loading staff:', error);
       }
-    };
+    }
 
     // Render staff table
-    window.renderStaffTable = function(staff) {
+    function renderStaffTable(staff) {
       const tbody = document.getElementById('staffTableBody');
       
       const adminRow = `
@@ -394,7 +419,7 @@
             ${member.role === 'Staff A' ? 'Read Messages & Reviews' : member.role === 'Staff B' ? 'Manage Orders' : 'None'}
           </td>
           <td>
-            <button class="action-btn action-delete" onclick="deleteStaffMember('${member.id}')">
+            <button class="action-btn action-delete" data-id="${member.id}">
               🗑️ Remove
             </button>
           </td>
@@ -402,26 +427,32 @@
       `).join('');
 
       tbody.innerHTML = adminRow + staffRows;
-    };
+
+      // Add delete event listeners
+      document.querySelectorAll('.action-delete').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const staffId = e.target.closest('button').dataset.id;
+          await deleteStaffMember(staffId);
+        });
+      });
+    }
 
     // Open add staff modal
-    window.openAddStaffModal = function() {
+    function openAddStaffModal() {
       document.getElementById('staffEmail').value = '';
       document.getElementById('staffName').value = '';
       document.getElementById('staffRole').value = '';
       document.getElementById('modalTitle').textContent = '➕ Add Staff Member';
       document.getElementById('staffModal').classList.add('active');
-    };
+    }
 
     // Close add staff modal
-    window.closeAddStaffModal = function() {
+    function closeAddStaffModal() {
       document.getElementById('staffModal').classList.remove('active');
-    };
+    }
 
     // Save staff member
-    window.saveStaffMember = async function(event) {
-      event.preventDefault();
-
+    async function saveStaffMember() {
       const email = document.getElementById('staffEmail').value.trim().toLowerCase();
       const name = document.getElementById('staffName').value.trim();
       const role = document.getElementById('staffRole').value;
@@ -445,7 +476,6 @@
         await dbService.addStaffWithId(staffId, staffData);
         console.log('✅ Staff member added with ID:', staffId);
 
-        // Close modal and refresh WITHOUT navigating away
         closeAddStaffModal();
         await loadStaff();
         
@@ -454,10 +484,10 @@
         console.error('❌ Failed to add staff:', error);
         alert('❌ Failed to add staff: ' + error.message);
       }
-    };
+    }
 
     // Delete staff member
-    window.deleteStaffMember = async function(staffId) {
+    async function deleteStaffMember(staffId) {
       if (!confirm('Are you sure you want to remove this staff member?')) return;
 
       try {
@@ -468,14 +498,9 @@
         console.error('❌ Failed to remove staff:', error);
         alert('❌ Failed to remove staff: ' + error.message);
       }
-    };
+    }
 
-    // Go back to admin dashboard
-    window.goBack = function() {
-      window.location.href = 'admin.html';
-    };
-
-    // Initialize on load
+    // Initialize
     init();
   </script>
 
