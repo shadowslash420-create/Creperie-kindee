@@ -172,7 +172,10 @@ async function handleLogin(event) {
 
     // Initialize dashboard
     await initializeDashboard();
-    showSection('dashboard');
+    
+    // Restore the section the user was on before, or show dashboard
+    const lastSection = sessionStorage.getItem('admin_current_section') || 'dashboard';
+    showSection(lastSection);
   } catch (error) {
     console.error('Login failed:', error);
     errorDiv.textContent = getLoginErrorMessage(error.code);
@@ -214,6 +217,7 @@ function showSection(section, event) {
   }
 
   state.currentSection = section;
+  sessionStorage.setItem('admin_current_section', section);
 
   // Update active nav item
   document.querySelectorAll('.nav-item').forEach(item => {
