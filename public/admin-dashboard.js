@@ -353,9 +353,115 @@ function getStatusColor(status) {
   const colors = {
     'unconfirmed': '#FFE0E0',
     'pending': '#FFF3CD',
-    'delivered': '#D4EDDA'
+    'confirmed': '#D4EDDA'
   };
   return colors[status] || '#E2E8F0';
+}
+
+// ==================== STYLED MODAL FUNCTIONS ====================
+
+function showStyledAlert(title, message) {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  `;
+  
+  modal.innerHTML = `
+    <div style="
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    ">
+      <h2 style="margin: 0 0 12px 0; color: #2d3748; font-size: 20px;">✅ ${title}</h2>
+      <p style="margin: 0; color: #666; line-height: 1.5;">${message}</p>
+      <button onclick="this.closest('div').parentElement.remove()" style="
+        margin-top: 20px;
+        padding: 10px 24px;
+        background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+      ">OK</button>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  setTimeout(() => {
+    if (modal.parentElement) modal.remove();
+  }, 4000);
+}
+
+function showStyledConfirm(title, message, onConfirm) {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  `;
+  
+  modal.innerHTML = `
+    <div style="
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    ">
+      <h2 style="margin: 0 0 12px 0; color: #2d3748; font-size: 20px;">⚠️ ${title}</h2>
+      <p style="margin: 0 0 24px 0; color: #666; line-height: 1.5;">${message}</p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button onclick="this.closest('div').parentElement.remove()" style="
+          padding: 10px 24px;
+          background: #cbd5e0;
+          color: #2d3748;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 14px;
+        ">Cancel</button>
+        <button onclick="(${onConfirm.toString()})(); this.closest('div').parentElement.remove();" style="
+          padding: 10px 24px;
+          background: #e53e3e;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 14px;
+        ">Delete</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
 }
 
 // ==================== ORDERS SECTION ====================
@@ -443,9 +549,10 @@ function renderOrdersTable() {
               <td style="padding: 12px; text-align: center; color: #FF6B35; font-weight: 600;">${itemCount}</td>
               <td style="padding: 12px; text-align: right; color: #2d3748; font-weight: 600;">${(order.total || 0).toFixed(2)} DZD</td>
               <td style="padding: 12px; text-align: center;">
-                <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding: 6px 8px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding: 6px 8px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 12px; font-weight: 600; background: ${getStatusColor(order.status)};">
+                  <option value="unconfirmed" ${order.status === 'unconfirmed' ? 'selected' : ''}>🔴 Unconfirmed</option>
                   <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-                  <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>✅ Delivered</option>
+                  <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>✅ Confirmed</option>
                 </select>
               </td>
               <td style="padding: 12px; text-align: center; color: #666; font-size: 12px;">${date}</td>
@@ -466,7 +573,19 @@ function viewOrderDetails(orderId) {
   const order = state.orders.find(o => o.id === orderId);
   if (!order) return;
   
-  alert(`Order #${orderId}\nCustomer: ${order.name || order.customerName}\nEmail: ${order.email}\nPhone: ${order.phone}\nTotal: ${order.total} DZD\nStatus: ${order.status}\n\nItems: ${(order.items || []).length}`);
+  const itemsDetail = (order.items || []).map(item => `${item.name} (×${item.qty})`).join(', ');
+  showStyledAlert('Order Details', `
+    <div style="text-align: left; font-size: 14px; line-height: 1.8;">
+      <strong>Order ID:</strong> ${orderId}<br>
+      <strong>Customer:</strong> ${order.name || order.customerName}<br>
+      <strong>Email:</strong> ${order.email || 'N/A'}<br>
+      <strong>Phone:</strong> ${order.phone || 'N/A'}<br>
+      <strong>Address:</strong> ${order.address || 'N/A'}<br>
+      <strong>Total:</strong> ${(order.total || 0).toFixed(2)} DZD<br>
+      <strong>Status:</strong> ${order.status}<br>
+      <strong>Items:</strong> ${itemsDetail || 'None'}
+    </div>
+  `);
 }
 
 function renderOrderCard(order) {
