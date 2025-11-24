@@ -10,12 +10,7 @@ service cloud.firestore {
              request.auth.token.email == 'oussamaanis2005@gmail.com';
     }
     
-    // Helper to find staff by normalized email
-    function getStaffByEmail(email) {
-      return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data;
-    }
-    
-    // Check if current user is staff with role A (view orders & messages)
+    // Check if current user is staff with role A (view orders & messages, update order status)
     function isStaffA() {
       return request.auth != null &&
              exists(/databases/$(database)/documents/staff/$(request.auth.uid)) &&
@@ -23,19 +18,12 @@ service cloud.firestore {
              get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.email.lower() == request.auth.token.email.lower();
     }
     
-    // Check if current user is staff with role B (manage messages & reviews)
+    // Check if current user is staff with role B (manage messages & reviews only)
     function isStaffB() {
       return request.auth != null &&
              exists(/databases/$(database)/documents/staff/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role == 'Staff B' &&
              get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.email.lower() == request.auth.token.email.lower();
-    }
-    
-    // Check if staff document exists for this user's email
-    function isStaffByEmail() {
-      let staff = get(/databases/$(database)/documents/staff/$(request.auth.uid));
-      return request.auth != null &&
-             staff.data.email.lower() == request.auth.token.email.lower();
     }
     
     // ==================== MENU COLLECTION ====================
@@ -52,21 +40,19 @@ service cloud.firestore {
     
     // ==================== ORDERS COLLECTION ====================
     match /orders/{orderId} {
-      allow create: if true;
+      allow create: if request.auth != null; // Customers must be logged in
       
       // Admin: full read access
       // Staff A: read-only access to view orders
-      // Staff B: read/update access to manage orders
       // Customers: read own orders by email or userId
       allow read: if isAdmin() || 
-                     isStaffA() || 
-                     isStaffB() ||
+                     isStaffA() ||
                      (request.auth != null && request.auth.token.email.lower() == resource.data.email.lower()) ||
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
-      // Only Admin and Staff B can update order status
+      // Admin and Staff A can update order status
       allow update: if isAdmin() || 
-                       (isStaffB() && request.resource.data.status != null && 
+                       (isStaffA() && request.resource.data.status != null && 
                         request.resource.data.keys().size() <= 2);
       
       allow delete: if isAdmin();
@@ -81,20 +67,20 @@ service cloud.firestore {
     // ==================== REVIEWS/FEEDBACK COLLECTION ====================
     match /reviews/{reviewId} {
       allow read: if true;
-      allow create: if true;
+      allow create: if request.auth != null; // Customers must be logged in
       
       // Admin: full access
-      // Staff B: can read and edit/delete reviews
+      // Staff B: can approve/delete reviews (update/delete)
       allow update, delete: if isAdmin() || isStaffB();
     }
     
     // ==================== CONTACT MESSAGES COLLECTION ====================
     match /contact_messages/{messageId} {
       allow read: if isAdmin() || isStaffA() || isStaffB();
-      allow create: if true;
+      allow create: if request.auth != null; // Customers must be logged in
       
       // Admin: full access
-      // Staff B: can edit and delete messages
+      // Staff B: can approve/delete messages (update/delete)
       allow update, delete: if isAdmin() || isStaffB();
     }
     

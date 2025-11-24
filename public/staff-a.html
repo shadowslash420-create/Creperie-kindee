@@ -206,6 +206,7 @@
     <!-- Orders Section -->
     <div class="section">
       <div class="section-title">📋 الطلبات الحالية - Current Orders</div>
+      <p style="color: #666; font-size: 13px; margin-bottom: 12px;">💡 اضغط على حالة الطلب لتحديثها / Click on order status to update it</p>
       <table class="orders-table" id="orders-table-staff">
         <thead>
           <tr>
@@ -301,7 +302,13 @@
             <td>${order.email || 'N/A'}</td>
             <td>${order.phone || 'N/A'}</td>
             <td>${(order.total || 0).toFixed(2)} DZD</td>
-            <td><span class="${statusClass}">${order.status}</span></td>
+            <td>
+              <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding: 6px 8px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 12px; font-weight: 600; background: ${getStatusColorStaffA(order.status)}; cursor: pointer;">
+                <option value="unconfirmed" ${order.status === 'unconfirmed' ? 'selected' : ''}>🔴 Unconfirmed</option>
+                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>✅ Confirmed</option>
+              </select>
+            </td>
             <td>${date}</td>
             <td><button class="view-btn" onclick="showOrderDetails('${order.id}')">👁️ عرض / View</button></td>
           </tr>
@@ -341,6 +348,28 @@
     // Close modal
     window.closeOrderModal = function() {
       document.getElementById('order-details-modal').classList.remove('show');
+    };
+
+    // Get status color
+    window.getStatusColorStaffA = function(status) {
+      const colors = {
+        'unconfirmed': '#FFE0E0',
+        'pending': '#FFF3CD',
+        'confirmed': '#D4EDDA'
+      };
+      return colors[status] || '#E2E8F0';
+    };
+
+    // Update order status
+    window.updateOrderStatus = async function(orderId, newStatus) {
+      try {
+        await dbService.updateOrderStatus(orderId, newStatus);
+        await loadStaffOrders();
+        alert('✅ تم تحديث حالة الطلب / Order status updated!');
+      } catch (error) {
+        console.error('Error updating order:', error);
+        alert('❌ خطأ في التحديث / Error updating order');
+      }
     };
 
     // Update stats
