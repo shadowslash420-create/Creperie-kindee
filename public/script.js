@@ -15,8 +15,8 @@ import { debounce, throttle, CacheStore, RequestDeduplicator, measurePerformance
 let restaurantSettings = {
   businessPhone: '+213 5X XXX XXXX',
   businessEmail: 'contact@creperie.com',
-  openingTime: '09:00',
-  closingTime: '22:00',
+  openingTime: '11:00',
+  closingTime: '01:00',
   deliveryFee: 0,
   freeDeliveryMin: 800
 };
@@ -29,8 +29,8 @@ async function loadRestaurantSettings() {
     const normalizedSettings = {
       businessPhone: settings.businessPhone || settings.phone || '+213 5X XXX XXXX',
       businessEmail: settings.businessEmail || 'contact@creperie.com',
-      openingTime: settings.openingTime || settings.hours?.openTime || '09:00',
-      closingTime: settings.closingTime || settings.hours?.closeTime || '22:00',
+      openingTime: settings.openingTime || settings.hours?.openTime || '11:00',
+      closingTime: settings.closingTime || settings.hours?.closeTime || '01:00',
       deliveryFee: settings.deliveryFee || 0,
       freeDeliveryMin: settings.freeDeliveryMin || 800
     };
@@ -96,8 +96,8 @@ dbService.listenToSettingsChanges((settings) => {
   const normalizedSettings = {
     businessPhone: settings.businessPhone || settings.phone || '+213 5X XXX XXXX',
     businessEmail: settings.businessEmail || 'contact@creperie.com',
-    openingTime: settings.openingTime || settings.hours?.openTime || '09:00',
-    closingTime: settings.closingTime || settings.hours?.closeTime || '22:00',
+    openingTime: settings.openingTime || settings.hours?.openTime || '11:00',
+    closingTime: settings.closingTime || settings.hours?.closeTime || '01:00',
     deliveryFee: settings.deliveryFee || 0,
     freeDeliveryMin: settings.freeDeliveryMin || 800
   };

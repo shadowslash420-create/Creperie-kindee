@@ -581,9 +581,10 @@ class DatabaseService {
       businessPhone: '+213 5X XXX XXXX',
       businessEmail: 'contact@creperie.com',
       address: '',
-      openingTime: '09:00',
-      closingTime: '22:00',
+      openingTime: '11:00',
+      closingTime: '01:00',
       deliveryFee: 0,
+      freeDeliveryMin: 800,
       paymentMethods: {
         cash: true,
         card: false,
