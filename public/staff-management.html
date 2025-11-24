@@ -332,6 +332,7 @@
   <script type="module">
     import { getAuthInstance } from './firebase-config.js';
     import DBService from './db-service.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     let dbService;
 
@@ -340,16 +341,20 @@
       try {
         console.log('🔄 Staff management page initializing...');
         const auth = await getAuthInstance();
-        if (!auth.currentUser) {
-          console.warn('⚠️ No user logged in, redirecting to login...');
-          window.location.href = 'login.html';
-          return;
-        }
+        
+        // Wait for authentication state to be established
+        onAuthStateChanged(auth, async (user) => {
+          if (!user) {
+            console.warn('⚠️ No user logged in, redirecting to login...');
+            window.location.href = 'login.html';
+            return;
+          }
 
-        console.log('✅ User logged in as:', auth.currentUser.email);
-        dbService = new DBService();
-        await loadStaff();
-        setupEventListeners();
+          console.log('✅ User logged in as:', user.email);
+          dbService = new DBService();
+          await loadStaff();
+          setupEventListeners();
+        });
       } catch (error) {
         console.error('❌ Init error:', error);
       }
