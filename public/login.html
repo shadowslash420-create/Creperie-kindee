@@ -421,6 +421,7 @@
       try {
         const ADMIN_EMAILS = ['oussamaanis2005@gmail.com'];
         if (ADMIN_EMAILS.includes(email)) {
+          console.log('👑 Admin user detected:', email);
           return 'admin.html';
         }
         
@@ -428,18 +429,21 @@
         const dbSvc = (await import('./db-service.js')).default;
         await dbSvc.init();
         const allStaff = await dbSvc.getAllStaff();
+        console.log('📊 Staff list for role check:', allStaff);
         const staffMember = allStaff.find(s => s.email?.toLowerCase() === email?.toLowerCase());
         
         if (staffMember) {
+          console.log('✅ Staff member found:', staffMember);
           if (staffMember.role === 'Staff A') {
             return 'staff-a.html';
           } else if (staffMember.role === 'Staff B') {
             return 'staff-b.html';
           }
         }
+        console.log('ℹ️ User is a customer, redirecting to home');
         return 'index.html';
       } catch (error) {
-        console.error('Error checking user role:', error);
+        console.error('❌ Error checking user role:', error);
         return 'index.html';
       }
     };

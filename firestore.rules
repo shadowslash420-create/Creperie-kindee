@@ -86,7 +86,7 @@ service cloud.firestore {
     
     // ==================== STAFF COLLECTION ====================
     match /staff/{staffId} {
-      allow read: if isAdmin();
+      allow read: if true; // Allow reading staff for login/role checking
       allow create, update, delete: if isAdmin();
     }
   }
