@@ -241,6 +241,7 @@
     import { signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     let staffOrders = [];
+    let isInitialized = false;
 
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', async () => {
@@ -250,12 +251,23 @@
           window.location.href = '/login.html';
           return;
         }
+        isInitialized = true;
         await loadStaffOrders();
         setupRealtimeListener();
       } catch (error) {
         console.error('Error during initialization:', error);
       }
     });
+    
+    // Prevent logout on auth state changes after initialization
+    const auth = getAuthInstance().then(authInstance => {
+      authInstance.onAuthStateChanged((user) => {
+        // Only redirect if we've initialized and user logs out
+        if (isInitialized && !user) {
+          window.location.href = '/login.html';
+        }
+      });
+    }).catch(err => console.error('Auth setup error:', err));
 
     // Load orders from Firebase
     async function loadStaffOrders() {

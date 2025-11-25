@@ -374,6 +374,7 @@
     let allReviews = [];
     let currentEditingMessageId = null;
     let currentEditingReviewId = null;
+    let isInitialized = false;
 
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', async () => {
@@ -383,11 +384,22 @@
           window.location.href = '/login.html';
           return;
         }
+        isInitialized = true;
         await loadData();
       } catch (error) {
         console.error('Error during initialization:', error);
       }
     });
+    
+    // Prevent logout on auth state changes after initialization
+    const auth = getAuthInstance().then(authInstance => {
+      authInstance.onAuthStateChanged((user) => {
+        // Only redirect if we've initialized and user logs out
+        if (isInitialized && !user) {
+          window.location.href = '/login.html';
+        }
+      });
+    }).catch(err => console.error('Auth setup error:', err));
 
     async function loadData() {
       try {
