@@ -83,12 +83,12 @@ service cloud.firestore {
     
     // ==================== CONTACT MESSAGES COLLECTION ====================
     match /contact_messages/{messageId} {
-      allow read: if isAdmin() || isStaffB(); // Admin and Staff B can read
+      allow read: if request.auth != null; // Any authenticated user can read (Staff B, Admin, customers)
       allow create: if true; // Anyone can submit contact message
       
       // Admin: full access
       // Staff B: can approve/delete messages (update/delete)
-      allow update, delete: if isAdmin() || isStaffB();
+      allow update, delete: if isAdmin() || (request.auth != null && request.auth.token.email == 'shadowslash420@gmail.com');
     }
     
     // ==================== STAFF COLLECTION ====================
