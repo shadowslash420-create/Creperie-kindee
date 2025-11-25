@@ -241,17 +241,28 @@
     import { signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     let staffOrders = [];
+    let pageLoaded = false;
 
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         const auth = await getAuthInstance();
-        if (!auth.currentUser) {
-          window.location.href = '/login.html';
-          return;
-        }
-        await loadStaffOrders();
-        setupRealtimeListener();
+        
+        // Setup auth state listener first
+        auth.onAuthStateChanged(async (user) => {
+          if (!user && pageLoaded) {
+            // Only redirect if user logs out AFTER page loaded
+            console.log('User logged out, redirecting to login...');
+            window.location.href = '/login.html';
+          } else if (user && !pageLoaded) {
+            // User is logged in, load data
+            pageLoaded = true;
+            console.log('User authenticated, loading staff data...');
+            await loadStaffOrders();
+            setupRealtimeListener();
+          }
+        });
+        
       } catch (error) {
         console.error('Error during initialization:', error);
       }
