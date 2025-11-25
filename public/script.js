@@ -2307,18 +2307,26 @@ async function submitContactOriginal(e){
   const t = translations[lang];
   
   try {
+    // Ensure dbService is initialized
+    if (!dbService || !dbService.init) {
+      throw new Error('Database service not initialized');
+    }
+    
     const contactData = {
       name: name,
       email: email,
       message: msg
     };
     
+    console.log('📝 Submitting contact message:', contactData);
     await dbService.addContactMessage(contactData);
+    console.log('✅ Contact message submitted successfully');
     showToastOriginal(t.ar.contactSuccess.replace('{name}', name));
     e.target.reset();
   } catch (error) {
-    console.error('Error submitting contact message:', error);
-    alert(lang === 'ar' ? 'حدث خطأ في إرسال الرسالة' : 'Error sending message');
+    const errorMsg = error?.message || error?.code || JSON.stringify(error);
+    console.error('❌ Error submitting contact message:', errorMsg, error);
+    alert(lang === 'ar' ? 'حدث خطأ في إرسال الرسالة: ' + errorMsg : 'Error sending message: ' + errorMsg);
   }
 }
 
