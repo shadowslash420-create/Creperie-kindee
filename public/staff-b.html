@@ -377,22 +377,16 @@
 
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', async () => {
-      const auth = await getAuthInstance();
-      if (!auth.currentUser) {
-        window.location.href = '/login.html';
-        return;
-      }
-      await loadData();
-    });
-
-    // Check auth status
-    window.addEventListener('load', async () => {
-      const auth = await getAuthInstance();
-      auth.onAuthStateChanged((user) => {
-        if (!user) {
+      try {
+        const auth = await getAuthInstance();
+        if (!auth.currentUser) {
           window.location.href = '/login.html';
+          return;
         }
-      });
+        await loadData();
+      } catch (error) {
+        console.error('Error during initialization:', error);
+      }
     });
 
     async function loadData() {
