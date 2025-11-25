@@ -10,15 +10,17 @@ service cloud.firestore {
              request.auth.token.email == 'oussamaanis2005@gmail.com';
     }
     
-    // Check if user is ANY staff member by searching staff collection for their email
-    function isAnyStaff() {
-      return request.auth != null &&
+    // Check if current user is staff by matching email in staff collection
+    function isStaffByEmail() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/staff/shadowslash420_gmail_com) &&
              get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.email.lower() == request.auth.token.email.lower();
     }
     
     // Check if current user is staff with role A (view orders & messages, update order status)
     function isStaffA() {
       return request.auth != null &&
+             exists(/databases/$(database)/documents/staff/shadowslash420_gmail_com) &&
              get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.role == 'Staff A' &&
              get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.email.lower() == request.auth.token.email.lower();
     }
@@ -26,6 +28,7 @@ service cloud.firestore {
     // Check if current user is staff with role B (manage messages & reviews only)
     function isStaffB() {
       return request.auth != null &&
+             exists(/databases/$(database)/documents/staff/shadowslash420_gmail_com) &&
              get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.role == 'Staff B' &&
              get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.email.lower() == request.auth.token.email.lower();
     }
@@ -94,5 +97,14 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
     
+    // ==================== REVIEWS/FEEDBACK COLLECTION ====================
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null; // Customers must be logged in
+      
+      // Admin: full access
+      // Staff B: can approve/delete reviews (update/delete)
+      allow update, delete: if isAdmin() || isStaffB();
+    }
   }
 }

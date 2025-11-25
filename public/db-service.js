@@ -576,7 +576,6 @@ class DatabaseService {
     try {
       const staffDataToSave = {
         ...staff,
-        email: staff.email.toLowerCase().trim(),
         createdAt: Timestamp.now()
       };
       console.log('📝 Writing to Firestore:', staffDataToSave);
