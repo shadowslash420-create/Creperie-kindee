@@ -81,8 +81,8 @@ service cloud.firestore {
     
     // ==================== CONTACT MESSAGES COLLECTION ====================
     match /contact_messages/{messageId} {
-      allow read: if isAdmin() || (isStaff() && request.auth != null); // Admin and logged-in staff can read
-      allow create: if request.auth != null; // Customers must be logged in
+      allow read: if isAdmin() || isStaffB(); // Admin and Staff B can read
+      allow create: if true; // Anyone can submit contact message
       
       // Admin: full access
       // Staff B: can approve/delete messages (update/delete)
@@ -93,16 +93,6 @@ service cloud.firestore {
     match /staff/{staffId} {
       allow read: if true; // Allow reading staff for login/role checking
       allow create, update, delete: if isAdmin();
-    }
-    
-    // ==================== REVIEWS/FEEDBACK COLLECTION ====================
-    match /reviews/{reviewId} {
-      allow read: if true;
-      allow create: if request.auth != null; // Customers must be logged in
-      
-      // Admin: full access
-      // Staff B: can approve/delete reviews (update/delete)
-      allow update, delete: if isAdmin() || isStaffB();
     }
   }
 }
