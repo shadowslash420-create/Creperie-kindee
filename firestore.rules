@@ -4,6 +4,11 @@ service cloud.firestore {
     
     // ==================== HELPER FUNCTIONS ====================
     
+    // Convert email to staff ID format (lowercase + replace special chars with _)
+    function emailToStaffId(email) {
+      return email.lower().replace(/[^a-z0-9]/g, '_');
+    }
+    
     // Check if current user is admin
     function isAdmin() {
       return request.auth != null && 
@@ -13,17 +18,15 @@ service cloud.firestore {
     // Check if current user is staff with role A (view orders & messages, update order status)
     function isStaffA() {
       return request.auth != null &&
-             exists(/databases/$(database)/documents/staff/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role == 'Staff A' &&
-             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.email.lower() == request.auth.token.email.lower();
+             exists(/databases/$(database)/documents/staff/$(emailToStaffId(request.auth.token.email))) &&
+             get(/databases/$(database)/documents/staff/$(emailToStaffId(request.auth.token.email))).data.role == 'Staff A';
     }
     
     // Check if current user is staff with role B (manage messages & reviews only)
     function isStaffB() {
       return request.auth != null &&
-             exists(/databases/$(database)/documents/staff/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role == 'Staff B' &&
-             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.email.lower() == request.auth.token.email.lower();
+             exists(/databases/$(database)/documents/staff/$(emailToStaffId(request.auth.token.email))) &&
+             get(/databases/$(database)/documents/staff/$(emailToStaffId(request.auth.token.email))).data.role == 'Staff B';
     }
     
     // ==================== MENU COLLECTION ====================
