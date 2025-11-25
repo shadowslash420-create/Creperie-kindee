@@ -2321,7 +2321,8 @@ async function submitContactOriginal(e){
     console.log('📝 Submitting contact message:', contactData);
     await dbService.addContactMessage(contactData);
     console.log('✅ Contact message submitted successfully');
-    showToastOriginal(t.ar.contactSuccess.replace('{name}', name));
+    const successMsg = t.contactSuccess ? t.contactSuccess.replace('{name}', name) : (lang === 'ar' ? 'شكراً!' : 'Thank you!');
+    showToastOriginal(successMsg);
     e.target.reset();
   } catch (error) {
     const errorMsg = error?.message || error?.code || JSON.stringify(error);
