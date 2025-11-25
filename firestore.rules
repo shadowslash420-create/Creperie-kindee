@@ -10,27 +10,25 @@ service cloud.firestore {
              request.auth.token.email == 'oussamaanis2005@gmail.com';
     }
     
-    // Check if current user is staff by matching email in staff collection
-    function isStaffByEmail() {
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/staff/shadowslash420_gmail_com) &&
-             get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.email.lower() == request.auth.token.email.lower();
+    // Check if current user exists in staff collection by email match
+    function isStaff() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/staff/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.email.lower() == request.auth.token.email.lower();
     }
     
     // Check if current user is staff with role A (view orders & messages, update order status)
     function isStaffA() {
       return request.auth != null &&
-             exists(/databases/$(database)/documents/staff/shadowslash420_gmail_com) &&
-             get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.role == 'Staff A' &&
-             get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.email.lower() == request.auth.token.email.lower();
+             exists(/databases/$(database)/documents/staff/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role == 'Staff A';
     }
     
     // Check if current user is staff with role B (manage messages & reviews only)
     function isStaffB() {
       return request.auth != null &&
-             exists(/databases/$(database)/documents/staff/shadowslash420_gmail_com) &&
-             get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.role == 'Staff B' &&
-             get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.email.lower() == request.auth.token.email.lower();
+             exists(/databases/$(database)/documents/staff/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.role == 'Staff B';
     }
     
     // ==================== MENU COLLECTION ====================
@@ -53,7 +51,7 @@ service cloud.firestore {
       // Staff A: read-only access to view orders
       // Customers: read own orders by email or userId
       allow read: if isAdmin() || 
-                     isStaffA() ||
+                     (isStaff() && request.auth != null) ||
                      (request.auth != null && request.auth.token.email.lower() == resource.data.email.lower()) ||
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
@@ -83,7 +81,7 @@ service cloud.firestore {
     
     // ==================== CONTACT MESSAGES COLLECTION ====================
     match /contact_messages/{messageId} {
-      allow read: if isAdmin() || request.auth != null; // Admin and any logged-in staff can read
+      allow read: if isAdmin() || (isStaff() && request.auth != null); // Admin and logged-in staff can read
       allow create: if request.auth != null; // Customers must be logged in
       
       // Admin: full access
