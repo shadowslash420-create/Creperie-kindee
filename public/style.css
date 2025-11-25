@@ -1299,14 +1299,20 @@ html{
   width:85%;
   max-width:380px;
   height:100vh;
-  background:#ffffff;
+  background:rgba(255,255,255,0.8);
+  backdrop-filter:blur(10px);
   box-shadow:8px 0 40px rgba(227,6,19,0.2);
   padding:0;
   z-index:1001;
-  transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:inset-inline-start 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y:auto;
   display:flex;
   flex-direction:column;
+}
+
+/* Instant close when clicking outside */
+.nav-menu.instant-close{
+  transition:inset-inline-start 0s;
 }
 
 .nav-menu.active,

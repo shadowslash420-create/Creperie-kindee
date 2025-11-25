@@ -485,7 +485,13 @@ window.closeAllSidebars = function() {
   const overlay = document.getElementById('menu-overlay');
 
   if (cartSide) cartSide.classList.remove('open');
-  if (navMenu) navMenu.classList.remove('open');
+  if (navMenu) {
+    navMenu.classList.add('instant-close');
+    navMenu.classList.remove('open');
+    setTimeout(() => {
+      navMenu.classList.remove('instant-close');
+    }, 50);
+  }
   if (overlay) overlay.classList.remove('active');
 }
 
