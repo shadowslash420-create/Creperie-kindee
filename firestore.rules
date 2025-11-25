@@ -20,15 +20,17 @@ service cloud.firestore {
     // Check if current user is staff with role A (view orders & messages, update order status)
     function isStaffA() {
       return request.auth != null &&
-             exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
-             get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Staff A';
+             exists(/databases/$(database)/documents/staff/shadowslash420_gmail_com) &&
+             get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.email.lower() == request.auth.token.email.lower() &&
+             get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.role == 'Staff A';
     }
     
     // Check if current user is staff with role B (manage messages & reviews only)
     function isStaffB() {
       return request.auth != null &&
-             exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
-             get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Staff B';
+             exists(/databases/$(database)/documents/staff/shadowslash420_gmail_com) &&
+             get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.email.lower() == request.auth.token.email.lower() &&
+             get(/databases/$(database)/documents/staff/shadowslash420_gmail_com).data.role == 'Staff B';
     }
     
     // ==================== MENU COLLECTION ====================
