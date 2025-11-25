@@ -244,23 +244,17 @@
 
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', async () => {
-      const auth = await getAuthInstance();
-      if (!auth.currentUser) {
-        window.location.href = '/login.html';
-        return;
-      }
-      await loadStaffOrders();
-      setupRealtimeListener();
-    });
-
-    // Check auth status
-    window.addEventListener('load', async () => {
-      const auth = await getAuthInstance();
-      auth.onAuthStateChanged((user) => {
-        if (!user) {
+      try {
+        const auth = await getAuthInstance();
+        if (!auth.currentUser) {
           window.location.href = '/login.html';
+          return;
         }
-      });
+        await loadStaffOrders();
+        setupRealtimeListener();
+      } catch (error) {
+        console.error('Error during initialization:', error);
+      }
     });
 
     // Load orders from Firebase
