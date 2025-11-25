@@ -5,6 +5,68 @@ const ORDERS_KEY = 'kc_orders';
 const LANG_KEY = 'kc_lang';
 const FEEDBACK_KEY = 'kc_feedback';
 
+// ==================== CRITICAL UI FUNCTIONS - DEFINED FIRST ====================
+// These must be defined before anything else to ensure they're available for onclick handlers
+window.toggleMenu = function() {
+  const navMenu = document.getElementById('nav-menu');
+  const overlay = document.getElementById('menu-overlay');
+  const cartSide = document.getElementById('cart-side');
+
+  if (navMenu && overlay) {
+    const isOpen = navMenu.classList.contains('open');
+
+    if (cartSide && cartSide.classList.contains('open')) {
+      cartSide.classList.remove('open');
+    }
+
+    if (isOpen) {
+      navMenu.classList.remove('open');
+      overlay.classList.remove('active');
+    } else {
+      navMenu.classList.add('open');
+      overlay.classList.add('active');
+    }
+  }
+}
+
+window.toggleCart = function() {
+  const cartSide = document.getElementById('cart-side');
+  const overlay = document.getElementById('menu-overlay');
+  const navMenu = document.getElementById('nav-menu');
+
+  if (cartSide && overlay) {
+    const isOpen = cartSide.classList.contains('open');
+
+    if (navMenu && navMenu.classList.contains('open')) {
+      navMenu.classList.remove('open');
+    }
+
+    if (isOpen) {
+      cartSide.classList.remove('open');
+      overlay.classList.remove('active');
+    } else {
+      cartSide.classList.add('open');
+      overlay.classList.add('active');
+    }
+  }
+}
+
+window.closeAllSidebars = function() {
+  const cartSide = document.getElementById('cart-side');
+  const navMenu = document.getElementById('nav-menu');
+  const overlay = document.getElementById('menu-overlay');
+
+  if (cartSide) cartSide.classList.remove('open');
+  if (navMenu) {
+    navMenu.classList.add('instant-close');
+    navMenu.classList.remove('open');
+    setTimeout(() => {
+      navMenu.classList.remove('instant-close');
+    }, 50);
+  }
+  if (overlay) overlay.classList.remove('active');
+}
+
 // Import Firebase services
 import dbService from './db-service.js';
 import { getMenuFromFirebase, getCategoriesFromFirebase, placeOrderToFirebase, listenToMenuUpdates } from './firebase-customer.js';
@@ -432,68 +494,7 @@ window.removeFromCart = function(idx) {
   renderCart();
 }
 
-// Toggle cart sidebar
-window.toggleCart = function() {
-  const cartSide = document.getElementById('cart-side');
-  const overlay = document.getElementById('menu-overlay');
-  const navMenu = document.getElementById('nav-menu');
-
-  if (cartSide && overlay) {
-    const isOpen = cartSide.classList.contains('open');
-
-    if (navMenu && navMenu.classList.contains('open')) {
-      navMenu.classList.remove('open');
-    }
-
-    if (isOpen) {
-      cartSide.classList.remove('open');
-      overlay.classList.remove('active');
-    } else {
-      cartSide.classList.add('open');
-      overlay.classList.add('active');
-    }
-  }
-}
-
-// Toggle menu sidebar
-window.toggleMenu = function() {
-  const navMenu = document.getElementById('nav-menu');
-  const overlay = document.getElementById('menu-overlay');
-  const cartSide = document.getElementById('cart-side');
-
-  if (navMenu && overlay) {
-    const isOpen = navMenu.classList.contains('open');
-
-    if (cartSide && cartSide.classList.contains('open')) {
-      cartSide.classList.remove('open');
-    }
-
-    if (isOpen) {
-      navMenu.classList.remove('open');
-      overlay.classList.remove('active');
-    } else {
-      navMenu.classList.add('open');
-      overlay.classList.add('active');
-    }
-  }
-}
-
-// Close all sidebars
-window.closeAllSidebars = function() {
-  const cartSide = document.getElementById('cart-side');
-  const navMenu = document.getElementById('nav-menu');
-  const overlay = document.getElementById('menu-overlay');
-
-  if (cartSide) cartSide.classList.remove('open');
-  if (navMenu) {
-    navMenu.classList.add('instant-close');
-    navMenu.classList.remove('open');
-    setTimeout(() => {
-      navMenu.classList.remove('instant-close');
-    }, 50);
-  }
-  if (overlay) overlay.classList.remove('active');
-}
+// UI functions already defined at top of file
 
 // Track checkout submission state
 let isCheckoutSubmitting = false;
