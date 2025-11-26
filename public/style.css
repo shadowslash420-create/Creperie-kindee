@@ -1963,6 +1963,8 @@ button:disabled{
   box-shadow:0 20px 60px rgba(0,0,0,0.3);
   position:relative;
   animation:slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform:translate(0, 0) scale(1);
+  margin:auto;
 }
 
 @keyframes slideUp{
