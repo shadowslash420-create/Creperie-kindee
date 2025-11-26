@@ -2222,7 +2222,7 @@ button:disabled{
   box-shadow:var(--soft-shadow);
   border-radius:0;
   animation:fadeIn 0.5s ease-out;
-  font-size:14px;
+  font-size:12px;
   display:table;
   table-layout:auto;
 }
@@ -2234,10 +2234,10 @@ button:disabled{
 }
 
 .orders-table th{
-  padding:12px 14px;
+  padding:9px 10px;
   text-align:left;
   font-weight:700;
-  font-size:12px;
+  font-size:10px;
   text-transform:uppercase;
   letter-spacing:0.5px;
   font-family:'Inter', sans-serif;
@@ -2260,8 +2260,8 @@ button:disabled{
 }
 
 .orders-table td{
-  padding:12px 14px;
-  font-size:14px;
+  padding:8px 10px;
+  font-size:11px;
   color:var(--text-primary);
   word-break:break-word;
 }
@@ -2269,12 +2269,12 @@ button:disabled{
 .status-badge{
   display:inline-block;
   color:#fff;
-  padding:6px 12px;
-  border-radius:12px;
+  padding:4px 10px;
+  border-radius:10px;
   font-weight:600;
-  font-size:11px;
+  font-size:9px;
   text-transform:uppercase;
-  letter-spacing:0.5px;
+  letter-spacing:0.3px;
   box-shadow:0 2px 8px rgba(0,0,0,0.15);
 }
 
@@ -2397,11 +2397,22 @@ button:disabled{
 
 @media(max-width:640px){
   .orders-table{
-    font-size:13px;
+    font-size:10px;
   }
 
-  .orders-table th, .orders-table td{
-    padding:12px 10px;
+  .orders-table th{
+    padding:7px 8px;
+    font-size:9px;
+  }
+
+  .orders-table td{
+    padding:6px 8px;
+    font-size:10px;
+  }
+
+  .status-badge{
+    padding:3px 8px;
+    font-size:8px;
   }
 
   .order-modal-content{
