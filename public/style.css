@@ -898,11 +898,26 @@ html{
   opacity:0.5;
 }
 
+@media(max-width:1024px){
+  .section{
+    padding:60px 36px;
+    margin-bottom:36px;
+  }
+}
+
 @media(max-width:768px){
   .section{
-    padding:48px 24px;
-    margin-bottom:32px;
+    padding:40px 24px;
+    margin-bottom:28px;
     border-radius:8px;
+  }
+}
+
+@media(max-width:480px){
+  .section{
+    padding:28px 16px;
+    margin-bottom:20px;
+    border-radius:6px;
   }
 }
 
@@ -916,6 +931,22 @@ html{
   font-weight:700;
   letter-spacing:2px;
   width:100%;
+}
+
+@media(max-width:768px){
+  .section-title{
+    font-size:32px;
+    margin-bottom:18px;
+    letter-spacing:1px;
+  }
+}
+
+@media(max-width:480px){
+  .section-title{
+    font-size:24px;
+    margin-bottom:14px;
+    letter-spacing:0.5px;
+  }
 }
 
 .section-title::after{
@@ -944,6 +975,22 @@ html{
   width:100%;
 }
 
+@media(max-width:768px){
+  .section-desc{
+    font-size:15px;
+    margin-bottom:32px;
+    line-height:1.8;
+  }
+}
+
+@media(max-width:480px){
+  .section-desc{
+    font-size:14px;
+    margin-bottom:24px;
+    line-height:1.7;
+  }
+}
+
 /* Menu Grid */
 .menu-grid{
   display:grid;
@@ -951,10 +998,23 @@ html{
   gap:32px;
 }
 
+@media(max-width:1024px){
+  .menu-grid{
+    gap:28px;
+  }
+}
+
 @media(max-width:768px){
   .menu-grid{
     grid-template-columns:1fr;
-    gap:24px;
+    gap:22px;
+  }
+}
+
+@media(max-width:480px){
+  .menu-grid{
+    grid-template-columns:1fr;
+    gap:16px;
   }
 }
 
@@ -1009,6 +1069,18 @@ html{
   overflow:hidden;
 }
 
+@media(max-width:768px){
+  .menu-card-image{
+    height:240px;
+  }
+}
+
+@media(max-width:480px){
+  .menu-card-image{
+    height:200px;
+  }
+}
+
 .menu-card-image::after{
   content:'';
   position:absolute;
@@ -1024,6 +1096,18 @@ html{
   background:#fff;
 }
 
+@media(max-width:768px){
+  .menu-card-content{
+    padding:20px;
+  }
+}
+
+@media(max-width:480px){
+  .menu-card-content{
+    padding:16px;
+  }
+}
+
 .menu-card-title{
   font-family:'Playfair Display', serif;
   font-size:24px;
@@ -1034,6 +1118,20 @@ html{
   letter-spacing:0.5px;
 }
 
+@media(max-width:768px){
+  .menu-card-title{
+    font-size:20px;
+    margin-bottom:10px;
+  }
+}
+
+@media(max-width:480px){
+  .menu-card-title{
+    font-size:18px;
+    margin-bottom:8px;
+  }
+}
+
 .menu-card-desc{
   font-size:16px;
   color:var(--text-secondary);
@@ -1041,6 +1139,23 @@ html{
   font-weight:400;
   margin-bottom:20px;
   min-height:48px;
+}
+
+@media(max-width:768px){
+  .menu-card-desc{
+    font-size:14px;
+    margin-bottom:16px;
+    min-height:42px;
+  }
+}
+
+@media(max-width:480px){
+  .menu-card-desc{
+    font-size:13px;
+    margin-bottom:12px;
+    min-height:39px;
+    line-height:1.6;
+  }
 }
 
 .menu-card-footer{
@@ -1056,6 +1171,18 @@ html{
   font-weight:700;
   color:var(--warm-gold);
   letter-spacing:0.5px;
+}
+
+@media(max-width:768px){
+  .menu-card-price{
+    font-size:19px;
+  }
+}
+
+@media(max-width:480px){
+  .menu-card-price{
+    font-size:17px;
+  }
 }
 
 .menu-card-btn{
@@ -1074,6 +1201,20 @@ html{
   box-shadow:0 4px 16px rgba(227,6,19,0.25), 0 2px 8px rgba(0,0,0,0.1);
   position:relative;
   overflow:hidden;
+}
+
+@media(max-width:768px){
+  .menu-card-btn{
+    padding:12px 24px;
+    font-size:14px;
+  }
+}
+
+@media(max-width:480px){
+  .menu-card-btn{
+    padding:10px 20px;
+    font-size:13px;
+  }
 }
 
 .menu-card-btn::before{
@@ -1156,6 +1297,18 @@ html{
   padding:24px;
 }
 
+@media(max-width:768px){
+  .menu-item-info{
+    padding:18px;
+  }
+}
+
+@media(max-width:480px){
+  .menu-item-info{
+    padding:14px;
+  }
+}
+
 .menu-item-name{
   font-family:'Playfair Display', serif;
   font-size:20px;
@@ -1166,6 +1319,20 @@ html{
   letter-spacing:0.5px;
 }
 
+@media(max-width:768px){
+  .menu-item-name{
+    font-size:18px;
+    margin-bottom:8px;
+  }
+}
+
+@media(max-width:480px){
+  .menu-item-name{
+    font-size:16px;
+    margin-bottom:6px;
+  }
+}
+
 .menu-item-desc{
   font-size:15px;
   color:var(--text-secondary);
@@ -1174,12 +1341,41 @@ html{
   margin-bottom:16px;
 }
 
+@media(max-width:768px){
+  .menu-item-desc{
+    font-size:13px;
+    margin-bottom:12px;
+  }
+}
+
+@media(max-width:480px){
+  .menu-item-desc{
+    font-size:12px;
+    margin-bottom:10px;
+    line-height:1.6;
+  }
+}
+
 .menu-item-price{
   font-size:18px;
   font-weight:700;
   color:var(--warm-gold);
   margin-top:12px;
   letter-spacing:0.5px;
+}
+
+@media(max-width:768px){
+  .menu-item-price{
+    font-size:16px;
+    margin-top:10px;
+  }
+}
+
+@media(max-width:480px){
+  .menu-item-price{
+    font-size:14px;
+    margin-top:8px;
+  }
 }
 
 /* Cart Sidebar */
