@@ -1556,6 +1556,12 @@ html{
   transform:scale(0.95);
 }
 
+/* Hide unwanted badges/overlays */
+[role="button"]:has(> :contains("RED")),
+*:contains("RED") {
+  display: none !important;
+}
+
 /* Footer */
 .footer{
   background:linear-gradient(135deg, #E30613 0%, #C10510 100%);
