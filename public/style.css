@@ -1635,6 +1635,27 @@ html{
     padding:10px 16px;
     flex:0 0 calc(50% - 4px);
   }
+
+  /* Mobile table responsiveness */
+  .orders-table{
+    font-size:10px;
+  }
+
+  .orders-table th{
+    padding:8px 4px;
+    font-size:9px;
+  }
+
+  .orders-table td{
+    padding:6px 4px;
+    font-size:10px;
+    max-width:80px;
+  }
+
+  .status-badge{
+    padding:3px 6px;
+    font-size:8px;
+  }
 }
 
 .footer-connect{
@@ -1891,9 +1912,13 @@ button:disabled{
   background:#fff;
   box-shadow:var(--soft-shadow);
   border-radius:8px;
-  overflow-x:auto;
   animation:fadeIn 0.5s ease-out;
   font-size:12px;
+  display:block;
+  overflow-x:auto;
+}
+@keyframes spin{
+  to{transform:rotate(360deg);}
 }
 
 .orders-table thead{

@@ -44,6 +44,11 @@
     <section class="section">
       <h2 class="section-title" id="orders-title" style="text-align:center">طلباتي</h2>
 
+      <!-- Loading Indicator -->
+      <div id="orders-loader" style="display:none;text-align:center;padding:60px 20px;">
+        <div style="display:inline-block;width:40px;height:40px;border:3px solid #ddd;border-top-color:#E30613;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+        <p style="margin-top:20px;color:#999;font-size:14px;">جاري تحميل الطلبات...</p>
+      </div>
 
       <!-- Orders Table -->
       <div id="orders-list"></div>
@@ -374,15 +379,26 @@
 
     window.loadUserOrders = loadUserOrders;
 
+    function showLoader(){
+      const container = document.getElementById('orders-list');
+      const loader = document.getElementById('orders-loader');
+      container.innerHTML = '';
+      loader.style.display = 'block';
+    }
+
     function displayOrders(orders){
       const container = document.getElementById('orders-list');
+      const loader = document.getElementById('orders-loader');
       const t = getOrderTranslations();
       const lang = getCurrentLang();
 
       container.innerHTML = '';
+      loader.style.display = 'none';
 
       if(orders.length === 0){
-        container.innerHTML = `<div class="card" style="text-align:center;padding:40px;color:#999;"><p>${t.noOrders}</p></div>`;
+        const msg = lang === 'ar' ? 'لم تقم بأي طلبات حتى الآن. ابدأ التسوق الآن!' : 'You haven\'t placed any orders yet. Start shopping now!';
+        const link = lang === 'ar' ? 'ابدأ التسوق' : 'Start Shopping';
+        container.innerHTML = `<div class="card" style="text-align:center;padding:60px 20px;color:#999;"><p style="font-size:16px;margin-bottom:20px;">${msg}</p><a href="menu.html" style="display:inline-block;background:#E30613;color:#fff;padding:12px 30px;border-radius:8px;text-decoration:none;font-weight:600;">${link}</a></div>`;
         return;
       }
 
@@ -725,9 +741,11 @@
           
           authBtn.textContent = '👤 ' + user.email.split('@')[0];
           console.log('📦 Loading orders for:', user.email);
+          showLoader();
           loadUserOrders(user.email);
         } else {
           console.log('User not logged in');
+          showLoader();
         }
       });
     });
