@@ -216,9 +216,6 @@
     window.logoutRole = function() {
       currentUserRole = 'customer';
       currentUser = null;
-      document.getElementById('role-selector').style.display = 'none';
-      document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById('role-customer').classList.add('active');
       if (cachedOrders) {
         displayOrders(cachedOrders);
       }
@@ -737,13 +734,10 @@
           }
           
           authBtn.textContent = '👤 ' + user.email.split('@')[0];
-          // Show role selector for staff/delivery access
-          document.getElementById('role-selector').style.display = 'flex';
           console.log('📦 Loading orders for:', user.email);
           loadUserOrders(user.email);
         } else {
           console.log('User not logged in');
-          document.getElementById('role-selector').style.display = 'none';
         }
       });
     });
