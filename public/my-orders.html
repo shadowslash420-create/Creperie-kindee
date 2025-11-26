@@ -526,24 +526,10 @@
 
       modalBody.innerHTML = `
         <div style="margin-bottom:24px;">
-          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px;">
+          <div style="display:flex;justify-content:flex-start;align-items:start;margin-bottom:20px;">
             <div>
               <h2 style="margin:0 0 8px 0;color:#E30613;font-family:'Playfair Display',serif;font-size:28px;font-weight:700;">${order.id}</h2>
               <div style="font-size:14px;color:#666;font-weight:500;">📅 ${date}</div>
-            </div>
-            <div style="
-              background:linear-gradient(135deg, ${statusColor} 0%, ${statusColor}dd 100%);
-              color:white;
-              padding:12px 28px;
-              border-radius:25px;
-              font-weight:700;
-              font-size:13px;
-              text-transform:uppercase;
-              letter-spacing:1px;
-              box-shadow:0 4px 12px ${statusColor}40;
-              border:2px solid rgba(255,255,255,0.3);
-            ">
-              ${statusLabel}
             </div>
           </div>
         </div>
@@ -562,9 +548,9 @@
               <div style="font-size:12px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-family:'Inter',sans-serif;">📍 ${t.address}</div>
               <div style="font-size:17px;color:#fff;font-weight:700;line-height:1.6;">${order.address}</div>
             </div>
-            <div style="grid-column:1/-1;padding-top:12px;border-top:2px solid rgba(255,255,255,0.3);">
+            <div style="grid-column:1/-1;padding-top:12px;border-top:2px solid rgba(255,255,255,0.5);">
               <div style="font-size:12px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-family:'Inter',sans-serif;">📦 ${t.status}</div>
-              <div style="display:inline-block;background:rgba(255,255,255,0.2);color:#fff;padding:8px 16px;border-radius:20px;font-weight:700;font-size:14px;border:2px solid rgba(255,255,255,0.4);">${statusLabel}</div>
+              <div style="display:inline-block;background:rgba(255,255,255,0.3);color:#fff;padding:10px 20px;border-radius:25px;font-weight:700;font-size:15px;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.3);">${statusLabel}</div>
             </div>
           </div>
         </div>
