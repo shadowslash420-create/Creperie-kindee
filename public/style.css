@@ -1530,9 +1530,10 @@ html{
   text-align:center;
   box-shadow:0 -4px 20px rgba(0,0,0,0.1);
   margin-top:auto;
-  width:100%;
-  box-sizing:border-box;
+  width:100vw;
   position:relative;
+  left:calc(-50vw + 50%);
+  box-sizing:border-box;
   margin-bottom:0;
 }
 
