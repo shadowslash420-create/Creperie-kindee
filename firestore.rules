@@ -50,11 +50,11 @@ service cloud.firestore {
       allow create: if request.auth != null; // Customers must be logged in
       
       // Admin: full read access
-      // Staff A: read-only access to view orders
-      // Customers: read own orders by email or userId
+      // Staff: read-only access to view orders
+      // Customers: read own orders by email match
       allow read: if isAdmin() || 
                      (isStaff() && request.auth != null) ||
-                     (request.auth != null && request.auth.token.email.lower() == resource.data.email.lower()) ||
+                     (request.auth != null && request.auth.token.email == resource.data.email) ||
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
       // Admin and Staff A can update order status
