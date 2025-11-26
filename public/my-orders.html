@@ -734,27 +734,29 @@
         }
       }
 
+      // Wait for auth state to be ready using onAuthStateChanged
       const auth = await getAuthInstance();
-      const user = auth && auth.currentUser;
-
-      if (user && user.email) {
-        console.log('✅ User logged in:', user.email);
-        currentUser = user;
-        
-        // Check if user is staff member and redirect if needed
-        const isStaff = await checkStaffRoleAndRedirectOnLoad();
-        if (isStaff) {
-          return; // User was redirected, stop here
+      auth.onAuthStateChanged(async (user) => {
+        if (user && user.email) {
+          console.log('✅ User logged in:', user.email);
+          currentUser = user;
+          
+          // Check if user is staff member and redirect if needed
+          const isStaff = await checkStaffRoleAndRedirectOnLoad();
+          if (isStaff) {
+            return; // User was redirected, stop here
+          }
+          
+          authBtn.textContent = '👤 ' + user.email.split('@')[0];
+          // Show role selector for staff/delivery access
+          document.getElementById('role-selector').style.display = 'flex';
+          console.log('📦 Loading orders for:', user.email);
+          loadUserOrders(user.email);
+        } else {
+          console.log('User not logged in');
+          document.getElementById('role-selector').style.display = 'none';
         }
-        
-        authBtn.textContent = '👤 ' + user.email.split('@')[0];
-        // Show role selector for staff/delivery access
-        document.getElementById('role-selector').style.display = 'flex';
-        loadUserOrders(user.email);
-      } else {
-        console.log('User not logged in');
-        document.getElementById('role-selector').style.display = 'none';
-      }
+      });
     });
   </script>
   <script type="module" src="auth.js"></script>
