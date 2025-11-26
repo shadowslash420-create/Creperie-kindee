@@ -745,7 +745,9 @@
           loadUserOrders(user.email);
         } else {
           console.log('User not logged in');
-          showLoader();
+          const t = getOrderTranslations();
+          const container = document.getElementById('orders-list');
+          container.innerHTML = `<div class="card" style="text-align:center;padding:60px 20px;color:#999;"><p style="font-size:16px;margin-bottom:20px;">${t.ar ? 'يرجى تسجيل الدخول لعرض طلباتك' : 'Please log in to view your orders'}</p></div>`;
         }
       });
     });
