@@ -613,8 +613,8 @@ function renderOrdersTable() {
               </td>
               <td style="padding: 12px; text-align: center; color: #666; font-size: 12px;">${date}</td>
               <td style="padding: 12px; text-align: center;">
-                <button onclick="viewOrderDetails('${order.id}')" style="padding: 6px 12px; background: #4299E1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 4px;">👁️ View</button>
-                <button onclick="deleteOrder('${order.id}')" style="padding: 6px 12px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Delete</button>
+                <button onclick="viewOrderDetails('${order.id}')" style="padding: 8px 16px; background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; margin-right: 8px; transition: transform 0.2s;">📋 Details</button>
+                <button onclick="deleteOrder('${order.id}')" style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: transform 0.2s;">🗑️ Delete</button>
               </td>
             </tr>
           `;
