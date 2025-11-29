@@ -14,24 +14,16 @@ service cloud.firestore {
     function isStaffA() {
       return request.auth != null &&
              request.auth.token.email != null &&
-             (
-               (exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
-                get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Staff A') ||
-               (exists(/databases/$(database)/documents/staff/$(request.auth.token.email.replace('.', '_').replace('@', '_')}) &&
-                get(/databases/$(database)/documents/staff/$(request.auth.token.email.replace('.', '_').replace('@', '_')}).data.role == 'Staff A')
-             );
+             exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
+             get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Staff A';
     }
     
     // Check if current user is staff with role B (manage messages & reviews only)
     function isStaffB() {
       return request.auth != null &&
              request.auth.token.email != null &&
-             (
-               (exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
-                get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Staff B') ||
-               (exists(/databases/$(database)/documents/staff/$(request.auth.token.email.replace('.', '_').replace('@', '_')}) &&
-                get(/databases/$(database)/documents/staff/$(request.auth.token.email.replace('.', '_').replace('@', '_')}).data.role == 'Staff B')
-             );
+             exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
+             get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Staff B';
     }
     
     // Check if current user exists in staff collection
