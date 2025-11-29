@@ -166,13 +166,26 @@
     }
     .modal-close {
       cursor: pointer;
-      font-size: 24px;
-      float: left;
+      font-size: 28px;
+      position: absolute;
+      top: 12px;
+      right: 12px;
       font-weight: bold;
       color: #666;
+      background: none;
+      border: none;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .modal-close:hover {
       color: #000;
+    }
+    .modal-content {
+      position: relative;
     }
   </style>
 </head>
@@ -271,12 +284,14 @@
     // Load orders from Firebase
     async function loadStaffOrders() {
       try {
+        console.log('📋 Staff A: Loading orders from Firebase...');
         await dbService.init();
         staffOrders = await dbService.getAllOrders();
+        console.log('✅ Staff A: Orders loaded:', staffOrders.length, staffOrders);
         renderOrdersTable();
         updateStats();
       } catch (error) {
-        console.error('Error loading orders:', error);
+        console.error('❌ Staff A: Error loading orders:', error);
       }
     }
 
@@ -323,8 +338,17 @@
 
     // Show order details
     window.showOrderDetails = function(orderId) {
+      console.log('📋 Show order details clicked for:', orderId);
+      console.log('📋 Available orders:', staffOrders.length, staffOrders);
+      
       const order = staffOrders.find(o => o.id === orderId);
-      if (!order) return;
+      console.log('📋 Found order:', order);
+      
+      if (!order) {
+        console.error('❌ Order not found:', orderId);
+        alert('Order not found');
+        return;
+      }
 
       const itemsDetail = (order.items || []).map(item => `${item.name} (×${item.qty || 1})`).join(', ');
       const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString('ar') : 'N/A';
@@ -348,6 +372,7 @@
       
       document.getElementById('order-details-content').innerHTML = html;
       document.getElementById('order-details-modal').classList.add('show');
+      console.log('✅ Modal shown');
     };
 
     // Close modal
