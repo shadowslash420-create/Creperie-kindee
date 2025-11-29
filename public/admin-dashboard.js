@@ -614,7 +614,7 @@ function renderOrdersTable() {
               <td style="padding: 12px; text-align: center; color: #666; font-size: 12px;">${date}</td>
               <td style="padding: 12px; text-align: center;">
                 <button onclick="viewOrderDetails('${order.id}')" style="padding: 8px 16px; background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; margin-right: 8px; transition: transform 0.2s;">📋 Details</button>
-                <button onclick="deleteOrder('${order.id}')" style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: transform 0.2s;">🗑️ Delete</button>
+                <button onclick="quickDeleteOrder('${order.id}')" style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: transform 0.2s;">🗑️ Delete</button>
               </td>
             </tr>
           `;
@@ -1438,6 +1438,18 @@ function setupRealtimeListeners() {
   });
 }
 
+// Quick delete - no confirmation
+async function quickDeleteOrder(orderId) {
+  try {
+    await dbService.deleteOrder(orderId);
+    await loadOrdersData();
+    renderOrdersTable();
+    loadDashboard();
+  } catch (error) {
+    alert('Error deleting order: ' + error.message);
+  }
+}
+
 // ==================== EVENT LISTENERS ====================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1461,6 +1473,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.filterOrders = filterOrders;
   window.updateOrderStatus = updateOrderStatus;
   window.deleteOrder = deleteOrder;
+  window.quickDeleteOrder = quickDeleteOrder;
   window.saveMenuItem = saveMenuItem;
   window.openCategoryModal = openCategoryModal;
   window.closeCategoryModal = closeCategoryModal;
