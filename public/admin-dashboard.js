@@ -931,21 +931,42 @@ async function deleteOrder(orderId) {
 
 // Handle delete from modal with proper async flow
 window.handleAdminOrderDelete = async function(orderId) {
+  console.log('🗑️ Delete button clicked for order:', orderId);
   if (confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
     try {
-      console.log('🗑️ Deleting order from modal:', orderId);
-      await dbService.deleteOrder(orderId);
+      console.log('🗑️ Starting delete process for order:', orderId);
+      console.log('🗑️ Calling dbService.deleteOrder()...');
+      
+      const result = await dbService.deleteOrder(orderId);
+      console.log('🗑️ Delete result:', result);
+      
+      console.log('🗑️ Reloading orders data...');
       await loadOrdersData();
+      console.log('✅ Orders data reloaded');
+      
+      console.log('🗑️ Rendering orders table...');
       renderOrdersTable();
+      console.log('✅ Orders table rendered');
+      
+      console.log('🗑️ Loading dashboard...');
       loadDashboard();
+      console.log('✅ Dashboard loaded');
       
       // Close modal
+      console.log('🗑️ Closing modal...');
       const modal = document.querySelector('[style*="position: fixed"]');
-      if (modal) modal.remove();
+      if (modal) {
+        modal.remove();
+        console.log('✅ Modal closed');
+      }
       
       showStyledAlert('Deleted', 'Order deleted successfully!');
+      console.log('✅ Delete completed successfully');
     } catch (error) {
       console.error('❌ Failed to delete order:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Full error object:', error);
       showStyledAlert('Error', 'Failed to delete order: ' + error.message);
     }
   }
