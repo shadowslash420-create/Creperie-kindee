@@ -1845,7 +1845,7 @@ function renderStaffTable() {
         </span>
       </td>
       <td style="padding:12px;color:#666;font-size:14px;">
-        ${member.role === 'Staff A' ? 'Read Messages & Reviews' : member.role === 'Staff B' ? 'Manage Orders' : 'None'}
+        ${member.role === 'Staff A' ? 'Manage Orders' : member.role === 'Staff B' ? 'Read Messages & Reviews' : 'None'}
       </td>
       <td style="padding:12px;">
         <button onclick="deleteStaff('${member.id}')" 
