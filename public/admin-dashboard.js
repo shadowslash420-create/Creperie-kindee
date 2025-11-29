@@ -1878,13 +1878,16 @@ function renderStaffTable() {
 }
 
 async function deleteStaff(staffId) {
+  console.log('🗑️ Delete staff clicked for:', staffId);
   showStyledConfirm('Remove Staff', 'Are you sure you want to remove this staff member?', async () => {
     try {
+      console.log('📝 Attempting to delete staff member with ID:', staffId);
       await dbService.deleteStaff(staffId);
+      console.log('✅ Staff member deleted successfully from Firestore');
       await loadStaff();
       showStyledAlert('Removed', 'Staff member removed successfully!');
     } catch (error) {
-      console.error('❌ Failed to remove staff:', error);
+      console.error('❌ Failed to remove staff:', error.code, error.message, error);
       showStyledAlert('Error', 'Failed to remove staff: ' + error.message);
     }
   });
