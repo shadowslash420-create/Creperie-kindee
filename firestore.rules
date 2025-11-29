@@ -60,7 +60,12 @@ service cloud.firestore {
                        (isStaffA() && 
                         (request.resource.data.status != null || request.resource.data.notes != null));
       
-      allow delete: if isAdmin();
+      // Admin: full delete access
+      // Customers: can delete their own pending orders only
+      allow delete: if isAdmin() || 
+                       (request.auth != null && 
+                        request.auth.token.email == resource.data.email && 
+                        resource.data.status == 'pending');
     }
     
     // ==================== SETTINGS COLLECTION ====================
