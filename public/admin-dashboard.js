@@ -762,10 +762,26 @@ function viewOrderDetails(orderId) {
   // Attach delete button handler
   const deleteBtn = document.getElementById(`delete-order-btn-${orderId}`);
   if (deleteBtn) {
-    deleteBtn.addEventListener('click', function() {
+    deleteBtn.addEventListener('click', async function() {
       if (confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
-        deleteOrder(orderId);
-        modal.remove();
+        try {
+          console.log('🗑️ Deleting order:', orderId);
+          await dbService.deleteOrder(orderId);
+          console.log('✅ Order deleted');
+          
+          // Close modal immediately
+          modal.remove();
+          
+          // Refresh orders
+          await loadOrdersData();
+          renderOrdersTable();
+          loadDashboard();
+          
+          showStyledAlert('Deleted', 'Order deleted successfully!');
+        } catch (error) {
+          console.error('❌ Delete failed:', error);
+          showStyledAlert('Error', 'Failed to delete: ' + error.message);
+        }
       }
     });
   }
