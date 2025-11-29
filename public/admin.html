@@ -562,18 +562,19 @@
       }
     };
 
-    // Check staff role by email
+    // Check staff role by email - searches all staff documents by email field
     async function checkStaffRole(userEmail) {
       try {
         const { getFirestoreInstance } = await import('./firebase-config.js');
-        const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
         
         const db = await getFirestoreInstance();
-        const staffRef = doc(db, 'staff', userEmail.toLowerCase());
-        const staffSnap = await getDoc(staffRef);
+        const staffRef = collection(db, 'staff');
+        const q = query(staffRef, where('email', '==', userEmail.toLowerCase()));
+        const staffSnap = await getDocs(q);
         
-        if (staffSnap.exists()) {
-          return staffSnap.data().role;
+        if (!staffSnap.empty) {
+          return staffSnap.docs[0].data().role;
         }
         return null;
       } catch (error) {

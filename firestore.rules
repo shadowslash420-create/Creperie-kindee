@@ -10,19 +10,10 @@ service cloud.firestore {
              request.auth.token.email == 'oussamaanis2005@gmail.com';
     }
     
-    // Check if current user exists in staff collection by email match
-    function isStaff() {
-      return request.auth != null &&
-             request.auth.token.email != null &&
-             exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
-             get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.email == request.auth.token.email;
-    }
-    
     // Check if current user is staff with role A (manage orders by updating status)
     function isStaffA() {
       return request.auth != null &&
              request.auth.token.email != null &&
-             exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
              get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Staff A';
     }
     
@@ -30,8 +21,12 @@ service cloud.firestore {
     function isStaffB() {
       return request.auth != null &&
              request.auth.token.email != null &&
-             exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
              get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Staff B';
+    }
+    
+    // Check if current user exists in staff collection
+    function isStaff() {
+      return isStaffA() || isStaffB();
     }
     
     // ==================== MENU COLLECTION ====================
