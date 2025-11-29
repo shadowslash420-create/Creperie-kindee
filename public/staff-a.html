@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة الموظفين - Creperie Kinder</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
     body {
       background: #f5f5f5;
@@ -376,6 +378,16 @@
           </div>
         </div>
 
+        ${order.location && order.location.lat && order.location.lng ? `
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: #2d3748; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📍 Delivery Location</h3>
+          <div id="order-location-map" style="width: 100%; height: 250px; border-radius: 8px; border: 2px solid #cbd5e0; background: #f7fafc;"></div>
+          <p style="font-size: 12px; color: #666; margin-top: 8px; text-align: center;">
+            📍 Latitude: <strong>${order.location.lat.toFixed(6)}</strong> | Longitude: <strong>${order.location.lng.toFixed(6)}</strong>
+          </p>
+        </div>
+        ` : ''}
+
         <div style="margin-bottom: 20px;">
           <h3 style="color: #2d3748; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📦 Order Items</h3>
           <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
@@ -416,6 +428,38 @@
       document.getElementById('order-details-content').innerHTML = html;
       document.getElementById('order-details-modal').classList.add('show');
       console.log('✅ Modal shown');
+
+      // Initialize map if location exists
+      if (order.location && order.location.lat && order.location.lng && window.L) {
+        setTimeout(() => {
+          const mapDiv = document.getElementById('order-location-map');
+          if (mapDiv && !mapDiv._leafletMap) {
+            const map = L.map(mapDiv, {
+              center: [order.location.lat, order.location.lng],
+              zoom: 16,
+              zoomControl: true
+            });
+
+            // Add tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap',
+              maxZoom: 19
+            }).addTo(map);
+
+            // Add red marker
+            const redIcon = L.divIcon({
+              className: 'custom-marker',
+              html: '<div style="background:#E30613;width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+              iconSize: [28, 28],
+              iconAnchor: [14, 14]
+            });
+
+            L.marker([order.location.lat, order.location.lng], { icon: redIcon }).addTo(map);
+            mapDiv._leafletMap = map;
+            map.invalidateSize();
+          }
+        }, 200);
+      }
     };
 
     // Close modal

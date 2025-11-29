@@ -704,6 +704,16 @@ function viewOrderDetails(orderId) {
         </div>
       </div>
     </div>
+
+    ${order.location && order.location.lat && order.location.lng ? `
+    <div style="margin-bottom: 24px;">
+      <h3 style="margin: 0 0 12px 0; color: #2d3748; font-size: 16px;">📍 Delivery Location</h3>
+      <div id="admin-order-location-map" style="width: 100%; height: 250px; border-radius: 8px; border: 2px solid #cbd5e0; background: #f7fafc;"></div>
+      <p style="font-size: 12px; color: #666; margin-top: 8px; text-align: center;">
+        📍 Latitude: <strong>${order.location.lat.toFixed(6)}</strong> | Longitude: <strong>${order.location.lng.toFixed(6)}</strong>
+      </p>
+    </div>
+    ` : ''}
     
     <!-- Items -->
     <div style="margin-bottom: 24px;">
@@ -748,6 +758,36 @@ function viewOrderDetails(orderId) {
   
   modal.appendChild(content);
   document.body.appendChild(modal);
+
+  // Initialize map if location exists
+  if (order.location && order.location.lat && order.location.lng && window.L) {
+    setTimeout(() => {
+      const mapDiv = document.getElementById('admin-order-location-map');
+      if (mapDiv && !mapDiv._leafletMap) {
+        const map = L.map(mapDiv, {
+          center: [order.location.lat, order.location.lng],
+          zoom: 16,
+          zoomControl: true
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap',
+          maxZoom: 19
+        }).addTo(map);
+
+        const redIcon = L.divIcon({
+          className: 'custom-marker',
+          html: '<div style="background:#E30613;width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+
+        L.marker([order.location.lat, order.location.lng], { icon: redIcon }).addTo(map);
+        mapDiv._leafletMap = map;
+        map.invalidateSize();
+      }
+    }, 200);
+  }
 }
 
 function renderOrderCard(order) {
