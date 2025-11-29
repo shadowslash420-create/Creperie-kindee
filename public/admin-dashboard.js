@@ -1381,8 +1381,26 @@ function setupRealtimeListeners() {
   });
 
   // Listen to order changes
+  let initialOrderCount = 0;
   dbService.listenToOrderChanges((updatedOrders) => {
     console.log('🔄 Admin: Orders updated in real-time:', updatedOrders.length, 'orders');
+    
+    // Detect new orders and show notification
+    if (initialOrderCount > 0 && updatedOrders.length > initialOrderCount) {
+      const newOrderCount = updatedOrders.length - initialOrderCount;
+      const newestOrder = updatedOrders.sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+        return dateB - dateA;
+      })[0];
+      
+      if (newestOrder) {
+        const message = `📦 New Order! Customer: ${newestOrder.name || newestOrder.customerName || 'Guest'} | Total: ${(newestOrder.total || 0).toFixed(2)} DZD`;
+        showNotification('New Order', message);
+      }
+    }
+    
+    initialOrderCount = updatedOrders.length;
     state.orders = updatedOrders;
     if (state.currentSection === 'orders') {
       renderOrdersTable();
@@ -1448,6 +1466,34 @@ async function quickDeleteOrder(orderId) {
   } catch (error) {
     alert('Error deleting order: ' + error.message);
   }
+}
+
+// Show notification
+function showNotification(title, message) {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    max-width: 400px;
+    font-size: 14px;
+    font-weight: 500;
+    animation: slideIn 0.3s ease-out;
+  `;
+  notification.innerHTML = `<strong>${title}:</strong> ${message}`;
+  document.body.appendChild(notification);
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => notification.remove(), 300);
+  }, 5000);
 }
 
 // ==================== EVENT LISTENERS ====================
