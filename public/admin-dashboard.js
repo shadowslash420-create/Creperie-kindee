@@ -752,12 +752,23 @@ function viewOrderDetails(orderId) {
     <!-- Actions -->
     <div style="display: flex; gap: 12px; justify-content: flex-end;">
       <button onclick="this.closest('[style*=fixed]').remove()" style="padding: 10px 24px; background: #cbd5e0; color: #2d3748; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Close</button>
-      <button onclick="handleAdminOrderDelete('${orderId}')" style="padding: 10px 24px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🗑️ Delete</button>
+      <button style="padding: 10px 24px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;" id="delete-order-btn-${orderId}">🗑️ Delete</button>
     </div>
   `;
   
   modal.appendChild(content);
   document.body.appendChild(modal);
+
+  // Attach delete button handler
+  const deleteBtn = document.getElementById(`delete-order-btn-${orderId}`);
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', function() {
+      if (confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+        deleteOrder(orderId);
+        modal.remove();
+      }
+    });
+  }
 
   // Initialize map if location exists
   if (order.location && order.location.lat && order.location.lng && window.L) {
@@ -929,48 +940,6 @@ async function deleteOrder(orderId) {
   });
 }
 
-// Handle delete from modal with proper async flow
-window.handleAdminOrderDelete = async function(orderId) {
-  console.log('🗑️ Delete button clicked for order:', orderId);
-  if (confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
-    try {
-      console.log('🗑️ Starting delete process for order:', orderId);
-      console.log('🗑️ Calling dbService.deleteOrder()...');
-      
-      const result = await dbService.deleteOrder(orderId);
-      console.log('🗑️ Delete result:', result);
-      
-      console.log('🗑️ Reloading orders data...');
-      await loadOrdersData();
-      console.log('✅ Orders data reloaded');
-      
-      console.log('🗑️ Rendering orders table...');
-      renderOrdersTable();
-      console.log('✅ Orders table rendered');
-      
-      console.log('🗑️ Loading dashboard...');
-      loadDashboard();
-      console.log('✅ Dashboard loaded');
-      
-      // Close modal
-      console.log('🗑️ Closing modal...');
-      const modal = document.querySelector('[style*="position: fixed"]');
-      if (modal) {
-        modal.remove();
-        console.log('✅ Modal closed');
-      }
-      
-      showStyledAlert('Deleted', 'Order deleted successfully!');
-      console.log('✅ Delete completed successfully');
-    } catch (error) {
-      console.error('❌ Failed to delete order:', error);
-      console.error('❌ Error message:', error.message);
-      console.error('❌ Error code:', error.code);
-      console.error('❌ Full error object:', error);
-      showStyledAlert('Error', 'Failed to delete order: ' + error.message);
-    }
-  }
-};
 
 // ==================== MENU SECTION ====================
 
