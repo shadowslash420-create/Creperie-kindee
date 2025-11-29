@@ -10,12 +10,6 @@ service cloud.firestore {
              request.auth.token.email == 'oussamaanis2005@gmail.com';
     }
     
-    // Check if user is any authenticated staff member
-    // Role will be verified in the app layer
-    function isAuthenticatedUser() {
-      return request.auth != null;
-    }
-    
     // ==================== MENU COLLECTION ====================
     match /menu/{menuId} {
       allow read: if true;
@@ -38,10 +32,8 @@ service cloud.firestore {
                      (request.auth != null && request.auth.token.email == resource.data.email) ||
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
-      // Admin and authenticated users can update order status (role verified in app)
-      allow update: if isAdmin() || 
-                       (request.auth != null && 
-                        request.resource.data.status != null);
+      // Admin and authenticated users can update order status
+      allow update: if isAdmin() || request.auth != null;
       
       allow delete: if isAdmin();
     }
@@ -58,7 +50,7 @@ service cloud.firestore {
       allow create: if request.auth != null; // Customers must be logged in
       
       // Admin: full access
-      // Authenticated users can update/delete (Staff B role verified in app)
+      // Authenticated users can update/delete reviews
       allow update, delete: if isAdmin() || request.auth != null;
     }
     
