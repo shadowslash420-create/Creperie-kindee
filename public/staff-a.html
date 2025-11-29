@@ -350,23 +350,64 @@
         return;
       }
 
-      const itemsDetail = (order.items || []).map(item => `${item.name} (×${item.qty || 1})`).join(', ');
       const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString('ar') : 'N/A';
+      const itemsRows = (order.items || []).map(item => `
+        <tr>
+          <td>${item.name}</td>
+          <td style="text-align: center;">${item.qty || 1}</td>
+          <td style="text-align: right;">${(item.price || 0).toFixed(2)} DZD</td>
+          <td style="text-align: right; font-weight: 600;">${((item.price || 0) * (item.qty || 1)).toFixed(2)} DZD</td>
+        </tr>
+      `).join('');
       
       const html = `
-        <h2 style="color: #E30613; margin-bottom: 20px;">📋 تفاصيل الطلب / Order Details</h2>
-        <div style="line-height: 1.8; font-size: 14px;">
-          <p><strong>رقم الطلب / Order ID:</strong> ${orderId}</p>
-          <p><strong>اسم العميل / Customer:</strong> ${order.name || order.customerName || 'N/A'}</p>
-          <p><strong>البريد الإلكتروني / Email:</strong> ${order.email || 'N/A'}</p>
-          <p><strong>الهاتف / Phone:</strong> ${order.phone || 'N/A'}</p>
-          <p><strong>العنوان / Address:</strong> ${order.address || 'N/A'}</p>
-          <p><strong>العناصر / Items:</strong> ${itemsDetail || 'None'}</p>
-          <p><strong>الإجمالي الفرعي / Subtotal:</strong> ${(order.subtotal || 0).toFixed(2)} DZD</p>
-          <p><strong>رسوم التوصيل / Delivery Fee:</strong> ${(order.deliveryFee || 0).toFixed(2)} DZD</p>
-          <p><strong>الإجمالي / Total:</strong> <span style="color: #E30613; font-weight: bold; font-size: 16px;">${(order.total || 0).toFixed(2)} DZD</span></p>
-          <p><strong>الحالة / Status:</strong> ${order.status}</p>
-          <p><strong>التاريخ / Date:</strong> ${date}</p>
+        <h2 style="color: #E30613; margin-bottom: 20px; text-align: center;">📋 Order Details - تفاصيل الطلب</h2>
+        
+        <div style="background: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+          <h3 style="color: #2d3748; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">👤 Customer Information</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; line-height: 1.6;">
+            <div><strong>Name:</strong> ${order.name || order.customerName || 'N/A'}</div>
+            <div><strong>Email:</strong> ${order.email || 'N/A'}</div>
+            <div><strong>Phone:</strong> ${order.phone || 'N/A'}</div>
+            <div><strong>Order ID:</strong> ${orderId}</div>
+            <div style="grid-column: 1 / -1;"><strong>Address:</strong> ${order.address || 'N/A'}</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: #2d3748; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📦 Order Items</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="background: #e2e8f0;">
+                <th style="padding: 8px; text-align: left; font-weight: 600; color: #2d3748;">Item Name</th>
+                <th style="padding: 8px; text-align: center; font-weight: 600; color: #2d3748;">Qty</th>
+                <th style="padding: 8px; text-align: right; font-weight: 600; color: #2d3748;">Price</th>
+                <th style="padding: 8px; text-align: right; font-weight: 600; color: #2d3748;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsRows}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="background: linear-gradient(135deg, #E30613 0%, #B30510 100%); color: white; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px;">
+            <div><strong>Subtotal:</strong> ${(order.subtotal || 0).toFixed(2)} DZD</div>
+            <div><strong>Delivery Fee:</strong> ${(order.deliveryFee || 0).toFixed(2)} DZD</div>
+          </div>
+          <div style="border-top: 1px solid rgba(255,255,255,0.2); margin-top: 10px; padding-top: 10px; font-size: 16px; font-weight: bold; text-align: right;">
+            Total: ${(order.total || 0).toFixed(2)} DZD
+          </div>
+        </div>
+
+        <div style="background: #f0fdf4; padding: 15px; border-radius: 8px;">
+          <h3 style="color: #166534; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">✓ Order Status</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; line-height: 1.6;">
+            <div><strong>Status:</strong> <span style="background: ${getStatusColorStaffA(order.status)}; padding: 4px 8px; border-radius: 4px; font-weight: 600;">${order.status.toUpperCase()}</span></div>
+            <div><strong>Date:</strong> ${date}</div>
+            <div style="grid-column: 1 / -1;"><strong>Special Instructions:</strong> ${order.specialInstructions || 'None'}</div>
+          </div>
         </div>
       `;
       
