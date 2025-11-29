@@ -60,10 +60,10 @@ service cloud.firestore {
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
       // Admin: full update access
-      // Staff A: can update only status field
+      // Staff A: can update status and notes only
       allow update: if isAdmin() || 
                        (isStaffA() && 
-                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']));
+                        (request.resource.data.status != null || request.resource.data.notes != null));
       
       allow delete: if isAdmin();
     }
