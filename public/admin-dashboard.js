@@ -638,39 +638,14 @@ function viewOrderDetails(orderId) {
   const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString() : 'N/A';
   const items = order.items || [];
   
-  // Create rich modal
-  const modal = document.createElement('div');
-  modal.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 10001;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    overflow: auto;
-  `;
-  
+  // Get or create container
+  const container = document.getElementById('order-details-container');
   const content = document.createElement('div');
-  content.style.cssText = `
-    background: white;
-    border-radius: 16px;
-    padding: 32px;
-    max-width: 700px;
-    width: 100%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    max-height: 90vh;
-    overflow-y: auto;
-  `;
   
   content.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 24px;">
       <h2 style="margin: 0; color: #E30613; font-size: 24px;">Order #${orderId}</h2>
-      <button onclick="this.closest('[style*=fixed]').remove()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">×</button>
+      <button onclick="document.getElementById('order-details-container').style.display='none'" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">×</button>
     </div>
     
     <!-- Status Badge -->
@@ -742,13 +717,15 @@ function viewOrderDetails(orderId) {
     
     <!-- Actions -->
     <div style="display: flex; gap: 12px; justify-content: flex-end;">
-      <button onclick="this.closest('[style*=fixed]').remove()" style="padding: 10px 24px; background: #cbd5e0; color: #2d3748; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Close</button>
-      <button onclick="deleteOrder('${orderId}'); this.closest('[style*=fixed]').remove();" style="padding: 10px 24px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🗑️ Delete</button>
+      <button onclick="document.getElementById('order-details-container').style.display='none'" style="padding: 10px 24px; background: #cbd5e0; color: #2d3748; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Close</button>
+      <button onclick="deleteOrder('${orderId}'); document.getElementById('order-details-container').style.display='none';" style="padding: 10px 24px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🗑️ Delete</button>
     </div>
   `;
   
-  modal.appendChild(content);
-  document.body.appendChild(modal);
+  container.innerHTML = '';
+  container.appendChild(content);
+  container.style.display = 'block';
+  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function renderOrderCard(order) {
