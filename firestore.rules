@@ -30,11 +30,6 @@ service cloud.firestore {
              );
     }
     
-    // Check if current user exists in staff collection
-    function isStaff() {
-      return isStaffA() || isStaffB();
-    }
-    
     // ==================== MENU COLLECTION ====================
     match /menu/{menuId} {
       allow read: if true;
