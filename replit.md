@@ -71,3 +71,6 @@ Creperie Kinder is a modern, elegant cloud-powered website for a crepe restauran
 - **Vercel:** Deployment platform for hosting the application and serverless functions.
 - **Playfair Display (Google Fonts):** For display headings.
 - **Inter (Google Fonts):** For body text.
+
+## Pending Features
+- **SMS Notifications via Twilio:** Staff A and Admin receive phone notifications when customers place orders. Requires Twilio Account SID, Auth Token, and phone numbers to be configured.
