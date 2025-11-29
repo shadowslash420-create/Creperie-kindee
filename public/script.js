@@ -266,6 +266,15 @@ let menuItems = [];
 let categories = [];
 let currentLang = localStorage.getItem(LANG_KEY) || 'ar';
 
+// Initialize language button on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const langBtn = document.getElementById('lang-btn');
+  if (langBtn) {
+    langBtn.textContent = currentLang === 'ar' ? 'EN' : 'ع';
+  }
+  applyTranslations();
+});
+
 // Get current auth user
 let currentAuthUser = null;
 
