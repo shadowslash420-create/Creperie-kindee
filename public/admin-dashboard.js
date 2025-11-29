@@ -1425,6 +1425,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.renderReviewsList = renderReviewsList;
   window.renderStaffTable = renderStaffTable;
   window.renderCustomersTable = renderCustomersTable;
+  window.viewOrderDetails = viewOrderDetails;
 });
 
 // ==================== CATEGORY MANAGEMENT ====================
