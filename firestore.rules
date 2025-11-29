@@ -14,24 +14,24 @@ service cloud.firestore {
     function isStaff() {
       return request.auth != null &&
              request.auth.token.email != null &&
-             exists(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())) &&
-             get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())).data.email.lower() == request.auth.token.email.lower();
+             exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
+             get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.email == request.auth.token.email;
     }
     
     // Check if current user is staff with role A (manage orders by updating status)
     function isStaffA() {
       return request.auth != null &&
              request.auth.token.email != null &&
-             exists(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())) &&
-             get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())).data.role == 'Staff A';
+             exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
+             get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Staff A';
     }
     
     // Check if current user is staff with role B (manage messages & reviews only)
     function isStaffB() {
       return request.auth != null &&
              request.auth.token.email != null &&
-             exists(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())) &&
-             get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())).data.role == 'Staff B';
+             exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
+             get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Staff B';
     }
     
     // ==================== MENU COLLECTION ====================
@@ -52,10 +52,10 @@ service cloud.firestore {
       
       // Admin: full read access
       // Staff A: read-only access to view orders
-      // Customers: read own orders by email match (case-insensitive)
+      // Customers: read own orders by email match
       allow read: if isAdmin() || 
                      (isStaffA() && request.auth != null) ||
-                     (request.auth != null && request.auth.token.email.lower() == resource.data.email.lower()) ||
+                     (request.auth != null && request.auth.token.email == resource.data.email) ||
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
       // Admin and Staff A can update order status
