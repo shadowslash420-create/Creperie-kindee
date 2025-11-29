@@ -20,6 +20,11 @@
     }
   </style>
   <script type="module" src="script.js"></script>
+  <script>
+    const LANG_KEY = 'kc_lang';
+    const savedLang = localStorage.getItem(LANG_KEY) || 'ar';
+    document.documentElement.lang = savedLang;
+  </script>
 </head>
 <body dir="ltr">
   <header class="header">

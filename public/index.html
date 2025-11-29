@@ -12,6 +12,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <title>Creperie Kinder</title>
   <link rel="stylesheet" href="style.css?v=2.0" />
+  <script>
+    const LANG_KEY = 'kc_lang';
+    const savedLang = localStorage.getItem(LANG_KEY) || 'ar';
+    document.documentElement.lang = savedLang;
+  </script>
 </head>
 <body dir="ltr">
   <!-- Header -->
