@@ -17,7 +17,7 @@ service cloud.firestore {
              get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.email.lower() == request.auth.token.email.lower();
     }
     
-    // Check if current user is staff with role A (view orders & messages, update order status)
+    // Check if current user is staff with role A (manage orders by updating status)
     function isStaffA() {
       return request.auth != null &&
              exists(/databases/$(database)/documents/staff/$(request.auth.uid)) &&
@@ -50,10 +50,10 @@ service cloud.firestore {
       allow create: if request.auth != null; // Customers must be logged in
       
       // Admin: full read access
-      // Staff: read-only access to view orders
+      // Staff A: read-only access to view orders
       // Customers: read own orders by email match (case-insensitive)
       allow read: if isAdmin() || 
-                     (isStaff() && request.auth != null) ||
+                     (isStaffA() && request.auth != null) ||
                      (request.auth != null && request.auth.token.email.lower() == resource.data.email.lower()) ||
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
