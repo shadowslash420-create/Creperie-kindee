@@ -1920,7 +1920,7 @@ async function saveStaffMember(event) {
   
   console.log('👨‍💼 Adding staff member:', { email, name, role });
   try {
-    const staffId = email.replace(/[^a-z0-9]/g, '_').substring(0, 64);
+    const staffId = email.toLowerCase();
     
     const staffData = {
       email: email.toLowerCase(),
