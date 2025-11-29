@@ -161,8 +161,7 @@ function updateDeliverySettings() {
   if (feeText) feeText.textContent = `${fee} DZD`;
 }
 
-// Load settings on page load
-document.addEventListener('DOMContentLoaded', loadRestaurantSettings);
+// Settings load is now handled in main consolidated DOMContentLoaded listener above
 
 // Listen for real-time settings changes
 dbService.listenToSettingsChanges((settings) => {
@@ -1421,19 +1420,6 @@ function applyFeedbackTranslations() {
   }
 }
 
-// Call on page load
-document.addEventListener('DOMContentLoaded', async () => {
-  markActiveFooterLink();
-  if (document.getElementById('faq-q1')) applyFaqTranslations();
-  if (document.getElementById('feedback-form')) {
-    await loadMenuItemsFromFirebase();
-    applyFeedbackTranslations();
-    setTimeout(() => {
-      initStarRatingOriginal();
-      renderFeedbackListOriginal();
-    }, 100);
-  }
-});
 // Also call when page is shown (after navigation)
 window.addEventListener('pageshow', markActiveFooterLink);
 
@@ -1517,8 +1503,11 @@ function setupFooterAdminClick() {
   }
 }
 
-// Initialize on page load
+// SINGLE CONSOLIDATED INITIALIZATION - runs only ONCE
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🔄 PAGE INITIALIZATION STARTED (single listener)');
+  
+  // Language button setup
   const langBtn = document.getElementById('lang-btn');
   if (langBtn) {
     langBtn.textContent = currentLang === 'ar' ? 'EN' : 'ع';
@@ -1538,8 +1527,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Setup footer admin 7-click feature
   setupFooterAdminClick();
+  
+  // Mark active footer link
+  markActiveFooterLink();
+  
+  // FAQ page setup
+  if (document.getElementById('faq-q1')) applyFaqTranslations();
+  
+  // Feedback page setup
+  if (document.getElementById('feedback-form')) {
+    await loadMenuItemsFromFirebase();
+    applyFeedbackTranslations();
+    setTimeout(() => {
+      initStarRatingOriginal();
+      renderFeedbackListOriginal();
+    }, 100);
+    
+    // Load menu items for feedback form select
+    const feedbackItemSelect = document.getElementById('feedback-item');
+    if (feedbackItemSelect && menuItems.length > 0) {
+      feedbackItemSelect.innerHTML = '<option value="">-- اختر منتج --</option>';
+      menuItems.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.name;
+        feedbackItemSelect.appendChild(option);
+      });
+    }
+  }
 
-  // Only initialize menu if we're on the menu page
+  // Determine page type and initialize accordingly
   const isMenuPage = window.location.pathname.includes('menu.html');
   const isHomePage = window.location.pathname === '/' || 
                      window.location.pathname === '/index.html' || 
@@ -1562,6 +1579,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   highlightActivePage();
   initScrollButton();
   updatePageIndicator();
+  
+  console.log('✅ PAGE INITIALIZATION COMPLETE');
 });
 
 // Original translations, FAQ, admin, feedback, and other helper functions remain here.
@@ -2704,76 +2723,7 @@ async function renderHomeMenuPreviewOriginal() {
   }
 }
 
-// Initialize on page load (Original)
-document.addEventListener('DOMContentLoaded', async ()=>{
-  initPageLoadOriginal(); // Call original initPageLoad
-  try {
-    const initialLang = getCurrentLang();
-    setLanguage(initialLang); // Assuming setLanguage is defined and works with original translations
-    applyTranslationsOriginal(); // Call original applyTranslations
-
-    // Only initialize menu if we're on the menu page
-    const isMenuPage = window.location.pathname.includes('menu.html');
-    const isHomePage = window.location.pathname === '/' || 
-                       window.location.pathname === '/index.html' || 
-                       window.location.pathname.endsWith('/');
-
-    if (isMenuPage) {
-      await initMenu(); // Use updated initMenu
-    } else if (isHomePage) {
-      // Load menu items for homepage preview
-      await loadMenuItemsFromFirebase(); // Use updated loadMenuItemsFromFirebase
-      loadCartOriginal(); // Use original loadCart
-      updateCart(); // Use updated updateCart
-      renderHomeMenuPreviewOriginal(); // Call original render function
-    } else {
-      // Still load cart for other pages
-      loadCartOriginal(); // Use original loadCart
-      updateCart(); // Use updated updateCart
-    }
-
-    highlightActivePageOriginal(); // Call original highlight function
-    initScrollButtonOriginal(); // Call original initScrollButton
-    updatePageIndicatorOriginal(); // Call original updatePageIndicator
-    initSecretAdminAccessOriginal(); // Call original initSecretAdminAccess
-  } catch(error) {
-    console.error('Error during DOMContentLoaded initialization:', error);
-  }
-
-  // Load menu items for feedback form
-  const feedbackItemSelect = document.getElementById('feedback-item');
-  if (feedbackItemSelect) {
-    loadMenuItemsFromFirebase().then(() => {
-      feedbackItemSelect.innerHTML = '<option value="">-- اختر منتج --</option>';
-      menuItems.forEach(item => {
-        const option = document.createElement('option');
-        option.value = item.id;
-        option.textContent = item.name;
-        feedbackItemSelect.appendChild(option);
-      });
-    });
-  }
-
-  const adminForm = document.getElementById('admin-login-form');
-  if(adminForm){
-    adminForm.addEventListener('submit', e=>{
-      e.preventDefault();
-      const u = document.getElementById('adm-user').value;
-      const p = document.getElementById('adm-pass').value;
-      if(adminLoginOriginal(u,p)){ // Call original adminLogin
-        checkAdminPageOriginal(); // Call original checkAdminPage
-      } else {
-        alert('خطأ في بيانات الدخول');
-      }
-    });
-  }
-
-  checkAdminPageOriginal(); // Call original checkAdminPage
-
-  populateFeedbackItemsOriginal(); // Call original populateFeedbackItems
-  renderFeedbackListOriginal(); // Call original renderFeedbackList
-  initStarRatingOriginal(); // Call original initStarRating
-});
+// DUPLICATE REMOVED - consolidated into single listener above
 
 // Update footer category links
 function updateFooterCategoryLinks() {
