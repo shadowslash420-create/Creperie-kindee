@@ -578,22 +578,31 @@ window.submitCheckoutForm = async function(event) {
   const phone = document.getElementById('checkout-phone').value.trim();
   const address = document.getElementById('checkout-address').value.trim();
   const notes = document.getElementById('checkout-notes').value.trim();
+  const lat = document.getElementById('checkout-lat').value;
+  const lng = document.getElementById('checkout-lng').value;
 
-  // Validate
+  // Validate - require location selection
   if (!firstName || !lastName || !phone || !address) {
     alert(currentLang === 'ar' ? 'الرجاء ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
+    return;
+  }
+
+  if (!lat || !lng) {
+    alert(currentLang === 'ar' ? 'الرجاء تحديد موقع التوصيل على الخريطة' : 'Please select your delivery location on the map');
     return;
   }
 
   // Combine first and last name
   const fullName = `${firstName} ${lastName}`;
 
-  // Save customer info
+  // Save customer info including location
   localStorage.setItem('kc_customer_info', JSON.stringify({ 
     firstName, 
     lastName, 
     phone, 
-    address 
+    address,
+    lat: parseFloat(lat),
+    lng: parseFloat(lng)
   }));
 
   // Calculate totals
@@ -608,6 +617,10 @@ window.submitCheckoutForm = async function(event) {
     phone,
     address,
     email: userEmail,
+    location: {
+      lat: parseFloat(lat),
+      lng: parseFloat(lng)
+    },
     items: cart.map(item => ({
       id: item.id,
       name: item.name,
@@ -884,12 +897,49 @@ window.checkoutFlow = async function() {
 
           <div style="margin-bottom: 16px;">
             <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #2C1810;">
-              ${isArabic ? 'عنوان التوصيل' : 'Delivery Address'} <span style="color: #E30613;">*</span>
+              ${isArabic ? 'موقع التوصيل' : 'Delivery Location'} <span style="color: #E30613;">*</span>
             </label>
+            <p style="font-size: 13px; color: #5C4033; margin-bottom: 8px;">
+              ${isArabic ? '📍 انقر على الخريطة أو استخدم موقعي الحالي لتحديد عنوان التوصيل' : '📍 Click on the map or use my current location to set delivery address'}
+            </p>
+            <button 
+              type="button" 
+              id="use-my-location-btn"
+              onclick="useMyLocation()"
+              style="
+                width: 100%;
+                padding: 10px;
+                background: linear-gradient(135deg, #52C41A 0%, #389E0D 100%);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+              "
+            >
+              📍 ${isArabic ? 'استخدم موقعي الحالي' : 'Use My Current Location'}
+            </button>
+            <div id="checkout-map" style="
+              width: 100%;
+              height: 200px;
+              border-radius: 8px;
+              border: 2px solid #FFE4E1;
+              margin-bottom: 10px;
+              z-index: 1;
+            "></div>
+            <input type="hidden" id="checkout-lat" value="${savedInfo.lat || ''}" />
+            <input type="hidden" id="checkout-lng" value="${savedInfo.lng || ''}" />
             <textarea 
               id="checkout-address" 
               required
-              rows="3"
+              rows="2"
+              placeholder="${isArabic ? 'تفاصيل إضافية للعنوان (رقم الشقة، علامة مميزة...)' : 'Additional address details (apt number, landmark...)'}"
               style="
                 width: 100%;
                 padding: 12px;
@@ -903,6 +953,9 @@ window.checkoutFlow = async function() {
               onfocus="this.style.borderColor='#E30613'"
               onblur="this.style.borderColor='#FFE4E1'"
             >${savedInfo.address || ''}</textarea>
+            <p id="selected-location-text" style="font-size: 12px; color: #52C41A; margin-top: 4px; display: none;">
+              ✅ ${isArabic ? 'تم تحديد الموقع' : 'Location selected'}
+            </p>
           </div>
 
           <div style="margin-bottom: 24px;">
@@ -997,11 +1050,182 @@ window.checkoutFlow = async function() {
 
   document.body.appendChild(modal);
 
+  // Initialize map after modal is in DOM
+  setTimeout(() => {
+    initCheckoutMap(savedInfo);
+  }, 100);
+
   // Focus first input
   setTimeout(() => {
     const firstInput = document.getElementById('checkout-firstname');
     if (firstInput) firstInput.focus();
-  }, 100);
+  }, 200);
+}
+
+// Map variables
+let checkoutMap = null;
+let checkoutMarker = null;
+
+// Initialize checkout map
+function initCheckoutMap(savedInfo) {
+  const mapContainer = document.getElementById('checkout-map');
+  if (!mapContainer || !window.L) {
+    console.log('Map container or Leaflet not available');
+    return;
+  }
+
+  // Default to Algeria (Blida area - near Kinder 5)
+  const defaultLat = savedInfo.lat || 36.4700;
+  const defaultLng = savedInfo.lng || 2.8277;
+  const hasExistingLocation = savedInfo.lat && savedInfo.lng;
+
+  // Initialize map
+  checkoutMap = L.map('checkout-map', {
+    center: [defaultLat, defaultLng],
+    zoom: hasExistingLocation ? 16 : 13,
+    zoomControl: true,
+    scrollWheelZoom: true
+  });
+
+  // Add tile layer (OpenStreetMap)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 19
+  }).addTo(checkoutMap);
+
+  // Custom red marker icon
+  const redIcon = L.divIcon({
+    className: 'custom-marker',
+    html: '<div style="background:#E30613;width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+  });
+
+  // Add marker if there's an existing location
+  if (hasExistingLocation) {
+    checkoutMarker = L.marker([defaultLat, defaultLng], { icon: redIcon, draggable: true }).addTo(checkoutMap);
+    setupMarkerDrag(checkoutMarker);
+    showLocationConfirmation();
+  }
+
+  // Click on map to set location
+  checkoutMap.on('click', function(e) {
+    setMapLocation(e.latlng.lat, e.latlng.lng);
+  });
+
+  // Force map to render correctly (fixes display issues in modals)
+  setTimeout(() => {
+    checkoutMap.invalidateSize();
+  }, 300);
+}
+
+// Set location on map
+function setMapLocation(lat, lng) {
+  if (!checkoutMap) return;
+
+  const redIcon = L.divIcon({
+    className: 'custom-marker',
+    html: '<div style="background:#E30613;width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+  });
+
+  // Remove existing marker
+  if (checkoutMarker) {
+    checkoutMap.removeLayer(checkoutMarker);
+  }
+
+  // Add new marker
+  checkoutMarker = L.marker([lat, lng], { icon: redIcon, draggable: true }).addTo(checkoutMap);
+  setupMarkerDrag(checkoutMarker);
+
+  // Update hidden inputs
+  document.getElementById('checkout-lat').value = lat;
+  document.getElementById('checkout-lng').value = lng;
+
+  // Center map on new location
+  checkoutMap.setView([lat, lng], 16);
+
+  // Show confirmation
+  showLocationConfirmation();
+
+  console.log('📍 Location set:', lat, lng);
+}
+
+// Setup marker drag events
+function setupMarkerDrag(marker) {
+  marker.on('dragend', function(e) {
+    const latlng = e.target.getLatLng();
+    document.getElementById('checkout-lat').value = latlng.lat;
+    document.getElementById('checkout-lng').value = latlng.lng;
+    showLocationConfirmation();
+    console.log('📍 Marker moved to:', latlng.lat, latlng.lng);
+  });
+}
+
+// Show location confirmation text
+function showLocationConfirmation() {
+  const confirmText = document.getElementById('selected-location-text');
+  if (confirmText) {
+    confirmText.style.display = 'block';
+  }
+}
+
+// Use current location
+window.useMyLocation = function() {
+  const btn = document.getElementById('use-my-location-btn');
+  const isArabic = currentLang === 'ar';
+  
+  if (!navigator.geolocation) {
+    alert(isArabic ? 'المتصفح لا يدعم تحديد الموقع' : 'Geolocation is not supported by your browser');
+    return;
+  }
+
+  // Show loading state
+  if (btn) {
+    btn.innerHTML = `<span style="display:flex;align-items:center;gap:8px;">⏳ ${isArabic ? 'جاري تحديد الموقع...' : 'Getting location...'}</span>`;
+    btn.disabled = true;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      
+      setMapLocation(lat, lng);
+      
+      // Reset button
+      if (btn) {
+        btn.innerHTML = `📍 ${isArabic ? 'تم تحديد الموقع ✅' : 'Location Set ✅'}`;
+        btn.style.background = 'linear-gradient(135deg, #52C41A 0%, #389E0D 100%)';
+        setTimeout(() => {
+          btn.innerHTML = `📍 ${isArabic ? 'استخدم موقعي الحالي' : 'Use My Current Location'}`;
+          btn.disabled = false;
+        }, 2000);
+      }
+    },
+    (error) => {
+      console.error('Geolocation error:', error);
+      let errorMsg = isArabic ? 'تعذر تحديد موقعك' : 'Could not get your location';
+      
+      if (error.code === error.PERMISSION_DENIED) {
+        errorMsg = isArabic ? 'يرجى السماح بالوصول إلى موقعك' : 'Please allow location access';
+      }
+      
+      alert(errorMsg);
+      
+      // Reset button
+      if (btn) {
+        btn.innerHTML = `📍 ${isArabic ? 'استخدم موقعي الحالي' : 'Use My Current Location'}`;
+        btn.disabled = false;
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 60000
+    }
+  );
 }
 
 // Toggle language
