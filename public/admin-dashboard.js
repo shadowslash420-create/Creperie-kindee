@@ -752,7 +752,7 @@ function viewOrderDetails(orderId) {
     <!-- Actions -->
     <div style="display: flex; gap: 12px; justify-content: flex-end;">
       <button onclick="this.closest('[style*=fixed]').remove()" style="padding: 10px 24px; background: #cbd5e0; color: #2d3748; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Close</button>
-      <button onclick="deleteOrder('${orderId}'); this.closest('[style*=fixed]').remove();" style="padding: 10px 24px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🗑️ Delete</button>
+      <button onclick="handleAdminOrderDelete('${orderId}')" style="padding: 10px 24px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🗑️ Delete</button>
     </div>
   `;
   
@@ -928,6 +928,28 @@ async function deleteOrder(orderId) {
     }
   });
 }
+
+// Handle delete from modal with proper async flow
+window.handleAdminOrderDelete = async function(orderId) {
+  if (confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+    try {
+      console.log('🗑️ Deleting order from modal:', orderId);
+      await dbService.deleteOrder(orderId);
+      await loadOrdersData();
+      renderOrdersTable();
+      loadDashboard();
+      
+      // Close modal
+      const modal = document.querySelector('[style*="position: fixed"]');
+      if (modal) modal.remove();
+      
+      showStyledAlert('Deleted', 'Order deleted successfully!');
+    } catch (error) {
+      console.error('❌ Failed to delete order:', error);
+      showStyledAlert('Error', 'Failed to delete order: ' + error.message);
+    }
+  }
+};
 
 // ==================== MENU SECTION ====================
 
