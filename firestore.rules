@@ -59,10 +59,13 @@ service cloud.firestore {
                      (request.auth != null && request.auth.token.email == resource.data.email) ||
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
-      // Admin and Staff A can update order status
+      // Admin: full update access
+      // Staff A: can only update status and optional notes/completedAt fields
       allow update: if isAdmin() || 
-                       (isStaffA() && request.resource.data.status != null && 
-                        request.resource.data.keys().size() <= 2);
+                       (isStaffA() && 
+                        (request.resource.data.status != null || request.resource.data.notes != null || request.resource.data.completedAt != null) &&
+                        request.resource.data.email == resource.data.email &&
+                        request.resource.data.userId == resource.data.userId);
       
       allow delete: if isAdmin();
     }
