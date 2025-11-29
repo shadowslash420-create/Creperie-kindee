@@ -183,6 +183,10 @@ html{
   letter-spacing:0.5px;
   font-family:'Inter', sans-serif;
   text-transform:uppercase;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
 }
 
 .lang-btn:hover{
