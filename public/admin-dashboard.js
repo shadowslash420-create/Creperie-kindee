@@ -764,17 +764,14 @@ function viewOrderDetails(orderId) {
   if (deleteBtn) {
     deleteBtn.addEventListener('click', async function(e) {
       e.preventDefault();
-      if (confirm('Are you sure you want to delete this order?')) {
-        try {
-          await dbService.deleteOrder(orderId);
-          modal.remove();
-          await loadOrdersData();
-          renderOrdersTable();
-          loadDashboard();
-          alert('✅ Order deleted successfully!');
-        } catch (error) {
-          alert('❌ Error: ' + error.message);
-        }
+      try {
+        await dbService.deleteOrder(orderId);
+        modal.remove();
+        await loadOrdersData();
+        renderOrdersTable();
+        loadDashboard();
+      } catch (error) {
+        alert('Error: ' + error.message);
       }
     });
   }
