@@ -562,14 +562,14 @@
       }
     };
 
-    // Check staff role
-    async function checkStaffRole(userId) {
+    // Check staff role by email
+    async function checkStaffRole(userEmail) {
       try {
         const { getFirestoreInstance } = await import('./firebase-config.js');
         const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
         
         const db = await getFirestoreInstance();
-        const staffRef = doc(db, 'staff', userId);
+        const staffRef = doc(db, 'staff', userEmail.toLowerCase());
         const staffSnap = await getDoc(staffRef);
         
         if (staffSnap.exists()) {
@@ -603,12 +603,12 @@
 
       // Show based on role
       if (userRole === 'Staff A') {
-        // Staff A: See Messages & Reviews only
+        // Staff A: Manage Orders by Status
+        if (navItems.orders) navItems.orders.style.display = 'block';
+      } else if (userRole === 'Staff B') {
+        // Staff B: See Messages & Reviews
         if (navItems.messages) navItems.messages.style.display = 'block';
         if (navItems.reviews) navItems.reviews.style.display = 'block';
-      } else if (userRole === 'Staff B') {
-        // Staff B: See Orders only
-        if (navItems.orders) navItems.orders.style.display = 'block';
       } else {
         // Admin: See all
         Object.values(navItems).forEach(item => {
@@ -638,8 +638,8 @@
           }
         }
       } else {
-        // Check if user is staff
-        const staffRole = await checkStaffRole(user.uid);
+        // Check if user is staff by email
+        const staffRole = await checkStaffRole(user.email);
         if (staffRole === 'Staff A' || staffRole === 'Staff B') {
           console.log(`✅ ${staffRole} user auto-logged in:`, user.email);
           document.getElementById('login-section').classList.add('hidden');
@@ -651,9 +651,9 @@
             await window.initializeDashboard();
             if (window.showSection) {
               if (staffRole === 'Staff A') {
-                window.showSection('messages');
-              } else if (staffRole === 'Staff B') {
                 window.showSection('orders');
+              } else if (staffRole === 'Staff B') {
+                window.showSection('messages');
               }
             }
           }
