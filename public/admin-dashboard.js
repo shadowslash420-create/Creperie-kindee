@@ -761,21 +761,53 @@ function viewOrderDetails(orderId) {
 
   // Attach delete button handler
   const deleteBtn = document.getElementById(`delete-order-btn-${orderId}`);
+  console.log('🔍 Looking for delete button:', `delete-order-btn-${orderId}`);
+  console.log('🔍 Button found:', deleteBtn ? 'YES' : 'NO');
+  
   if (deleteBtn) {
-    deleteBtn.addEventListener('click', async function() {
+    console.log('✅ Attaching click handler to delete button');
+    deleteBtn.addEventListener('click', async function(e) {
+      console.log('🗑️ DELETE BUTTON CLICKED!');
+      e.preventDefault();
+      e.stopPropagation();
+      
+      console.log('📝 Showing confirmation dialog...');
       if (confirm('Are you sure you want to delete this order?')) {
+        console.log('✅ Confirmed - starting deletion...');
         try {
-          await dbService.deleteOrder(orderId);
+          console.log('🗑️ Calling dbService.deleteOrder(' + orderId + ')');
+          const result = await dbService.deleteOrder(orderId);
+          console.log('✅ Delete returned:', result);
+          
+          console.log('🗑️ Removing modal...');
           modal.remove();
+          
+          console.log('🗑️ Reloading data...');
           await loadOrdersData();
+          console.log('✅ Data reloaded');
+          
+          console.log('🗑️ Rendering table...');
           renderOrdersTable();
+          console.log('✅ Table rendered');
+          
+          console.log('🗑️ Loading dashboard...');
           loadDashboard();
+          console.log('✅ Dashboard loaded');
+          
+          console.log('✅ DELETION COMPLETE!');
           showStyledAlert('Success', 'Order deleted successfully!');
         } catch (error) {
+          console.error('❌ DELETE FAILED:', error);
+          console.error('❌ Error message:', error.message);
+          console.error('❌ Error code:', error.code);
           showStyledAlert('Error', 'Failed to delete: ' + error.message);
         }
+      } else {
+        console.log('❌ Deletion cancelled by user');
       }
     });
+  } else {
+    console.error('❌ Delete button NOT found!');
   }
 
   // Initialize map if location exists
