@@ -2019,7 +2019,8 @@ async function saveStaffMember(event) {
   
   console.log('👨‍💼 Adding staff member:', { email, name, role });
   try {
-    const staffId = email.toLowerCase();
+    // Create safe ID by replacing @ with _ and . with _
+    const staffId = email.toLowerCase().replace(/[@.]/g, '_');
     
     const staffData = {
       email: email.toLowerCase(),
