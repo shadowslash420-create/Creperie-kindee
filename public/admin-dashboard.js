@@ -635,21 +635,119 @@ function viewOrderDetails(orderId) {
   }
   
   console.log('Order found:', order);
-  const itemsDetail = (order.items || []).map(item => `${item.name} (×${item.qty || 1})`).join(', ');
-  const html = `
-    <strong>Order ID:</strong> ${orderId}<br><br>
-    <strong>Customer:</strong> ${order.name || order.customerName || 'N/A'}<br>
-    <strong>Email:</strong> ${order.email || 'N/A'}<br>
-    <strong>Phone:</strong> ${order.phone || order.customerPhone || 'N/A'}<br>
-    <strong>Address:</strong> ${order.address || 'N/A'}<br><br>
-    <strong>Items:</strong><br>${itemsDetail || 'None'}<br><br>
-    <strong>Subtotal:</strong> ${(order.subtotal || 0).toFixed(2)} DZD<br>
-    <strong>Delivery Fee:</strong> ${(order.deliveryFee || 0).toFixed(2)} DZD<br>
-    <strong>Total:</strong> <span style="color: #E30613; font-weight: bold; font-size: 16px;">${(order.total || 0).toFixed(2)} DZD</span><br><br>
-    <strong>Status:</strong> ${order.status}<br>
-    <strong>Date:</strong> ${order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString() : 'N/A'}
+  const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString() : 'N/A';
+  const items = order.items || [];
+  
+  // Create rich modal
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
   `;
-  showStyledAlert('Order Details', html);
+  
+  const content = document.createElement('div');
+  content.style.cssText = `
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 700px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+  `;
+  
+  content.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 24px;">
+      <h2 style="margin: 0; color: #E30613; font-size: 24px;">Order #${orderId}</h2>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999;">×</button>
+    </div>
+    
+    <!-- Status Badge -->
+    <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+      <span style="padding: 8px 16px; border-radius: 20px; font-weight: 600; background: ${getStatusColor(order.status)}; color: #333;">
+        ${order.status.toUpperCase()}
+      </span>
+      <span style="padding: 8px 16px; border-radius: 20px; font-size: 13px; background: #f0f0f0; color: #666;">
+        📅 ${date}
+      </span>
+    </div>
+    
+    <!-- Customer Info -->
+    <div style="background: #f9f9f9; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+      <h3 style="margin: 0 0 16px 0; color: #2d3748; font-size: 16px;">👤 Customer Details</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <p style="margin: 0; color: #999; font-size: 12px; font-weight: 600;">NAME</p>
+          <p style="margin: 8px 0 0 0; color: #2d3748; font-weight: 600;">${order.customerName || order.name || 'N/A'}</p>
+        </div>
+        <div>
+          <p style="margin: 0; color: #999; font-size: 12px; font-weight: 600;">EMAIL</p>
+          <p style="margin: 8px 0 0 0; color: #2d3748; font-weight: 600;">${order.email || 'N/A'}</p>
+        </div>
+        <div>
+          <p style="margin: 0; color: #999; font-size: 12px; font-weight: 600;">PHONE</p>
+          <p style="margin: 8px 0 0 0; color: #2d3748; font-weight: 600;">📞 ${order.phone || order.customerPhone || 'N/A'}</p>
+        </div>
+        <div>
+          <p style="margin: 0; color: #999; font-size: 12px; font-weight: 600;">ADDRESS</p>
+          <p style="margin: 8px 0 0 0; color: #2d3748; font-weight: 600;">📍 ${order.address || 'N/A'}</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Items -->
+    <div style="margin-bottom: 24px;">
+      <h3 style="margin: 0 0 12px 0; color: #2d3748; font-size: 16px;">🛒 Order Items</h3>
+      ${items.length > 0 ? `
+        <table style="width: 100%; border-collapse: collapse;">
+          <tbody>
+            ${items.map(item => `
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 12px; color: #2d3748; font-weight: 600;">${item.name || 'Unknown'}</td>
+                <td style="padding: 12px; text-align: center; color: #666;">×${item.quantity || item.qty || 1}</td>
+                <td style="padding: 12px; text-align: right; color: #2d3748; font-weight: 600;">${(item.price || 0).toFixed(2)} DZD</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : '<p style="color: #999;">No items in this order</p>'}
+    </div>
+    
+    <!-- Summary -->
+    <div style="background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%); padding: 20px; border-radius: 12px; color: white; margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+        <span>Subtotal:</span>
+        <span style="font-weight: 600;">${(order.subtotal || 0).toFixed(2)} DZD</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+        <span>Delivery:</span>
+        <span style="font-weight: 600;">${(order.deliveryFee || 0).toFixed(2)} DZD</span>
+      </div>
+      <div style="border-top: 2px solid rgba(255,255,255,0.3); padding-top: 12px; display: flex; justify-content: space-between; font-size: 18px;">
+        <span style="font-weight: bold;">Total:</span>
+        <span style="font-weight: bold;">${(order.total || 0).toFixed(2)} DZD</span>
+      </div>
+    </div>
+    
+    <!-- Actions -->
+    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+      <button onclick="this.closest('[style*=fixed]').remove()" style="padding: 10px 24px; background: #cbd5e0; color: #2d3748; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Close</button>
+      <button onclick="deleteOrder('${orderId}'); this.closest('[style*=fixed]').remove();" style="padding: 10px 24px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">🗑️ Delete</button>
+    </div>
+  `;
+  
+  modal.appendChild(content);
+  document.body.appendChild(modal);
 }
 
 function renderOrderCard(order) {
