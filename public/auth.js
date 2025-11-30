@@ -2,7 +2,8 @@
 import { getAuthInstance } from './firebase-config.js';
 import {
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
@@ -12,7 +13,34 @@ import {
 
 const provider = new GoogleAuthProvider();
 
-// Sign in with Google
+// Handle redirect result when page loads after Google sign-in redirect
+async function handleRedirectResult() {
+  try {
+    const auth = await getAuthInstance();
+    if (!auth) {
+      return null;
+    }
+
+    const result = await getRedirectResult(auth);
+    if (result) {
+      const user = result.user;
+      console.log('User signed in via redirect:', user.displayName);
+      return user;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error handling redirect result:', error.message);
+    if (error.code !== 'auth/popup-closed-by-user') {
+      alert('تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى.\n' + error.message);
+    }
+    return null;
+  }
+}
+
+// Initialize redirect result handler
+handleRedirectResult();
+
+// Sign in with Google using redirect
 export async function signInWithGoogle() {
   try {
     const auth = await getAuthInstance();
@@ -20,10 +48,9 @@ export async function signInWithGoogle() {
       throw new Error('Firebase authentication not initialized');
     }
 
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    console.log('User signed in:', user.displayName);
-    return user;
+    // Use redirect instead of popup - works better in iframes and embedded environments
+    await signInWithRedirect(auth, provider);
+    // Note: The function won't return here as the page will redirect to Google
   } catch (error) {
     console.error('Error signing in:', error.message);
     alert('تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى.\n' + error.message);
