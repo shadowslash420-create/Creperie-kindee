@@ -16,20 +16,32 @@ const provider = new GoogleAuthProvider();
 // Get redirect result - should be called by pages that need it
 export async function getGoogleRedirectResult() {
   try {
+    console.log('🔐 getGoogleRedirectResult called - checking for Google redirect...');
     const auth = await getAuthInstance();
     if (!auth) {
+      console.warn('❌ Auth instance is null');
       return null;
     }
 
+    // Add a small delay to ensure Firebase SDK is fully ready
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    console.log('📍 Current URL:', window.location.href);
+    console.log('🔍 Calling getRedirectResult from Firebase...');
+    
     const result = await getRedirectResult(auth);
+    
     if (result) {
       const user = result.user;
-      console.log('✅ User signed in via Google redirect:', user.displayName);
+      console.log('✅ User signed in via Google redirect:', user.displayName, user.email);
       return result;
+    } else {
+      console.log('ℹ️ No redirect result - user may not have redirected from Google');
     }
     return null;
   } catch (error) {
-    console.error('Error handling redirect result:', error.message);
+    console.error('Error handling redirect result:', error.code, error.message);
+    // Don't return null on error - log the error but continue
     return null;
   }
 }
