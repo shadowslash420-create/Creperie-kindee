@@ -2,7 +2,8 @@
 import { getAuthInstance } from './firebase-config.js';
 import {
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
@@ -16,7 +17,30 @@ provider.setCustomParameters({
   prompt: 'select_account'
 });
 
-// Sign in with Google using popup
+// Get redirect result for webview compatibility
+export async function getGoogleRedirectResult() {
+  try {
+    console.log('🔐 Checking for Google redirect result...');
+    const auth = await getAuthInstance();
+    if (!auth) {
+      console.warn('Auth not initialized');
+      return null;
+    }
+
+    const result = await getRedirectResult(auth);
+    if (result) {
+      console.log('✅ Redirect result found:', result.user.email);
+      return result;
+    }
+    console.log('ℹ️ No redirect result');
+    return null;
+  } catch (error) {
+    console.error('Error getting redirect result:', error.code, error.message);
+    return null;
+  }
+}
+
+// Sign in with Google using redirect for webview
 export async function signInWithGoogle() {
   try {
     const auth = await getAuthInstance();
@@ -24,20 +48,11 @@ export async function signInWithGoogle() {
       throw new Error('Firebase authentication not initialized');
     }
 
-    console.log('🔐 Attempting Google sign-in with popup...');
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    console.log('✅ User signed in with Google:', user.displayName, user.email);
-    return user;
+    console.log('🔐 Initiating Google sign-in redirect...');
+    await signInWithRedirect(auth, provider);
+    // Page will redirect to Google, code after this won't run
   } catch (error) {
     console.error('Error signing in with Google:', error.message, error.code);
-    
-    // Ignore cancellations
-    if (error.code === 'auth/popup-closed-by-user') {
-      console.log('ℹ️ User closed the popup');
-      return null;
-    }
-    
     alert('تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى.\n' + error.message);
     throw error;
   }
