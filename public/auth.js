@@ -3,6 +3,8 @@ import { getAuthInstance } from './firebase-config.js';
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
@@ -16,7 +18,30 @@ provider.setCustomParameters({
   prompt: 'select_account'
 });
 
-// Sign in with Google using popup for external pages
+// Check if in embedded webview/iframe
+function isInWebview() {
+  return window.self !== window.top;
+}
+
+// Get redirect result for webview
+export async function getGoogleRedirectResult() {
+  try {
+    const auth = await getAuthInstance();
+    if (!auth) return null;
+    
+    const result = await getRedirectResult(auth);
+    if (result) {
+      console.log('✅ Redirect result found:', result.user.email);
+      return result;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting redirect result:', error.code);
+    return null;
+  }
+}
+
+// Sign in with Google - uses popup on external pages, redirect on webview
 export async function signInWithGoogle() {
   try {
     const auth = await getAuthInstance();
@@ -24,15 +49,24 @@ export async function signInWithGoogle() {
       throw new Error('Firebase authentication not initialized');
     }
 
-    console.log('🔐 Opening Google sign-in popup...');
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    console.log('✅ User signed in with Google:', user.displayName, user.email);
-    return user;
+    const inWebview = isInWebview();
+    console.log('🔐 Sign-in requested (webview:', inWebview, ')');
+    
+    if (inWebview) {
+      // Use redirect for webview (embedded iframe)
+      console.log('📤 Using redirect-based sign-in for webview...');
+      await signInWithRedirect(auth, provider);
+    } else {
+      // Use popup for external pages
+      console.log('🪟 Using popup-based sign-in for external page...');
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      console.log('✅ User signed in with Google:', user.displayName, user.email);
+      return user;
+    }
   } catch (error) {
     console.error('Error signing in with Google:', error.message, error.code);
     
-    // Ignore cancellations
     if (error.code === 'auth/popup-closed-by-user') {
       console.log('ℹ️ User closed the popup');
       return null;

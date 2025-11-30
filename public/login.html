@@ -375,9 +375,14 @@
   </div>
 
   <script type="module">
-    import { signInWithGoogle, signInWithEmail, signUpWithEmail } from './auth.js';
+    import { signInWithGoogle, signInWithEmail, signUpWithEmail, getGoogleRedirectResult } from './auth.js';
 
     let currentMode = 'signin'; // 'signin' or 'signup'
+    
+    // Check if in webview
+    function isInWebview() {
+      return window.self !== window.top;
+    }
 
     // Tab switching
     window.switchAuthTab = function(tab) {
@@ -498,21 +503,34 @@
     }
 
 
+    // For webview: check if returning from Google redirect
+    if (isInWebview()) {
+      (async () => {
+        console.log('🔍 Webview detected - checking for redirect result...');
+        const result = await getGoogleRedirectResult();
+        if (result && result.user) {
+          console.log('✅ User authenticated via redirect:', result.user.email);
+          const redirectUrl = await window.getUserRedirectUrl(result.user.email);
+          window.location.href = redirectUrl;
+        }
+      })();
+    }
+
     // Google auth handler
     const googleSignInBtn = document.getElementById('google-signin-btn');
     googleSignInBtn.addEventListener('click', async () => {
       googleSignInBtn.disabled = true;
-      googleSignInBtn.textContent = 'جاري فتح نافذة Google...';
+      googleSignInBtn.textContent = isInWebview() ? 'جاري إعادة التوجيه إلى Google...' : 'جاري فتح نافذة Google...';
       
       try {
         const user = await signInWithGoogle();
         if (user) {
-          // Get redirect URL based on user role
+          // For external pages: user is returned immediately from popup
           const redirectUrl = await window.getUserRedirectUrl(user.email);
           console.log('📍 Redirecting to:', redirectUrl);
           window.location.href = redirectUrl;
         } else {
-          // User cancelled
+          // User cancelled (only for external page popup)
           googleSignInBtn.disabled = false;
           googleSignInBtn.innerHTML = `
             <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
