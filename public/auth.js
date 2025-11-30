@@ -12,6 +12,10 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 const provider = new GoogleAuthProvider();
+// Force account selection dialog when signing in
+provider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 // Get redirect result - should be called by pages that need it
 export async function getGoogleRedirectResult() {
