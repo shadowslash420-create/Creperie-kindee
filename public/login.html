@@ -375,7 +375,7 @@
   </div>
 
   <script type="module">
-    import { signInWithGoogle, signInWithEmail, signUpWithEmail } from './auth.js';
+    import { signInWithGoogle, signInWithEmail, signUpWithEmail, getGoogleRedirectResult } from './auth.js';
 
     let currentMode = 'signin'; // 'signin' or 'signup'
 
@@ -499,21 +499,18 @@
 
     // Check if user just returned from Google redirect auth
     async function checkGoogleRedirectAuth() {
-      try {
-        const auth = await (await import('./firebase-config.js')).getAuthInstance();
-        const { getRedirectResult } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-        const result = await getRedirectResult(auth);
-        
-        if (result && result.user) {
-          console.log('✅ User authenticated via Google redirect:', result.user.email);
-          // Get redirect URL based on user role
-          const redirectUrl = await window.getUserRedirectUrl(result.user.email);
-          window.location.href = redirectUrl;
-          return true;
-        }
-      } catch (error) {
-        console.error('Error checking Google redirect:', error);
+      console.log('🔍 Checking for Google redirect result...');
+      const result = await getGoogleRedirectResult();
+      
+      if (result && result.user) {
+        console.log('✅ User authenticated via Google redirect:', result.user.email);
+        // Get redirect URL based on user role
+        const redirectUrl = await window.getUserRedirectUrl(result.user.email);
+        console.log('📍 Redirecting to:', redirectUrl);
+        window.location.href = redirectUrl;
+        return true;
       }
+      console.log('❌ No Google redirect result found');
       return false;
     }
 

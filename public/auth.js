@@ -13,8 +13,8 @@ import {
 
 const provider = new GoogleAuthProvider();
 
-// Handle redirect result when page loads after Google sign-in redirect
-async function handleRedirectResult() {
+// Get redirect result - should be called by pages that need it
+export async function getGoogleRedirectResult() {
   try {
     const auth = await getAuthInstance();
     if (!auth) {
@@ -24,21 +24,15 @@ async function handleRedirectResult() {
     const result = await getRedirectResult(auth);
     if (result) {
       const user = result.user;
-      console.log('User signed in via redirect:', user.displayName);
-      return user;
+      console.log('✅ User signed in via Google redirect:', user.displayName);
+      return result;
     }
     return null;
   } catch (error) {
     console.error('Error handling redirect result:', error.message);
-    if (error.code !== 'auth/popup-closed-by-user') {
-      alert('تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى.\n' + error.message);
-    }
     return null;
   }
 }
-
-// Initialize redirect result handler
-handleRedirectResult();
 
 // Sign in with Google using redirect
 export async function signInWithGoogle() {
