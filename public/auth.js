@@ -2,8 +2,7 @@
 import { getAuthInstance } from './firebase-config.js';
 import {
   GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
@@ -17,40 +16,7 @@ provider.setCustomParameters({
   prompt: 'select_account'
 });
 
-// Get redirect result - should be called by pages that need it
-export async function getGoogleRedirectResult() {
-  try {
-    console.log('🔐 getGoogleRedirectResult called - checking for Google redirect...');
-    const auth = await getAuthInstance();
-    if (!auth) {
-      console.warn('❌ Auth instance is null');
-      return null;
-    }
-
-    // Add a small delay to ensure Firebase SDK is fully ready
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    console.log('📍 Current URL:', window.location.href);
-    console.log('🔍 Calling getRedirectResult from Firebase...');
-    
-    const result = await getRedirectResult(auth);
-    
-    if (result) {
-      const user = result.user;
-      console.log('✅ User signed in via Google redirect:', user.displayName, user.email);
-      return result;
-    } else {
-      console.log('ℹ️ No redirect result - user may not have redirected from Google');
-    }
-    return null;
-  } catch (error) {
-    console.error('Error handling redirect result:', error.code, error.message);
-    // Don't return null on error - log the error but continue
-    return null;
-  }
-}
-
-// Sign in with Google using redirect
+// Sign in with Google using popup
 export async function signInWithGoogle() {
   try {
     const auth = await getAuthInstance();
@@ -58,11 +24,20 @@ export async function signInWithGoogle() {
       throw new Error('Firebase authentication not initialized');
     }
 
-    // Use redirect instead of popup - works better in iframes and embedded environments
-    await signInWithRedirect(auth, provider);
-    // Note: The function won't return here as the page will redirect to Google
+    console.log('🔐 Attempting Google sign-in with popup...');
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    console.log('✅ User signed in with Google:', user.displayName, user.email);
+    return user;
   } catch (error) {
-    console.error('Error signing in:', error.message);
+    console.error('Error signing in with Google:', error.message, error.code);
+    
+    // Ignore cancellations
+    if (error.code === 'auth/popup-closed-by-user') {
+      console.log('ℹ️ User closed the popup');
+      return null;
+    }
+    
     alert('تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى.\n' + error.message);
     throw error;
   }
