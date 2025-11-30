@@ -375,9 +375,10 @@
   </div>
 
   <script type="module">
-    import { signInWithGoogle, signInWithEmail, signUpWithEmail, getGoogleRedirectResult } from './auth.js';
+    import { signInWithGoogle, signInWithEmail, signUpWithEmail, getGoogleRedirectResult, onAuthChange } from './auth.js';
 
     let currentMode = 'signin'; // 'signin' or 'signup'
+    let authCheckTimeout = null;
 
     // Tab switching
     window.switchAuthTab = function(tab) {
@@ -497,36 +498,62 @@
       return messages[code] || 'حدث خطأ، يرجى المحاولة مرة أخرى';
     }
 
-    // Check if user just returned from Google redirect auth
+    // Setup auth state listener to detect redirect authentication
+    async function setupAuthListener() {
+      console.log('👂 Setting up auth state listener to detect redirect...');
+      
+      let unsubscribe = null;
+      
+      // Set a timeout to stop listening after 3 seconds
+      authCheckTimeout = setTimeout(() => {
+        console.log('⏱️ Auth check timeout - no user detected from redirect');
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      }, 3000);
+      
+      unsubscribe = await onAuthChange(async (user) => {
+        if (user) {
+          console.log('✅ User authenticated via redirect:', user.email);
+          clearTimeout(authCheckTimeout);
+          
+          // Get redirect URL based on user role
+          const redirectUrl = await window.getUserRedirectUrl(user.email);
+          console.log('📍 Redirecting to:', redirectUrl);
+          window.location.href = redirectUrl;
+        }
+      });
+    }
+
+    // Also try getRedirectResult for compatibility
     async function checkGoogleRedirectAuth() {
       console.log('🔍 Checking for Google redirect result...');
-      console.log('📍 Current domain:', window.location.hostname);
-      console.log('🌐 Full URL:', window.location.href);
+      console.log('📍 Domain:', window.location.hostname);
       
       const result = await getGoogleRedirectResult();
       
       if (result && result.user) {
-        console.log('✅ User authenticated via Google redirect:', result.user.email);
-        // Get redirect URL based on user role
+        console.log('✅ User from getRedirectResult:', result.user.email);
+        clearTimeout(authCheckTimeout);
         const redirectUrl = await window.getUserRedirectUrl(result.user.email);
         console.log('📍 Redirecting to:', redirectUrl);
         window.location.href = redirectUrl;
         return true;
-      }
-      console.log('❌ No Google redirect result found');
-      
-      // If we're on the login page and have URL params, show domain debug info
-      if (window.location.search.includes('code') || window.location.search.includes('state')) {
-        console.warn('⚠️ Google redirected with auth code but Firebase rejected it!');
-        console.warn('📌 YOUR DOMAIN:', window.location.hostname);
-        console.warn('Action needed: Add this domain to Firebase Console → Authentication → Authorized domains');
       }
       
       return false;
     }
 
     // Check on page load
-    checkGoogleRedirectAuth();
+    (async () => {
+      // First check if there's a direct redirect result
+      const hadRedirectResult = await checkGoogleRedirectAuth();
+      
+      // If not, set up auth listener (catches auth state after page reload)
+      if (!hadRedirectResult) {
+        await setupAuthListener();
+      }
+    })();
 
     // Google auth handler
     const googleSignInBtn = document.getElementById('google-signin-btn');

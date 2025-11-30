@@ -59,6 +59,10 @@ async function initializeFirebase() {
       auth = getAuth(app);
       db = getFirestore(app);
       storage = getStorage(app);
+      
+      // CRITICAL: Set persistence to LOCAL to survive page reloads after redirect
+      auth.setPersistence(auth.persistence);
+      
       console.log('Firebase initialized successfully with Firestore and Storage');
       return { app, auth, db, storage };
     } catch (error) {
