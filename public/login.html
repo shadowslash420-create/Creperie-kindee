@@ -500,6 +500,9 @@
     // Check if user just returned from Google redirect auth
     async function checkGoogleRedirectAuth() {
       console.log('🔍 Checking for Google redirect result...');
+      console.log('📍 Current domain:', window.location.hostname);
+      console.log('🌐 Full URL:', window.location.href);
+      
       const result = await getGoogleRedirectResult();
       
       if (result && result.user) {
@@ -511,6 +514,14 @@
         return true;
       }
       console.log('❌ No Google redirect result found');
+      
+      // If we're on the login page and have URL params, show domain debug info
+      if (window.location.search.includes('code') || window.location.search.includes('state')) {
+        console.warn('⚠️ Google redirected with auth code but Firebase rejected it!');
+        console.warn('📌 YOUR DOMAIN:', window.location.hostname);
+        console.warn('Action needed: Add this domain to Firebase Console → Authentication → Authorized domains');
+      }
+      
       return false;
     }
 
