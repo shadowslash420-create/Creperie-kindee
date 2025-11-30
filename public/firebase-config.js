@@ -2,7 +2,7 @@
 // Add your Firebase project credentials here
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getAuth, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
@@ -61,7 +61,12 @@ async function initializeFirebase() {
       storage = getStorage(app);
       
       // CRITICAL: Set persistence to LOCAL to survive page reloads after redirect
-      auth.setPersistence(auth.persistence);
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        console.log('✅ Firebase persistence set to LOCAL');
+      } catch (persistError) {
+        console.warn('⚠️ Could not set persistence:', persistError.message);
+      }
       
       console.log('Firebase initialized successfully with Firestore and Storage');
       return { app, auth, db, storage };
