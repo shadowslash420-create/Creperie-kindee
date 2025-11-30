@@ -497,18 +497,38 @@
       return messages[code] || 'حدث خطأ، يرجى المحاولة مرة أخرى';
     }
 
+    // Check if user just returned from Google redirect auth
+    async function checkGoogleRedirectAuth() {
+      try {
+        const auth = await (await import('./firebase-config.js')).getAuthInstance();
+        const { getRedirectResult } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+        const result = await getRedirectResult(auth);
+        
+        if (result && result.user) {
+          console.log('✅ User authenticated via Google redirect:', result.user.email);
+          // Get redirect URL based on user role
+          const redirectUrl = await window.getUserRedirectUrl(result.user.email);
+          window.location.href = redirectUrl;
+          return true;
+        }
+      } catch (error) {
+        console.error('Error checking Google redirect:', error);
+      }
+      return false;
+    }
+
+    // Check on page load
+    checkGoogleRedirectAuth();
+
     // Google auth handler
     const googleSignInBtn = document.getElementById('google-signin-btn');
     googleSignInBtn.addEventListener('click', async () => {
       googleSignInBtn.disabled = true;
-      googleSignInBtn.textContent = 'جاري تسجيل الدخول...';
+      googleSignInBtn.textContent = 'جاري إعادة التوجيه إلى Google...';
       
       try {
-        const user = await signInWithGoogle();
-        
-        // Get redirect URL based on user role
-        const redirectUrl = await window.getUserRedirectUrl(user.email);
-        window.location.href = redirectUrl;
+        await signInWithGoogle();
+        // Note: Page will redirect to Google, no code runs after this
       } catch (error) {
         console.error('Login failed:', error);
         googleSignInBtn.disabled = false;
