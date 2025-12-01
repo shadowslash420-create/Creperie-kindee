@@ -1,81 +1,54 @@
 // Authentication Logic
 import { getAuthInstance } from './firebase-config.js';
 import {
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  signOut as firebaseSignOut, // Alias to avoid naming conflict
+  signOut as firebaseSignOut,
   onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-const provider = new GoogleAuthProvider();
-// Force account selection dialog when signing in
-provider.setCustomParameters({
-  prompt: 'select_account'
-});
-
-// Check if in embedded webview/iframe
-function isInWebview() {
-  return window.self !== window.top;
-}
-
-// Get redirect result 
-export async function getGoogleRedirectResult() {
-  try {
-    const auth = await getAuthInstance();
-    if (!auth) return null;
-    
-    const result = await getRedirectResult(auth);
-    if (result) {
-      console.log('✅ Redirect result found:', result.user.email);
-      return result;
-    }
-    return null;
-  } catch (error) {
-    console.error('Error getting redirect result:', error.code);
-    return null;
-  }
-}
-
-// Sign in with Google - auto-detects environment and uses appropriate method
+// Google Sign-In with native SDK (works on all platforms including webview)
 export async function signInWithGoogle() {
-  try {
-    const auth = await getAuthInstance();
-    if (!auth) {
-      throw new Error('Firebase authentication not initialized');
+  return new Promise((resolve, reject) => {
+    // Initialize Google One Tap
+    if (!window.google) {
+      console.error('Google Identity Services not loaded');
+      reject(new Error('Google SDK not initialized'));
+      return;
     }
 
-    const inWebview = isInWebview();
-    console.log('🔐 Sign-in requested (webview:', inWebview, ')');
+    const clientId = '447252216729-h7p3l3p5c1lf8k8k5r5r5r5r5r5r5r5r.apps.googleusercontent.com'; // Your Google Client ID
     
-    if (inWebview) {
-      // Use redirect for webview/embedded environments
-      console.log('📤 Using redirect-based sign-in for webview...');
-      await signInWithRedirect(auth, provider);
-      // Page redirects to Google, no code runs after this
-    } else {
-      // Use popup for external websites
-      console.log('🪟 Using popup-based sign-in for external website...');
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      console.log('✅ User signed in with Google:', user.displayName, user.email);
-      return user;
-    }
-  } catch (error) {
-    console.error('Error signing in with Google:', error.message, error.code);
+    console.log('🔐 Initiating native Google sign-in...');
     
-    if (error.code === 'auth/popup-closed-by-user') {
-      console.log('ℹ️ User closed the popup');
-      return null;
-    }
-    
-    alert('تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى.\n' + error.message);
-    throw error;
-  }
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: async (response) => {
+        try {
+          if (response.credential) {
+            console.log('✅ Google sign-in successful');
+            // Decode JWT to get user info
+            const decoded = JSON.parse(atob(response.credential.split('.')[1]));
+            resolve({
+              email: decoded.email,
+              name: decoded.name,
+              picture: decoded.picture
+            });
+          }
+        } catch (error) {
+          console.error('Error processing Google response:', error);
+          reject(error);
+        }
+      }
+    });
+
+    // Trigger the One Tap UI or popup
+    google.accounts.id.renderButton(
+      document.getElementById('google-signin-btn'),
+      { theme: 'outline', size: 'large', width: '100%' }
+    );
+  });
 }
 
 // Sign in with Email/Password
@@ -128,7 +101,7 @@ export async function signOutUser() {
       throw new Error('Firebase authentication not initialized');
     }
 
-    await firebaseSignOut(auth); // Use the aliased function
+    await firebaseSignOut(auth);
     console.log('User signed out');
   } catch (error) {
     console.error('Error signing out:', error.message);
@@ -142,13 +115,13 @@ export async function onAuthChange(callback) {
     const auth = await getAuthInstance();
     if (!auth) {
       console.error('Firebase authentication not initialized');
-      return () => {}; // Return empty unsubscribe function
+      return () => {};
     }
 
     return onAuthStateChanged(auth, callback);
   } catch (error) {
     console.error('Error setting up auth state listener:', error);
-    return () => {}; // Return empty unsubscribe function
+    return () => {};
   }
 }
 
@@ -163,14 +136,12 @@ export async function initAuthUI() {
   try {
     await onAuthChange((user) => {
       if (user) {
-        // User is signed in
         authBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
         authBtn.title = user.displayName || 'Profile';
         authBtn.onclick = () => {
           showLogoutConfirmation(user);
         };
       } else {
-        // User is signed out
         authBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>`;
         authBtn.title = 'تسجيل الدخول';
         authBtn.onclick = () => {
@@ -180,7 +151,6 @@ export async function initAuthUI() {
     });
   } catch (error) {
     console.error('Failed to initialize auth UI:', error);
-    // Set default state on error
     authBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>`;
     authBtn.title = 'تسجيل الدخول';
     authBtn.onclick = () => {
@@ -191,7 +161,6 @@ export async function initAuthUI() {
 
 // Custom logout confirmation dialog
 function showLogoutConfirmation(user) {
-  // Create modal overlay
   const overlay = document.createElement('div');
   overlay.style.cssText = `
     position: fixed;
@@ -209,7 +178,6 @@ function showLogoutConfirmation(user) {
     animation: fadeIn 0.3s ease;
   `;
 
-  // Create modal content
   const modal = document.createElement('div');
   modal.style.cssText = `
     background: linear-gradient(180deg, #FFF5F5 0%, #FFE8E8 100%);
@@ -271,7 +239,6 @@ function showLogoutConfirmation(user) {
     </div>
   `;
 
-  // Add animations
   const style = document.createElement('style');
   style.textContent = `
     @keyframes fadeIn {
@@ -288,7 +255,6 @@ function showLogoutConfirmation(user) {
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
 
-  // Add hover effects
   const cancelBtn = modal.querySelector('#cancel-logout');
   const confirmBtn = modal.querySelector('#confirm-logout');
 
@@ -316,13 +282,11 @@ function showLogoutConfirmation(user) {
     confirmBtn.style.boxShadow = '0 4px 12px rgba(227,6,19,0.3)';
   });
 
-  // Handle cancel
   cancelBtn.onclick = () => {
     overlay.style.animation = 'fadeOut 0.2s ease';
     setTimeout(() => overlay.remove(), 200);
   };
 
-  // Handle logout
   confirmBtn.onclick = () => {
     confirmBtn.textContent = 'جاري تسجيل الخروج...';
     confirmBtn.disabled = true;
@@ -336,7 +300,6 @@ function showLogoutConfirmation(user) {
     });
   };
 
-  // Close on overlay click
   overlay.onclick = (e) => {
     if (e.target === overlay) {
       overlay.style.animation = 'fadeOut 0.2s ease';
@@ -344,7 +307,6 @@ function showLogoutConfirmation(user) {
     }
   };
 
-  // Add fadeOut animation
   style.textContent += `
     @keyframes fadeOut {
       from { opacity: 1; }
