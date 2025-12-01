@@ -18,6 +18,11 @@ provider.setCustomParameters({
   prompt: 'select_account'
 });
 
+// Check if in embedded webview/iframe
+function isInWebview() {
+  return window.self !== window.top;
+}
+
 // Get redirect result 
 export async function getGoogleRedirectResult() {
   try {
@@ -36,7 +41,7 @@ export async function getGoogleRedirectResult() {
   }
 }
 
-// Sign in with Google using redirect (works on all platforms)
+// Sign in with Google - auto-detects environment and uses appropriate method
 export async function signInWithGoogle() {
   try {
     const auth = await getAuthInstance();
@@ -44,11 +49,30 @@ export async function signInWithGoogle() {
       throw new Error('Firebase authentication not initialized');
     }
 
-    console.log('🔐 Initiating Google sign-in redirect...');
-    await signInWithRedirect(auth, provider);
-    // Page redirects to Google, no code runs after this
+    const inWebview = isInWebview();
+    console.log('🔐 Sign-in requested (webview:', inWebview, ')');
+    
+    if (inWebview) {
+      // Use redirect for webview/embedded environments
+      console.log('📤 Using redirect-based sign-in for webview...');
+      await signInWithRedirect(auth, provider);
+      // Page redirects to Google, no code runs after this
+    } else {
+      // Use popup for external websites
+      console.log('🪟 Using popup-based sign-in for external website...');
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      console.log('✅ User signed in with Google:', user.displayName, user.email);
+      return user;
+    }
   } catch (error) {
     console.error('Error signing in with Google:', error.message, error.code);
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      console.log('ℹ️ User closed the popup');
+      return null;
+    }
+    
     alert('تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى.\n' + error.message);
     throw error;
   }
