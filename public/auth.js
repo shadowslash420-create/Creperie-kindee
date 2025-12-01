@@ -214,3 +214,12 @@ export function renderGoogleSignInButton(containerId, options = {}) {
     return false;
   }
 }
+
+export function getUserInfoFromCredential(credential) {
+  try {
+    return JSON.parse(atob(credential.split('.')[1]));
+  } catch (error) {
+    console.error('Error decoding credential:', error);
+    return null;
+  }
+}

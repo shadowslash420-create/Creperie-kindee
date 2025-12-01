@@ -367,12 +367,9 @@
   </div>
 
   <script type="module">
-    import { initializeGoogleSignIn, renderGoogleSignInButton, getUserInfoFromCredential } from './auth.js';
-    import { signInWithEmail, signUpWithEmail } from './auth.js';
+    import { initializeGoogleSignIn, renderGoogleSignInButton, getUserInfoFromCredential, signInWithEmail, signUpWithEmail } from './auth.js';
 
     let currentMode = 'signin';
-    
-    // Google OAuth Client ID
     const GOOGLE_CLIENT_ID = '447252216729-s339gl45f1abi32l17jt34f1nujjaddq.apps.googleusercontent.com';
     
     // Initialize Google Sign-In when Google tab is clicked
