@@ -622,13 +622,27 @@
 
     // Check authentication on page load
     onAuthChange(async (user) => {
-      if (!user) {
+      // Check Firebase user OR localStorage for Google Sign-In
+      let currentUser = user;
+      if (!currentUser) {
+        const googleUserJson = localStorage.getItem('kc_google_user');
+        if (googleUserJson) {
+          try {
+            currentUser = JSON.parse(googleUserJson);
+            console.log('✅ Using Google user from localStorage:', currentUser.email);
+          } catch (e) {
+            console.error('Failed to parse stored Google user:', e);
+          }
+        }
+      }
+      
+      if (!currentUser) {
         // Not authenticated - show login section
         document.getElementById('login-section').classList.remove('hidden');
         document.getElementById('admin-section').classList.add('hidden');
-      } else if (ADMIN_EMAILS.includes(user.email)) {
+      } else if (ADMIN_EMAILS.includes(currentUser.email)) {
         // Admin user is authenticated
-        console.log('✅ Admin user auto-logged in:', user.email);
+        console.log('✅ Admin user auto-logged in:', currentUser.email);
         document.getElementById('login-section').classList.add('hidden');
         document.getElementById('admin-section').classList.remove('hidden');
         await setupNavigation('Admin');
@@ -642,9 +656,9 @@
         }
       } else {
         // Check if user is staff by email
-        const staffRole = await checkStaffRole(user.email);
+        const staffRole = await checkStaffRole(currentUser.email);
         if (staffRole === 'Staff A' || staffRole === 'Staff B') {
-          console.log(`✅ ${staffRole} user auto-logged in:`, user.email);
+          console.log(`✅ ${staffRole} user auto-logged in:`, currentUser.email);
           document.getElementById('login-section').classList.add('hidden');
           document.getElementById('admin-section').classList.remove('hidden');
           await setupNavigation(staffRole);

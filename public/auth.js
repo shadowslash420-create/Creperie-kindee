@@ -130,14 +130,22 @@ export async function handleGoogleSignIn(response) {
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
       console.log('✅ Google sign-in successful:', payload.email);
       
-      // Sign in with Firebase using the Google credential
+      // Store user info in localStorage for admin panel access
+      localStorage.setItem('kc_google_user', JSON.stringify({
+        email: payload.email,
+        name: payload.name,
+        picture: payload.picture
+      }));
+      console.log('✅ User stored in localStorage');
+      
+      // Try to sign in with Firebase (but don't block if it fails)
       try {
         const credential = GoogleAuthProvider.credential(null, response.credential);
         const auth = await getAuthInstance();
         const userCredential = await signInWithCredential(auth, credential);
         console.log('✅ Firebase authentication successful:', userCredential.user.email);
       } catch (firebaseError) {
-        console.warn('Firebase sign-in error (non-critical):', firebaseError.message);
+        console.warn('Firebase sign-in warning:', firebaseError.message);
       }
       
       window.dispatchEvent(new CustomEvent('google-signin-success', {
