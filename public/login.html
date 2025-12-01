@@ -385,16 +385,19 @@
     
     // Initialize Google Sign-In on page load
     (async () => {
-      console.log('📱 Initializing native Google Sign-In...');
+      console.log('📱 Initializing native Google Sign-In with Client ID:', GOOGLE_CLIENT_ID);
       const success = await initializeGoogleSignIn(GOOGLE_CLIENT_ID);
+      console.log('Initialization result:', success);
       if (success) {
-        renderGoogleSignInButton('google-signin-btn', {
+        const rendered = renderGoogleSignInButton('google-signin-btn', {
           type: 'standard',
           theme: 'outline',
           size: 'large',
-          text: 'signin_with',
-          locale: 'ar'
+          text: 'signin_with'
         });
+        console.log('Button render result:', rendered);
+      } else {
+        console.error('Failed to initialize Google Sign-In');
       }
     })();
     
