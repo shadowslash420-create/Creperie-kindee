@@ -499,32 +499,24 @@
     }
 
 
-    // Google Sign-In button handler with native SDK
-    const googleSignInBtn = document.getElementById('google-signin-btn');
-    
-    // When Google Sign-In button is clicked, handle the user info
-    window.addEventListener('load', () => {
-      // Google SDK will automatically render button once loaded
-      if (window.google) {
-        console.log('✅ Google Identity Services loaded');
+    // Google Sign-In with native SDK
+    function initializeGoogleSignIn() {
+      const googleSignInBtn = document.getElementById('google-signin-btn');
+      
+      if (!googleSignInBtn) {
+        console.warn('Google Sign-In button not found on page');
+        return;
       }
-    });
-    
-    // Store the original button and replace with native Google button
-    if (googleSignInBtn && window.google) {
+      
+      if (!window.google) {
+        console.error('Google Identity Services not loaded');
+        return;
+      }
+      
+      console.log('🔐 Initializing Google Sign-In...');
+      
       try {
-        window.google.accounts.id.renderButton(
-          googleSignInBtn,
-          { 
-            theme: 'outline', 
-            size: 'large', 
-            width: '100%',
-            text: 'signin_with',
-            locale: 'ar'
-          }
-        );
-        
-        // Handle the sign-in callback
+        // Initialize first
         window.google.accounts.id.initialize({
           client_id: '447252216729-h7p3l3p5c1lf8k8k5r5r5r5r5r5r5r5r.apps.googleusercontent.com',
           callback: async (response) => {
@@ -541,10 +533,37 @@
             }
           }
         });
+        
+        // Render button after initialize
+        window.google.accounts.id.renderButton(
+          googleSignInBtn,
+          { 
+            theme: 'outline', 
+            size: 'large',
+            text: 'signin_with'
+          }
+        );
+        
+        console.log('✅ Google Sign-In initialized');
       } catch (error) {
         console.error('Error initializing Google Sign-In:', error);
       }
     }
+    
+    // Wait for Google SDK to load and then initialize
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeGoogleSignIn);
+    } else {
+      initializeGoogleSignIn();
+    }
+    
+    // Also try after a short delay to ensure SDK is ready
+    setTimeout(() => {
+      if (window.google && !document.getElementById('google-signin-btn')?.hasAttribute('data-initialized')) {
+        initializeGoogleSignIn();
+        document.getElementById('google-signin-btn')?.setAttribute('data-initialized', 'true');
+      }
+    }, 1000);
   </script>
 </body>
 </html>
