@@ -6,7 +6,9 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   signOut as firebaseSignOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  signInWithCredential,
+  GoogleAuthProvider
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 // ===== FIREBASE AUTHENTICATION FUNCTIONS =====
@@ -122,11 +124,22 @@ if (document.readyState === 'loading') {
 
 // ===== NATIVE GOOGLE SIGN-IN FUNCTIONS =====
 
-export function handleGoogleSignIn(response) {
+export async function handleGoogleSignIn(response) {
   if (response.credential) {
     try {
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
       console.log('✅ Google sign-in successful:', payload.email);
+      
+      // Sign in with Firebase using the Google credential
+      try {
+        const credential = GoogleAuthProvider.credential(null, response.credential);
+        const auth = await getAuthInstance();
+        const userCredential = await signInWithCredential(auth, credential);
+        console.log('✅ Firebase authentication successful:', userCredential.user.email);
+      } catch (firebaseError) {
+        console.warn('Firebase sign-in error (non-critical):', firebaseError.message);
+      }
+      
       window.dispatchEvent(new CustomEvent('google-signin-success', {
         detail: {
           email: payload.email,
