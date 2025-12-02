@@ -1870,6 +1870,13 @@ function renderMessagesList() {
 }
 
 async function deleteMessage(messageId) {
+  // Permission check: Only Admin and Staff B can delete messages
+  if (state.currentUserRole !== 'Admin' && state.currentUserRole !== 'Staff B') {
+    showStyledAlert('Restricted', '❌ Only Admin and Staff B can delete messages');
+    console.warn('⛔ User role', state.currentUserRole, 'not authorized to delete messages');
+    return;
+  }
+  
   showStyledConfirm('Delete Message', 'Are you sure you want to delete this message?', async () => {
     try {
       await dbService.deleteContactMessage(messageId);
@@ -1927,16 +1934,23 @@ function renderReviewsList() {
 }
 
 async function deleteFeedback(reviewId) {
-  if (!confirm('Are you sure you want to delete this feedback?')) return;
-
-  try {
-    await dbService.deleteReview(reviewId);
-    await loadReviews();
-    alert('✅ Feedback deleted successfully!');
-  } catch (error) {
-    console.error('❌ Failed to delete feedback:', error);
-    alert('❌ Failed to delete feedback');
+  // Permission check: Only Admin and Staff B can delete reviews
+  if (state.currentUserRole !== 'Admin' && state.currentUserRole !== 'Staff B') {
+    showStyledAlert('Restricted', '❌ Only Admin and Staff B can delete reviews');
+    console.warn('⛔ User role', state.currentUserRole, 'not authorized to delete reviews');
+    return;
   }
+  
+  showStyledConfirm('Delete Review', 'Are you sure you want to delete this review?', async () => {
+    try {
+      await dbService.deleteReview(reviewId);
+      await loadReviews();
+      showStyledAlert('Deleted', 'Review deleted successfully!');
+    } catch (error) {
+      console.error('❌ Failed to delete review:', error);
+      showStyledAlert('Error', 'Failed to delete review');
+    }
+  });
 }
 
 // Alias for deleteReview (used globally)

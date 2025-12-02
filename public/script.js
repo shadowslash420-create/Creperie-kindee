@@ -1074,6 +1074,13 @@ function initCheckoutMap(savedInfo) {
     return;
   }
 
+  // If map already exists, destroy it first
+  if (checkoutMap) {
+    checkoutMap.remove();
+    checkoutMap = null;
+    checkoutMarker = null;
+  }
+
   // Default to Algeria (Blida area - near Kinder 5)
   const defaultLat = savedInfo.lat || 36.4700;
   const defaultLng = savedInfo.lng || 2.8277;
@@ -1114,9 +1121,16 @@ function initCheckoutMap(savedInfo) {
   });
 
   // Force map to render correctly (fixes display issues in modals)
+  // Multiple invalidateSize calls ensure proper rendering
   setTimeout(() => {
-    checkoutMap.invalidateSize();
+    if (checkoutMap) checkoutMap.invalidateSize();
+  }, 100);
+  setTimeout(() => {
+    if (checkoutMap) checkoutMap.invalidateSize();
   }, 300);
+  setTimeout(() => {
+    if (checkoutMap) checkoutMap.invalidateSize();
+  }, 500);
 }
 
 // Set location on map
