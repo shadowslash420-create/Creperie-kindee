@@ -645,6 +645,12 @@
         console.log('✅ Admin user auto-logged in:', currentUser.email);
         document.getElementById('login-section').classList.add('hidden');
         document.getElementById('admin-section').classList.remove('hidden');
+        
+        // Clear cache on admin login
+        if (window.clearAdminCache) {
+          window.clearAdminCache();
+        }
+        
         await setupNavigation('Admin');
 
         // Initialize dashboard if function is available

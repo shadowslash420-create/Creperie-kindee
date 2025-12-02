@@ -72,16 +72,27 @@ async function checkUserStaffStatus() {
 
 async function loadMenuData() {
   try {
-    console.log('📋 Loading menu items...');
+    console.log('📋 Loading menu items from Firebase directly...');
     if (!window.dbService) {
       console.error('❌ dbService is null:', window.dbService);
       throw new Error('dbService not available');
     }
     console.log('✅ dbService available');
     await window.dbService.init();
-    console.log('✅ dbService initialized');
-    const data = await window.dbService.getAllMenuItems();
-    console.log('✅ Menu items loaded:', data?.length || 0, 'items:', data);
+    console.log('✅ dbService initialized, querying Firebase...');
+    
+    // Get the db instance and query directly (no cache)
+    const db = window.dbService.db;
+    if (!db) throw new Error('Firebase DB not initialized');
+    
+    // Import Firestore functions
+    const { collection, query, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/10.8.0/firestore.js');
+    const menuRef = collection(db, 'menu');
+    const q = query(menuRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    console.log('✅ Menu items loaded directly from Firebase:', data?.length || 0, 'items:', data);
     state.menuItems = data || [];
     return data;
   } catch (error) {
@@ -509,6 +520,19 @@ window.initializeDashboard = initializeDashboard;
 
 console.log('✅ Admin dashboard script loaded');
 
+// ==================== CACHE CLEARING ====================
+function clearAdminCache() {
+  console.log('🧹 Clearing admin cache...');
+  const keysToKeep = ['kc_google_user', 'firebase_auth'];
+  Object.keys(localStorage).forEach(key => {
+    if (!keysToKeep.includes(key) && !key.startsWith('firebase:')) {
+      localStorage.removeItem(key);
+      console.log(`🗑️ Removed cache: ${key}`);
+    }
+  });
+  console.log('✅ Admin cache cleared');
+}
+
 // ==================== AUTO-INITIALIZE WITH RETRY ====================
 async function waitForDependencies(maxWait = 5000) {
   const startTime = Date.now();
@@ -524,6 +548,9 @@ async function waitForDependencies(maxWait = 5000) {
 }
 
 (async () => {
+  // Clear cache first for admin panel
+  clearAdminCache();
+  
   await waitForDependencies();
   
   try {
