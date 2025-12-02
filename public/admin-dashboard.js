@@ -1537,6 +1537,8 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeAddStaffModal = closeAddStaffModal;
   window.deleteStaff = deleteStaff;
   window.deleteReview = deleteReview;
+  window.deleteMessage = deleteMessage;
+  window.deleteFeedback = deleteFeedback;
   window.saveStaffMember = saveStaffMember;
   window.renderCouponsGrid = renderCouponsGrid;
   window.renderReviewsList = renderReviewsList;
@@ -1955,11 +1957,6 @@ async function deleteFeedback(reviewId) {
 
 // Alias for deleteReview (used globally)
 const deleteReview = deleteFeedback;
-
-// Expose to global scope for onclick handlers
-window.deleteMessage = deleteMessage;
-window.deleteFeedback = deleteFeedback;
-window.deleteReview = deleteReview;
 
 function loadSettings() {
   console.log('⚙️ Loading settings...');
