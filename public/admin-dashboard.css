@@ -1230,6 +1230,23 @@
   display: none !important;
 }
 
+/* Override hidden for admin-dashboard when not hidden */
+#admin-section:not(.hidden) {
+  display: flex !important;
+}
+
+#login-section.hidden {
+  display: none !important;
+}
+
+.content-section {
+  display: none;
+}
+
+.content-section.active {
+  display: block;
+}
+
 /* Menu Management */
 .menu-manager {
   padding: 32px;
