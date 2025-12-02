@@ -1872,21 +1872,21 @@ function renderMessagesList() {
 async function deleteMessage(messageId) {
   // Permission check: Only Admin and Staff B can delete messages
   if (state.currentUserRole !== 'Admin' && state.currentUserRole !== 'Staff B') {
-    showStyledAlert('Restricted', '❌ Only Admin and Staff B can delete messages');
+    alert('❌ Only Admin and Staff B can delete messages. Your role: ' + state.currentUserRole);
     console.warn('⛔ User role', state.currentUserRole, 'not authorized to delete messages');
     return;
   }
   
-  showStyledConfirm('Delete Message', 'Are you sure you want to delete this message?', async () => {
-    try {
-      await dbService.deleteContactMessage(messageId);
-      await loadMessages();
-      showStyledAlert('Deleted', 'Message deleted successfully!');
-    } catch (error) {
-      console.error('❌ Failed to delete message:', error);
-      showStyledAlert('Error', 'Failed to delete message');
-    }
-  });
+  if (!confirm('Are you sure you want to delete this message?')) return;
+  
+  try {
+    await dbService.deleteContactMessage(messageId);
+    await loadMessages();
+    alert('✅ Message deleted successfully!');
+  } catch (error) {
+    console.error('❌ Failed to delete message:', error);
+    alert('❌ Failed to delete message: ' + error.message);
+  }
 }
 
 function renderReviewsList() {
@@ -1936,21 +1936,21 @@ function renderReviewsList() {
 async function deleteFeedback(reviewId) {
   // Permission check: Only Admin and Staff B can delete reviews
   if (state.currentUserRole !== 'Admin' && state.currentUserRole !== 'Staff B') {
-    showStyledAlert('Restricted', '❌ Only Admin and Staff B can delete reviews');
+    alert('❌ Only Admin and Staff B can delete reviews. Your role: ' + state.currentUserRole);
     console.warn('⛔ User role', state.currentUserRole, 'not authorized to delete reviews');
     return;
   }
   
-  showStyledConfirm('Delete Review', 'Are you sure you want to delete this review?', async () => {
-    try {
-      await dbService.deleteReview(reviewId);
-      await loadReviews();
-      showStyledAlert('Deleted', 'Review deleted successfully!');
-    } catch (error) {
-      console.error('❌ Failed to delete review:', error);
-      showStyledAlert('Error', 'Failed to delete review');
-    }
-  });
+  if (!confirm('Are you sure you want to delete this review?')) return;
+  
+  try {
+    await dbService.deleteReview(reviewId);
+    await loadReviews();
+    alert('✅ Review deleted successfully!');
+  } catch (error) {
+    console.error('❌ Failed to delete review:', error);
+    alert('❌ Failed to delete review: ' + error.message);
+  }
 }
 
 // Alias for deleteReview (used globally)
