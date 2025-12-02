@@ -114,3 +114,9 @@ initializeFirebase().catch(err => {
 });
 
 export { app, auth, db, storage };
+
+// CRITICAL FIX: Expose functions globally for non-module scripts
+window.getAuthInstance = getAuthInstance;
+window.getAppInstance = getAppInstance;
+window.getFirestoreInstance = getFirestoreInstance;
+window.getStorageInstance = getStorageInstance;

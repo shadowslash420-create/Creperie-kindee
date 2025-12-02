@@ -673,3 +673,6 @@ class DatabaseService {
 
 const dbService = new DatabaseService();
 export default dbService;
+
+// CRITICAL FIX: Expose to global scope for non-module scripts
+window.dbService = dbService;
