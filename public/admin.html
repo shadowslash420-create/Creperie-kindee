@@ -643,8 +643,16 @@
       } else if (ADMIN_EMAILS.includes(currentUser.email)) {
         // Admin user is authenticated
         console.log('✅ Admin user auto-logged in:', currentUser.email);
-        document.getElementById('login-section').classList.add('hidden');
-        document.getElementById('admin-section').classList.remove('hidden');
+        const loginSection = document.getElementById('login-section');
+        const adminSection = document.getElementById('admin-section');
+        if (loginSection) {
+          loginSection.classList.add('hidden');
+          loginSection.style.display = 'none';
+        }
+        if (adminSection) {
+          adminSection.classList.remove('hidden');
+          adminSection.style.display = 'flex';
+        }
         
         // Clear cache on admin login
         if (window.clearAdminCache) {
