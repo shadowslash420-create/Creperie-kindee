@@ -1,0 +1,118 @@
+/* CRITICAL PERFORMANCE OPTIMIZATIONS - NO LAG ON ANY DEVICE */
+
+/* Disable ALL animations */
+* {
+  animation: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+html {
+  scroll-behavior: auto !important;
+}
+
+body {
+  background: #FFF5F5 !important;
+  background-attachment: scroll !important;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Remove expensive pseudo-elements */
+body::before {
+  display: none !important;
+}
+
+/* Remove all text shadows - very expensive */
+* {
+  text-shadow: none !important;
+}
+
+/* Optimize hero section - remove all effects */
+.home-hero-title {
+  animation: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+  will-change: auto;
+}
+
+.home-hero-tagline {
+  animation: none !important;
+  text-shadow: none !important;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  color: #fff !important;
+  will-change: auto;
+}
+
+.home-hero-desc {
+  text-shadow: none !important;
+}
+
+/* Simplify all transitions to minimal duration */
+button, a, .menu-item, .card, .offering-card {
+  transition: opacity 0.1s ease !important;
+}
+
+/* Disable expensive filters */
+* {
+  filter: none !important;
+}
+
+/* Optimize images for mobile */
+img {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000;
+}
+
+/* Remove box shadows - extremely expensive for mobile */
+.menu-item, .card, .offering-card, button, .nav-item {
+  box-shadow: none !important;
+  border: 1px solid #ccc;
+}
+
+/* Optimize cart and menu interactions */
+.cart-side, .nav-menu {
+  transform: none !important;
+  transition: opacity 0.15s ease !important;
+}
+
+/* Remove expensive gradients from critical elements */
+body {
+  background: solid #FFF5F5 !important;
+}
+
+.home-hero {
+  background: solid #E30613 !important;
+}
+
+/* Mobile optimization - reduce complexity */
+@media (max-width: 768px) {
+  * {
+    will-change: auto;
+  }
+  
+  body {
+    font-size: 16px;
+  }
+  
+  /* Disable all hover effects on mobile */
+  button:hover, a:hover, .menu-item:hover {
+    transform: none !important;
+  }
+}
+
+/* Disable GPU acceleration triggers that cause lag */
+.header, .cart-side, .nav-menu {
+  transform: translate3d(0, 0, 0) !important;
+  will-change: auto;
+}
+
+/* Final override: NO ANIMATIONS ANYWHERE */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes titleGlow { 0% { opacity: 1; } 100% { opacity: 1; } }
+@keyframes title3DBounce { 0% { transform: none; } 100% { transform: none; } }
+@keyframes fadeInSlide { 0% { opacity: 1; } 100% { opacity: 1; } }
+@keyframes floatImagine { 0% { transform: none; } 100% { transform: none; } }
