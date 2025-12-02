@@ -684,9 +684,11 @@
   </script>
   <!-- Load dependencies as modules to expose them globally -->
   <script type="module">
-    import firebaseConfig from './firebase-config.js';
+    import * as firebaseConfig from './firebase-config.js';
     import dbService from './db-service.js';
-    console.log('✅ Dependencies loaded and exposed to window');
+    console.log('✅ Dependencies loaded');
+    // Ensure they're available to other scripts
+    window.dbService = dbService;
   </script>
   <!-- Load admin dashboard after dependencies are available -->
   <script src="admin-dashboard.js" defer></script>

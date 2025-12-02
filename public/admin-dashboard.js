@@ -1,28 +1,5 @@
 /* ==================== CREPERIE KINDER ADMIN DASHBOARD ==================== */
-/* Fixed version - works with classic script loading */
-
-// Global references (these are initialized by firebase-config.js and db-service.js in HTML)
-// We'll define them here as they're loaded before this script
-let getAuthInstance, getFirestoreInstance, signInWithEmailAndPassword, signOut, dbService;
-
-// Wait for dependencies to be available
-async function waitForDependencies() {
-  let attempts = 0;
-  while (attempts < 50) {
-    try {
-      // Try to access window.db Service (from db-service.js)
-      if (window.dbService !== undefined) {
-        dbService = window.dbService;
-        console.log('✅ dbService available');
-        return true;
-      }
-    } catch(e) {}
-    await new Promise(r => setTimeout(r, 100));
-    attempts++;
-  }
-  console.error('❌ Failed to load dependencies');
-  return false;
-}
+/* Works with classic script loading - all functions are exposed to window */
 
 // ==================== STATE MANAGEMENT ====================
 const state = {
@@ -52,7 +29,10 @@ const state = {
 
 async function checkUserStaffStatus() {
   try {
-    if (!window.getAuthInstance) return;
+    if (!window.getAuthInstance) {
+      console.error('❌ Firebase not available yet');
+      return;
+    }
     const auth = await window.getAuthInstance();
     if (!auth || !auth.currentUser) {
       state.isStaffUser = false;
