@@ -495,3 +495,27 @@ window.deleteMessage = deleteMessage;
 window.initializeDashboard = initializeDashboard;
 
 console.log('✅ Admin dashboard script loaded');
+
+// ==================== AUTO-INITIALIZE ====================
+// Wait a bit for dependencies to load, then initialize
+setTimeout(() => {
+  if (window.dbService && window.getAuthInstance) {
+    console.log('🚀 Auto-initializing dashboard...');
+    initializeDashboard().catch(err => {
+      console.error('❌ Auto-init failed:', err);
+    });
+  } else {
+    console.warn('⏳ Dependencies not ready yet, retrying...');
+    // Retry after more time
+    setTimeout(() => {
+      if (window.dbService && window.getAuthInstance) {
+        console.log('🚀 Auto-initializing dashboard (retry)...');
+        initializeDashboard().catch(err => {
+          console.error('❌ Auto-init failed (retry):', err);
+        });
+      } else {
+        console.error('❌ Dependencies still not available');
+      }
+    }, 1000);
+  }
+}, 500);
