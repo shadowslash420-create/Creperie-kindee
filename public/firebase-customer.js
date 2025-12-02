@@ -46,18 +46,18 @@ function saveToLocalStorage(cacheKey, timestampKey, data) {
 export async function getCategoriesFromFirebase() {
   try {
     console.log('📂 Loading categories from Firestore...');
-    
+
     if (!dbService || typeof dbService.getAllCategories !== 'function') {
       console.error('❌ dbService is not properly initialized');
       return [];
     }
-    
+
     // Check in-memory cache first
     if (categoriesCache) {
       console.log('📦 Returning cached categories (memory):', categoriesCache.length);
       return categoriesCache;
     }
-    
+
     // Check localStorage next
     if (isCacheValid(CACHE_KEYS.CATEGORIES_TIMESTAMP)) {
       const cached = loadFromLocalStorage(CACHE_KEYS.CATEGORIES);
@@ -67,28 +67,28 @@ export async function getCategoriesFromFirebase() {
         return cached;
       }
     }
-    
+
     // Fetch from Firestore
     console.log('🔄 Fetching fresh categories from Firestore...');
     const categories = await dbService.getAllCategories();
     console.log('✅ Categories loaded:', categories.length);
     console.log('📊 Category IDs:', categories.map(c => c.id));
-    
+
     // Update both caches
     categoriesCache = categories;
     saveToLocalStorage(CACHE_KEYS.CATEGORIES, CACHE_KEYS.CATEGORIES_TIMESTAMP, categories);
-    
+
     return categories;
   } catch (error) {
     console.error('❌ Failed to load categories from Firebase:', error);
-    
+
     // Try to return localStorage data even if fetch failed
     const cached = loadFromLocalStorage(CACHE_KEYS.CATEGORIES);
     if (cached) {
       console.log('📦 Returning stale cached categories (Firebase failed):', cached.length);
       return cached;
     }
-    
+
     return [];
   }
 }
@@ -96,18 +96,18 @@ export async function getCategoriesFromFirebase() {
 export async function getMenuFromFirebase() {
   try {
     console.log('🔍 firebase-customer.js: Fetching menu from dbService...');
-    
+
     if (!dbService || typeof dbService.getAllMenuItems !== 'function') {
       console.error('❌ dbService is not properly initialized');
       return [];
     }
-    
+
     // Check in-memory cache first
     if (menuCache) {
       console.log('📦 Returning cached menu (memory):', menuCache.length, 'items');
       return menuCache;
     }
-    
+
     // Check localStorage next
     if (isCacheValid(CACHE_KEYS.MENU_TIMESTAMP)) {
       const cached = loadFromLocalStorage(CACHE_KEYS.MENU);
@@ -119,31 +119,31 @@ export async function getMenuFromFirebase() {
         return cached;
       }
     }
-    
+
     // Fetch from Firestore
     console.log('🔄 Fetching fresh menu from Firestore...');
     const menu = await dbService.getAllMenuItems();
     console.log('✅ Menu fetched from Firestore:', menu.length, 'items');
     console.log('📊 Item details:', menu.map(item => ({ name: item.name, category: item.category })));
-    
+
     // Update both caches
     menuCache = menu;
     saveToLocalStorage(CACHE_KEYS.MENU, CACHE_KEYS.MENU_TIMESTAMP, menu);
-    
+
     // Setup real-time listener
     setupMenuListener();
-    
+
     return menu;
   } catch (error) {
     console.error('❌ Failed to load menu from Firebase:', error);
-    
+
     // Try to return localStorage data even if fetch failed
     const cached = loadFromLocalStorage(CACHE_KEYS.MENU);
     if (cached) {
       console.log('📦 Returning stale cached menu (Firebase failed):', cached.length, 'items');
       return cached;
     }
-    
+
     return [];
   }
 }
@@ -152,11 +152,37 @@ export async function getMenuFromFirebase() {
 function setupMenuListener() {
   if (!menuListener) {
     console.log('👂 Setting up real-time menu listener...');
-    menuListener = dbService.listenToMenuChanges((updatedMenu) => {
-      console.log('🔄 Menu updated in real-time:', updatedMenu.length, 'items');
-      menuCache = updatedMenu;
-      saveToLocalStorage(CACHE_KEYS.MENU, CACHE_KEYS.MENU_TIMESTAMP, updatedMenu);
-      window.dispatchEvent(new CustomEvent('menuUpdated', { detail: updatedMenu }));
+    let initialLoad = true;
+    onSnapshot(query(collection(db, 'menu')), (snapshot) => {
+      if (snapshot.metadata.fromCache && !initialLoad) {
+        console.log('⚠️ Ignoring cached snapshot');
+        return;
+      }
+
+      const items = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Only update if we have actual changes or it's the initial load
+      if (initialLoad || !snapshot.metadata.hasPendingWrites) {
+        console.log('🔄 Menu updated in real-time:', items.length, 'items');
+
+        // Update cache
+        setCache('kc_firebase_menu_cache', items);
+
+        // Update state
+        window.menuItems = items;
+
+        // Re-render if we're on the home page
+        if (typeof renderHomeMenuPreview === 'function') {
+          renderHomeMenuPreview(items);
+        }
+
+        initialLoad = false;
+      }
+    }, (error) => {
+      console.error('❌ Real-time listener error:', error);
     });
   }
 }
@@ -192,7 +218,7 @@ export function clearExpiredCache() {
     [CACHE_KEYS.MENU, CACHE_KEYS.MENU_TIMESTAMP],
     [CACHE_KEYS.CATEGORIES, CACHE_KEYS.CATEGORIES_TIMESTAMP]
   ];
-  
+
   keys.forEach(([cacheKey, timestampKey]) => {
     if (!isCacheValid(timestampKey)) {
       localStorage.removeItem(cacheKey);
