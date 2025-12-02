@@ -698,9 +698,9 @@ function viewOrderDetails(orderId) {
           <p style="margin: 0; color: #999; font-size: 12px; font-weight: 600;">PHONE</p>
           <p style="margin: 8px 0 0 0; color: #2d3748; font-weight: 600;">📞 ${order.phone || order.customerPhone || 'N/A'}</p>
         </div>
-        <div>
+        <div style="grid-column:1/-1;">
           <p style="margin: 0; color: #999; font-size: 12px; font-weight: 600;">ADDRESS</p>
-          <p style="margin: 8px 0 0 0; color: #2d3748; font-weight: 600;">📍 ${order.address || 'N/A'}</p>
+          <p style="margin: 8px 0 0 0; color: #2d3748; font-weight: 600;">📍 ${order.address || 'Not provided'}</p>
         </div>
       </div>
     </div>
