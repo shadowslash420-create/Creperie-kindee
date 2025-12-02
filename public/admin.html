@@ -682,15 +682,21 @@
       }
     });
   </script>
-  <!-- Load dependencies as modules to expose them globally -->
+  <!-- Load dependencies as modules and signal when ready -->
   <script type="module">
-    import * as firebaseConfig from './firebase-config.js';
-    import dbService from './db-service.js';
-    console.log('✅ Dependencies loaded');
-    // Ensure they're available to other scripts
-    window.dbService = dbService;
+    (async () => {
+      try {
+        const firebaseConfig = await import('./firebase-config.js');
+        const dbServiceModule = await import('./db-service.js');
+        window.dbService = dbServiceModule.default;
+        window.firebaseLoaded = true;
+        console.log('✅ Module dependencies loaded and exposed to window');
+      } catch (e) {
+        console.error('❌ Failed to load modules:', e);
+      }
+    })();
   </script>
-  <!-- Load admin dashboard after dependencies are available -->
-  <script src="admin-dashboard.js" defer></script>
+  <!-- Load admin dashboard after module script starts -->
+  <script src="admin-dashboard.js"></script>
 </body>
 </html>

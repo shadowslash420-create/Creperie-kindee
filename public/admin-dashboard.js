@@ -496,26 +496,31 @@ window.initializeDashboard = initializeDashboard;
 
 console.log('✅ Admin dashboard script loaded');
 
-// ==================== AUTO-INITIALIZE ====================
-// Wait a bit for dependencies to load, then initialize
-setTimeout(() => {
-  if (window.dbService && window.getAuthInstance) {
-    console.log('🚀 Auto-initializing dashboard...');
-    initializeDashboard().catch(err => {
-      console.error('❌ Auto-init failed:', err);
-    });
-  } else {
-    console.warn('⏳ Dependencies not ready yet, retrying...');
-    // Retry after more time
-    setTimeout(() => {
-      if (window.dbService && window.getAuthInstance) {
-        console.log('🚀 Auto-initializing dashboard (retry)...');
-        initializeDashboard().catch(err => {
-          console.error('❌ Auto-init failed (retry):', err);
-        });
-      } else {
-        console.error('❌ Dependencies still not available');
-      }
-    }, 1000);
+// ==================== AUTO-INITIALIZE WITH RETRY ====================
+async function waitForDependencies(maxWait = 5000) {
+  const startTime = Date.now();
+  while (Date.now() - startTime < maxWait) {
+    if (window.dbService && window.getAuthInstance && window.firebaseLoaded) {
+      console.log('✅ All dependencies ready!');
+      return true;
+    }
+    await new Promise(r => setTimeout(r, 100));
   }
-}, 500);
+  console.error('❌ Dependencies timeout - some may be missing');
+  return false;
+}
+
+(async () => {
+  await waitForDependencies();
+  
+  try {
+    const auth = await window.getAuthInstance();
+    if (auth && auth.currentUser) {
+      console.log('🚀 User logged in, auto-initializing dashboard...');
+      await initializeDashboard();
+      console.log('✅ Dashboard auto-initialized');
+    }
+  } catch (err) {
+    console.error('❌ Auto-init error:', err.message);
+  }
+})();
