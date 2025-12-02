@@ -1459,3 +1459,45 @@ function renderCustomersTable() {
 
   table.innerHTML = html;
 }
+
+// ==================== EXPOSE FUNCTIONS GLOBALLY FOR HTML EVENT HANDLERS ====================
+
+// Make all functions available globally for onclick/onchange/onsubmit handlers
+window.toggleSidebar = toggleSidebar;
+window.showSection = showSection;
+window.handleAdminLogout = handleAdminLogout;
+window.openAddModal = openAddModal;
+window.closeModal = closeModal;
+window.editMenuItem = editMenuItem;
+window.deleteMenuItem = deleteMenuItem;
+window.filterOrdersByStatus = filterOrdersByStatus;
+window.filterOrders = filterOrders;
+window.viewOrderDetails = viewOrderDetails;
+window.openCategoryModal = openCategoryModal;
+window.closeCategoryModal = closeCategoryModal;
+window.addCategory = addCategory;
+window.deleteCategory = deleteCategory;
+window.filterMenuByCategory = filterMenuByCategory;
+window.handleImageUrlInput = handleImageUrlInput;
+window.openImgBBUpload = openImgBBUpload;
+window.clearImage = clearImage;
+window.resetImageUpload = resetImageUpload;
+window.saveMenuItem = saveMenuItem;
+window.saveStaffMember = saveStaffMember;
+window.openAddStaffModal = openAddStaffModal;
+window.closeAddStaffModal = closeAddStaffModal;
+window.deleteStaff = deleteStaff;
+window.deleteMessage = deleteMessage;
+window.deleteFeedback = deleteFeedback;
+window.handleLogin = handleLogin;
+window.initializeDashboard = initializeDashboard;
+window.setupSettingsHandlers = setupSettingsHandlers;
+
+// Auto-initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  getAuthInstance().then(auth => {
+    if (auth?.currentUser) {
+      initializeDashboard();
+    }
+  });
+});
