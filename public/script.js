@@ -213,8 +213,8 @@ const translations = {
     offering3Title: 'قائمة متنوعة للجميع', offering3Desc: 'خيارات متعددة تناسب جميع الأعمار من الأطفال إلى الكبار، حلو أو مالح',
     offering4Title: 'توصيل سريع للمنزل', offering4Desc: 'استمتع بطعمنا الشهي في منزلك مع خدمة توصيل سريعة وموثوقة',
     offering5Title: 'عروض عائلية', offering5Desc: 'باقات خاصة للعائلات بأسعار مميزة وتوصيل مجاني للطلبات الكبيرة',
-    offering6Title: 'خدمة طوال اليوم', offering6Desc: 'نعمل من 9 صباحاً حتى 11 مساءً لنكون دائماً في خدمتكم',
-    'faq-q1': 'ما هي ساعات العمل؟', 'faq-a1': 'نحن مفتوحون يومياً من الساعة 9 صباحاً حتى 11 مساءً',
+    offering6Title: 'خدمة طوال اليوم', offering6Desc: 'نعمل من الساعة 11 صباحاً حتى 1 صباحاً لنكون دائماً في خدمتكم',
+    'faq-q1': 'ما هي ساعات العمل؟', 'faq-a1': 'نحن مفتوحون يومياً من الساعة 11 صباحاً حتى 1 صباحاً',
     'faq-q2': 'هل توفرون توصيل مجاني؟', 'faq-a2': 'نعم، نوفر توصيل مجاني للطلبات التي تزيد عن 1000 DZD',
     'faq-q3': 'هل تستخدمون شوكولاتة كيندر الأصلية؟', 'faq-a3': 'بالتأكيد! نستخدم فقط شوكولاتة كيندر الأصلية ومكونات طازجة يومياً',
     'faq-q4': 'هل يمكنني تخصيص طلبي؟', 'faq-a4': 'نعم، يمكنك إضافة ملاحظات خاصة عند الطلب وسنقوم بتلبية طلبك حسب الإمكان',
@@ -248,8 +248,8 @@ const translations = {
     offering3Title: 'Diverse Menu for All', offering3Desc: 'Multiple options suitable for all ages from children to adults, sweet or savory',
     offering4Title: 'Fast Home Delivery', offering4Desc: 'Enjoy our delicious food at home with fast and reliable delivery service',
     offering5Title: 'Family Packages', offering5Desc: 'Special bundles for families at great prices with free delivery on large orders',
-    offering6Title: 'All-Day Service', offering6Desc: 'We\'re open from 9 AM to 11 PM to always be at your service',
-    'faq-q1': 'What are your opening hours?', 'faq-a1': 'We are open daily from 9 AM to 11 PM',
+    offering6Title: 'All-Day Service', offering6Desc: 'We\'re open from 11 AM to 1 AM to always be at your service',
+    'faq-q1': 'What are your opening hours?', 'faq-a1': 'We are open daily from 11 AM to 1 AM',
     'faq-q2': 'Do you offer free delivery?', 'faq-a2': 'Yes, we offer free delivery for orders over 1000 DZD',
     'faq-q3': 'Do you use original Kinder chocolate?', 'faq-a3': 'Absolutely! We only use original Kinder chocolate and fresh ingredients daily',
     'faq-q4': 'Can I customize my order?', 'faq-a4': 'Yes, you can add special notes when ordering and we will fulfill your request as best as we can',
@@ -1888,7 +1888,7 @@ const originalTranslations = {
 
     // FAQ Page
     faqQ1: 'ما هي ساعات العمل؟',
-    faqA1: 'نحن مفتوحون يومياً من الساعة 9 صباحاً حتى 11 مساءً',
+    faqA1: 'نحن مفتوحون يومياً من الساعة 11 صباحاً حتى 1 صباحاً',
     faqQ2: 'هل توفرون توصيل مجاني؟',
     faqA2: 'نعم، نوفر توصيل مجاني للطلبات التي تزيد عن 15 دج',
     faqQ3: 'هل تستخدمون شوكولاتة كيندر الأصلية؟',
@@ -2005,7 +2005,7 @@ const originalTranslations = {
 
     // FAQ Page
     faqQ1: 'What are your opening hours?',
-    faqA1: 'We are open daily from 9 AM to 11 PM',
+    faqA1: 'We are open daily from 11 AM to 1 AM',
     faqQ2: 'Do you offer free delivery?',
     faqA2: 'Yes, we offer free delivery for orders over 15 DZD',
     faqQ3: 'Do you use original Kinder chocolate?',
