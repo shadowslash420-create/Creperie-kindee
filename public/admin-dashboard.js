@@ -1956,6 +1956,11 @@ async function deleteFeedback(reviewId) {
 // Alias for deleteReview (used globally)
 const deleteReview = deleteFeedback;
 
+// Expose to global scope for onclick handlers
+window.deleteMessage = deleteMessage;
+window.deleteFeedback = deleteFeedback;
+window.deleteReview = deleteReview;
+
 function loadSettings() {
   console.log('⚙️ Loading settings...');
   // Settings are already loaded in the HTML, event handlers are attached in setupSettingsHandlers()
