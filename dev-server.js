@@ -4,17 +4,11 @@ const path = require('path');
 const app = express();
 const PORT = 5000;
 
-// Optimized caching for performance
+// Disable caching for development
 app.use((req, res, next) => {
-  // Cache static assets (CSS, JS) for 1 hour
-  if (req.url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-  } else {
-    // No cache for HTML files (always fresh)
-    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-  }
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   next();
 });
 
