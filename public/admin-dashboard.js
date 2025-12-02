@@ -230,6 +230,7 @@ function showSection(section, event) {
 async function renderDashboard() {
   try {
     console.log('🎨 Rendering dashboard...');
+    console.log('State data:', { orders: state.orders.length, reviews: state.reviews.length, messages: state.messages?.length });
     const totalOrders = state.orders.length;
     const totalReviews = state.reviews.length;
     const totalMessages = state.messages?.length || 0;
@@ -246,9 +247,15 @@ async function renderDashboard() {
       'stat-completed': state.orders.filter(o => o.status === 'delivered').length
     };
 
+    console.log('Updating stat elements:', statElements);
     for (const [id, value] of Object.entries(statElements)) {
       const el = document.getElementById(id);
-      if (el) el.textContent = value;
+      if (el) {
+        el.textContent = value;
+        console.log(`✅ Updated ${id} = ${value}`);
+      } else {
+        console.warn(`⚠️ Element ${id} not found`);
+      }
     }
 
     console.log('✅ Dashboard rendered');
@@ -520,13 +527,29 @@ async function waitForDependencies(maxWait = 5000) {
   await waitForDependencies();
   
   try {
+    console.log('🔍 Checking if user is logged in...');
     const auth = await window.getAuthInstance();
+    console.log('Auth instance:', auth);
     if (auth && auth.currentUser) {
-      console.log('🚀 User logged in, auto-initializing dashboard...');
+      console.log('🚀 User logged in:', auth.currentUser.email, '- auto-initializing dashboard...');
       await initializeDashboard();
       console.log('✅ Dashboard auto-initialized');
+      // Automatically show dashboard section
+      showSection('dashboard');
+    } else {
+      console.log('ℹ️ No user logged in yet');
     }
   } catch (err) {
     console.error('❌ Auto-init error:', err.message);
   }
 })();
+
+// Listen for auth changes and reinit dashboard when user logs in
+if (window.onAuthChange) {
+  window.onAuthChange((user) => {
+    if (user && document.getElementById('admin-section') && !document.getElementById('admin-section').classList.contains('hidden')) {
+      console.log('👤 Auth changed, reinitializing dashboard...');
+      initializeDashboard().catch(err => console.error('❌ Reinit error:', err));
+    }
+  });
+}
