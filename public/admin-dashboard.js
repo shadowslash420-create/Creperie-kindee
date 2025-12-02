@@ -73,14 +73,19 @@ async function checkUserStaffStatus() {
 async function loadMenuData() {
   try {
     console.log('📋 Loading menu items...');
-    if (!window.dbService) throw new Error('dbService not available');
+    if (!window.dbService) {
+      console.error('❌ dbService is null:', window.dbService);
+      throw new Error('dbService not available');
+    }
+    console.log('✅ dbService available');
     await window.dbService.init();
+    console.log('✅ dbService initialized');
     const data = await window.dbService.getAllMenuItems();
-    console.log('✅ Menu items loaded:', data.length);
-    state.menuItems = data;
+    console.log('✅ Menu items loaded:', data?.length || 0, 'items:', data);
+    state.menuItems = data || [];
     return data;
   } catch (error) {
-    console.error('❌ Failed to load menu:', error.message);
+    console.error('❌ Failed to load menu:', error.message, error);
     state.menuItems = [];
     return [];
   }
@@ -92,11 +97,11 @@ async function loadOrdersData() {
     if (!window.dbService) throw new Error('dbService not available');
     await window.dbService.init();
     const data = await window.dbService.getAllOrders();
-    console.log('✅ Orders loaded:', data.length);
+    console.log('✅ Orders loaded:', data?.length || 0, 'items:', data);
     state.orders = data || [];
     return data;
   } catch (error) {
-    console.error('❌ Failed to load orders:', error.message);
+    console.error('❌ Failed to load orders:', error.message, error);
     state.orders = [];
     return [];
   }
@@ -121,6 +126,7 @@ async function loadReviews() {
   try {
     console.log('⭐ Loading reviews...');
     if (!window.dbService) throw new Error('dbService not available');
+    await window.dbService.init();
     const data = await window.dbService.getAllReviews();
     console.log('✅ Reviews loaded:', data.length);
     state.reviews = data || [];
