@@ -1492,12 +1492,3 @@ window.deleteFeedback = deleteFeedback;
 window.handleLogin = handleLogin;
 window.initializeDashboard = initializeDashboard;
 window.setupSettingsHandlers = setupSettingsHandlers;
-
-// Auto-initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-  getAuthInstance().then(auth => {
-    if (auth?.currentUser) {
-      initializeDashboard();
-    }
-  });
-});
