@@ -738,6 +738,19 @@ async function openAddModal() {
   document.getElementById('menu-item-modal').classList.add('active');
   document.getElementById('menu-item-form').reset();
   state.editingItem = null;
+  
+  // Populate category dropdown
+  const categorySelect = document.getElementById('item-category');
+  if (categorySelect && state.categories) {
+    categorySelect.innerHTML = '<option value="">Select category</option>';
+    state.categories.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat.id;
+      option.textContent = cat.name;
+      categorySelect.appendChild(option);
+    });
+    console.log('✅ Populated category dropdown with', state.categories.length, 'categories');
+  }
 }
 
 async function closeModal() {
@@ -750,9 +763,23 @@ async function editMenuItem(itemId) {
   const item = state.menuItems.find(m => m.id === itemId);
   if (!item) return;
   state.editingItem = item;
+  
+  // Populate category dropdown first
+  const categorySelect = document.getElementById('item-category');
+  if (categorySelect && state.categories) {
+    categorySelect.innerHTML = '<option value="">Select category</option>';
+    state.categories.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat.id;
+      option.textContent = cat.name;
+      categorySelect.appendChild(option);
+    });
+  }
+  
   document.getElementById('item-name').value = item.name;
   document.getElementById('item-price').value = item.price;
   document.getElementById('item-desc').value = item.description || '';
+  document.getElementById('item-category').value = item.category || '';
   document.getElementById('item-image-url').value = item.image || '';
   document.getElementById('menu-item-modal').classList.add('active');
 }
