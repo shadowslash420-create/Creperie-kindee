@@ -738,8 +738,8 @@
   padding: 16px 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
-  background: linear-gradient(135deg, #3b2b26 0%, #4a3a33 100%);
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #E30613 0%, #FF6B35 100%);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;

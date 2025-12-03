@@ -518,7 +518,6 @@ function viewOrderDetails(orderId) {
     </div>
   `;
   
-  modalContent.appendChild(modalOverlay);
   modalOverlay.appendChild(modalContent);
   document.body.appendChild(modalOverlay);
   
