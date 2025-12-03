@@ -163,6 +163,54 @@ async function loadStaffData() {
   }
 }
 
+async function loadCustomersData() {
+  try {
+    console.log('👥 Loading customers from orders...');
+    if (!state.orders || state.orders.length === 0) {
+      console.log('No orders available to extract customers');
+      state.customers = [];
+      return [];
+    }
+
+    // Extract unique customers from orders
+    const customerMap = new Map();
+    
+    state.orders.forEach(order => {
+      if (order.email) {
+        const email = order.email.toLowerCase();
+        if (!customerMap.has(email)) {
+          customerMap.set(email, {
+            email: order.email,
+            name: order.name || 'N/A',
+            phone: order.phone || 'N/A',
+            address: order.address || 'N/A',
+            totalOrders: 0,
+            totalSpent: 0,
+            lastOrderDate: null
+          });
+        }
+        
+        const customer = customerMap.get(email);
+        customer.totalOrders++;
+        customer.totalSpent += (order.total || 0);
+        
+        const orderDate = order.createdAt ? (order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt)) : null;
+        if (orderDate && (!customer.lastOrderDate || orderDate > customer.lastOrderDate)) {
+          customer.lastOrderDate = orderDate;
+        }
+      }
+    });
+
+    state.customers = Array.from(customerMap.values());
+    console.log('✅ Customers loaded:', state.customers.length);
+    return state.customers;
+  } catch (error) {
+    console.error('❌ Failed to load customers:', error.message);
+    state.customers = [];
+    return [];
+  }
+}
+
 // ==================== UI MANAGEMENT ====================
 
 function toggleSidebar() {
@@ -224,6 +272,8 @@ function showSection(section, event) {
     renderMenuGrid();
   } else if (section === 'orders') {
     renderOrdersList();
+  } else if (section === 'customers') {
+    renderCustomersTable();
   } else if (section === 'reviews') {
     renderReviewsList();
   } else if (section === 'messages') {
@@ -1036,6 +1086,81 @@ function filterMenuByCategory(category) {
   event.target.classList.add('active');
 }
 
+// ==================== CUSTOMERS MANAGEMENT ====================
+
+async function renderCustomersTable() {
+  try {
+    console.log('🎨 Rendering customers table...');
+    const container = document.getElementById('customers-table');
+    if (!container) {
+      console.warn('⚠️ customers-table element not found');
+      return;
+    }
+
+    // Load customers from orders
+    await loadCustomersData();
+
+    if (!state.customers || state.customers.length === 0) {
+      container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">No customers found. Customers will appear here once orders are placed.</p>';
+      return;
+    }
+
+    const html = `
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+          <thead>
+            <tr style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;">
+              <th style="padding:16px;text-align:left;font-weight:600;">📧 Email</th>
+              <th style="padding:16px;text-align:left;font-weight:600;">👤 Name</th>
+              <th style="padding:16px;text-align:left;font-weight:600;">📱 Phone</th>
+              <th style="padding:16px;text-align:left;font-weight:600;">📦 Orders</th>
+              <th style="padding:16px;text-align:left;font-weight:600;">💰 Total Spent</th>
+              <th style="padding:16px;text-align:left;font-weight:600;">📅 Last Order</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${state.customers.map((customer, index) => {
+              const lastOrderDate = customer.lastOrderDate 
+                ? customer.lastOrderDate.toLocaleDateString() + ' ' + customer.lastOrderDate.toLocaleTimeString()
+                : 'N/A';
+              const bgColor = index % 2 === 0 ? '#f7fafc' : 'white';
+              
+              return `
+                <tr style="background:${bgColor};border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:16px;color:#2d3748;font-weight:500;">${customer.email}</td>
+                  <td style="padding:16px;color:#2d3748;">${customer.name}</td>
+                  <td style="padding:16px;color:#2d3748;">${customer.phone}</td>
+                  <td style="padding:16px;text-align:center;">
+                    <span style="background:#667eea;color:white;padding:4px 12px;border-radius:12px;font-weight:600;font-size:13px;">
+                      ${customer.totalOrders}
+                    </span>
+                  </td>
+                  <td style="padding:16px;color:#E30613;font-weight:700;">${customer.totalSpent.toFixed(2)} DZD</td>
+                  <td style="padding:16px;color:#718096;font-size:13px;">${lastOrderDate}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      
+      <div style="margin-top:24px;padding:16px;background:#f7fafc;border-radius:8px;border-left:4px solid #667eea;">
+        <p style="margin:0;color:#2d3748;font-weight:600;">📊 Total Customers: ${state.customers.length}</p>
+        <p style="margin:8px 0 0 0;color:#718096;font-size:13px;">Customer data is automatically extracted from order history</p>
+      </div>
+    `;
+
+    container.innerHTML = html;
+    console.log('✅ Customers table rendered with', state.customers.length, 'customers');
+  } catch (error) {
+    console.error('❌ Error rendering customers table:', error);
+    const container = document.getElementById('customers-table');
+    if (container) {
+      container.innerHTML = '<p style="text-align:center;color:#e53e3e;padding:40px;">Error loading customers. Please try again.</p>';
+    }
+  }
+}
+
 // ==================== STAFF MANAGEMENT ====================
 
 function openAddStaffModal() {
@@ -1144,6 +1269,7 @@ window.closeAddStaffModal = closeAddStaffModal;
 window.saveStaffMember = saveStaffMember;
 window.deleteStaff = deleteStaff;
 window.renderStaffTable = renderStaffTable;
+window.renderCustomersTable = renderCustomersTable;
 window.updateOrderStatus = updateOrderStatus;
 window.viewOrderDetails = viewOrderDetails;
 
