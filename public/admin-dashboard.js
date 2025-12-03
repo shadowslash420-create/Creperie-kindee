@@ -209,7 +209,8 @@ function showSection(section, event) {
   state.currentSection = section;
   
   // Hide all sections
-  document.querySelectorAll('[id$="-section"]').forEach(el => {
+  document.querySelectorAll('.content-section').forEach(el => {
+    el.classList.remove('active');
     el.style.display = 'none';
   });
 
@@ -217,6 +218,7 @@ function showSection(section, event) {
   const sectionId = 'section-' + section;
   const sectionEl = document.getElementById(sectionId);
   if (sectionEl) {
+    sectionEl.classList.add('active');
     sectionEl.style.display = 'block';
     console.log('✅ Section displayed:', sectionId);
   }
@@ -242,11 +244,14 @@ function showSection(section, event) {
     renderMessagesList();
   }
 
-  // Close sidebar on mobile
-  if (window.innerWidth <= 768) {
-    const sidebar = document.getElementById('dashboard-sidebar');
-    if (sidebar) sidebar.classList.remove('active');
-  }
+  // ALWAYS close sidebar and overlay after selecting a section
+  const sidebar = document.getElementById('dashboard-sidebar');
+  const overlay = document.querySelector('.sidebar-overlay');
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  
+  if (sidebar) sidebar.classList.remove('active');
+  if (overlay) overlay.classList.remove('active');
+  if (mobileMenuBtn) mobileMenuBtn.classList.remove('active');
 
   sessionStorage.setItem('admin_current_section', section);
 }
