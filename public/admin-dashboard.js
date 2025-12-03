@@ -72,27 +72,11 @@ async function checkUserStaffStatus() {
 
 async function loadMenuData() {
   try {
-    console.log('📋 Loading menu items from Firebase directly...');
-    if (!window.dbService) {
-      console.error('❌ dbService is null:', window.dbService);
-      throw new Error('dbService not available');
-    }
-    console.log('✅ dbService available');
+    console.log('📋 Loading menu items...');
+    if (!window.dbService) throw new Error('dbService not available');
     await window.dbService.init();
-    console.log('✅ dbService initialized, querying Firebase...');
-    
-    // Get the db instance and query directly (no cache)
-    const db = window.dbService.db;
-    if (!db) throw new Error('Firebase DB not initialized');
-    
-    // Import Firestore functions
-    const { collection, query, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/10.8.0/firestore.js');
-    const menuRef = collection(db, 'menu');
-    const q = query(menuRef, orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
-    console.log('✅ Menu items loaded directly from Firebase:', data?.length || 0, 'items:', data);
+    const data = await window.dbService.getAllMenuItems();
+    console.log('✅ Menu items loaded:', data?.length || 0, 'items:', data);
     state.menuItems = data || [];
     return data;
   } catch (error) {
