@@ -500,11 +500,19 @@ let isCheckoutSubmitting = false;
 
 // Close checkout modal
 window.closeCheckoutModal = function(event) {
+  // Prevent submission if in progress
+  if (isCheckoutSubmitting) {
+    console.log('⏳ Cannot close modal during order submission');
+    return;
+  }
+  
   // Prevent event bubbling if called from click event
   if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
+  
+  console.log('🔴 Closing checkout modal');
   
   // Find and remove all checkout modals
   const modals = document.querySelectorAll('.checkout-modal-overlay, #checkout-modal');
@@ -817,37 +825,42 @@ window.checkoutFlow = async function() {
       max-height: 90vh;
       display: flex;
       flex-direction: column;
+      position: relative;
+      z-index: 1;
     ">
       <div style="
         background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
-        padding: 24px;
+        padding: 20px 24px;
         color: white;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        position: relative;
+        z-index: 10;
       ">
         <h2 style="margin: 0; font-size: 24px; font-weight: 700;">
           ${isArabic ? '🛒 إتمام الطلب' : '🛒 Complete Order'}
         </h2>
-        <button type="button" onclick="closeCheckoutModal(); return false;" id="checkout-close-btn" style="
-          background: rgba(255,255,255,0.2);
-          border: 2px solid rgba(255,255,255,0.3);
+        <button type="button" id="checkout-close-btn" style="
+          background: rgba(255,255,255,0.25);
+          border: 2px solid rgba(255,255,255,0.4);
           color: white;
-          font-size: 32px;
+          font-size: 28px;
           cursor: pointer;
           padding: 0;
           line-height: 1;
-          width: 44px;
-          height: 44px;
+          width: 48px;
+          height: 48px;
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: 8px;
           flex-shrink: 0;
-          z-index: 10;
+          z-index: 100;
           position: relative;
-          transition: all 0.3s;
-        " onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='scale(1.1)';" onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='scale(1)';">×</button>
+          transition: all 0.2s;
+          font-weight: 300;
+        ">×</button>
       </div>
       
       <div style="padding: 24px; overflow-y: auto; flex: 1;">
@@ -1082,6 +1095,32 @@ window.checkoutFlow = async function() {
   });
 
   document.body.appendChild(modal);
+
+  // Add click event listener to close button
+  setTimeout(() => {
+    const closeBtn = document.getElementById('checkout-close-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeCheckoutModal();
+      });
+      
+      closeBtn.addEventListener('mouseover', () => {
+        if (!isCheckoutSubmitting) {
+          closeBtn.style.background = 'rgba(255,255,255,0.4)';
+          closeBtn.style.transform = 'scale(1.1)';
+        }
+      });
+      
+      closeBtn.addEventListener('mouseout', () => {
+        closeBtn.style.background = 'rgba(255,255,255,0.25)';
+        closeBtn.style.transform = 'scale(1)';
+      });
+      
+      console.log('✅ Close button event listener attached');
+    }
+  }, 100);
 
   // Initialize map after modal is fully rendered
   setTimeout(() => {
