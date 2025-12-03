@@ -1,8 +1,15 @@
 import dbService from './db-service.js';
+import { getFirestoreInstance } from './firebase-config.js';
+import { 
+  collection, 
+  query, 
+  onSnapshot 
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 let menuCache = null;
 let menuListener = null;
 let categoriesCache = null;
+let db = null;
 
 // Cache keys for localStorage
 const CACHE_KEYS = {
@@ -149,11 +156,14 @@ export async function getMenuFromFirebase() {
 }
 
 // Separate function to setup listener
-function setupMenuListener() {
+async function setupMenuListener() {
   if (!menuListener) {
     console.log('👂 Setting up real-time menu listener...');
+    if (!db) {
+      db = await getFirestoreInstance();
+    }
     let initialLoad = true;
-    onSnapshot(query(collection(db, 'menu')), (snapshot) => {
+    menuListener = onSnapshot(query(collection(db, 'menu')), (snapshot) => {
       if (snapshot.metadata.fromCache && !initialLoad) {
         console.log('⚠️ Ignoring cached snapshot');
         return;
