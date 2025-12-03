@@ -204,6 +204,11 @@
   z-index: 1000;
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 4px 0 20px rgba(255, 17, 17, 0.2);
+  transform: translateX(-100%);
+}
+
+.dashboard-sidebar.active {
+  transform: translateX(0);
 }
 
 .sidebar-header {
@@ -1137,16 +1142,6 @@
 }
 
 @media (max-width: 768px) {
-  .dashboard-sidebar {
-    transform: translateX(-100%);
-    width: 80%;
-    max-width: 320px;
-  }
-  
-  .dashboard-sidebar.active {
-    transform: translateX(0);
-  }
-  
   .dashboard-main {
     margin-left: 0;
   }
