@@ -351,12 +351,17 @@ async function renderOrdersList() {
 
     const html = state.orders.map(order => `
       <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
           <div>
             <h4 style="margin:0;color:#2d3748;">#${order.id?.substring(0,8)}</h4>
             <p style="margin:4px 0;color:#666;font-size:14px;">${order.name || 'N/A'}</p>
           </div>
-          <span style="background:${order.status === 'delivered' ? '#48bb78' : '#ed8936'};color:white;padding:4px 8px;border-radius:4px;font-size:12px;">${order.status || 'pending'}</span>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;background:${order.status === 'delivered' ? '#48bb78' : '#ed8936'};color:white;cursor:pointer;font-weight:600;font-size:12px;">
+              <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>pending</option>
+              <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>delivered</option>
+            </select>
+          </div>
         </div>
         <p style="margin:8px 0;color:#666;font-size:14px;">📍 ${order.address || 'No address'}</p>
         <p style="margin:8px 0;font-weight:600;color:#2d3748;">Total: ${order.total} DZD</p>
@@ -367,6 +372,20 @@ async function renderOrdersList() {
     console.log('✅ Orders list rendered');
   } catch (error) {
     console.error('❌ Error rendering orders:', error);
+  }
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    console.log('🔄 Updating order status:', orderId, '→', newStatus);
+    if (!window.dbService) throw new Error('dbService not available');
+    await window.dbService.updateOrder(orderId, { status: newStatus });
+    await loadOrdersData();
+    renderOrdersList();
+    console.log('✅ Order status updated');
+  } catch (error) {
+    console.error('❌ Error updating order:', error);
+    alert('❌ Failed to update order: ' + error.message);
   }
 }
 
@@ -820,43 +839,29 @@ async function deleteStaff(staffId) {
 
 function renderStaffTable() {
   const table = document.getElementById('staff-table');
-  if (!table) return;
+  if (!table) {
+    console.warn('⚠️ staff-table element not found');
+    return;
+  }
 
   if (!state.staff || state.staff.length === 0) {
     table.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No staff members yet</p>';
     return;
   }
 
-  const html = `
-    <table style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr style="background: #f7fafc; border-bottom: 2px solid #e2e8f0;">
-          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600;">Name</th>
-          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600;">Email</th>
-          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600;">Role</th>
-          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${state.staff.map(staff => `
-          <tr style="border-bottom: 1px solid #e2e8f0;">
-            <td style="padding: 12px; color: #2d3748;">${staff.name || 'N/A'}</td>
-            <td style="padding: 12px; color: #666;">${staff.email || 'N/A'}</td>
-            <td style="padding: 12px;">
-              <span style="background: ${staff.role === 'Admin' ? '#e53e3e' : staff.role === 'Staff A' ? '#3182ce' : '#48bb78'}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-                ${staff.role || 'N/A'}
-              </span>
-            </td>
-            <td style="padding: 12px;">
-              <button onclick="deleteStaff('${staff.id}')" style="padding: 6px 12px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Delete</button>
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
+  const html = state.staff.map(staff => `
+    <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="flex:1;">
+        <h4 style="margin:0 0 4px 0;color:#2d3748;font-weight:600;">${staff.name || 'N/A'}</h4>
+        <p style="margin:0;color:#666;font-size:14px;">${staff.email || 'N/A'}</p>
+        <span style="background:${staff.role === 'Admin' ? '#e53e3e' : staff.role === 'Staff A' ? '#3182ce' : '#48bb78'};color:white;padding:4px 8px;border-radius:4px;font-size:11px;display:inline-block;margin-top:4px;">${staff.role || 'N/A'}</span>
+      </div>
+      <button onclick="deleteStaff('${staff.id}')" style="padding:8px 12px;background:#e53e3e;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">🗑️ Delete</button>
+    </div>
+  `).join('');
 
   table.innerHTML = html;
+  console.log('✅ Staff table rendered with', state.staff.length, 'members');
 }
 
 // ==================== EXPOSE TO WINDOW ====================
@@ -891,6 +896,7 @@ window.closeAddStaffModal = closeAddStaffModal;
 window.saveStaffMember = saveStaffMember;
 window.deleteStaff = deleteStaff;
 window.renderStaffTable = renderStaffTable;
+window.updateOrderStatus = updateOrderStatus;
 
 console.log('✅ Admin dashboard script loaded');
 
