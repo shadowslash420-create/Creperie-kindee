@@ -93,8 +93,14 @@
   <!-- Order Details Modal -->
   <div id="order-modal" class="order-modal">
     <div class="order-modal-content">
-      <button class="order-modal-close" onclick="closeOrderModal()">×</button>
-      <div id="order-modal-body"></div>
+      <div class="order-modal-header" id="order-modal-header">
+        <div>
+          <h2 class="order-modal-header-title" id="order-modal-title"></h2>
+          <div class="order-modal-header-date" id="order-modal-date"></div>
+        </div>
+        <button class="order-modal-close" onclick="closeOrderModal()">×</button>
+      </div>
+      <div class="order-modal-body" id="order-modal-body"></div>
     </div>
   </div>
 
@@ -544,6 +550,9 @@
     window.openOrderModal = function(order, t, lang) {
       const modal = document.getElementById('order-modal');
       const modalBody = document.getElementById('order-modal-body');
+      const modalHeader = document.getElementById('order-modal-header');
+      const modalTitle = document.getElementById('order-modal-title');
+      const modalDate = document.getElementById('order-modal-date');
 
       const statusColors = {
         'unconfirmed': '#e74c3c',
@@ -582,6 +591,11 @@
 
       const date = orderDate.toLocaleString(lang === 'ar' ? 'ar-DZ' : 'en-US');
 
+      // Set header content
+      modalTitle.textContent = `📦 ${order.id}`;
+      modalDate.textContent = `📅 ${date}`;
+      modalHeader.classList.remove('hidden');
+
       // Generate role-specific actions
       let actionButtons = '';
       if (currentUserRole === 'staff') {
@@ -601,102 +615,118 @@
           <button class="status-action-btn" style="background:#e74c3c;color:#fff;" onclick="updateOrderStatus('${order.id}', 'cancelled')">❌ Cancel</button>
         `;
       } else if (currentUserRole === 'customer' && status === 'pending') {
-        // Allow customers to delete pending orders
         actionButtons = `<button class="status-action-btn" style="background:#e74c3c;color:#fff;padding:12px 24px;" onclick="deleteCustomerOrder('${order.id}', '${t.confirmDelete}')">🗑️ ${t.deleteOrder}</button>`;
       }
 
       modalBody.innerHTML = `
-        <div style="margin-bottom:24px;">
-          <div style="display:flex;justify-content:flex-start;align-items:start;margin-bottom:20px;">
-            <div>
-              <h2 style="margin:0 0 8px 0;color:#E30613;font-family:'Playfair Display',serif;font-size:28px;font-weight:700;">${order.id}</h2>
-              <div style="font-size:14px;color:#666;font-weight:500;">📅 ${date}</div>
+        <div style="background:linear-gradient(135deg, #f8f9fa 0%, #fff 100%);padding:20px;border-radius:12px;margin-bottom:20px;border:1px solid #eee;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:16px;">
+            <div style="background:#fff;padding:16px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+              <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">👤 ${t.customer}</div>
+              <div style="font-size:16px;color:#2C1810;font-weight:700;">${order.name}</div>
+            </div>
+            <div style="background:#fff;padding:16px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+              <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">📞 ${t.phone}</div>
+              <div style="font-size:16px;color:#2C1810;font-weight:700;">${order.phone}</div>
+            </div>
+            <div style="grid-column:1/-1;background:#fff;padding:16px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+              <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">📍 ${t.address}</div>
+              <div style="font-size:16px;color:#2C1810;font-weight:600;line-height:1.5;">${order.address || 'Not provided'}</div>
+            </div>
+            <div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;padding-top:8px;">
+              <span style="font-size:12px;color:#666;font-weight:600;">📦 ${t.status}:</span>
+              <span class="status-badge" style="background-color:${statusColor}">${statusLabel}</span>
             </div>
           </div>
         </div>
 
-        <div style="background:linear-gradient(135deg, #E30613 0%, #B30510 100%);padding:24px;border-radius:12px;margin-bottom:24px;border:none;">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:20px;align-items:start;">
-            <div>
-              <div style="font-size:12px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-family:'Inter',sans-serif;">👤 ${t.customer}</div>
-              <div style="font-size:17px;color:#fff;font-weight:700;">${order.name}</div>
-            </div>
-            <div>
-              <div style="font-size:12px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-family:'Inter',sans-serif;">📞 ${t.phone}</div>
-              <div style="font-size:17px;color:#fff;font-weight:700;">${order.phone}</div>
-            </div>
-            <div style="grid-column:1/-1;">
-              <div style="font-size:12px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-family:'Inter',sans-serif;">📍 ${t.address}</div>
-              <div style="font-size:17px;color:#fff;font-weight:700;line-height:1.6;">${order.address || 'Not provided'}</div>
-            </div>
-            <div style="grid-column:1/-1;padding-top:10px;border-top:2px solid rgba(255,255,255,0.5);">
-              <div style="font-size:11px;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-family:'Inter',sans-serif;">📦 ${t.status}</div>
-              <div style="display:inline-block;background:rgba(255,255,255,0.25);color:#fff;padding:6px 14px;border-radius:20px;font-weight:600;font-size:12px;border:1px solid rgba(255,255,255,0.5);">${statusLabel}</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-bottom:24px;">
-          <h3 style="font-size:14px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;font-family:'Inter',sans-serif;">🍽️ ${t.items}</h3>
-          <div style="background:#fff;border:2px solid #FFE4E1;border-radius:8px;overflow:hidden;">
+        <div style="margin-bottom:20px;">
+          <h3 style="font-size:13px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;font-family:'Inter',sans-serif;">🍽️ ${t.items}</h3>
+          <div style="background:#fff;border:1px solid #f0f0f0;border-radius:10px;overflow:hidden;">
             ${order.items.map((item, idx) => `
-              <div style="padding:16px;border-bottom:${idx < order.items.length - 1 ? '1px solid #FFE4E1' : 'none'};display:flex;justify-content:space-between;align-items:center;">
-                <div>
-                  <span style="font-weight:700;color:#2C1810;font-size:16px;">${item.qty}×</span>
-                  <span style="color:#5C4033;font-size:16px;margin-left:8px;">${item.name}</span>
+              <div style="padding:14px 16px;border-bottom:${idx < order.items.length - 1 ? '1px solid #f5f5f5' : 'none'};display:flex;justify-content:space-between;align-items:center;transition:background 0.2s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='#fff'">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="background:#E30613;color:#fff;padding:4px 10px;border-radius:6px;font-weight:700;font-size:13px;">${item.qty}×</span>
+                  <span style="color:#2C1810;font-size:15px;font-weight:500;">${item.name}</span>
                 </div>
-                <span style="color:#E30613;font-weight:700;font-size:16px;">${item.price.toFixed(2)} DZD</span>
+                <span style="color:#E30613;font-weight:700;font-size:15px;">${item.price.toFixed(2)} DZD</span>
               </div>
             `).join('')}
           </div>
         </div>
 
         ${order.specialInstructions ? `
-        <div style="margin-bottom:24px;">
-          <h3 style="font-size:14px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-family:'Inter',sans-serif;">📝 ${t.specialInstructions}</h3>
-          <div style="background:#FFF9F3;padding:16px;border-radius:8px;border-left:4px solid #E30613;">
-            <div style="color:#5C4033;font-size:15px;font-style:italic;line-height:1.6;">
+        <div style="margin-bottom:20px;">
+          <h3 style="font-size:13px;color:#E30613;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;font-family:'Inter',sans-serif;">📝 ${t.specialInstructions}</h3>
+          <div style="background:#FFF9F3;padding:14px 16px;border-radius:10px;border-left:3px solid #E30613;">
+            <div style="color:#5C4033;font-size:14px;font-style:italic;line-height:1.5;">
               ${order.specialInstructions}
             </div>
           </div>
         </div>
         ` : ''}
 
-        <div style="background:linear-gradient(135deg, #E30613 0%, #C10510 100%);padding:28px;border-radius:12px;box-shadow:0 8px 24px rgba(227,6,19,0.3);">
-          <div style="display:flex;justify-content:space-between;margin-bottom:16px;color:rgba(255,255,255,0.9);font-size:16px;border-bottom:2px solid rgba(255,255,255,0.3);padding-bottom:16px;">
-            <span style="font-weight:600;">${t.subtotal}:</span>
-            <strong style="font-weight:700;font-size:18px;color:#fff;">${(order.subtotal || order.total || 0).toFixed(2)} DZD</strong>
+        <div style="background:linear-gradient(135deg, #E30613 0%, #C10510 100%);padding:24px;border-radius:12px;box-shadow:0 6px 20px rgba(227,6,19,0.25);">
+          <div style="display:flex;justify-content:space-between;margin-bottom:12px;color:rgba(255,255,255,0.9);font-size:15px;">
+            <span style="font-weight:500;">${t.subtotal}:</span>
+            <strong style="font-weight:700;color:#fff;">${(order.subtotal || order.total || 0).toFixed(2)} DZD</strong>
           </div>
           ${order.deliveryFee !== undefined ? `
-          <div style="display:flex;justify-content:space-between;margin-bottom:16px;color:rgba(255,255,255,0.9);font-size:16px;">
-            <span style="font-weight:600;">${t.deliveryFee}:</span>
-            <strong style="font-weight:700;font-size:18px;color:${order.deliveryFee === 0 ? '#52C41A' : '#fff'};">
-              ${order.deliveryFee === 0 ? '✨ ' + (lang === 'ar' ? 'توصيل مجاني!' : 'Free Delivery!') : order.deliveryFee.toFixed(2) + ' DZD'}
+          <div style="display:flex;justify-content:space-between;margin-bottom:12px;color:rgba(255,255,255,0.9);font-size:15px;">
+            <span style="font-weight:500;">${t.deliveryFee}:</span>
+            <strong style="font-weight:700;color:${order.deliveryFee === 0 ? '#90EE90' : '#fff'};">
+              ${order.deliveryFee === 0 ? '✨ ' + (lang === 'ar' ? 'مجاني!' : 'Free!') : order.deliveryFee.toFixed(2) + ' DZD'}
             </strong>
           </div>
           ` : ''}
-          <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:800;color:#fff;font-family:'Playfair Display',serif;letter-spacing:0.5px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:800;color:#fff;font-family:'Playfair Display',serif;padding-top:12px;border-top:1px solid rgba(255,255,255,0.3);">
             <span>${t.total}:</span>
-            <strong style="text-shadow:0 2px 8px rgba(0,0,0,0.2);">${order.total.toFixed(2)} DZD</strong>
+            <strong>${order.total.toFixed(2)} DZD</strong>
           </div>
-          ${actionButtons ? `<div style="padding-top:16px;border-top:2px solid rgba(255,255,255,0.3);">${actionButtons}</div>` : ''}
+          ${actionButtons ? `<div style="padding-top:16px;margin-top:16px;border-top:1px solid rgba(255,255,255,0.3);">${actionButtons}</div>` : ''}
         </div>
       `;
 
       modal.style.display = 'flex';
       modal.style.animation = 'fadeIn 0.3s ease';
+      modalBody.scrollTop = 0;
+
+      // Add scroll listener for header hide/show on scroll direction
+      let lastScrollTop = 0;
+      let scrollThreshold = 10;
+      modalBody.onscroll = function() {
+        const scrollTop = modalBody.scrollTop;
+        const scrollDelta = scrollTop - lastScrollTop;
+        
+        // Only trigger if scroll delta is significant (avoids jitter)
+        if (Math.abs(scrollDelta) > scrollThreshold) {
+          if (scrollDelta > 0 && scrollTop > 60) {
+            // Scrolling down past threshold - hide header
+            modalHeader.classList.add('hidden');
+          } else if (scrollDelta < 0) {
+            // Scrolling up - show header
+            modalHeader.classList.remove('hidden');
+          }
+          lastScrollTop = scrollTop;
+        }
+      };
     }
 
     window.closeOrderModal = function() {
       const modal = document.getElementById('order-modal');
+      const modalBody = document.getElementById('order-modal-body');
+      const modalHeader = document.getElementById('order-modal-header');
+      
       modal.style.display = 'none';
+      modalBody.onscroll = null;
+      modalHeader.classList.remove('hidden');
     }
 
     // Close modal when clicking outside
     window.addEventListener('click', (e) => {
       const modal = document.getElementById('order-modal');
       if (e.target === modal) {
-        modal.style.display = 'none';
+        window.closeOrderModal();
       }
     });
 
