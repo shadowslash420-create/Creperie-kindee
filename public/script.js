@@ -499,11 +499,34 @@ window.removeFromCart = function(idx) {
 let isCheckoutSubmitting = false;
 
 // Close checkout modal
-window.closeCheckoutModal = function() {
+window.closeCheckoutModal = function(event) {
+  // Prevent event bubbling if called from click event
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  
   // Allow closing even during submission (user choice)
-  const modal = document.getElementById('checkout-modal');
+  const modal = document.querySelector('.checkout-modal-overlay');
   if (modal) {
     modal.remove();
+  }
+  
+  // Also try by ID in case class selector fails
+  const modalById = document.getElementById('checkout-modal');
+  if (modalById) {
+    modalById.remove();
+  }
+  
+  // Clean up map if it exists
+  if (checkoutMap) {
+    try {
+      checkoutMap.remove();
+      checkoutMap = null;
+      checkoutMarker = null;
+    } catch (e) {
+      console.log('Error cleaning up map:', e);
+    }
   }
   
   // Reset submission flag
@@ -807,7 +830,7 @@ window.checkoutFlow = async function() {
         <h2 style="margin: 0; font-size: 24px; font-weight: 700;">
           ${isArabic ? '🛒 إتمام الطلب' : '🛒 Complete Order'}
         </h2>
-        <button onclick="closeCheckoutModal()" id="checkout-close-btn" style="
+        <button onclick="closeCheckoutModal(event); return false;" id="checkout-close-btn" style="
           background: none;
           border: none;
           color: white;
@@ -1050,7 +1073,7 @@ window.checkoutFlow = async function() {
   // Close on background click (but not during submission)
   modal.addEventListener('click', (e) => {
     if (e.target === modal && !isCheckoutSubmitting) {
-      closeCheckoutModal();
+      closeCheckoutModal(e);
     }
   });
 
@@ -1080,8 +1103,10 @@ function initCheckoutMap(savedInfo) {
     return;
   }
   
+  // Wait for Leaflet to be fully loaded
   if (!window.L) {
-    console.error('⚠️ Leaflet library not loaded');
+    console.warn('⚠️ Leaflet not loaded yet, retrying in 500ms...');
+    setTimeout(() => initCheckoutMap(savedInfo), 500);
     return;
   }
 
@@ -1105,7 +1130,7 @@ function initCheckoutMap(savedInfo) {
 
   // Initialize map
   try {
-    checkoutMap = L.map('checkout-map', {
+    checkoutMap = L.map(mapContainer, {
       center: [defaultLat, defaultLng],
       zoom: hasExistingLocation ? 16 : 13,
       zoomControl: true,
@@ -1113,15 +1138,22 @@ function initCheckoutMap(savedInfo) {
       touchZoom: true,
       doubleClickZoom: true,
       attributionControl: true,
-      preferCanvas: true
+      preferCanvas: false
     });
 
-    // Add tile layer (OpenStreetMap)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    // Add tile layer (OpenStreetMap) with error handling
+    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap',
       maxZoom: 19,
-      minZoom: 3
-    }).addTo(checkoutMap);
+      minZoom: 3,
+      errorTileUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2VlZSIvPjwvc3ZnPg=='
+    });
+    
+    tileLayer.on('tileerror', function(error) {
+      console.warn('Tile loading error:', error);
+    });
+    
+    tileLayer.addTo(checkoutMap);
 
     // Custom red marker icon with better visibility
     const redIcon = L.divIcon({
@@ -1157,15 +1189,26 @@ function initCheckoutMap(savedInfo) {
     });
 
     // Force map to render correctly with multiple invalidateSize calls
-    const invalidateTimes = [100, 200, 300, 500, 800];
-    invalidateTimes.forEach(time => {
-      setTimeout(() => {
-        if (checkoutMap) {
-          checkoutMap.invalidateSize();
-          console.log(`🗺️ Map size invalidated (${time}ms)`);
-        }
-      }, time);
-    });
+    setTimeout(() => {
+      if (checkoutMap) {
+        checkoutMap.invalidateSize();
+        console.log('🗺️ Map size invalidated (immediate)');
+      }
+    }, 100);
+    
+    setTimeout(() => {
+      if (checkoutMap) {
+        checkoutMap.invalidateSize();
+        console.log('🗺️ Map size invalidated (200ms)');
+      }
+    }, 200);
+    
+    setTimeout(() => {
+      if (checkoutMap) {
+        checkoutMap.invalidateSize();
+        console.log('🗺️ Map size invalidated (500ms)');
+      }
+    }, 500);
 
     console.log('✅ Map initialized successfully');
   } catch (error) {
