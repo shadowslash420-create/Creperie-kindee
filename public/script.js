@@ -830,19 +830,24 @@ window.checkoutFlow = async function() {
           ${isArabic ? '🛒 إتمام الطلب' : '🛒 Complete Order'}
         </h2>
         <button type="button" onclick="closeCheckoutModal(); return false;" id="checkout-close-btn" style="
-          background: none;
-          border: none;
+          background: rgba(255,255,255,0.2);
+          border: 2px solid rgba(255,255,255,0.3);
           color: white;
           font-size: 32px;
           cursor: pointer;
           padding: 0;
           line-height: 1;
-          width: 32px;
-          height: 32px;
+          width: 44px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-        ">×</button>
+          border-radius: 8px;
+          flex-shrink: 0;
+          z-index: 10;
+          position: relative;
+          transition: all 0.3s;
+        " onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='scale(1.1)';" onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='scale(1)';">×</button>
       </div>
       
       <div style="padding: 24px; overflow-y: auto; flex: 1;">
