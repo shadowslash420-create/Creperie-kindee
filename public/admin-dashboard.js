@@ -381,18 +381,18 @@ async function renderOrdersList() {
     const tableHtml = `
       <div class="section">
         <div class="section-title">📋 الطلبات الحالية - Current Orders</div>
-        <p style="color: #666; font-size: 13px; margin-bottom: 12px;">💡 Click on order status to update it / اضغط على حالة الطلب لتحديثها</p>
+        <p style="color: #718096; font-size: 14px; margin-bottom: 20px; font-weight: 500;">💡 Click on order status to update it / اضغط على حالة الطلب لتحديثها</p>
         <table class="orders-table">
           <thead>
             <tr>
-              <th>رقم الطلب / Order ID</th>
-              <th>العميل / Customer</th>
-              <th>البريد الإلكتروني / Email</th>
-              <th>الهاتف / Phone</th>
-              <th>المبلغ / Total</th>
-              <th>الحالة / Status</th>
-              <th>التاريخ / Date</th>
-              <th>الإجراءات / Actions</th>
+              <th style="min-width: 140px;">🔢 رقم الطلب<br/>Order ID</th>
+              <th style="min-width: 160px;">👤 العميل<br/>Customer</th>
+              <th style="min-width: 200px;">📧 البريد الإلكتروني<br/>Email</th>
+              <th style="min-width: 140px;">📱 الهاتف<br/>Phone</th>
+              <th style="min-width: 120px;">💰 المبلغ<br/>Total</th>
+              <th style="min-width: 180px;">📊 الحالة<br/>Status</th>
+              <th style="min-width: 180px;">📅 التاريخ<br/>Date</th>
+              <th style="min-width: 140px;">⚡ الإجراءات<br/>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -400,21 +400,21 @@ async function renderOrdersList() {
               const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() + ' ' + new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleTimeString() : 'N/A';
               const statusClass = `status-${order.status}`;
               return `
-                <tr>
-                  <td>${order.id?.substring(0,12)}</td>
-                  <td>${order.name || 'N/A'}</td>
-                  <td>${order.email || 'N/A'}</td>
-                  <td>${order.phone || 'N/A'}</td>
-                  <td>DZD ${(order.total || 0).toFixed(2)}</td>
+                <tr class="orders-table-row">
+                  <td style="font-weight:700;color:#E30613;">#${order.id?.substring(0,8).toUpperCase()}</td>
+                  <td style="font-weight:600;">${order.name || 'N/A'}</td>
+                  <td style="color:#4a5568;">${order.email || 'N/A'}</td>
+                  <td style="font-weight:600;color:#2d3748;">${order.phone || 'N/A'}</td>
+                  <td style="font-weight:700;color:#E30613;font-size:15px;">${(order.total || 0).toFixed(2)} DZD</td>
                   <td>
-                    <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:6px 8px;border:1px solid #cbd5e0;border-radius:4px;cursor:pointer;font-weight:600;font-size:12px;">
+                    <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;background:white;transition:all 0.3s;text-transform:uppercase;">
                       <option value="unconfirmed" ${order.status === 'unconfirmed' ? 'selected' : ''}>🔴 Unconfirmed</option>
                       <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
                       <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>✅ Confirmed</option>
                     </select>
                   </td>
-                  <td>${date}</td>
-                  <td><button onclick="viewOrderDetails('${order.id}')" class="view-btn">👁️ عرض / View</button></td>
+                  <td style="color:#4a5568;font-size:13px;">${date}</td>
+                  <td><button onclick="viewOrderDetails('${order.id}')" class="view-btn">👁️ View</button></td>
                 </tr>
               `;
             }).join('')}
