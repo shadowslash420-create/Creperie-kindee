@@ -1187,14 +1187,16 @@ function setMapLocation(lat, lng) {
   checkoutMarker = L.marker([lat, lng], { icon: redIcon, draggable: true }).addTo(checkoutMap);
   setupMarkerDrag(checkoutMarker);
 
-  // Update hidden inputs
+  // CRITICAL: Update hidden inputs with proper values
   const latInput = document.getElementById('checkout-lat');
   const lngInput = document.getElementById('checkout-lng');
   
   if (latInput && lngInput) {
-    latInput.value = lat;
-    lngInput.value = lng;
-    console.log('✅ Coordinates saved to hidden inputs');
+    latInput.value = parseFloat(lat).toFixed(6);
+    lngInput.value = parseFloat(lng).toFixed(6);
+    console.log('✅ Coordinates saved to hidden inputs:', latInput.value, lngInput.value);
+  } else {
+    console.error('❌ Could not find lat/lng input fields!');
   }
 
   // Center map on new location with smooth animation
@@ -1231,6 +1233,8 @@ function showLocationConfirmation() {
 // Use current location
 window.useMyLocation = function() {
   const btn = document.getElementById('use-my-location-btn');
+  const latInput = document.getElementById('checkout-lat');
+  const lngInput = document.getElementById('checkout-lng');
   const isArabic = currentLang === 'ar';
   
   console.log('📍 Requesting current location...');
@@ -1257,6 +1261,14 @@ window.useMyLocation = function() {
       
       console.log('✅ Location obtained:', { lat, lng, accuracy: accuracy + 'm' });
       
+      // CRITICAL: Set the hidden input values FIRST
+      if (latInput && lngInput) {
+        latInput.value = lat;
+        lngInput.value = lng;
+        console.log('✅ Coordinates saved to inputs:', latInput.value, lngInput.value);
+      }
+      
+      // Then update the map visualization
       setMapLocation(lat, lng);
       
       // Update address field with coordinates
@@ -1265,6 +1277,9 @@ window.useMyLocation = function() {
         addressField.value = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
         addressField.placeholder = isArabic ? 'أضف تفاصيل إضافية للعنوان...' : 'Add additional address details...';
       }
+      
+      // Show confirmation
+      showLocationConfirmation();
       
       // Reset button with success state
       if (btn) {
