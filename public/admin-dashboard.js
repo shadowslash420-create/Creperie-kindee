@@ -892,7 +892,7 @@ async function editMenuItem(itemId) {
   document.getElementById('item-price').value = item.price;
   document.getElementById('item-desc').value = item.description || '';
   document.getElementById('item-category').value = item.category || '';
-  document.getElementById('item-image-url').value = item.image || '';
+  document.getElementById('item-image-url').value = item.image || item.img || '';
   document.getElementById('menu-item-modal').classList.add('active');
 }
 
@@ -902,7 +902,7 @@ async function saveMenuItem(e) {
   const price = parseFloat(document.getElementById('item-price').value);
   const description = document.getElementById('item-desc').value.trim();
   const category = document.getElementById('item-category').value;
-  const image = document.getElementById('item-image-url').value;
+  const imageUrl = document.getElementById('item-image-url').value.trim();
 
   if (!name || !price || !category) {
     alert('❌ Please fill required fields');
@@ -910,7 +910,14 @@ async function saveMenuItem(e) {
   }
 
   try {
-    const itemData = { name, price, description, category, image };
+    const itemData = { 
+      name, 
+      price, 
+      description, 
+      category, 
+      image: imageUrl,
+      img: imageUrl  // Store in both fields for backwards compatibility
+    };
     if (state.editingItem) {
       await window.dbService.updateMenuItem(state.editingItem.id, itemData);
       alert('✅ Menu item updated!');
