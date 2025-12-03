@@ -184,7 +184,7 @@ async function loadStaffData() {
 function toggleSidebar() {
   console.log('🔄 Toggling sidebar...');
   const sidebar = document.getElementById('dashboard-sidebar');
-  if (sidebar) sidebar.classList.toggle('open');
+  if (sidebar) sidebar.classList.toggle('active');
 }
 
 function showSection(section, event) {
@@ -230,7 +230,7 @@ function showSection(section, event) {
   // Close sidebar on mobile
   if (window.innerWidth <= 768) {
     const sidebar = document.getElementById('dashboard-sidebar');
-    if (sidebar) sidebar.classList.remove('open');
+    if (sidebar) sidebar.classList.remove('active');
   }
 
   sessionStorage.setItem('admin_current_section', section);
