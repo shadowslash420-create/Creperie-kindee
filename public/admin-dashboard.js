@@ -349,48 +349,86 @@ async function renderOrdersList() {
       return;
     }
 
-    const html = `
-      <table style="width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-        <thead>
-          <tr style="background:#f7fafc;border-bottom:2px solid #e2e8f0;">
-            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Order ID</th>
-            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Customer</th>
-            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Email</th>
-            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Phone</th>
-            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Total</th>
-            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Status</th>
-            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Date</th>
-            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${state.orders.map(order => {
-            const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() : 'N/A';
-            return `
-              <tr style="border-bottom:1px solid #e2e8f0;hover:{background:#f7fafc;}">
-                <td style="padding:12px;color:#2d3748;font-size:14px;"><strong>#${order.id?.substring(0,8)}</strong></td>
-                <td style="padding:12px;color:#2d3748;font-size:14px;">${order.name || 'N/A'}</td>
-                <td style="padding:12px;color:#666;font-size:13px;">${order.email || 'N/A'}</td>
-                <td style="padding:12px;color:#666;font-size:13px;">${order.phone || 'N/A'}</td>
-                <td style="padding:12px;color:#FF1111;font-weight:600;">${order.total || 0} DZD</td>
-                <td style="padding:12px;">
-                  <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:6px 8px;border:1px solid #cbd5e0;border-radius:4px;background:${order.status === 'delivered' ? '#D4EDDA' : '#FFF3CD'};color:${order.status === 'delivered' ? '#155724' : '#856404'};cursor:pointer;font-weight:600;font-size:12px;">
-                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-                    <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>✅ Delivered</option>
-                  </select>
-                </td>
-                <td style="padding:12px;color:#666;font-size:13px;">${date}</td>
-                <td style="padding:12px;">
-                  <button onclick="viewOrderDetails('${order.id}')" style="padding:6px 12px;background:#3182ce;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;">👁️ View</button>
-                </td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      </table>
+    // Calculate order stats
+    const confirmed = state.orders.filter(o => o.status === 'confirmed').length;
+    const pending = state.orders.filter(o => o.status === 'pending').length;
+    const unconfirmed = state.orders.filter(o => o.status === 'unconfirmed').length;
+    const total = state.orders.length;
+
+    // Stats cards HTML
+    const statsHtml = `
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:30px;">
+        <div style="background:linear-gradient(135deg,#E30613 0%,#FF6B35 100%);color:white;padding:30px;border-radius:16px;text-align:center;box-shadow:0 4px 12px rgba(227,6,19,0.3);">
+          <div style="font-size:48px;font-weight:700;margin-bottom:8px;">${confirmed}</div>
+          <div style="font-size:16px;font-weight:600;">Confirmed / مؤكدة</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#E30613 0%,#FF6B35 100%);color:white;padding:30px;border-radius:16px;text-align:center;box-shadow:0 4px 12px rgba(227,6,19,0.3);">
+          <div style="font-size:48px;font-weight:700;margin-bottom:8px;">${pending}</div>
+          <div style="font-size:16px;font-weight:600;">Pending / قيد الانتظار</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#E30613 0%,#FF6B35 100%);color:white;padding:30px;border-radius:16px;text-align:center;box-shadow:0 4px 12px rgba(227,6,19,0.3);">
+          <div style="font-size:48px;font-weight:700;margin-bottom:8px;">${unconfirmed}</div>
+          <div style="font-size:16px;font-weight:600;">Unconfirmed / غير مؤكدة</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#E30613 0%,#FF6B35 100%);color:white;padding:30px;border-radius:16px;text-align:center;box-shadow:0 4px 12px rgba(227,6,19,0.3);">
+          <div style="font-size:48px;font-weight:700;margin-bottom:8px;">${total}</div>
+          <div style="font-size:16px;font-weight:600;">Total Orders / إجمالي الطلبات</div>
+        </div>
+      </div>
     `;
 
-    container.innerHTML = html;
+    // Orders table HTML
+    const tableHtml = `
+      <div style="background:white;border-radius:12px;padding:30px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;border-bottom:4px solid #E30613;padding-bottom:16px;">
+          <span style="font-size:32px;">📋</span>
+          <h2 style="margin:0;color:#E30613;font-size:28px;font-weight:700;">Current Orders - الطلبات الحالية</h2>
+        </div>
+        <p style="color:#666;font-size:14px;margin-bottom:16px;">💡 Click on order status to update it / اضغط على حالة الطلب لتحديثها</p>
+        
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#f7fafc;border-bottom:2px solid #e2e8f0;">
+              <th style="padding:16px;text-align:left;color:#2d3748;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">ACTIONS / الإجراءات</th>
+              <th style="padding:16px;text-align:left;color:#2d3748;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">DATE / التاريخ</th>
+              <th style="padding:16px;text-align:left;color:#2d3748;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">STATUS / الحالة</th>
+              <th style="padding:16px;text-align:left;color:#2d3748;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">TOTAL / المبلغ</th>
+              <th style="padding:16px;text-align:left;color:#2d3748;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">PHONE / الهاتف</th>
+              <th style="padding:16px;text-align:left;color:#2d3748;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">EMAIL / البريد الإلكتروني</th>
+              <th style="padding:16px;text-align:left;color:#2d3748;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">CUSTOMER / العميل</th>
+              <th style="padding:16px;text-align:left;color:#2d3748;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">ORDER ID / رقم الطلب</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${state.orders.map(order => {
+              const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() + ' ' + new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleTimeString() : 'N/A';
+              return `
+                <tr style="border-bottom:1px solid #e2e8f0;height:70px;vertical-align:middle;">
+                  <td style="padding:16px;">
+                    <button onclick="viewOrderDetails('${order.id}')" style="background:#4299E1;color:white;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;">👁️ عرض / View</button>
+                  </td>
+                  <td style="padding:16px;color:#666;font-size:13px;">${date}</td>
+                  <td style="padding:16px;">
+                    <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:6px 8px;border:1px solid #cbd5e0;border-radius:4px;background:${order.status === 'confirmed' ? '#D4EDDA' : order.status === 'pending' ? '#FFF3CD' : '#FFE0E0'};color:${order.status === 'confirmed' ? '#155724' : order.status === 'pending' ? '#856404' : '#c53030'};cursor:pointer;font-weight:600;font-size:12px;">
+                      <option value="unconfirmed" ${order.status === 'unconfirmed' ? 'selected' : ''}>🔴 Unconfirmed</option>
+                      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                      <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>✅ Confirmed</option>
+                    </select>
+                  </td>
+                  <td style="padding:16px;color:#E30613;font-weight:700;font-size:14px;">DZD ${(order.total || 0).toFixed(2)}</td>
+                  <td style="padding:16px;color:#666;font-size:13px;">${order.phone || 'N/A'}</td>
+                  <td style="padding:16px;color:#666;font-size:13px;">${order.email || 'N/A'}</td>
+                  <td style="padding:16px;color:#2d3748;font-size:14px;">${order.name || 'N/A'}</td>
+                  <td style="padding:16px;color:#2d3748;font-size:13px;font-weight:600;">${order.id?.substring(0,12)}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    container.innerHTML = statsHtml + tableHtml;
     console.log('✅ Orders list rendered');
   } catch (error) {
     console.error('❌ Error rendering orders:', error);
