@@ -411,7 +411,7 @@
 
 .stat-card {
   background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-  color: white;
+  color: white !important;
   padding: 20px;
   border-radius: 12px;
   text-align: center;
@@ -421,12 +421,12 @@
   font-size: 32px;
   font-weight: bold;
   margin-bottom: 5px;
-  color: white;
+  color: white !important;
 }
 .stat-label {
   font-size: 14px;
   opacity: 1;
-  color: white;
+  color: white !important;
   font-weight: 500;
 }
 
@@ -1697,7 +1697,6 @@
 
 .form-group input[type="file"]::file-selector-button:hover {
   background: #3182ce;
-}x;
 }
 
 .image-preview {

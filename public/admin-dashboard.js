@@ -436,45 +436,114 @@ function viewOrderDetails(orderId) {
     alert('Order not found');
     return;
   }
-  const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() : 'N/A';
+  
+  const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() + ' ' + new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleTimeString() : 'N/A';
+  
   const itemsRows = (order.items || []).map(item => `
     <tr style="border-bottom:1px solid #e2e8f0;">
-      <td style="padding:8px;text-align:left;">${item.name || 'N/A'}</td>
-      <td style="padding:8px;text-align:center;">${item.qty || 1}</td>
-      <td style="padding:8px;text-align:right;">${(item.price || 0).toFixed(2)} DZD</td>
-      <td style="padding:8px;text-align:right;font-weight:600;">${((item.price || 0) * (item.qty || 1)).toFixed(2)} DZD</td>
+      <td style="padding:12px;text-align:left;color:#2d3748;font-weight:500;">${item.name || 'N/A'}</td>
+      <td style="padding:12px;text-align:center;color:#2d3748;font-weight:600;">${item.qty || 1}</td>
+      <td style="padding:12px;text-align:right;color:#FF1111;font-weight:600;">${(item.price || 0).toFixed(2)} DZD</td>
+      <td style="padding:12px;text-align:right;color:#2d3748;font-weight:700;">${((item.price || 0) * (item.qty || 1)).toFixed(2)} DZD</td>
     </tr>
   `).join('');
   
-  const html = `
-    <h2 style="color:#FF1111;margin-bottom:20px;text-align:center;">📋 Order Details</h2>
-    <div style="background:#f7fafc;padding:15px;border-radius:8px;margin-bottom:20px;">
-      <h3 style="color:#2d3748;margin:0 0 12px 0;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;">👤 Customer Information</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;line-height:1.6;">
-        <div><strong>Name:</strong> ${order.name || 'N/A'}</div>
-        <div><strong>Email:</strong> ${order.email || 'N/A'}</div>
-        <div><strong>Phone:</strong> ${order.phone || 'N/A'}</div>
-        <div><strong>Order ID:</strong> ${orderId}</div>
-        <div style="grid-column:1/-1;"><strong>Address:</strong> ${order.address || 'N/A'}</div>
+  // Create modal overlay
+  const modalOverlay = document.createElement('div');
+  modalOverlay.className = 'modal-overlay';
+  modalOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;overflow-y:auto;';
+  
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = 'background:white;border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+  
+  modalContent.innerHTML = `
+    <div style="position:sticky;top:0;background:linear-gradient(135deg,#FF1111 0%,#E60000 100%);color:white;padding:24px;border-radius:16px 16px 0 0;z-index:1;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h2 style="margin:0;font-size:24px;font-weight:700;">📋 Order Details</h2>
+        <button onclick="this.closest('.modal-overlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:white;font-size:28px;width:40px;height:40px;border-radius:8px;cursor:pointer;transition:all 0.3s;">✕</button>
       </div>
+      <p style="margin:8px 0 0 0;opacity:0.9;font-size:14px;">Order ID: ${orderId.substring(0, 12)}</p>
     </div>
-    <div style="margin-bottom:20px;">
-      <h3 style="color:#2d3748;margin:0 0 12px 0;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;">📦 Order Items</h3>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead><tr style="background:#e2e8f0;"><th style="padding:8px;text-align:left;font-weight:600;">Item</th><th style="padding:8px;text-align:center;font-weight:600;">Qty</th><th style="padding:8px;text-align:right;font-weight:600;">Price</th><th style="padding:8px;text-align:right;font-weight:600;">Total</th></tr></thead>
-        <tbody>${itemsRows}</tbody>
-      </table>
-    </div>
-    <div style="background:linear-gradient(135deg,#FF1111 0%,#E60000 100%);color:white;padding:16px;border-radius:8px;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;font-size:13px;">
-        <div><strong>Subtotal:</strong> ${(order.subtotal || 0).toFixed(2)} DZD</div>
-        <div><strong>Delivery Fee:</strong> ${(order.deliveryFee || 0).toFixed(2)} DZD</div>
+    
+    <div style="padding:24px;">
+      <div style="background:#f7fafc;padding:20px;border-radius:12px;margin-bottom:20px;border:2px solid #e2e8f0;">
+        <h3 style="color:#2d3748;margin:0 0 16px 0;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:24px;">👤</span> Customer Information
+        </h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:14px;">
+          <div style="color:#2d3748;"><strong style="color:#718096;">Name:</strong> ${order.name || 'N/A'}</div>
+          <div style="color:#2d3748;"><strong style="color:#718096;">Email:</strong> ${order.email || 'N/A'}</div>
+          <div style="color:#2d3748;"><strong style="color:#718096;">Phone:</strong> ${order.phone || 'N/A'}</div>
+          <div style="color:#2d3748;"><strong style="color:#718096;">Date:</strong> ${date}</div>
+          <div style="grid-column:1/-1;color:#2d3748;"><strong style="color:#718096;">Address:</strong> ${order.address || 'N/A'}</div>
+        </div>
       </div>
-      <div style="border-top:1px solid rgba(255,255,255,0.2);margin-top:10px;padding-top:10px;font-size:16px;font-weight:bold;text-align:right;">Total: ${(order.total || 0).toFixed(2)} DZD</div>
+
+      ${order.location && order.location.lat && order.location.lng ? `
+      <div style="background:#f7fafc;padding:20px;border-radius:12px;margin-bottom:20px;border:2px solid #e2e8f0;">
+        <h3 style="color:#2d3748;margin:0 0 16px 0;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:24px;">📍</span> Delivery Location
+        </h3>
+        <div id="order-location-map-${orderId}" style="width:100%;height:300px;border-radius:8px;border:2px solid #cbd5e0;"></div>
+        <p style="margin:12px 0 0 0;color:#718096;font-size:13px;">📌 Coordinates: ${order.location.lat.toFixed(6)}, ${order.location.lng.toFixed(6)}</p>
+      </div>
+      ` : ''}
+      
+      <div style="background:#f7fafc;padding:20px;border-radius:12px;margin-bottom:20px;border:2px solid #e2e8f0;">
+        <h3 style="color:#2d3748;margin:0 0 16px 0;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:24px;">📦</span> Order Items
+        </h3>
+        <table style="width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;">
+          <thead>
+            <tr style="background:linear-gradient(135deg,#2d3748 0%,#4a5568 100%);color:white;">
+              <th style="padding:12px;text-align:left;font-weight:600;font-size:13px;">ITEM</th>
+              <th style="padding:12px;text-align:center;font-weight:600;font-size:13px;">QTY</th>
+              <th style="padding:12px;text-align:right;font-weight:600;font-size:13px;">PRICE</th>
+              <th style="padding:12px;text-align:right;font-weight:600;font-size:13px;">TOTAL</th>
+            </tr>
+          </thead>
+          <tbody>${itemsRows}</tbody>
+        </table>
+      </div>
+      
+      <div style="background:linear-gradient(135deg,#FF1111 0%,#E60000 100%);color:white;padding:24px;border-radius:12px;box-shadow:0 4px 20px rgba(255,17,17,0.3);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;font-size:15px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.2);">
+          <div><strong>Subtotal:</strong> ${(order.subtotal || 0).toFixed(2)} DZD</div>
+          <div><strong>Delivery Fee:</strong> ${(order.deliveryFee || 0).toFixed(2)} DZD</div>
+        </div>
+        <div style="font-size:20px;font-weight:bold;text-align:right;">
+          Total: ${(order.total || 0).toFixed(2)} DZD
+        </div>
+      </div>
     </div>
   `;
   
-  alert('Order Details: ' + order.name + '\n\n' + 'Total: ' + order.total + ' DZD\n' + 'Status: ' + order.status + '\n' + 'Date: ' + date);
+  modalContent.appendChild(modalOverlay);
+  modalOverlay.appendChild(modalContent);
+  document.body.appendChild(modalOverlay);
+  
+  // Initialize map if location exists
+  if (order.location && order.location.lat && order.location.lng && typeof L !== 'undefined') {
+    setTimeout(() => {
+      const mapElement = document.getElementById(`order-location-map-${orderId}`);
+      if (mapElement) {
+        const map = L.map(`order-location-map-${orderId}`).setView([order.location.lat, order.location.lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        const marker = L.marker([order.location.lat, order.location.lng]).addTo(map);
+        marker.bindPopup(`<b>${order.name || 'Customer'}</b><br>${order.address || 'Delivery Location'}`).openPopup();
+      }
+    }, 100);
+  }
+  
+  // Close on outside click
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) {
+      modalOverlay.remove();
+    }
+  });
 }
 
 async function updateOrderStatus(orderId, newStatus) {
