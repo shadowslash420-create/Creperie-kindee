@@ -1070,13 +1070,17 @@ let checkoutMarker = null;
 function initCheckoutMap(savedInfo) {
   const mapContainer = document.getElementById('checkout-map');
   if (!mapContainer || !window.L) {
-    console.log('Map container or Leaflet not available');
+    console.log('⚠️ Map container or Leaflet not available');
     return;
   }
 
   // If map already exists, destroy it first
   if (checkoutMap) {
-    checkoutMap.remove();
+    try {
+      checkoutMap.remove();
+    } catch (e) {
+      console.log('Error removing old map:', e);
+    }
     checkoutMap = null;
     checkoutMarker = null;
   }
@@ -1086,67 +1090,97 @@ function initCheckoutMap(savedInfo) {
   const defaultLng = savedInfo.lng || 2.8277;
   const hasExistingLocation = savedInfo.lat && savedInfo.lng;
 
+  console.log('🗺️ Initializing map at:', defaultLat, defaultLng);
+
   // Initialize map
-  checkoutMap = L.map('checkout-map', {
-    center: [defaultLat, defaultLng],
-    zoom: hasExistingLocation ? 16 : 13,
-    zoomControl: true,
-    scrollWheelZoom: true
-  });
+  try {
+    checkoutMap = L.map('checkout-map', {
+      center: [defaultLat, defaultLng],
+      zoom: hasExistingLocation ? 16 : 13,
+      zoomControl: true,
+      scrollWheelZoom: true,
+      attributionControl: true
+    });
 
-  // Add tile layer (OpenStreetMap)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
-    maxZoom: 19
-  }).addTo(checkoutMap);
+    // Add tile layer (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 19
+    }).addTo(checkoutMap);
 
-  // Custom red marker icon
-  const redIcon = L.divIcon({
-    className: 'custom-marker',
-    html: '<div style="background:#E30613;width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
-  });
+    // Custom red marker icon
+    const redIcon = L.divIcon({
+      className: 'custom-marker',
+      html: '<div style="background:#E30613;width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
+    });
 
-  // Add marker if there's an existing location
-  if (hasExistingLocation) {
-    checkoutMarker = L.marker([defaultLat, defaultLng], { icon: redIcon, draggable: true }).addTo(checkoutMap);
-    setupMarkerDrag(checkoutMarker);
-    showLocationConfirmation();
+    // Add marker if there's an existing location
+    if (hasExistingLocation) {
+      checkoutMarker = L.marker([defaultLat, defaultLng], { icon: redIcon, draggable: true }).addTo(checkoutMap);
+      setupMarkerDrag(checkoutMarker);
+      showLocationConfirmation();
+      console.log('✅ Marker added at saved location');
+    }
+
+    // Click on map to set location
+    checkoutMap.on('click', function(e) {
+      console.log('📍 Map clicked at:', e.latlng.lat, e.latlng.lng);
+      setMapLocation(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Force map to render correctly (fixes display issues in modals)
+    // Multiple invalidateSize calls ensure proper rendering
+    setTimeout(() => {
+      if (checkoutMap) {
+        checkoutMap.invalidateSize();
+        console.log('🗺️ Map size invalidated (100ms)');
+      }
+    }, 100);
+    setTimeout(() => {
+      if (checkoutMap) {
+        checkoutMap.invalidateSize();
+        console.log('🗺️ Map size invalidated (300ms)');
+      }
+    }, 300);
+    setTimeout(() => {
+      if (checkoutMap) {
+        checkoutMap.invalidateSize();
+        console.log('🗺️ Map size invalidated (500ms)');
+      }
+    }, 500);
+
+    console.log('✅ Map initialized successfully');
+  } catch (error) {
+    console.error('❌ Error initializing map:', error);
   }
-
-  // Click on map to set location
-  checkoutMap.on('click', function(e) {
-    setMapLocation(e.latlng.lat, e.latlng.lng);
-  });
-
-  // Force map to render correctly (fixes display issues in modals)
-  // Multiple invalidateSize calls ensure proper rendering
-  setTimeout(() => {
-    if (checkoutMap) checkoutMap.invalidateSize();
-  }, 100);
-  setTimeout(() => {
-    if (checkoutMap) checkoutMap.invalidateSize();
-  }, 300);
-  setTimeout(() => {
-    if (checkoutMap) checkoutMap.invalidateSize();
-  }, 500);
 }
 
 // Set location on map
 function setMapLocation(lat, lng) {
-  if (!checkoutMap) return;
+  if (!checkoutMap) {
+    console.error('❌ Map not initialized');
+    return;
+  }
+
+  console.log('📍 Setting location on map:', lat, lng);
 
   const redIcon = L.divIcon({
     className: 'custom-marker',
-    html: '<div style="background:#E30613;width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
+    html: '<div style="background:#E30613;width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
   });
 
   // Remove existing marker
   if (checkoutMarker) {
-    checkoutMap.removeLayer(checkoutMarker);
+    try {
+      checkoutMap.removeLayer(checkoutMarker);
+      console.log('🗑️ Removed old marker');
+    } catch (e) {
+      console.log('⚠️ Could not remove old marker:', e);
+    }
   }
 
   // Add new marker
@@ -1154,16 +1188,25 @@ function setMapLocation(lat, lng) {
   setupMarkerDrag(checkoutMarker);
 
   // Update hidden inputs
-  document.getElementById('checkout-lat').value = lat;
-  document.getElementById('checkout-lng').value = lng;
+  const latInput = document.getElementById('checkout-lat');
+  const lngInput = document.getElementById('checkout-lng');
+  
+  if (latInput && lngInput) {
+    latInput.value = lat;
+    lngInput.value = lng;
+    console.log('✅ Coordinates saved to hidden inputs');
+  }
 
-  // Center map on new location
-  checkoutMap.setView([lat, lng], 16);
+  // Center map on new location with smooth animation
+  checkoutMap.setView([lat, lng], 16, {
+    animate: true,
+    duration: 0.5
+  });
 
   // Show confirmation
   showLocationConfirmation();
 
-  console.log('📍 Location set:', lat, lng);
+  console.log('✅ Location set successfully:', lat, lng);
 }
 
 // Setup marker drag events
@@ -1190,8 +1233,12 @@ window.useMyLocation = function() {
   const btn = document.getElementById('use-my-location-btn');
   const isArabic = currentLang === 'ar';
   
+  console.log('📍 Requesting current location...');
+  
   if (!navigator.geolocation) {
-    alert(isArabic ? 'المتصفح لا يدعم تحديد الموقع' : 'Geolocation is not supported by your browser');
+    const errorMsg = isArabic ? 'المتصفح لا يدعم تحديد الموقع' : 'Geolocation is not supported by your browser';
+    alert(errorMsg);
+    console.error('❌ Geolocation not supported');
     return;
   }
 
@@ -1199,45 +1246,80 @@ window.useMyLocation = function() {
   if (btn) {
     btn.innerHTML = `<span style="display:flex;align-items:center;gap:8px;">⏳ ${isArabic ? 'جاري تحديد الموقع...' : 'Getting location...'}</span>`;
     btn.disabled = true;
+    btn.style.opacity = '0.7';
   }
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
+      const accuracy = position.coords.accuracy;
+      
+      console.log('✅ Location obtained:', { lat, lng, accuracy: accuracy + 'm' });
       
       setMapLocation(lat, lng);
       
-      // Reset button
+      // Update address field with coordinates
+      const addressField = document.getElementById('checkout-address');
+      if (addressField && !addressField.value.trim()) {
+        addressField.value = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+        addressField.placeholder = isArabic ? 'أضف تفاصيل إضافية للعنوان...' : 'Add additional address details...';
+      }
+      
+      // Reset button with success state
       if (btn) {
-        btn.innerHTML = `📍 ${isArabic ? 'تم تحديد الموقع ✅' : 'Location Set ✅'}`;
+        btn.innerHTML = `✅ ${isArabic ? 'تم تحديد الموقع' : 'Location Set'}`;
         btn.style.background = 'linear-gradient(135deg, #52C41A 0%, #389E0D 100%)';
+        btn.style.opacity = '1';
+        
         setTimeout(() => {
           btn.innerHTML = `📍 ${isArabic ? 'استخدم موقعي الحالي' : 'Use My Current Location'}`;
+          btn.style.background = 'linear-gradient(135deg, #52C41A 0%, #389E0D 100%)';
           btn.disabled = false;
         }, 2000);
       }
     },
     (error) => {
-      console.error('Geolocation error:', error);
-      let errorMsg = isArabic ? 'تعذر تحديد موقعك' : 'Could not get your location';
+      console.error('❌ Geolocation error:', error.code, error.message);
       
-      if (error.code === error.PERMISSION_DENIED) {
-        errorMsg = isArabic ? 'يرجى السماح بالوصول إلى موقعك' : 'Please allow location access';
+      let errorMsg = isArabic ? 'تعذر تحديد موقعك' : 'Could not get your location';
+      let detailMsg = '';
+      
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          errorMsg = isArabic ? 'تم رفض الإذن بالوصول إلى الموقع' : 'Location permission denied';
+          detailMsg = isArabic 
+            ? 'يرجى السماح بالوصول إلى موقعك في إعدادات المتصفح' 
+            : 'Please allow location access in your browser settings';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMsg = isArabic ? 'الموقع غير متاح' : 'Location unavailable';
+          detailMsg = isArabic 
+            ? 'تأكد من تفعيل GPS على جهازك' 
+            : 'Make sure GPS is enabled on your device';
+          break;
+        case error.TIMEOUT:
+          errorMsg = isArabic ? 'انتهت مهلة تحديد الموقع' : 'Location request timed out';
+          detailMsg = isArabic 
+            ? 'يرجى المحاولة مرة أخرى' 
+            : 'Please try again';
+          break;
       }
       
-      alert(errorMsg);
+      alert(errorMsg + '\n\n' + detailMsg);
       
       // Reset button
       if (btn) {
         btn.innerHTML = `📍 ${isArabic ? 'استخدم موقعي الحالي' : 'Use My Current Location'}`;
+        btn.style.background = 'linear-gradient(135deg, #52C41A 0%, #389E0D 100%)';
+        btn.style.opacity = '1';
         btn.disabled = false;
       }
     },
     {
       enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 60000
+      timeout: 15000,
+      maximumAge: 0
     }
   );
 }
