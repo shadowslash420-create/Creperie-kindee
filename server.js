@@ -10,6 +10,9 @@ let adminApp = null;
 let adminDb = null;
 let adminAuth = null;
 
+// Admin credentials - hardcoded admins (replace with database check later)
+const ADMIN_EMAILS = ['oussamaanis2005@gmail.com'];
+
 function initializeFirebaseAdmin() {
   try {
     if (!process.env.FIREBASE_PRIVATE_KEY || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PROJECT_ID) {
@@ -50,6 +53,10 @@ function initializeFirebaseAdmin() {
 // Initialize Firebase Admin SDK on startup
 initializeFirebaseAdmin();
 
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Optimized caching for performance
 app.use((req, res, next) => {
   // Cache static assets (CSS, JS) for 1 hour
@@ -65,6 +72,103 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static('public'));
+
+// ========== ADMIN AUTHENTICATION ENDPOINTS ==========
+
+// Admin Login - Create custom token for authorized users
+app.post('/api/admin-login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+
+    if (!adminAuth) {
+      return res.status(500).json({ error: 'Admin SDK not initialized' });
+    }
+
+    console.log(`🔐 Admin login attempt for: ${email}`);
+
+    // Verify user exists and password is correct using Firebase Admin SDK
+    try {
+      // Get user by email
+      const user = await adminAuth.getUserByEmail(email);
+      console.log(`✅ User found: ${email}`);
+
+      // Check if user is admin
+      if (!ADMIN_EMAILS.includes(email)) {
+        console.warn(`❌ User ${email} is not an admin`);
+        return res.status(403).json({ error: 'User is not authorized as admin' });
+      }
+
+      // Create custom token for admin
+      const customToken = await adminAuth.createCustomToken(user.uid, { admin: true });
+      
+      res.json({
+        success: true,
+        token: customToken,
+        user: {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || 'Admin'
+        }
+      });
+
+      console.log(`✅ Admin token created for: ${email}`);
+    } catch (authError) {
+      console.error(`❌ Auth error: ${authError.message}`);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+  } catch (error) {
+    console.error('❌ Login error:', error.message);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Admin Logout
+app.post('/api/admin-logout', (req, res) => {
+  try {
+    console.log('🚪 Admin logout');
+    res.json({ success: true, message: 'Logged out' });
+  } catch (error) {
+    res.status(500).json({ error: 'Logout failed' });
+  }
+});
+
+// Check Admin Status
+app.get('/api/admin-status', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ admin: false, error: 'No token provided' });
+    }
+
+    const token = authHeader.substring(7);
+    
+    if (!adminAuth) {
+      return res.status(500).json({ admin: false, error: 'Admin SDK not initialized' });
+    }
+
+    // Verify token
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    const user = await adminAuth.getUser(decodedToken.uid);
+
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
+
+    res.json({
+      admin: isAdmin,
+      email: user.email,
+      displayName: user.displayName || 'Admin',
+      uid: user.uid
+    });
+  } catch (error) {
+    console.error('Token verification error:', error.message);
+    res.status(401).json({ admin: false, error: 'Invalid token' });
+  }
+});
+
+// ========== PUBLIC ENDPOINTS ==========
 
 // Serve Firebase config from environment variables
 app.get('/api/firebase-config', (req, res) => {

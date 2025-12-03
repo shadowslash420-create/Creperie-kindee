@@ -527,6 +527,104 @@ async function initializeDashboard() {
   }
 }
 
+// ==================== ADMIN LOGIN HANDLER ====================
+
+async function handleAdminLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('adm-user').value.trim();
+  const password = document.getElementById('adm-pass').value;
+  const loginError = document.getElementById('login-error');
+  const loginBtn = document.getElementById('admin-login-btn');
+
+  if (!email || !password) {
+    loginError.textContent = 'Please enter email and password';
+    loginError.style.display = 'block';
+    return;
+  }
+
+  try {
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Logging in...';
+    loginError.style.display = 'none';
+
+    console.log('🔐 Admin login attempt for:', email);
+
+    // Step 1: Get custom token from backend
+    const loginResponse = await fetch('/api/admin-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!loginResponse.ok) {
+      const error = await loginResponse.json();
+      loginError.textContent = error.error || 'Login failed';
+      loginError.style.display = 'block';
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Login';
+      return;
+    }
+
+    const loginData = await loginResponse.json();
+    console.log('✅ Received admin token');
+
+    // Step 2: Use custom token to sign in with Firebase
+    const auth = await window.getAuthInstance();
+    const { signInWithCustomToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+    
+    const userCredential = await signInWithCustomToken(auth, loginData.token);
+    console.log('✅ Admin signed in successfully:', userCredential.user.email);
+
+    // Store admin token and user info
+    sessionStorage.setItem('admin_token', loginData.token);
+    sessionStorage.setItem('admin_user', JSON.stringify(loginData.user));
+
+    // Hide login page, show dashboard
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('admin-section').classList.remove('hidden');
+
+    // Load dashboard data
+    await initializeDashboard();
+
+    console.log('✅ Admin dashboard loaded');
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    loginError.textContent = error.message || 'Login failed';
+    loginError.style.display = 'block';
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Login';
+  }
+}
+
+async function handleAdminLogout() {
+  if (!confirm('Are you sure you want to logout?')) return;
+  
+  try {
+    console.log('🚪 Admin logout');
+    const auth = await window.getAuthInstance();
+    const { signOut } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+    
+    await signOut(auth);
+    
+    // Clear session storage
+    sessionStorage.removeItem('admin_token');
+    sessionStorage.removeItem('admin_user');
+
+    // Show login page, hide dashboard
+    document.getElementById('login-section').classList.remove('hidden');
+    document.getElementById('admin-section').classList.add('hidden');
+    
+    // Reset form
+    document.getElementById('admin-login-form').reset();
+    document.getElementById('login-error').style.display = 'none';
+
+    console.log('✅ Admin logged out');
+  } catch (error) {
+    console.error('❌ Logout error:', error);
+    alert('Logout failed: ' + error.message);
+  }
+}
+
 // ==================== EXPOSE TO WINDOW ====================
 window.toggleSidebar = toggleSidebar;
 window.showSection = showSection;
@@ -539,6 +637,8 @@ window.deleteMenuItem = deleteMenuItem;
 window.deleteFeedback = deleteFeedback;
 window.deleteMessage = deleteMessage;
 window.initializeDashboard = initializeDashboard;
+window.handleAdminLogin = handleAdminLogin;
+window.handleAdminLogout = handleAdminLogout;
 
 console.log('✅ Admin dashboard script loaded');
 
