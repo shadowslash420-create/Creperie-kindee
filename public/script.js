@@ -842,6 +842,7 @@ window.checkoutFlow = async function() {
                 font-size: 16px;
                 font-family: 'Cormorant Garamond', serif;
                 transition: border-color 0.3s;
+                box-sizing: border-box;
               "
               onfocus="this.style.borderColor='#E30613'"
               onblur="this.style.borderColor='#FFE4E1'"
@@ -865,6 +866,7 @@ window.checkoutFlow = async function() {
                 font-size: 16px;
                 font-family: 'Cormorant Garamond', serif;
                 transition: border-color 0.3s;
+                box-sizing: border-box;
               "
               onfocus="this.style.borderColor='#E30613'"
               onblur="this.style.borderColor='#FFE4E1'"
@@ -889,6 +891,7 @@ window.checkoutFlow = async function() {
                 font-size: 16px;
                 font-family: 'Cormorant Garamond', serif;
                 transition: border-color 0.3s;
+                box-sizing: border-box;
               "
               onfocus="this.style.borderColor='#E30613'"
               onblur="this.style.borderColor='#FFE4E1'"
@@ -927,11 +930,13 @@ window.checkoutFlow = async function() {
             </button>
             <div id="checkout-map" style="
               width: 100%;
-              height: 200px;
+              height: 250px;
               border-radius: 8px;
               border: 2px solid #FFE4E1;
               margin-bottom: 10px;
-              z-index: 1;
+              z-index: 100;
+              position: relative;
+              background: #f5f5f5;
             "></div>
             <input type="hidden" id="checkout-lat" value="${savedInfo.lat || ''}" />
             <input type="hidden" id="checkout-lng" value="${savedInfo.lng || ''}" />
@@ -949,6 +954,7 @@ window.checkoutFlow = async function() {
                 font-family: 'Cormorant Garamond', serif;
                 resize: vertical;
                 transition: border-color 0.3s;
+                box-sizing: border-box;
               "
               onfocus="this.style.borderColor='#E30613'"
               onblur="this.style.borderColor='#FFE4E1'"
@@ -1050,15 +1056,15 @@ window.checkoutFlow = async function() {
 
   document.body.appendChild(modal);
 
-  // Initialize map after modal is in DOM
+  // Initialize map after modal is fully rendered
   setTimeout(() => {
     initCheckoutMap(savedInfo);
-  }, 100);
-
-  // Focus first input
-  setTimeout(() => {
-    const firstInput = document.getElementById('checkout-firstname');
-    if (firstInput) firstInput.focus();
+    
+    // Focus first input after map is initialized
+    setTimeout(() => {
+      const firstInput = document.getElementById('checkout-firstname');
+      if (firstInput) firstInput.focus();
+    }, 300);
   }, 200);
 }
 
@@ -1069,8 +1075,13 @@ let checkoutMarker = null;
 // Initialize checkout map
 function initCheckoutMap(savedInfo) {
   const mapContainer = document.getElementById('checkout-map');
-  if (!mapContainer || !window.L) {
-    console.log('⚠️ Map container or Leaflet not available');
+  if (!mapContainer) {
+    console.error('⚠️ Map container not found');
+    return;
+  }
+  
+  if (!window.L) {
+    console.error('⚠️ Leaflet library not loaded');
     return;
   }
 
@@ -1086,11 +1097,11 @@ function initCheckoutMap(savedInfo) {
   }
 
   // Default to Algeria (Blida area - near Kinder 5)
-  const defaultLat = savedInfo.lat || 36.4700;
-  const defaultLng = savedInfo.lng || 2.8277;
+  const defaultLat = savedInfo.lat ? parseFloat(savedInfo.lat) : 36.4700;
+  const defaultLng = savedInfo.lng ? parseFloat(savedInfo.lng) : 2.8277;
   const hasExistingLocation = savedInfo.lat && savedInfo.lng;
 
-  console.log('🗺️ Initializing map at:', defaultLat, defaultLng);
+  console.log('🗺️ Initializing map at:', defaultLat, defaultLng, 'Has existing:', hasExistingLocation);
 
   // Initialize map
   try {
@@ -1099,61 +1110,72 @@ function initCheckoutMap(savedInfo) {
       zoom: hasExistingLocation ? 16 : 13,
       zoomControl: true,
       scrollWheelZoom: true,
-      attributionControl: true
+      touchZoom: true,
+      doubleClickZoom: true,
+      attributionControl: true,
+      preferCanvas: true
     });
 
     // Add tile layer (OpenStreetMap)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap',
-      maxZoom: 19
+      maxZoom: 19,
+      minZoom: 3
     }).addTo(checkoutMap);
 
-    // Custom red marker icon
+    // Custom red marker icon with better visibility
     const redIcon = L.divIcon({
       className: 'custom-marker',
-      html: '<div style="background:#E30613;width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
-      iconSize: [28, 28],
-      iconAnchor: [14, 14]
+      html: '<div style="background:#E30613;width:32px;height:32px;border-radius:50%;border:4px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.4);"></div>',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
     });
 
     // Add marker if there's an existing location
     if (hasExistingLocation) {
       checkoutMarker = L.marker([defaultLat, defaultLng], { icon: redIcon, draggable: true }).addTo(checkoutMap);
       setupMarkerDrag(checkoutMarker);
+      
+      // Update hidden inputs with saved location
+      const latInput = document.getElementById('checkout-lat');
+      const lngInput = document.getElementById('checkout-lng');
+      if (latInput && lngInput) {
+        latInput.value = defaultLat.toString();
+        lngInput.value = defaultLng.toString();
+      }
+      
       showLocationConfirmation();
       console.log('✅ Marker added at saved location');
     }
 
     // Click on map to set location
     checkoutMap.on('click', function(e) {
-      console.log('📍 Map clicked at:', e.latlng.lat, e.latlng.lng);
-      setMapLocation(e.latlng.lat, e.latlng.lng);
+      const clickLat = e.latlng.lat;
+      const clickLng = e.latlng.lng;
+      console.log('📍 Map clicked at:', clickLat, clickLng);
+      setMapLocation(clickLat, clickLng);
     });
 
-    // Force map to render correctly (fixes display issues in modals)
-    // Multiple invalidateSize calls ensure proper rendering
-    setTimeout(() => {
-      if (checkoutMap) {
-        checkoutMap.invalidateSize();
-        console.log('🗺️ Map size invalidated (100ms)');
-      }
-    }, 100);
-    setTimeout(() => {
-      if (checkoutMap) {
-        checkoutMap.invalidateSize();
-        console.log('🗺️ Map size invalidated (300ms)');
-      }
-    }, 300);
-    setTimeout(() => {
-      if (checkoutMap) {
-        checkoutMap.invalidateSize();
-        console.log('🗺️ Map size invalidated (500ms)');
-      }
-    }, 500);
+    // Force map to render correctly with multiple invalidateSize calls
+    const invalidateTimes = [100, 200, 300, 500, 800];
+    invalidateTimes.forEach(time => {
+      setTimeout(() => {
+        if (checkoutMap) {
+          checkoutMap.invalidateSize();
+          console.log(`🗺️ Map size invalidated (${time}ms)`);
+        }
+      }, time);
+    });
 
     console.log('✅ Map initialized successfully');
   } catch (error) {
     console.error('❌ Error initializing map:', error);
+    // Show error message to user
+    mapContainer.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#E30613;font-weight:600;">
+        ⚠️ Error loading map. Please try again.
+      </div>
+    `;
   }
 }
 
@@ -1164,13 +1186,17 @@ function setMapLocation(lat, lng) {
     return;
   }
 
-  console.log('📍 Setting location on map:', lat, lng);
+  // Ensure precise coordinates
+  const preciseLat = parseFloat(lat);
+  const preciseLng = parseFloat(lng);
+  
+  console.log('📍 Setting location on map:', preciseLat, preciseLng);
 
   const redIcon = L.divIcon({
     className: 'custom-marker',
-    html: '<div style="background:#E30613;width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
-    iconSize: [28, 28],
-    iconAnchor: [14, 14]
+    html: '<div style="background:#E30613;width:32px;height:32px;border-radius:50%;border:4px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.4);"></div>',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
   });
 
   // Remove existing marker
@@ -1184,23 +1210,23 @@ function setMapLocation(lat, lng) {
   }
 
   // Add new marker
-  checkoutMarker = L.marker([lat, lng], { icon: redIcon, draggable: true }).addTo(checkoutMap);
+  checkoutMarker = L.marker([preciseLat, preciseLng], { icon: redIcon, draggable: true }).addTo(checkoutMap);
   setupMarkerDrag(checkoutMarker);
 
-  // CRITICAL: Update hidden inputs with proper values
+  // CRITICAL: Update hidden inputs with precise values
   const latInput = document.getElementById('checkout-lat');
   const lngInput = document.getElementById('checkout-lng');
   
   if (latInput && lngInput) {
-    latInput.value = parseFloat(lat).toFixed(6);
-    lngInput.value = parseFloat(lng).toFixed(6);
+    latInput.value = preciseLat.toString();
+    lngInput.value = preciseLng.toString();
     console.log('✅ Coordinates saved to hidden inputs:', latInput.value, lngInput.value);
   } else {
     console.error('❌ Could not find lat/lng input fields!');
   }
 
   // Center map on new location with smooth animation
-  checkoutMap.setView([lat, lng], 16, {
+  checkoutMap.setView([preciseLat, preciseLng], 16, {
     animate: true,
     duration: 0.5
   });
@@ -1208,17 +1234,27 @@ function setMapLocation(lat, lng) {
   // Show confirmation
   showLocationConfirmation();
 
-  console.log('✅ Location set successfully:', lat, lng);
+  console.log('✅ Location set successfully:', preciseLat, preciseLng);
 }
 
 // Setup marker drag events
 function setupMarkerDrag(marker) {
   marker.on('dragend', function(e) {
     const latlng = e.target.getLatLng();
-    document.getElementById('checkout-lat').value = latlng.lat;
-    document.getElementById('checkout-lng').value = latlng.lng;
+    const preciseLat = parseFloat(latlng.lat);
+    const preciseLng = parseFloat(latlng.lng);
+    
+    const latInput = document.getElementById('checkout-lat');
+    const lngInput = document.getElementById('checkout-lng');
+    
+    if (latInput && lngInput) {
+      latInput.value = preciseLat.toString();
+      lngInput.value = preciseLng.toString();
+      console.log('📍 Marker moved to:', preciseLat, preciseLng);
+      console.log('✅ Updated inputs:', latInput.value, lngInput.value);
+    }
+    
     showLocationConfirmation();
-    console.log('📍 Marker moved to:', latlng.lat, latlng.lng);
   });
 }
 
