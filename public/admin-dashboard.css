@@ -306,7 +306,7 @@
 /* Main Content */
 .dashboard-main {
   flex: 1;
-  margin-left: 260px;
+  margin-left: 0;
   min-height: 100vh;
   background: #fff9f3;
 }
@@ -332,12 +332,16 @@
 }
 
 .mobile-menu-btn {
-  display: none;
-  background: none;
+  display: block;
+  background: var(--primary);
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
-  color: #333;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  padding: 0;
 }
 
 .header-left h1 {
