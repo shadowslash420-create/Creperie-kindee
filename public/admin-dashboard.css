@@ -1239,12 +1239,23 @@
   display: none !important;
 }
 
+/* All content sections hidden by default */
 .content-section {
-  display: none;
+  display: none !important;
 }
 
+/* Only show active section */
 .content-section.active {
-  display: block;
+  display: block !important;
+}
+
+/* Ensure sections with IDs are also hidden by default */
+[id^="section-"] {
+  display: none !important;
+}
+
+[id^="section-"].active {
+  display: block !important;
 }
 
 /* Menu Management */
