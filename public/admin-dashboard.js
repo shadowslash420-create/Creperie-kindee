@@ -184,7 +184,22 @@ async function loadStaffData() {
 function toggleSidebar() {
   console.log('🔄 Toggling sidebar...');
   const sidebar = document.getElementById('dashboard-sidebar');
-  if (sidebar) sidebar.classList.toggle('active');
+  const overlay = document.querySelector('.sidebar-overlay');
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  
+  if (!sidebar) return;
+  
+  const isActive = sidebar.classList.contains('active');
+  
+  if (isActive) {
+    sidebar.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    if (mobileMenuBtn) mobileMenuBtn.classList.remove('active');
+  } else {
+    sidebar.classList.add('active');
+    if (overlay) overlay.classList.add('active');
+    if (mobileMenuBtn) mobileMenuBtn.classList.add('active');
+  }
 }
 
 function showSection(section, event) {
