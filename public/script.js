@@ -506,17 +506,13 @@ window.closeCheckoutModal = function(event) {
     event.stopPropagation();
   }
   
-  // Allow closing even during submission (user choice)
-  const modal = document.querySelector('.checkout-modal-overlay');
-  if (modal) {
-    modal.remove();
-  }
-  
-  // Also try by ID in case class selector fails
-  const modalById = document.getElementById('checkout-modal');
-  if (modalById) {
-    modalById.remove();
-  }
+  // Find and remove all checkout modals
+  const modals = document.querySelectorAll('.checkout-modal-overlay, #checkout-modal');
+  modals.forEach(modal => {
+    if (modal) {
+      modal.remove();
+    }
+  });
   
   // Clean up map if it exists
   if (checkoutMap) {
@@ -531,6 +527,9 @@ window.closeCheckoutModal = function(event) {
   
   // Reset submission flag
   isCheckoutSubmitting = false;
+  
+  // Re-enable body scroll
+  document.body.style.overflow = '';
 }
 
 // Check staff role and redirect
@@ -830,7 +829,7 @@ window.checkoutFlow = async function() {
         <h2 style="margin: 0; font-size: 24px; font-weight: 700;">
           ${isArabic ? '🛒 إتمام الطلب' : '🛒 Complete Order'}
         </h2>
-        <button onclick="closeCheckoutModal(event); return false;" id="checkout-close-btn" style="
+        <button type="button" onclick="closeCheckoutModal(); return false;" id="checkout-close-btn" style="
           background: none;
           border: none;
           color: white;
@@ -1073,7 +1072,7 @@ window.checkoutFlow = async function() {
   // Close on background click (but not during submission)
   modal.addEventListener('click', (e) => {
     if (e.target === modal && !isCheckoutSubmitting) {
-      closeCheckoutModal(e);
+      closeCheckoutModal();
     }
   });
 
