@@ -410,62 +410,24 @@
 }
 
 .stat-card {
-  background: #fff;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+  color: white;
+  padding: 20px;
   border-radius: 12px;
-  padding: 28px;
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  box-shadow: var(--soft-shadow);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid var(--border);
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
 }
-
-.stat-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--medium-shadow);
-  border-color: #FF1111;
-}
-
-.stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  flex-shrink: 0;
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: #8d7a6f;
-  margin: 0 0 6px 0;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
 .stat-value {
-  font-family: 'Playfair Display', serif;
   font-size: 32px;
-  font-weight: 700;
-  color: #3b2b26;
-  margin: 0 0 8px 0;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: white;
 }
-
-.stat-change {
-  font-size: 13px;
-  color: #705c53;
-}
-
-.stat-change.positive {
-  color: #52C41A;
+.stat-label {
+  font-size: 14px;
+  opacity: 1;
+  color: white;
+  font-weight: 500;
 }
 
 .chart-card {
@@ -1139,7 +1101,7 @@
   .charts-row {
     grid-template-columns: 1fr;
   }
-  
+
   .dashboard-row {
     grid-template-columns: 1fr;
   }
@@ -1149,7 +1111,7 @@
   .dashboard-main {
     margin-left: 0;
   }
-  
+
   .mobile-menu-btn {
     display: block;
     background: var(--primary);
@@ -1162,32 +1124,32 @@
     transition: all 0.3s;
     box-shadow: 0 4px 12px rgba(227,6,19,0.3);
   }
-  
+
   .mobile-menu-btn:hover {
     background: var(--primary-dark);
     transform: translateY(-2px);
   }
-  
+
   .mobile-menu-btn.active {
     background: var(--primary-dark);
   }
-  
+
   .sidebar-toggle {
     display: block;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .content-section {
     padding: 20px;
   }
-  
+
   .dashboard-header {
     padding: 16px 20px;
   }
-  
+
   /* Mobile sidebar overlay */
   .sidebar-overlay {
     display: none;
@@ -1202,12 +1164,12 @@
     opacity: 0;
     transition: opacity 0.3s ease;
   }
-  
+
   .sidebar-overlay.active {
     display: block;
     opacity: 1;
   }
-  
+
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -1786,15 +1748,15 @@
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .menu-filters {
     justify-content: center;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .modal-content {
     max-height: 95vh;
   }
