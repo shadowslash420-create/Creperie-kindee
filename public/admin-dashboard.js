@@ -208,19 +208,21 @@ function showSection(section, event) {
   
   state.currentSection = section;
   
-  // Hide all sections
-  document.querySelectorAll('.content-section').forEach(el => {
+  // Hide ALL sections - use more specific selector
+  document.querySelectorAll('.content-section, [id^="section-"]').forEach(el => {
     el.classList.remove('active');
     el.style.display = 'none';
   });
 
-  // Show selected section
+  // Show ONLY the selected section
   const sectionId = 'section-' + section;
   const sectionEl = document.getElementById(sectionId);
   if (sectionEl) {
     sectionEl.classList.add('active');
     sectionEl.style.display = 'block';
     console.log('✅ Section displayed:', sectionId);
+  } else {
+    console.warn('⚠️ Section not found:', sectionId);
   }
 
   // Update active nav item

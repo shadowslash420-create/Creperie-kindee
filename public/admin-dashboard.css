@@ -1242,6 +1242,8 @@
 /* All content sections hidden by default */
 .content-section {
   display: none !important;
+  position: relative;
+  width: 100%;
 }
 
 /* Only show active section */
@@ -1252,10 +1254,19 @@
 /* Ensure sections with IDs are also hidden by default */
 [id^="section-"] {
   display: none !important;
+  position: relative;
+  width: 100%;
 }
 
 [id^="section-"].active {
   display: block !important;
+}
+
+/* Ensure dashboard main shows only one section at a time */
+.dashboard-main > .content-section:not(.active),
+.dashboard-main > [id^="section-"]:not(.active) {
+  display: none !important;
+  visibility: hidden;
 }
 
 /* Menu Management */
