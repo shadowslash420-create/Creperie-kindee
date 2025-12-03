@@ -345,34 +345,103 @@ async function renderOrdersList() {
     if (!container) return;
 
     if (!state.orders || state.orders.length === 0) {
-      container.innerHTML = '<p style="text-align:center;color:#999;">No orders</p>';
+      container.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">No orders yet</p>';
       return;
     }
 
-    const html = state.orders.map(order => `
-      <div style="background:white;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.1);margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
-          <div>
-            <h4 style="margin:0;color:#2d3748;">#${order.id?.substring(0,8)}</h4>
-            <p style="margin:4px 0;color:#666;font-size:14px;">${order.name || 'N/A'}</p>
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:6px 10px;border:1px solid #ddd;border-radius:4px;background:${order.status === 'delivered' ? '#48bb78' : '#ed8936'};color:white;cursor:pointer;font-weight:600;font-size:12px;">
-              <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>pending</option>
-              <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>delivered</option>
-            </select>
-          </div>
-        </div>
-        <p style="margin:8px 0;color:#666;font-size:14px;">📍 ${order.address || 'No address'}</p>
-        <p style="margin:8px 0;font-weight:600;color:#2d3748;">Total: ${order.total} DZD</p>
-      </div>
-    `).join('');
+    const html = `
+      <table style="width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <thead>
+          <tr style="background:#f7fafc;border-bottom:2px solid #e2e8f0;">
+            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Order ID</th>
+            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Customer</th>
+            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Email</th>
+            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Phone</th>
+            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Total</th>
+            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Status</th>
+            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Date</th>
+            <th style="padding:12px;text-align:left;color:#2d3748;font-weight:600;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${state.orders.map(order => {
+            const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() : 'N/A';
+            return `
+              <tr style="border-bottom:1px solid #e2e8f0;hover:{background:#f7fafc;}">
+                <td style="padding:12px;color:#2d3748;font-size:14px;"><strong>#${order.id?.substring(0,8)}</strong></td>
+                <td style="padding:12px;color:#2d3748;font-size:14px;">${order.name || 'N/A'}</td>
+                <td style="padding:12px;color:#666;font-size:13px;">${order.email || 'N/A'}</td>
+                <td style="padding:12px;color:#666;font-size:13px;">${order.phone || 'N/A'}</td>
+                <td style="padding:12px;color:#FF1111;font-weight:600;">${order.total || 0} DZD</td>
+                <td style="padding:12px;">
+                  <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:6px 8px;border:1px solid #cbd5e0;border-radius:4px;background:${order.status === 'delivered' ? '#D4EDDA' : '#FFF3CD'};color:${order.status === 'delivered' ? '#155724' : '#856404'};cursor:pointer;font-weight:600;font-size:12px;">
+                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                    <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>✅ Delivered</option>
+                  </select>
+                </td>
+                <td style="padding:12px;color:#666;font-size:13px;">${date}</td>
+                <td style="padding:12px;">
+                  <button onclick="viewOrderDetails('${order.id}')" style="padding:6px 12px;background:#3182ce;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;">👁️ View</button>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
 
     container.innerHTML = html;
     console.log('✅ Orders list rendered');
   } catch (error) {
     console.error('❌ Error rendering orders:', error);
   }
+}
+
+function viewOrderDetails(orderId) {
+  const order = state.orders.find(o => o.id === orderId);
+  if (!order) {
+    alert('Order not found');
+    return;
+  }
+  const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() : 'N/A';
+  const itemsRows = (order.items || []).map(item => `
+    <tr style="border-bottom:1px solid #e2e8f0;">
+      <td style="padding:8px;text-align:left;">${item.name || 'N/A'}</td>
+      <td style="padding:8px;text-align:center;">${item.qty || 1}</td>
+      <td style="padding:8px;text-align:right;">${(item.price || 0).toFixed(2)} DZD</td>
+      <td style="padding:8px;text-align:right;font-weight:600;">${((item.price || 0) * (item.qty || 1)).toFixed(2)} DZD</td>
+    </tr>
+  `).join('');
+  
+  const html = `
+    <h2 style="color:#FF1111;margin-bottom:20px;text-align:center;">📋 Order Details</h2>
+    <div style="background:#f7fafc;padding:15px;border-radius:8px;margin-bottom:20px;">
+      <h3 style="color:#2d3748;margin:0 0 12px 0;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;">👤 Customer Information</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;line-height:1.6;">
+        <div><strong>Name:</strong> ${order.name || 'N/A'}</div>
+        <div><strong>Email:</strong> ${order.email || 'N/A'}</div>
+        <div><strong>Phone:</strong> ${order.phone || 'N/A'}</div>
+        <div><strong>Order ID:</strong> ${orderId}</div>
+        <div style="grid-column:1/-1;"><strong>Address:</strong> ${order.address || 'N/A'}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <h3 style="color:#2d3748;margin:0 0 12px 0;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;">📦 Order Items</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#e2e8f0;"><th style="padding:8px;text-align:left;font-weight:600;">Item</th><th style="padding:8px;text-align:center;font-weight:600;">Qty</th><th style="padding:8px;text-align:right;font-weight:600;">Price</th><th style="padding:8px;text-align:right;font-weight:600;">Total</th></tr></thead>
+        <tbody>${itemsRows}</tbody>
+      </table>
+    </div>
+    <div style="background:linear-gradient(135deg,#FF1111 0%,#E60000 100%);color:white;padding:16px;border-radius:8px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;font-size:13px;">
+        <div><strong>Subtotal:</strong> ${(order.subtotal || 0).toFixed(2)} DZD</div>
+        <div><strong>Delivery Fee:</strong> ${(order.deliveryFee || 0).toFixed(2)} DZD</div>
+      </div>
+      <div style="border-top:1px solid rgba(255,255,255,0.2);margin-top:10px;padding-top:10px;font-size:16px;font-weight:bold;text-align:right;">Total: ${(order.total || 0).toFixed(2)} DZD</div>
+    </div>
+  `;
+  
+  alert('Order Details: ' + order.name + '\n\n' + 'Total: ' + order.total + ' DZD\n' + 'Status: ' + order.status + '\n' + 'Date: ' + date);
 }
 
 async function updateOrderStatus(orderId, newStatus) {
@@ -897,6 +966,7 @@ window.saveStaffMember = saveStaffMember;
 window.deleteStaff = deleteStaff;
 window.renderStaffTable = renderStaffTable;
 window.updateOrderStatus = updateOrderStatus;
+window.viewOrderDetails = viewOrderDetails;
 
 console.log('✅ Admin dashboard script loaded');
 
