@@ -625,6 +625,174 @@ async function handleAdminLogout() {
   }
 }
 
+// ==================== MENU ITEM MANAGEMENT ====================
+
+async function openAddModal() {
+  document.getElementById('menu-item-modal').classList.add('active');
+  document.getElementById('menu-item-form').reset();
+  state.editingItem = null;
+}
+
+async function closeModal() {
+  document.getElementById('menu-item-modal').classList.remove('active');
+  document.getElementById('menu-item-form').reset();
+  state.editingItem = null;
+}
+
+async function editMenuItem(itemId) {
+  const item = state.menuItems.find(m => m.id === itemId);
+  if (!item) return;
+  state.editingItem = item;
+  document.getElementById('item-name').value = item.name;
+  document.getElementById('item-price').value = item.price;
+  document.getElementById('item-desc').value = item.description || '';
+  document.getElementById('item-image-url').value = item.image || '';
+  document.getElementById('menu-item-modal').classList.add('active');
+}
+
+async function saveMenuItem(e) {
+  e.preventDefault();
+  const name = document.getElementById('item-name').value.trim();
+  const price = parseFloat(document.getElementById('item-price').value);
+  const description = document.getElementById('item-desc').value.trim();
+  const category = document.getElementById('item-category').value;
+  const image = document.getElementById('item-image-url').value;
+
+  if (!name || !price || !category) {
+    alert('❌ Please fill required fields');
+    return;
+  }
+
+  try {
+    const itemData = { name, price, description, category, image };
+    if (state.editingItem) {
+      await window.dbService.updateMenuItem(state.editingItem.id, itemData);
+      alert('✅ Menu item updated!');
+    } else {
+      await window.dbService.addMenuItem(itemData);
+      alert('✅ Menu item added!');
+    }
+    await loadMenuData();
+    renderMenuGrid();
+    closeModal();
+  } catch (error) {
+    console.error('Error saving menu item:', error);
+    alert('❌ Failed to save: ' + error.message);
+  }
+}
+
+// ==================== ORDERS MANAGEMENT ====================
+
+function filterOrdersByStatus(status) {
+  state.orderFilter = status;
+  renderOrdersList();
+  const buttons = document.querySelectorAll('.filter-tab');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function filterOrders(event) {
+  const searchTerm = event.target.value.toLowerCase();
+  renderOrdersList();
+}
+
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    await window.dbService.updateOrder(orderId, { status: newStatus });
+    const order = state.orders.find(o => o.id === orderId);
+    if (order) order.status = newStatus;
+    alert('✅ Order status updated!');
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    alert('❌ Failed to update status');
+  }
+}
+
+// ==================== CATEGORY MANAGEMENT ====================
+
+function openCategoryModal() {
+  document.getElementById('category-modal').classList.add('active');
+  renderCategoriesList();
+}
+
+function closeCategoryModal() {
+  document.getElementById('category-modal').classList.remove('active');
+}
+
+async function addCategory(event) {
+  event.preventDefault();
+  const categoryId = document.getElementById('category-id').value.trim().toLowerCase();
+  const categoryName = document.getElementById('category-name').value.trim();
+
+  if (!categoryId || !categoryName) {
+    alert('❌ Please fill all fields');
+    return;
+  }
+
+  if (!/^[a-z0-9_-]+$/.test(categoryId)) {
+    alert('❌ Category ID must be lowercase with no spaces');
+    return;
+  }
+
+  try {
+    await window.dbService.addCategory({ id: categoryId, name: categoryName });
+    await loadCategoriesData();
+    document.getElementById('category-id').value = '';
+    document.getElementById('category-name').value = '';
+    renderCategoriesList();
+    alert('✅ Category added!');
+  } catch (error) {
+    console.error('Error adding category:', error);
+    alert('❌ Failed to add category: ' + error.message);
+  }
+}
+
+function renderCategoriesList() {
+  const list = document.getElementById('categories-list');
+  if (!list) return;
+  const html = (state.categories || []).map(cat => `
+    <div style="background: white; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 8px;">
+      <div>
+        <p style="margin: 0; font-weight: 600; color: #2d3748;">${cat.name}</p>
+        <p style="margin: 4px 0 0 0; font-size: 12px; color: #666;">ID: ${cat.id}</p>
+      </div>
+      <button onclick="deleteCategory('${cat.id}')" style="padding: 6px 12px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️</button>
+    </div>
+  `).join('');
+  list.innerHTML = html || '<p style="text-align: center; color: #999;">No categories yet</p>';
+}
+
+async function deleteCategory(categoryId) {
+  if (!confirm('Delete this category?')) return;
+  try {
+    await window.dbService.deleteCategory(categoryId);
+    await loadCategoriesData();
+    renderCategoriesList();
+    alert('✅ Category deleted!');
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    alert('❌ Failed to delete category');
+  }
+}
+
+function filterMenuByCategory(category) {
+  state.menuFilter = category;
+  renderMenuGrid();
+  const buttons = document.querySelectorAll('.filter-btn');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// ==================== STAFF MANAGEMENT ====================
+
+function openAddStaffModal() {
+  document.getElementById('staff-modal')?.classList.add('active');
+}
+
+function closeAddStaffModal() {
+  document.getElementById('staff-modal')?.classList.remove('active');
+}
+
 // ==================== EXPOSE TO WINDOW ====================
 window.toggleSidebar = toggleSidebar;
 window.showSection = showSection;
@@ -639,6 +807,21 @@ window.deleteMessage = deleteMessage;
 window.initializeDashboard = initializeDashboard;
 window.handleAdminLogin = handleAdminLogin;
 window.handleAdminLogout = handleAdminLogout;
+window.openAddModal = openAddModal;
+window.closeModal = closeModal;
+window.editMenuItem = editMenuItem;
+window.saveMenuItem = saveMenuItem;
+window.filterOrdersByStatus = filterOrdersByStatus;
+window.filterOrders = filterOrders;
+window.updateOrderStatus = updateOrderStatus;
+window.openCategoryModal = openCategoryModal;
+window.closeCategoryModal = closeCategoryModal;
+window.addCategory = addCategory;
+window.renderCategoriesList = renderCategoriesList;
+window.deleteCategory = deleteCategory;
+window.filterMenuByCategory = filterMenuByCategory;
+window.openAddStaffModal = openAddStaffModal;
+window.closeAddStaffModal = closeAddStaffModal;
 
 console.log('✅ Admin dashboard script loaded');
 
