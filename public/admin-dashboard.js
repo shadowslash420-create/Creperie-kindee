@@ -385,14 +385,14 @@ async function renderOrdersList() {
         <table class="orders-table">
           <thead>
             <tr>
-              <th>ACTIONS / الإجراءات</th>
-              <th>DATE / التاريخ</th>
-              <th>STATUS / الحالة</th>
-              <th>TOTAL / المبلغ</th>
-              <th>PHONE / الهاتف</th>
-              <th>EMAIL / البريد الإلكتروني</th>
-              <th>CUSTOMER / العميل</th>
-              <th>ORDER ID / رقم الطلب</th>
+              <th>رقم الطلب / Order ID</th>
+              <th>العميل / Customer</th>
+              <th>البريد الإلكتروني / Email</th>
+              <th>الهاتف / Phone</th>
+              <th>المبلغ / Total</th>
+              <th>الحالة / Status</th>
+              <th>التاريخ / Date</th>
+              <th>الإجراءات / Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -401,8 +401,11 @@ async function renderOrdersList() {
               const statusClass = `status-${order.status}`;
               return `
                 <tr>
-                  <td><button onclick="viewOrderDetails('${order.id}')" class="view-btn">👁️ عرض / View</button></td>
-                  <td>${date}</td>
+                  <td>${order.id?.substring(0,12)}</td>
+                  <td>${order.name || 'N/A'}</td>
+                  <td>${order.email || 'N/A'}</td>
+                  <td>${order.phone || 'N/A'}</td>
+                  <td>DZD ${(order.total || 0).toFixed(2)}</td>
                   <td>
                     <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:6px 8px;border:1px solid #cbd5e0;border-radius:4px;cursor:pointer;font-weight:600;font-size:12px;">
                       <option value="unconfirmed" ${order.status === 'unconfirmed' ? 'selected' : ''}>🔴 Unconfirmed</option>
@@ -410,11 +413,8 @@ async function renderOrdersList() {
                       <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>✅ Confirmed</option>
                     </select>
                   </td>
-                  <td>DZD ${(order.total || 0).toFixed(2)}</td>
-                  <td>${order.phone || 'N/A'}</td>
-                  <td>${order.email || 'N/A'}</td>
-                  <td>${order.name || 'N/A'}</td>
-                  <td>${order.id?.substring(0,12)}</td>
+                  <td>${date}</td>
+                  <td><button onclick="viewOrderDetails('${order.id}')" class="view-btn">👁️ عرض / View</button></td>
                 </tr>
               `;
             }).join('')}
