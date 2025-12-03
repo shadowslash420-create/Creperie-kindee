@@ -162,18 +162,7 @@
 
       <!-- Orders Section -->
       <section class="content-section" id="section-orders">
-        <div class="orders-header">
-          <div class="search-box">
-            <input type="text" id="order-search" placeholder="Search by customer name or order ID..." onkeyup="filterOrders()">
-          </div>
-          <div class="filter-tabs">
-            <button class="filter-tab active" onclick="filterOrdersByStatus('all', event)">All</button>
-            <button class="filter-tab" onclick="filterOrdersByStatus('unconfirmed', event)">Unconfirmed</button>
-            <button class="filter-tab" onclick="filterOrdersByStatus('pending', event)">Pending</button>
-            <button class="filter-tab" onclick="filterOrdersByStatus('delivered', event)">Delivered</button>
-          </div>
-        </div>
-        <div class="orders-table-container" id="orders-table"></div>
+        <div id="orders-table"></div>
       </section>
 
       <!-- Menu Section -->
