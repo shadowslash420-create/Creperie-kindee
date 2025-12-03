@@ -457,7 +457,7 @@ function viewOrderDetails(orderId) {
   modalContent.style.cssText = 'background:white;border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
   
   modalContent.innerHTML = `
-    <div style="position:sticky;top:0;background:linear-gradient(135deg,#FF1111 0%,#E60000 100%);color:white;padding:24px;border-radius:16px 16px 0 0;z-index:1;">
+    <div style="position:sticky;top:0;background:linear-gradient(135deg,#FF1111 0%,#E60000 100%);color:white;padding:24px;border-radius:16px 16px 0 0;z-index:1000;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <h2 style="margin:0;font-size:24px;font-weight:700;">📋 Order Details</h2>
         <button onclick="this.closest('.modal-overlay').remove()" style="background:rgba(255,255,255,0.2);border:none;color:white;font-size:28px;width:40px;height:40px;border-radius:8px;cursor:pointer;transition:all 0.3s;">✕</button>
@@ -552,6 +552,12 @@ async function updateOrderStatus(orderId, newStatus) {
     await window.dbService.updateOrder(orderId, { status: newStatus });
     await loadOrdersData();
     renderOrdersList();
+    
+    // Update dashboard statistics if on dashboard section
+    if (state.currentSection === 'dashboard') {
+      renderDashboard();
+    }
+    
     console.log('✅ Order status updated');
   } catch (error) {
     console.error('❌ Error updating order:', error);
