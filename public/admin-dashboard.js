@@ -228,6 +228,8 @@ function showSection(section, event) {
     renderReviewsList();
   } else if (section === 'messages') {
     renderMessagesList();
+  } else if (section === 'staff') {
+    renderStaffTable();
   }
 
   // ALWAYS close sidebar and overlay after selecting a section
@@ -771,10 +773,90 @@ function filterMenuByCategory(category) {
 
 function openAddStaffModal() {
   document.getElementById('staff-modal')?.classList.add('active');
+  document.getElementById('staff-form')?.reset();
 }
 
 function closeAddStaffModal() {
   document.getElementById('staff-modal')?.classList.remove('active');
+  document.getElementById('staff-form')?.reset();
+}
+
+async function saveStaffMember(e) {
+  e.preventDefault();
+  const staffEmail = document.getElementById('staff-email').value.trim();
+  const staffName = document.getElementById('staff-name').value.trim();
+  const staffRole = document.getElementById('staff-role').value;
+
+  if (!staffEmail || !staffName || !staffRole) {
+    alert('❌ Please fill all fields');
+    return;
+  }
+
+  try {
+    const staffData = { id: staffEmail, name: staffName, role: staffRole, email: staffEmail };
+    await window.dbService.addStaff(staffData);
+    await loadStaffData();
+    renderStaffTable();
+    closeAddStaffModal();
+    alert('✅ Staff member added!');
+  } catch (error) {
+    console.error('Error saving staff:', error);
+    alert('❌ Failed to save staff: ' + error.message);
+  }
+}
+
+async function deleteStaff(staffId) {
+  if (!confirm('Delete this staff member?')) return;
+  try {
+    await window.dbService.deleteStaff(staffId);
+    await loadStaffData();
+    renderStaffTable();
+    alert('✅ Staff member deleted!');
+  } catch (error) {
+    console.error('Error deleting staff:', error);
+    alert('❌ Failed to delete staff');
+  }
+}
+
+function renderStaffTable() {
+  const table = document.getElementById('staff-table');
+  if (!table) return;
+
+  if (!state.staff || state.staff.length === 0) {
+    table.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No staff members yet</p>';
+    return;
+  }
+
+  const html = `
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background: #f7fafc; border-bottom: 2px solid #e2e8f0;">
+          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600;">Name</th>
+          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600;">Email</th>
+          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600;">Role</th>
+          <th style="padding: 12px; text-align: left; color: #2d3748; font-weight: 600;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${state.staff.map(staff => `
+          <tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 12px; color: #2d3748;">${staff.name || 'N/A'}</td>
+            <td style="padding: 12px; color: #666;">${staff.email || 'N/A'}</td>
+            <td style="padding: 12px;">
+              <span style="background: ${staff.role === 'Admin' ? '#e53e3e' : staff.role === 'Staff A' ? '#3182ce' : '#48bb78'}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                ${staff.role || 'N/A'}
+              </span>
+            </td>
+            <td style="padding: 12px;">
+              <button onclick="deleteStaff('${staff.id}')" style="padding: 6px 12px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Delete</button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  table.innerHTML = html;
 }
 
 // ==================== EXPOSE TO WINDOW ====================
@@ -806,6 +888,9 @@ window.deleteCategory = deleteCategory;
 window.filterMenuByCategory = filterMenuByCategory;
 window.openAddStaffModal = openAddStaffModal;
 window.closeAddStaffModal = closeAddStaffModal;
+window.saveStaffMember = saveStaffMember;
+window.deleteStaff = deleteStaff;
+window.renderStaffTable = renderStaffTable;
 
 console.log('✅ Admin dashboard script loaded');
 
