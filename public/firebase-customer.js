@@ -179,7 +179,7 @@ async function setupMenuListener() {
         console.log('🔄 Menu updated in real-time:', items.length, 'items');
 
         // Update cache
-        setCache('kc_firebase_menu_cache', items);
+        saveToLocalStorage(CACHE_KEYS.MENU, CACHE_KEYS.MENU_TIMESTAMP, items);
 
         // Update state
         window.menuItems = items;
