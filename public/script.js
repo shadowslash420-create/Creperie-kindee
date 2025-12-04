@@ -86,7 +86,7 @@ let restaurantSettings = {
 async function loadRestaurantSettings() {
   try {
     const settings = await dbService.getSettings();
-    
+
     // Map admin field names to our expected names
     const normalizedSettings = {
       businessPhone: settings.businessPhone || settings.phone || '+213 5X XXX XXXX',
@@ -96,7 +96,7 @@ async function loadRestaurantSettings() {
       deliveryFee: settings.deliveryFee || 0,
       freeDeliveryMin: settings.freeDeliveryMin || 800
     };
-    
+
     restaurantSettings = { ...restaurantSettings, ...normalizedSettings };
     updateAllFooters();
     updateFAQSettings();
@@ -130,13 +130,13 @@ function updateFAQSettings() {
   const openTime = restaurantSettings.openingTime || '11:00';
   const closeTime = restaurantSettings.closingTime || '01:00';
   const deliveryFee = restaurantSettings.deliveryFee || 0;
-  
+
   const lang = localStorage.getItem(LANG_KEY) || 'ar';
   const isArabic = lang === 'ar';
-  
+
   const openTimeFormatted = formatTimeWithAMPM(openTime);
   const closeTimeFormatted = formatTimeWithAMPM(closeTime);
-  
+
   // Update FAQ answer 1 for hours
   const q1 = document.getElementById('faq-a1');
   if (q1) {
@@ -144,7 +144,7 @@ function updateFAQSettings() {
       ? `نحن مفتوحون يومياً من الساعة ${openTimeFormatted} حتى ${closeTimeFormatted}`
       : `We are open daily from ${openTimeFormatted} to ${closeTimeFormatted}`;
   }
-  
+
   // Update FAQ answer 2 for free delivery threshold
   const q2 = document.getElementById('faq-a2');
   if (q2) {
@@ -174,7 +174,7 @@ dbService.listenToSettingsChanges((settings) => {
     deliveryFee: settings.deliveryFee || 0,
     freeDeliveryMin: settings.freeDeliveryMin || 800
   };
-  
+
   restaurantSettings = { ...restaurantSettings, ...normalizedSettings };
   updateAllFooters();
   updateFAQSettings();
@@ -297,7 +297,7 @@ window.addToCart = function(itemId, event) {
 
   const existing = cart.find(c => c.id === itemId);
   const wasInCart = !!existing;
-  
+
   if (existing) {
     existing.qty++;
   } else {
@@ -321,7 +321,7 @@ window.addToCart = function(itemId, event) {
   } else if (document.activeElement && document.activeElement.tagName === 'BUTTON') {
     button = document.activeElement;
   }
-  
+
   if (button) {
     button.style.transform = 'scale(0.9)';
     button.style.transition = 'transform 0.1s';
@@ -336,7 +336,7 @@ window.addToCart = function(itemId, event) {
   const message = wasInCart 
     ? (isArabic ? `✅ تم زيادة الكمية: ${menuItem.name}` : `✅ Quantity increased: ${menuItem.name}`)
     : (isArabic ? `✅ تمت الإضافة للسلة: ${menuItem.name}` : `✅ Added to cart: ${menuItem.name}`);
-  
+
   showToast(message, 'success');
 }
 
@@ -351,13 +351,13 @@ function showToast(message, type = 'success') {
   const toast = document.createElement('div');
   toast.id = 'cart-toast';
   toast.textContent = message;
-  
+
   const colors = {
     success: '#52C41A',
     error: '#E30613',
     info: '#FF6B35'
   };
-  
+
   toast.style.cssText = `
     position: fixed;
     bottom: 100px;
@@ -377,15 +377,15 @@ function showToast(message, type = 'success') {
     text-align: center;
     pointer-events: none;
   `;
-  
+
   document.body.appendChild(toast);
-  
+
   // Animate in
   setTimeout(() => {
     toast.style.opacity = '1';
     toast.style.transform = 'translateX(-50%) translateY(0)';
   }, 10);
-  
+
   // Animate out and remove
   setTimeout(() => {
     toast.style.opacity = '0';
@@ -505,15 +505,15 @@ window.closeCheckoutModal = function(event) {
     console.log('⏳ Cannot close modal during order submission');
     return;
   }
-  
+
   // Prevent event bubbling if called from click event
   if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
-  
+
   console.log('🔴 Closing checkout modal');
-  
+
   // Find and remove all checkout modals
   const modals = document.querySelectorAll('.checkout-modal-overlay, #checkout-modal');
   modals.forEach(modal => {
@@ -521,7 +521,7 @@ window.closeCheckoutModal = function(event) {
       modal.remove();
     }
   });
-  
+
   // Clean up map if it exists
   if (checkoutMap) {
     try {
@@ -532,10 +532,10 @@ window.closeCheckoutModal = function(event) {
       console.log('Error cleaning up map:', e);
     }
   }
-  
+
   // Reset submission flag
   isCheckoutSubmitting = false;
-  
+
   // Re-enable body scroll
   document.body.style.overflow = '';
 }
@@ -548,10 +548,10 @@ async function checkStaffRoleAndRedirect() {
 
     const email = auth.currentUser.email.toLowerCase().trim();
     const staffId = email.replace(/[^a-z0-9]/g, '_').substring(0, 64);
-    
+
     const staff = await dbService.getAllStaff();
     const staffMember = staff.find(s => s.id === staffId);
-    
+
     if (staffMember) {
       console.log('👨‍💼 Staff member detected:', staffMember.role);
       if (staffMember.role === 'Staff A') {
@@ -579,7 +579,7 @@ window.submitCheckoutForm = async function(event) {
       userEmail = auth.currentUser.email ? auth.currentUser.email.toLowerCase().trim() : null;
       currentUser = auth.currentUser;
       console.log('✅ User logged in with email:', userEmail);
-      
+
       // Check if this is a staff member and redirect
       checkStaffRoleAndRedirect();
     }
@@ -592,9 +592,9 @@ window.submitCheckoutForm = async function(event) {
     alert(currentLang === 'ar' 
       ? 'يجب تسجيل الدخول أولاً لتقديم الطلب\n\nسيتم توجيهك إلى صفحة تسجيل الدخول...' 
       : 'You must sign in to place an order\n\nRedirecting to login page...');
-    
+
     closeCheckoutModal();
-    
+
     // Redirect to login page
     setTimeout(() => {
       window.location.href = 'login.html';
@@ -691,11 +691,26 @@ window.submitCheckoutForm = async function(event) {
   try {
     closeAllSidebars();
 
+    // Create order in Firebase
     const orderId = await placeOrderToFirebase(orderData);
-    console.log('Order placed with ID:', orderId);
+    console.log('✅ Order created:', orderId);
 
-    // Save order info for auto-display
-    localStorage.setItem('kc_recent_order_id', orderId);
+    // Send notification to admin and staff
+    try {
+      await fetch('/api/notify-new-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          customerName: fullName,
+          total: total.toFixed(2),
+          items: cart.length
+        })
+      });
+      console.log('✅ Notification sent to admin/staff');
+    } catch (notifyError) {
+      console.warn('⚠️ Could not send notification:', notifyError);
+    }
 
     // Clear cart
     cart = [];
@@ -717,7 +732,7 @@ window.submitCheckoutForm = async function(event) {
     }, 1000);
   } catch (error) {
     console.error('Error placing order:', error);
-    
+
     // Reset submission flag immediately
     isCheckoutSubmitting = false;
 
@@ -754,21 +769,21 @@ window.submitCheckoutForm = async function(event) {
         form.insertBefore(errorDiv, form.firstChild);
       }
     }
-    
+
     // Show more specific error message
     let errorMessage = currentLang === 'ar' 
       ? '❌ حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.' 
       : '❌ Error placing order. Please try again.';
-    
+
     if (error.code === 'permission-denied') {
       errorMessage = currentLang === 'ar'
         ? '❌ عذراً، لا يمكن إتمام الطلب حالياً. يرجى الاتصال بنا مباشرة.'
         : '❌ Sorry, cannot complete order now. Please contact us directly.';
     }
-    
+
     errorDiv.textContent = errorMessage;
     errorDiv.style.display = 'block';
-    
+
     // Scroll error into view
     errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -862,7 +877,7 @@ window.checkoutFlow = async function() {
           font-weight: 300;
         ">×</button>
       </div>
-      
+
       <div style="padding: 24px; overflow-y: auto; flex: 1;">
         <form id="checkout-form" onsubmit="submitCheckoutForm(event); return false;">
           <div style="margin-bottom: 16px;">
@@ -1105,19 +1120,19 @@ window.checkoutFlow = async function() {
         e.stopPropagation();
         closeCheckoutModal();
       });
-      
+
       closeBtn.addEventListener('mouseover', () => {
         if (!isCheckoutSubmitting) {
           closeBtn.style.background = 'rgba(255,255,255,0.4)';
           closeBtn.style.transform = 'scale(1.1)';
         }
       });
-      
+
       closeBtn.addEventListener('mouseout', () => {
         closeBtn.style.background = 'rgba(255,255,255,0.25)';
         closeBtn.style.transform = 'scale(1)';
       });
-      
+
       console.log('✅ Close button event listener attached');
     }
   }, 100);
@@ -1125,7 +1140,7 @@ window.checkoutFlow = async function() {
   // Initialize map after modal is fully rendered
   setTimeout(() => {
     initCheckoutMap(savedInfo);
-    
+
     // Focus first input after map is initialized
     setTimeout(() => {
       const firstInput = document.getElementById('checkout-firstname');
@@ -1145,7 +1160,7 @@ function initCheckoutMap(savedInfo) {
     console.error('⚠️ Map container not found');
     return;
   }
-  
+
   // Wait for Leaflet to be fully loaded
   if (!window.L) {
     console.warn('⚠️ Leaflet not loaded yet, retrying in 500ms...');
@@ -1191,11 +1206,11 @@ function initCheckoutMap(savedInfo) {
       minZoom: 3,
       errorTileUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2VlZSIvPjwvc3ZnPg=='
     });
-    
+
     tileLayer.on('tileerror', function(error) {
       console.warn('Tile loading error:', error);
     });
-    
+
     tileLayer.addTo(checkoutMap);
 
     // Custom red marker icon with better visibility
@@ -1210,7 +1225,7 @@ function initCheckoutMap(savedInfo) {
     if (hasExistingLocation) {
       checkoutMarker = L.marker([defaultLat, defaultLng], { icon: redIcon, draggable: true }).addTo(checkoutMap);
       setupMarkerDrag(checkoutMarker);
-      
+
       // Update hidden inputs with saved location
       const latInput = document.getElementById('checkout-lat');
       const lngInput = document.getElementById('checkout-lng');
@@ -1218,7 +1233,7 @@ function initCheckoutMap(savedInfo) {
         latInput.value = defaultLat.toString();
         lngInput.value = defaultLng.toString();
       }
-      
+
       showLocationConfirmation();
       console.log('✅ Marker added at saved location');
     }
@@ -1238,14 +1253,14 @@ function initCheckoutMap(savedInfo) {
         console.log('🗺️ Map size invalidated (immediate)');
       }
     }, 100);
-    
+
     setTimeout(() => {
       if (checkoutMap) {
         checkoutMap.invalidateSize();
         console.log('🗺️ Map size invalidated (200ms)');
       }
     }, 200);
-    
+
     setTimeout(() => {
       if (checkoutMap) {
         checkoutMap.invalidateSize();
@@ -1275,7 +1290,7 @@ function setMapLocation(lat, lng) {
   // Ensure precise coordinates
   const preciseLat = parseFloat(lat);
   const preciseLng = parseFloat(lng);
-  
+
   console.log('📍 Setting location on map:', preciseLat, preciseLng);
 
   const redIcon = L.divIcon({
@@ -1302,7 +1317,7 @@ function setMapLocation(lat, lng) {
   // CRITICAL: Update hidden inputs with precise values
   const latInput = document.getElementById('checkout-lat');
   const lngInput = document.getElementById('checkout-lng');
-  
+
   if (latInput && lngInput) {
     latInput.value = preciseLat.toString();
     lngInput.value = preciseLng.toString();
@@ -1329,17 +1344,17 @@ function setupMarkerDrag(marker) {
     const latlng = e.target.getLatLng();
     const preciseLat = parseFloat(latlng.lat);
     const preciseLng = parseFloat(latlng.lng);
-    
+
     const latInput = document.getElementById('checkout-lat');
     const lngInput = document.getElementById('checkout-lng');
-    
+
     if (latInput && lngInput) {
       latInput.value = preciseLat.toString();
       lngInput.value = preciseLng.toString();
       console.log('📍 Marker moved to:', preciseLat, preciseLng);
       console.log('✅ Updated inputs:', latInput.value, lngInput.value);
     }
-    
+
     showLocationConfirmation();
   });
 }
@@ -1358,9 +1373,9 @@ window.useMyLocation = function() {
   const latInput = document.getElementById('checkout-lat');
   const lngInput = document.getElementById('checkout-lng');
   const isArabic = currentLang === 'ar';
-  
+
   console.log('📍 Requesting current location...');
-  
+
   if (!navigator.geolocation) {
     const errorMsg = isArabic ? 'المتصفح لا يدعم تحديد الموقع' : 'Geolocation is not supported by your browser';
     alert(errorMsg);
@@ -1380,35 +1395,35 @@ window.useMyLocation = function() {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
       const accuracy = position.coords.accuracy;
-      
+
       console.log('✅ Location obtained:', { lat, lng, accuracy: accuracy + 'm' });
-      
+
       // CRITICAL: Set the hidden input values FIRST
       if (latInput && lngInput) {
         latInput.value = lat;
         lngInput.value = lng;
         console.log('✅ Coordinates saved to inputs:', latInput.value, lngInput.value);
       }
-      
+
       // Then update the map visualization
       setMapLocation(lat, lng);
-      
+
       // Update address field with coordinates
       const addressField = document.getElementById('checkout-address');
       if (addressField && !addressField.value.trim()) {
         addressField.value = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
         addressField.placeholder = isArabic ? 'أضف تفاصيل إضافية للعنوان...' : 'Add additional address details...';
       }
-      
+
       // Show confirmation
       showLocationConfirmation();
-      
+
       // Reset button with success state
       if (btn) {
         btn.innerHTML = `✅ ${isArabic ? 'تم تحديد الموقع' : 'Location Set'}`;
         btn.style.background = 'linear-gradient(135deg, #52C41A 0%, #389E0D 100%)';
         btn.style.opacity = '1';
-        
+
         setTimeout(() => {
           btn.innerHTML = `📍 ${isArabic ? 'استخدم موقعي الحالي' : 'Use My Current Location'}`;
           btn.style.background = 'linear-gradient(135deg, #52C41A 0%, #389E0D 100%)';
@@ -1418,10 +1433,10 @@ window.useMyLocation = function() {
     },
     (error) => {
       console.error('❌ Geolocation error:', error.code, error.message);
-      
+
       let errorMsg = isArabic ? 'تعذر تحديد موقعك' : 'Could not get your location';
       let detailMsg = '';
-      
+
       switch(error.code) {
         case error.PERMISSION_DENIED:
           errorMsg = isArabic ? 'تم رفض الإذن بالوصول إلى الموقع' : 'Location permission denied';
@@ -1442,9 +1457,9 @@ window.useMyLocation = function() {
             : 'Please try again';
           break;
       }
-      
+
       alert(errorMsg + '\n\n' + detailMsg);
-      
+
       // Reset button
       if (btn) {
         btn.innerHTML = `📍 ${isArabic ? 'استخدم موقعي الحالي' : 'Use My Current Location'}`;
@@ -1495,7 +1510,7 @@ window.toggleLanguage = function() {
 // Apply translations to ALL pages including index sections
 window.applyTranslations = function() {
   const t = getT();
-  
+
   // Navigation and menu links
   document.querySelectorAll('.nav-link-home').forEach(el => el.textContent = t.home);
   document.querySelectorAll('.nav-link-about').forEach(el => el.textContent = t.about);
@@ -1683,16 +1698,16 @@ async function initMenu() {
 window.scrollTabCarousel = function(direction) {
   const tabNav = document.getElementById('tab-nav');
   if (!tabNav) return;
-  
+
   const scrollAmount = 200;
   const currentScroll = tabNav.scrollLeft;
-  
+
   if (direction === 'left') {
     tabNav.scrollLeft = currentScroll - scrollAmount;
   } else {
     tabNav.scrollLeft = currentScroll + scrollAmount;
   }
-  
+
   updateCarouselButtons();
 }
 
@@ -1701,12 +1716,12 @@ function updateCarouselButtons() {
   const tabNav = document.getElementById('tab-nav');
   const prevBtn = document.getElementById('tab-prev');
   const nextBtn = document.getElementById('tab-next');
-  
+
   if (!tabNav || !prevBtn || !nextBtn) return;
-  
+
   const canScrollLeft = tabNav.scrollLeft > 0;
   const canScrollRight = tabNav.scrollLeft < (tabNav.scrollWidth - tabNav.clientWidth - 10);
-  
+
   prevBtn.disabled = !canScrollLeft;
   nextBtn.disabled = !canScrollRight;
 }
@@ -1737,10 +1752,10 @@ function renderMenu(filterCategory = null, searchQuery = '') {
     // Use a class 'tab-btn' for easier selection and manipulation
     return `<button class="tab tab-btn ${isActive ? 'active' : ''}" onclick="filterByCategory('${cat}')">${categoryLabel}</button>`;
   }).join('');
-  
+
   // Update carousel buttons after rendering
   setTimeout(updateCarouselButtons, 100);
-  
+
   // Add scroll listener
   tabNav.addEventListener('scroll', updateCarouselButtons);
 
@@ -1835,7 +1850,7 @@ window.switchTab = window.filterByCategory;
 function markActiveFooterLink() {
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const footerLinks = document.querySelectorAll('.footer-links a');
-  
+
   footerLinks.forEach(link => {
     link.classList.remove('active-page');
     const href = link.getAttribute('href');
@@ -1870,7 +1885,7 @@ function applyFeedbackTranslations() {
     'feedback-submit': t.feedbackSubmitBtn,
     'feedback-reviews-title': t.feedbackReviewsTitle
   };
-  
+
   for (const [id, text] of Object.entries(elements)) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
@@ -1940,16 +1955,16 @@ function setupFooterAdminClick() {
   if (footerConnect) {
     let clickCount = 0;
     let clickTimeout;
-    
+
     footerConnect.addEventListener('click', function() {
       clickCount++;
-      
+
       // Reset counter after 3 seconds of no clicks
       clearTimeout(clickTimeout);
       clickTimeout = setTimeout(() => {
         clickCount = 0;
       }, 3000);
-      
+
       // After 7 clicks, redirect to admin dashboard
       if (clickCount === 7) {
         clickCount = 0;
@@ -1963,7 +1978,7 @@ function setupFooterAdminClick() {
 // SINGLE CONSOLIDATED INITIALIZATION - runs only ONCE
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🔄 PAGE INITIALIZATION STARTED (single listener)');
-  
+
   // Language button setup
   const langBtn = document.getElementById('lang-btn');
   if (langBtn) {
@@ -1984,13 +1999,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Setup footer admin 7-click feature
   setupFooterAdminClick();
-  
+
   // Mark active footer link
   markActiveFooterLink();
-  
+
   // FAQ page setup
   if (document.getElementById('faq-q1')) applyFaqTranslations();
-  
+
   // Feedback page setup
   if (document.getElementById('feedback-form')) {
     await loadMenuItemsFromFirebase();
@@ -1999,7 +2014,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       initStarRatingOriginal();
       renderFeedbackListOriginal();
     }, 100);
-    
+
     // Load menu items for feedback form select
     const feedbackItemSelect = document.getElementById('feedback-item');
     if (feedbackItemSelect && menuItems.length > 0) {
@@ -2036,7 +2051,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   highlightActivePage();
   initScrollButton();
   updatePageIndicator();
-  
+
   console.log('✅ PAGE INITIALIZATION COMPLETE');
 });
 
@@ -2229,7 +2244,7 @@ const originalTranslations = {
     feedbackNameLabel: 'Your name:',
     feedbackItemLabel: 'Select product:',
     feedbackRatingLabel: 'Rating:',
-    feedbackCommentLabel: 'Your comment:',
+    feedbackCommentLabel: 'Your Comment:',
     feedbackSubmit: 'Submit Review',
     selectItem: '-- Select a product --',
     navFaq: 'FAQ',
@@ -2240,15 +2255,13 @@ const originalTranslations = {
     faqQ1: 'What are your opening hours?',
     faqA1: 'We are open daily from 11 AM to 1 AM',
     faqQ2: 'Do you offer free delivery?',
-    faqA2: 'Yes, we offer free delivery for orders over 15 DZD',
+    faqA2: 'Yes, we offer free delivery for orders over 1000 DZD',
     faqQ3: 'Do you use original Kinder chocolate?',
     faqA3: 'Absolutely! We only use original Kinder chocolate and fresh ingredients daily',
     faqQ4: 'Can I customize my order?',
-    faqA4: 'Yes, you can add special notes when ordering and we will accommodate your request as much as possible',
-    faqQ5: 'Do you have vegan options?',
-    faqA5: 'Yes, we have vegan crepes with berries and vegan cream',
-    faqQ6: 'How long does preparation and delivery take?',
-    faqA6: 'Preparation usually takes 10-15 minutes, and delivery 20-30 minutes depending on your location',
+    faqA4: 'Yes, you can add special notes when ordering and we will fulfill your request as best as we can',
+    faqQ5: 'How long does preparation and delivery take?',
+    faqA5: 'Usually preparation takes 10-15 minutes, and delivery takes 20-30 minutes depending on your location',
     feedbackFormTitle: 'Share Your Experience',
     feedbackReviewsTitle: 'Customer Reviews',
     noFeedback: 'No reviews yet',
@@ -2781,19 +2794,19 @@ async function submitContactOriginal(e){
   const msg = document.getElementById('contact-msg').value;
   const lang = getCurrentLang();
   const t = translations[lang];
-  
+
   try {
     // Ensure dbService is initialized
     if (!dbService || !dbService.init) {
       throw new Error('Database service not initialized');
     }
-    
+
     const contactData = {
       name: name,
       email: email,
       message: msg
     };
-    
+
     console.log('📝 Submitting contact message:', contactData);
     await dbService.addContactMessage(contactData);
     console.log('✅ Contact message submitted successfully');
@@ -2864,7 +2877,7 @@ async function submitFeedbackOriginal(e){
 
     await dbService.addReview(reviewData);
     alert(lang === 'ar' ? 'شكراً لك! تم إرسال تقييمك بنجاح' : 'Thank you! Your review has been submitted successfully');
-    
+
     if(e.target) e.target.reset();
     if(ratingInput) ratingInput.value = '';
     document.querySelectorAll('.star').forEach(star => star.textContent = '☆');
@@ -3186,7 +3199,7 @@ async function renderHomeMenuPreviewOriginal() {
 function updateFooterCategoryLinks() {
   const footerLinks = document.getElementById('footer-links');
   if (!footerLinks) return;
-  
+
   // This function is called but doesn't need to do anything special
   // Footer links are static in the HTML
   console.log('Footer links updated');
@@ -3331,7 +3344,6 @@ window.initMenu = initMenu; // Updated
 window.renderHomeMenuPreview = renderHomeMenuPreview; // Updated
 window.applyTranslations = applyTranslations; // Updated
 window.toggleLanguage = toggleLanguage; // Updated
-window.updateCart = updateCart; // Updated
 
 // Ensure the updated functions are also globally accessible if needed
 window.setupSearch = setupSearch;

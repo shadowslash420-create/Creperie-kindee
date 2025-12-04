@@ -511,12 +511,12 @@
                 <label style="display:block;margin-bottom:8px;font-weight:600;">Staff Email</label>
                 <input type="email" id="staff-email" placeholder="staff@example.com" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;"/>
               </div>
-              
+
               <div class="form-group" style="margin-bottom:16px;">
                 <label style="display:block;margin-bottom:8px;font-weight:600;">Staff Name</label>
                 <input type="text" id="staff-name" placeholder="John Doe" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;"/>
               </div>
-              
+
               <div class="form-group" style="margin-bottom:20px;">
                 <label style="display:block;margin-bottom:8px;font-weight:600;">Role</label>
                 <select id="staff-role" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box;">
@@ -525,7 +525,7 @@
                   <option value="Staff B">Staff B (Read Messages & Reviews)</option>
                 </select>
               </div>
-              
+
               <div style="display:flex;gap:10px;justify-content:flex-end;">
                 <button type="button" onclick="closeAddStaffModal()" style="padding:10px 20px;background:#ccc;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Cancel</button>
                 <button type="submit" class="btn-primary" style="padding:10px 24px;">Add Staff Member</button>
@@ -561,12 +561,12 @@
       try {
         const { getFirestoreInstance } = await import('./firebase-config.js');
         const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-        
+
         const db = await getFirestoreInstance();
         const staffRef = collection(db, 'staff');
         const q = query(staffRef, where('email', '==', userEmail.toLowerCase()));
         const staffSnap = await getDocs(q);
-        
+
         if (!staffSnap.empty) {
           return staffSnap.docs[0].data().role;
         }
@@ -627,7 +627,7 @@
           }
         }
       }
-      
+
       if (!currentUser) {
         // Not authenticated - show login section
         const loginEl = document.getElementById('login-section');
@@ -653,12 +653,12 @@
           adminSection.classList.remove('hidden');
           adminSection.style.display = 'flex';
         }
-        
+
         // Clear cache on admin login
         if (window.clearAdminCache) {
           window.clearAdminCache();
         }
-        
+
         await setupNavigation('Admin');
 
         // Initialize dashboard if function is available

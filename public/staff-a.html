@@ -273,6 +273,21 @@
             // User is logged in, load data
             pageLoaded = true;
             console.log('User authenticated, loading staff data...');
+            
+            // Enable notifications for staff
+            try {
+              const vapidResponse = await fetch('/api/vapid-key');
+              if (vapidResponse.ok) {
+                const { vapidKey } = await vapidResponse.json();
+                if (window.notificationService?.initialize) {
+                  await window.notificationService.initialize(vapidKey, user.email);
+                  console.log('✅ Staff notifications enabled');
+                }
+              }
+            } catch (error) {
+              console.warn('⚠️ Could not enable staff notifications:', error);
+            }
+            
             await loadStaffOrders();
             setupRealtimeListener();
           }

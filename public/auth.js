@@ -65,23 +65,68 @@ export async function onAuthChange(callback) {
   }
 }
 
-export async function initAuthUI() {
+async function updateAuthButton(user) {
   const authBtn = document.getElementById('auth-btn');
   if (!authBtn) {
     console.warn('Auth button not found');
     return;
   }
 
+  if (user) {
+    authBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+    authBtn.title = user.displayName || 'Profile';
+    authBtn.onclick = () => showLogoutConfirmation(user);
+  } else {
+    authBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>`;
+    authBtn.title = 'تسجيل الدخول';
+    authBtn.onclick = () => window.location.href = 'login.html';
+  }
+}
+
+async function checkIfStaff(email) {
   try {
-    await onAuthChange((user) => {
+    if (!window.dbService) return false;
+    await window.dbService.init();
+    const staff = await window.dbService.getAllStaff();
+    return staff.some(s => s.email?.toLowerCase() === email?.toLowerCase());
+  } catch (error) {
+    console.error('Error checking staff status:', error);
+    return false;
+  }
+}
+
+export async function initAuthUI() {
+  try {
+    await onAuthChange(async (user) => { // Added async here
       if (user) {
-        authBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-        authBtn.title = user.displayName || 'Profile';
-        authBtn.onclick = () => showLogoutConfirmation(user);
+        console.log('✅ User logged in:', user.email);
+        updateAuthButton(user);
+
+        // Check if email is admin or staff
+        const isAdminOrStaff = user.email === 'oussamaanis2005@gmail.com' ||
+                               await checkIfStaff(user.email);
+
+        if (isAdminOrStaff) {
+          console.log('🔐 Admin/Staff user detected - initializing notifications');
+
+          // Initialize notifications for admin/staff
+          try {
+            const vapidResponse = await fetch('/api/vapid-key');
+            if (vapidResponse.ok) {
+              const { vapidKey } = await vapidResponse.json();
+              if (window.notificationService?.initialize) {
+                const result = await window.notificationService.initialize(vapidKey, user.email);
+                if (result.success) {
+                  console.log('✅ Admin/Staff notifications enabled');
+                }
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ Could not enable notifications:', error);
+          }
+        }
       } else {
-        authBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>`;
-        authBtn.title = 'تسجيل الدخول';
-        authBtn.onclick = () => window.location.href = 'login.html';
+        updateAuthButton(user);
       }
     });
   } catch (error) {
@@ -92,10 +137,10 @@ export async function initAuthUI() {
 function showLogoutConfirmation(user) {
   const overlay = document.createElement('div');
   overlay.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:10000;display:flex;align-items:center;justify-content:center;`;
-  
+
   const modal = document.createElement('div');
   modal.style.cssText = `background:linear-gradient(180deg,#FFF5F5,#FFE8E8);border-radius:24px;padding:40px 32px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(227,6,19,0.3);text-align:center;border:2px solid rgba(227,6,19,0.2);`;
-  
+
   modal.innerHTML = `
     <div style="font-size:64px;margin-bottom:20px;">👋</div>
     <h2 style="font-family:Playfair Display,serif;font-size:28px;color:#2C1810;margin-bottom:12px;">مرحباً ${user.displayName || 'المستخدم'}!</h2>
@@ -105,10 +150,10 @@ function showLogoutConfirmation(user) {
       <button id="confirm-logout" style="flex:1;padding:16px 24px;background:linear-gradient(135deg,#E30613,#C10510);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;">تسجيل الخروج</button>
     </div>
   `;
-  
+
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
-  
+
   modal.querySelector('#cancel-logout').onclick = () => overlay.remove();
   modal.querySelector('#confirm-logout').onclick = async () => {
     await signOutUser();
@@ -129,7 +174,7 @@ export async function handleGoogleSignIn(response) {
     try {
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
       console.log('✅ Google sign-in successful:', payload.email);
-      
+
       // Store user info in localStorage for admin panel access
       localStorage.setItem('kc_google_user', JSON.stringify({
         email: payload.email,
@@ -137,7 +182,7 @@ export async function handleGoogleSignIn(response) {
         picture: payload.picture
       }));
       console.log('✅ User stored in localStorage');
-      
+
       // Try to sign in with Firebase (but don't block if it fails)
       try {
         const credential = GoogleAuthProvider.credential(null, response.credential);
@@ -147,7 +192,7 @@ export async function handleGoogleSignIn(response) {
       } catch (firebaseError) {
         console.warn('Firebase sign-in warning:', firebaseError.message);
       }
-      
+
       window.dispatchEvent(new CustomEvent('google-signin-success', {
         detail: {
           email: payload.email,
@@ -168,14 +213,14 @@ export async function handleGoogleSignIn(response) {
 export async function initializeGoogleSignIn(clientId) {
   return new Promise((resolve) => {
     window.handleGoogleSignInCallback = handleGoogleSignIn;
-    
+
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
     script.onload = () => {
       console.log('✅ Google SDK script loaded');
-      
+
       try {
         if (!window.google?.accounts?.id) {
           console.error('❌ window.google.accounts.id not available');
@@ -188,7 +233,7 @@ export async function initializeGoogleSignIn(clientId) {
           callback: window.handleGoogleSignInCallback,
           auto_select: false
         });
-        
+
         console.log('✅ Google SDK initialized');
         resolve(true);
       } catch (error) {
@@ -196,12 +241,12 @@ export async function initializeGoogleSignIn(clientId) {
         resolve(false);
       }
     };
-    
+
     script.onerror = () => {
       console.error('❌ Failed to load Google SDK script');
       resolve(false);
     };
-    
+
     document.head.appendChild(script);
   });
 }
