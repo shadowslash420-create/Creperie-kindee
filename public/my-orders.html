@@ -21,6 +21,8 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="median-styles.css">
+  <script src="median-fcm-bridge.js"></script>
   <script type="module" src="script.js"></script>
   <script>
     const LANG_KEY = 'kc_lang';
@@ -253,10 +255,10 @@
       try {
         const order = cachedOrders.find(o => o.id === orderId);
         if (!order) return;
-        
+
         await dbService.updateOrder(orderId, { status: newStatus });
         console.log('✅ Order status updated to:', newStatus);
-        
+
         // Refresh orders
         if (currentUser?.email) {
           loadUserOrders(currentUser.email);
@@ -269,22 +271,22 @@
 
     window.deleteCustomerOrder = async function(orderId, confirmMsg) {
       if (!confirm(confirmMsg)) return;
-      
+
       try {
         const t = getOrderTranslations();
         console.log('🗑️ Deleting customer order:', orderId);
-        
+
         await dbService.deleteOrder(orderId);
         console.log('✅ Order deleted successfully');
-        
+
         // Close modal
         window.closeOrderModal();
-        
+
         // Refresh orders
         if (currentUser?.email) {
           await loadUserOrders(currentUser.email);
         }
-        
+
         // Show success notification
         const notification = document.createElement('div');
         notification.style.cssText = `
@@ -302,7 +304,7 @@
         `;
         notification.textContent = '✅ ' + t.orderDeleted;
         document.body.appendChild(notification);
-        
+
         setTimeout(() => {
           notification.style.transition = 'opacity 0.3s';
           notification.style.opacity = '0';
@@ -322,11 +324,11 @@
 
         const email = auth.currentUser.email.toLowerCase().trim();
         const staffId = email.replace(/[^a-z0-9]/g, '_').substring(0, 64);
-        
+
         console.log('🔍 Checking if user is staff member...', email);
         const staff = await dbService.getAllStaff();
         const staffMember = staff.find(s => s.id === staffId);
-        
+
         if (staffMember) {
           console.log('👨‍💼 Staff member detected:', staffMember.role, '- Redirecting...');
           if (staffMember.role === 'Staff A') {
@@ -483,7 +485,7 @@
       // Create table
       const table = document.createElement('table');
       table.className = 'orders-table';
-      
+
       const thead = document.createElement('thead');
       const headerRow = document.createElement('tr');
       headerRow.innerHTML = `
@@ -560,7 +562,7 @@
     window.openOrderModal = function(order, t, lang) {
       isModalOpen = true;
       pendingUpdate = false;
-      
+
       const modal = document.getElementById('order-modal');
       const modalBody = document.getElementById('order-modal-body');
       const modalHeader = document.getElementById('order-modal-header');
@@ -710,7 +712,7 @@
       modalBody.onscroll = function() {
         const scrollTop = modalBody.scrollTop;
         const scrollDelta = scrollTop - lastScrollTop;
-        
+
         // Only trigger if scroll delta is significant (avoids jitter)
         if (Math.abs(scrollDelta) > scrollThreshold) {
           if (scrollDelta > 0 && scrollTop > 60) {
@@ -727,17 +729,17 @@
 
     window.closeOrderModal = function() {
       isModalOpen = false;
-      
+
       // Apply pending update if there was one
       if (pendingUpdate && cachedOrders) {
         displayOrders(cachedOrders);
         pendingUpdate = false;
       }
-      
+
       const modal = document.getElementById('order-modal');
       const modalBody = document.getElementById('order-modal-body');
       const modalHeader = document.getElementById('order-modal-header');
-      
+
       modal.style.display = 'none';
       modalBody.onscroll = null;
       modalHeader.classList.remove('hidden');
@@ -755,56 +757,56 @@
       const t = getOrderTranslations();
       const errorDiv = document.getElementById('search-error');
       const searchBtn = document.getElementById('search-btn');
-      
+
       errorDiv.style.display = 'none';
       errorDiv.textContent = '';
-      
+
       if (!phone) {
         errorDiv.textContent = t.phoneRequired;
         errorDiv.style.display = 'block';
         return;
       }
-      
+
       searchBtn.disabled = true;
       searchBtn.textContent = t.searching;
-      
+
       try {
         console.log('📞 Searching orders for phone:', phone);
-        
+
         // Clean up previous listener if exists
         if (orderListenerUnsubscribe) {
           orderListenerUnsubscribe();
           orderListenerUnsubscribe = null;
         }
-        
+
         // Get orders by phone
         const orders = await dbService.getOrdersByPhone(phone);
         console.log('✅ Orders loaded for phone:', orders.length);
-        
+
         cachedOrders = orders;
         currentSearchPhone = phone;
         displayOrders(orders);
-        
+
         // Set up real-time listener for this phone number
         orderListenerUnsubscribe = dbService.listenToOrdersByPhone(phone, (updatedOrders) => {
           console.log('📲 Real-time order update for phone:', updatedOrders.length, 'orders');
-          
+
           const previousOrders = cachedOrders || [];
           cachedOrders = updatedOrders;
-          
+
           // Check if there were any status changes
           const statusChanged = previousOrders.some((prevOrder) => {
             const newOrder = updatedOrders.find(o => o.id === prevOrder.id);
             return newOrder && newOrder.status !== prevOrder.status;
           });
-          
+
           if (statusChanged) {
             showStatusUpdateNotification(t.statusUpdated);
           }
-          
+
           displayOrders(updatedOrders);
         });
-        
+
       } catch (error) {
         console.error('Error searching orders:', error);
         errorDiv.textContent = t.errorFetching;
@@ -816,7 +818,7 @@
         searchBtn.textContent = t.searchBtn;
       }
     }
-    
+
     window.searchOrdersByPhone = searchOrdersByPhone;
 
     // Check for logged-in user and load their orders
@@ -848,13 +850,13 @@
         if (user && user.email) {
           console.log('✅ User logged in:', user.email);
           currentUser = user;
-          
+
           // Check if user is staff member and redirect if needed
           const isStaff = await checkStaffRoleAndRedirectOnLoad();
           if (isStaff) {
             return; // User was redirected, stop here
           }
-          
+
           authBtn.textContent = '👤 ' + user.email.split('@')[0];
           console.log('📦 Loading orders for:', user.email);
           showLoader();
