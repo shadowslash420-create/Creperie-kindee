@@ -190,35 +190,6 @@
       font-size: 18px;
     }
 
-    .auth-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 24px;
-      background: var(--light-cream);
-      padding: 4px;
-      border-radius: 12px;
-    }
-
-    .auth-tab {
-      flex: 1;
-      padding: 12px;
-      background: transparent;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      color: var(--text-secondary);
-    }
-
-    .auth-tab.active {
-      background: #ffffff;
-      color: #E30613;
-      box-shadow: 0 2px 4px rgba(227,6,19,0.2);
-      border: 2px solid #E30613;
-    }
-
     .auth-mode-toggle {
       display: flex;
       gap: 8px;
@@ -308,11 +279,6 @@
       <h1 class="login-title">مرحباً بك</h1>
       <p class="login-description">سجل الدخول للاستمتاع بتجربة مخصصة وتتبع طلباتك</p>
 
-      <div class="auth-tabs">
-        <button class="auth-tab active" onclick="switchAuthTab('email')">البريد الإلكتروني</button>
-        <button class="auth-tab" onclick="switchAuthTab('google')">Google</button>
-      </div>
-
       <div class="auth-form-container" id="email-auth-form">
         <div class="auth-mode-toggle">
           <button class="mode-btn active" id="signin-mode-btn" onclick="switchMode('signin')">تسجيل الدخول</button>
@@ -339,10 +305,6 @@
         </form>
       </div>
 
-      <div class="auth-form-container" id="google-auth-form" style="display:none;">
-        <div id="google-signin-btn" style="display:flex;justify-content:center;margin:20px 0"></div>
-      </div>
-
       <div class="benefits">
         <div class="benefit-item">
           <span class="benefit-icon">✓</span>
@@ -367,64 +329,9 @@
   </div>
 
   <script type="module">
-    import { initializeGoogleSignIn, renderGoogleSignInButton, getUserInfoFromCredential, signInWithEmail, signUpWithEmail } from './auth.js';
+    import { signInWithEmail, signUpWithEmail } from './auth.js';
 
     let currentMode = 'signin';
-    const GOOGLE_CLIENT_ID = '447252216729-s339gl45f1abi32l17jt34f1nujjaddq.apps.googleusercontent.com';
-    
-    // Initialize Google Sign-In when Google tab is clicked
-    const initGoogleSignIn = async () => {
-      console.log('📱 Initializing native Google Sign-In...');
-      const success = await initializeGoogleSignIn(GOOGLE_CLIENT_ID);
-      if (success) {
-        const rendered = renderGoogleSignInButton('google-signin-btn', {
-          type: 'standard',
-          theme: 'outline',
-          size: 'large',
-          text: 'signin_with'
-        });
-        console.log('✅ Button rendered:', rendered);
-      } else {
-        console.error('❌ Failed to initialize Google Sign-In');
-      }
-    };
-    
-    // Only initialize when user switches to Google tab
-    window.addEventListener('load', () => {
-      // Check if user is already on Google tab (URL hash)
-      if (window.location.hash === '#google' || document.getElementById('google-auth-form')?.style.display !== 'none') {
-        initGoogleSignIn();
-      }
-    });
-    
-    // Listen for Google Sign-In success
-    window.addEventListener('google-signin-success', async (event) => {
-      console.log('🎉 Google sign-in event received');
-      const userData = event.detail;
-      try {
-        const redirectUrl = await window.getUserRedirectUrl(userData.email);
-        console.log('📍 Redirecting to:', redirectUrl);
-        window.location.href = redirectUrl;
-      } catch (error) {
-        console.error('Error after Google sign-in:', error);
-        alert('تعذر الانتقال إلى الصفحة المطلوبة');
-      }
-    });
-
-    // Tab switching
-    window.switchAuthTab = function(tab) {
-      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
-      
-      if (tab === 'email') {
-        document.getElementById('email-auth-form').style.display = 'block';
-        document.getElementById('google-auth-form').style.display = 'none';
-      } else {
-        document.getElementById('email-auth-form').style.display = 'none';
-        document.getElementById('google-auth-form').style.display = 'block';
-        setTimeout(initGoogleSignIn, 100);
-      }
-    };
 
     // Mode switching (sign in vs sign up)
     window.switchMode = function(mode) {
