@@ -19,36 +19,45 @@ async function initializeMessaging() {
 
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) {
-    console.warn('Service workers not supported');
+    console.warn('⚠️ Service workers not supported in this browser');
     return null;
   }
 
   try {
+    console.log('🔧 Checking for existing service worker registration...');
+    
     // Try to unregister any existing service worker first
     try {
       const existing = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
       if (existing) {
         await existing.unregister();
-        console.log('Unregistered old service worker');
+        console.log('🗑️ Unregistered old service worker');
       }
     } catch (e) {
-      // No existing registration, that's fine
+      console.log('ℹ️ No existing service worker to unregister');
     }
 
+    console.log('📝 Registering service worker at /firebase-messaging-sw.js...');
+    
     // Register the service worker
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
       scope: '/'
     });
-    console.log('✅ Service Worker registered:', registration.scope);
+    console.log('✅ Service Worker registered successfully');
+    console.log('   Scope:', registration.scope);
+    console.log('   Active:', registration.active ? 'Yes' : 'No');
+    console.log('   Installing:', registration.installing ? 'Yes' : 'No');
 
     // Fetch and send config to service worker
     try {
+      console.log('📡 Fetching Firebase config for service worker...');
       const configResponse = await fetch('/api/firebase-config');
       if (!configResponse.ok) {
-        console.warn('Could not fetch Firebase config');
+        console.warn('⚠️ Could not fetch Firebase config:', configResponse.status);
         return registration;
       }
       const config = await configResponse.json();
+      console.log('✅ Firebase config fetched for service worker');
       
       // Send config to active worker
       if (registration.active) {
@@ -69,16 +78,24 @@ async function registerServiceWorker() {
         console.log('📨 Config sent to ready service worker');
       }
     } catch (configError) {
-      console.warn('Could not send config to service worker:', configError);
+      console.warn('⚠️ Could not send config to service worker:', configError.message);
     }
 
     return registration;
   } catch (error) {
     console.error('❌ Service Worker registration failed:', error);
-    if (error.message.includes('https')) {
+    console.error('   Error name:', error.name);
+    console.error('   Error message:', error.message);
+    
+    if (error.message.includes('https') || error.message.includes('insecure')) {
       console.error('ℹ️ Service Workers require HTTPS or localhost');
     }
-    return null;
+    
+    if (error.message.includes('not found') || error.message.includes('404')) {
+      console.error('ℹ️ Service worker file not found at /firebase-messaging-sw.js');
+    }
+    
+    throw error;
   }
 }
 
@@ -256,8 +273,16 @@ export function showInAppNotification(payload) {
 export async function initializeNotifications(vapidKey, userId = null) {
   try {
     console.log('🚀 Starting notification initialization...');
-    console.log('VAPID Key provided:', vapidKey ? 'Yes' : 'No');
+    console.log('VAPID Key provided:', vapidKey ? 'Yes (' + vapidKey.substring(0, 20) + '...)' : 'No');
     console.log('User ID:', userId || 'None');
+    console.log('Browser supports notifications:', 'Notification' in window);
+    console.log('Browser supports service workers:', 'serviceWorker' in navigator);
+    console.log('Current permission:', Notification.permission);
+    
+    if (!vapidKey) {
+      console.error('❌ No VAPID key provided');
+      return { success: false, reason: 'no_vapid_key', error: 'VAPID key is required' };
+    }
     
     const permissionResult = await requestNotificationPermission();
     
@@ -269,13 +294,18 @@ export async function initializeNotifications(vapidKey, userId = null) {
     console.log('✅ Permission granted, initializing messaging...');
     await initializeMessaging();
     
+    if (!messaging) {
+      console.error('❌ Firebase messaging not initialized');
+      return { success: false, reason: 'messaging_not_initialized', error: 'Firebase messaging failed to initialize' };
+    }
+    
     try {
       console.log('🎫 Getting FCM token...');
       const token = await getFCMToken(vapidKey);
       
       if (!token) {
         console.warn('⚠️ No token obtained');
-        return { success: true, token: null, partial: true };
+        return { success: false, reason: 'no_token', error: 'Failed to obtain FCM token' };
       }
 
       console.log('💾 Saving token to server...');
@@ -293,10 +323,12 @@ export async function initializeNotifications(vapidKey, userId = null) {
       return { success: true, token };
     } catch (tokenError) {
       console.error('❌ Error during token setup:', tokenError);
+      console.error('Token error stack:', tokenError.stack);
       return { success: false, reason: 'token_setup_error', error: tokenError.message };
     }
   } catch (error) {
     console.error('❌ Notification initialization error:', error);
+    console.error('Init error stack:', error.stack);
     return { success: false, reason: 'init_error', error: error.message };
   }
 }

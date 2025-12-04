@@ -199,7 +199,7 @@
   <script type="module" src="notifications.js" defer></script>
   <script>
     let notificationInitialized = false;
-    
+
     async function handleNotificationBellClick() {
       if (notificationInitialized) {
         showNotificationStatus();
@@ -207,10 +207,10 @@
       }
       showNotificationPermissionBanner();
     }
-    
+
     function showNotificationPermissionBanner() {
       if (document.querySelector('.notification-permission-banner')) return;
-      
+
       const banner = document.createElement('div');
       banner.className = 'notification-permission-banner';
       banner.innerHTML = `
@@ -229,17 +229,17 @@
       document.body.appendChild(banner);
       setTimeout(() => banner.classList.add('show'), 10);
     }
-    
+
     async function enableNotifications() {
       const banner = document.querySelector('.notification-permission-banner');
       if (banner) {
         banner.querySelector('.permission-btn-allow').textContent = 'جاري التفعيل...';
         banner.querySelector('.permission-btn-allow').disabled = true;
       }
-      
+
       try {
         console.log('🔔 Starting notification setup...');
-        
+
         // Check if running in Median app
         if (window.FCMBridge && window.FCMBridge.isMedianApp()) {
           console.log('📱 Running in Median app - using native notifications');
@@ -250,10 +250,10 @@
           if (banner) banner.remove();
           return;
         }
-        
+
         // Web notifications
         console.log('🌐 Running in browser - using web notifications');
-        
+
         // Get VAPID key
         const vapidResponse = await fetch('/api/vapid-key');
         if (!vapidResponse.ok) {
@@ -263,30 +263,57 @@
         }
         const { vapidKey } = await vapidResponse.json();
         console.log('✅ VAPID key retrieved');
-        
+
         // Initialize notifications
         if (window.notificationService && window.notificationService.initialize) {
           const result = await window.notificationService.initialize(vapidKey);
-          console.log('📱 Notification initialization result:', result);
-          
-          if (result.success) {
+          console.log('🔔 Notification initialization result:', result);
+
+          if (result && result.success) {
             notificationInitialized = true;
             localStorage.setItem('notifications_enabled', 'true');
             showNotificationSuccess();
+            if (banner) banner.remove();
           } else {
-            throw new Error(result.error || result.reason || 'Failed to initialize notifications');
+            const errorReason = result?.reason || result?.error || 'Unknown error';
+            console.error('❌ Initialization failed with reason:', errorReason);
+            throw new Error(`Notification setup failed: ${errorReason}`);
           }
         } else {
-          throw new Error('Notification service not available');
+          throw new Error('Notification service not loaded. Please refresh the page.');
         }
       } catch (error) {
-        console.error('❌ Notification setup error:', error);
-        showNotificationError(error.message || 'Unknown error');
+        console.error('❌ Notification setup failed:', error);
+        console.error('Error stack:', error.stack);
+
+        if (banner) {
+          const errorMsg = banner.querySelector('.permission-banner-text'); // Corrected selector
+          if (errorMsg) {
+            errorMsg.innerHTML = `
+              <div class="permission-banner-title" style="color: #e53e3e; font-weight: 600;">فشل تفعيل الإشعارات</div>
+              <div class="permission-banner-desc" style="font-size: 12px; margin-top: 4px;">خطأ: ${error.message}</div>
+            `;
+          }
+          banner.querySelector('.permission-btn-allow').textContent = 'إعادة المحاولة';
+          banner.querySelector('.permission-btn-allow').disabled = false;
+        }
+
+        // Show detailed error
+        const errorDetails = [
+          'فشل تفعيل الإشعارات',
+          '',
+          'الخطأ: ' + error.message,
+          '',
+          'يرجى التأكد من:',
+          '1. تفعيل الإشعارات في المتصفح',
+          '2. استخدام HTTPS',
+          '3. ضبط FIREBASE_VAPID_KEY في Vercel'
+        ].join('\n');
+
+        alert(errorDetails);
       }
-      
-      if (banner) banner.remove();
     }
-    
+
     function showNotificationSuccess() {
       const notification = document.createElement('div');
       notification.className = 'in-app-notification show';
@@ -305,13 +332,13 @@
         setTimeout(() => notification.remove(), 300);
       }, 4000);
     }
-    
+
     function showNotificationError(reason) {
       let message = 'حدث خطأ أثناء تفعيل الإشعارات';
       if (reason === 'denied') message = 'تم رفض إذن الإشعارات. يرجى تفعيلها من إعدادات المتصفح';
       if (reason === 'not_supported') message = 'المتصفح لا يدعم الإشعارات';
       if (reason === 'VAPID key not configured') message = 'الإشعارات غير متاحة حالياً';
-      
+
       const notification = document.createElement('div');
       notification.className = 'in-app-notification show';
       notification.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
@@ -330,7 +357,7 @@
         setTimeout(() => notification.remove(), 300);
       }, 5000);
     }
-    
+
     function showNotificationStatus() {
       const status = window.notificationService?.getPermissionStatus?.() || 'unknown';
       if (status === 'granted') {
@@ -343,7 +370,7 @@
         showNotificationPermissionBanner();
       }
     }
-    
+
     document.addEventListener('DOMContentLoaded', () => {
       if (localStorage.getItem('notifications_enabled') === 'true' && Notification.permission === 'granted') {
         notificationInitialized = true;
