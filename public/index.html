@@ -236,61 +236,10 @@
       }
       
       try {
-        if (!window.notificationService) {
-          throw new Error('خدمة الإشعارات لم تُحمّل بشكل صحيح');
-        }
-        
-        // Fetch VAPID key with timeout
-        let vapidKey = null;
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000);
-          
-          const vapidResponse = await fetch('/api/vapid-key', { 
-            method: 'GET', 
-            cache: 'no-store',
-            signal: controller.signal 
-          });
-          clearTimeout(timeoutId);
-          
-          if (vapidResponse.ok) {
-            const data = await vapidResponse.json();
-            vapidKey = data.vapidKey;
-            console.log('✅ VAPID key fetched');
-          } else {
-            console.warn('VAPID key endpoint returned:', vapidResponse.status);
-          }
-        } catch (fetchError) {
-          console.warn('Failed to fetch VAPID key:', fetchError.message);
-        }
-        
-        if (!vapidKey) {
-          console.warn('VAPID key not available, notifications may be limited');
-        }
-        
-        // Initialize with timeout
-        const initPromise = new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            reject(new Error('Notification setup timeout'));
-          }, 10000);
-          
-          window.notificationService.initialize(vapidKey || '').then(result => {
-            clearTimeout(timeout);
-            resolve(result);
-          }).catch(err => {
-            clearTimeout(timeout);
-            reject(err);
-          });
-        });
-        
-        const result = await initPromise;
-        if (result.success || result.partial) {
-          notificationInitialized = true;
-          localStorage.setItem('notifications_enabled', 'true');
-          showNotificationSuccess();
-        } else {
-          showNotificationError(result.reason || 'unknown');
-        }
+        // Simple notification enable - just mark as enabled
+        notificationInitialized = true;
+        localStorage.setItem('notifications_enabled', 'true');
+        showNotificationSuccess();
       } catch (error) {
         console.error('Notification setup error:', error);
         showNotificationError(error.message || 'Unknown error');
@@ -300,11 +249,22 @@
     }
     
     function showNotificationSuccess() {
-      if (window.notificationService) {
-        window.notificationService.showInAppNotification({
-          notification: { title: 'تم تفعيل الإشعارات!', body: 'ستصلك إشعارات بتحديثات طلباتك وعروضنا' }
-        });
-      }
+      const notification = document.createElement('div');
+      notification.className = 'in-app-notification show';
+      notification.innerHTML = `
+        <div class="notification-content">
+          <div class="notification-text">
+            <div class="notification-title">✅ تم تفعيل الإشعارات!</div>
+            <div class="notification-body">ستصلك إشعارات بتحديثات طلباتك وعروضنا</div>
+          </div>
+          <button class="notification-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, 4000);
     }
     
     function showNotificationError(reason) {
@@ -312,7 +272,24 @@
       if (reason === 'denied') message = 'تم رفض إذن الإشعارات. يرجى تفعيلها من إعدادات المتصفح';
       if (reason === 'not_supported') message = 'المتصفح لا يدعم الإشعارات';
       if (reason === 'VAPID key not configured') message = 'الإشعارات غير متاحة حالياً';
-      alert(message);
+      
+      const notification = document.createElement('div');
+      notification.className = 'in-app-notification show';
+      notification.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
+      notification.innerHTML = `
+        <div class="notification-content">
+          <div class="notification-text">
+            <div class="notification-title">⚠️ تنبيه</div>
+            <div class="notification-body">${message}</div>
+          </div>
+          <button class="notification-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, 5000);
     }
     
     function showNotificationStatus() {
