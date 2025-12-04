@@ -1,9 +1,9 @@
 import dbService from './db-service.js';
 import { getFirestoreInstance } from './firebase-config.js';
-import { 
-  collection, 
-  query, 
-  onSnapshot 
+import {
+  collection,
+  query,
+  onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 let menuCache = null;
@@ -199,7 +199,26 @@ async function setupMenuListener() {
 
 export async function placeOrderToFirebase(orderData) {
   try {
-    const orderId = await dbService.createOrder(orderData);
+    const docRef = await dbService.createOrder(orderData); // Assuming createOrder returns a DocumentReference
+    const orderId = docRef.id;
+    console.log('✅ Order saved to Firestore with ID:', orderId);
+
+    // Send notification to admin/staff
+    try {
+      await fetch('/api/send-order-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          customerName: orderData.name || orderData.firstName + ' ' + orderData.lastName,
+          total: orderData.total
+        })
+      });
+      console.log('📲 Notification sent to admin/staff');
+    } catch (notifError) {
+      console.warn('⚠️ Could not send notification:', notifError);
+    }
+
     return orderId;
   } catch (error) {
     console.error('Failed to place order to Firebase:', error);
