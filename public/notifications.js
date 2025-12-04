@@ -127,21 +127,32 @@ export async function getFCMToken(vapidKey) {
 
 export async function saveTokenToServer(token, userId = null) {
   try {
+    if (!token) {
+      console.warn('No token to save');
+      return false;
+    }
+    
     const response = await fetch('/api/save-fcm-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, userId })
+      body: JSON.stringify({ token, userId }),
+      timeout: 5000
     });
 
     if (!response.ok) {
-      throw new Error('Failed to save token');
+      console.error('Server returned:', response.status, response.statusText);
+      if (response.status === 500) {
+        console.warn('Server error saving token, but continuing');
+        return true;
+      }
+      throw new Error(`Failed to save token: ${response.status}`);
     }
 
-    console.log('FCM token saved to server');
+    console.log('✅ FCM token saved to server');
     return true;
   } catch (error) {
-    console.error('Error saving token:', error);
-    return false;
+    console.warn('Warning saving token to server:', error.message);
+    return true;
   }
 }
 
@@ -193,25 +204,39 @@ export function showInAppNotification(payload) {
 }
 
 export async function initializeNotifications(vapidKey, userId = null) {
-  const permissionResult = await requestNotificationPermission();
-  
-  if (!permissionResult.success) {
-    return { success: false, reason: permissionResult.reason };
+  try {
+    const permissionResult = await requestNotificationPermission();
+    
+    if (!permissionResult.success) {
+      return { success: false, reason: permissionResult.reason };
+    }
+
+    await initializeMessaging();
+    
+    try {
+      const token = await getFCMToken(vapidKey);
+      
+      if (!token) {
+        console.warn('No token obtained, but continuing with notifications');
+        return { success: true, token: null, partial: true };
+      }
+
+      const saved = await saveTokenToServer(token, userId);
+      if (!saved) {
+        console.warn('Token obtained but could not save to server');
+      }
+
+      setupForegroundMessageHandler();
+
+      return { success: true, token };
+    } catch (tokenError) {
+      console.error('Error during token setup:', tokenError);
+      return { success: false, reason: 'token_setup_error', error: tokenError.message };
+    }
+  } catch (error) {
+    console.error('Notification initialization error:', error);
+    return { success: false, reason: 'init_error', error: error.message };
   }
-
-  await initializeMessaging();
-  
-  const token = await getFCMToken(vapidKey);
-  
-  if (!token) {
-    return { success: false, reason: 'token_failed' };
-  }
-
-  await saveTokenToServer(token, userId);
-
-  setupForegroundMessageHandler();
-
-  return { success: true, token };
 }
 
 export function getNotificationPermissionStatus() {

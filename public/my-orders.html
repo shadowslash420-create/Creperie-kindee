@@ -229,6 +229,8 @@
     let currentSearchPhone = null;
     let currentUserRole = 'customer';
     let currentUser = null;
+    let isModalOpen = false;
+    let pendingUpdate = false;
 
     window.switchRole = function(role) {
       currentUserRole = role;
@@ -386,6 +388,14 @@
       // Set up real-time listener using dbService
       dbService.listenToOrdersByEmail(userEmail, (updatedOrders) => {
         console.log('📲 Real-time order update received:', updatedOrders.length, 'orders');
+
+        // If modal is open, just cache the update and don't re-render
+        if (isModalOpen) {
+          console.log('⏸️ Modal is open, queuing update...');
+          cachedOrders = updatedOrders;
+          pendingUpdate = true;
+          return;
+        }
 
         const previousOrders = cachedOrders || [];
         cachedOrders = updatedOrders;
@@ -548,6 +558,9 @@
     }
 
     window.openOrderModal = function(order, t, lang) {
+      isModalOpen = true;
+      pendingUpdate = false;
+      
       const modal = document.getElementById('order-modal');
       const modalBody = document.getElementById('order-modal-body');
       const modalHeader = document.getElementById('order-modal-header');
@@ -713,6 +726,14 @@
     }
 
     window.closeOrderModal = function() {
+      isModalOpen = false;
+      
+      // Apply pending update if there was one
+      if (pendingUpdate && cachedOrders) {
+        displayOrders(cachedOrders);
+        pendingUpdate = false;
+      }
+      
       const modal = document.getElementById('order-modal');
       const modalBody = document.getElementById('order-modal-body');
       const modalHeader = document.getElementById('order-modal-header');
