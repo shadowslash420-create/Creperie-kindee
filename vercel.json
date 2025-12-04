@@ -56,6 +56,14 @@
     "api/save-fcm-token.js": {
       "memory": 128,
       "maxDuration": 10
+    },
+    "api/send-order-notification.js": {
+      "memory": 128,
+      "maxDuration": 10
+    },
+    "api/notify-new-order.js": {
+      "memory": 128,
+      "maxDuration": 10
     }
   }
 }
