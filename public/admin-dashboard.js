@@ -637,9 +637,27 @@ async function updateOrderStatus(orderId, newStatus) {
   try {
     console.log('🔄 Updating order status:', orderId, '→', newStatus);
     if (!window.dbService) throw new Error('dbService not available');
+    
+    // Get order data before update
+    const order = state.orders.find(o => o.id === orderId);
+    
+    // Update in database
     await window.dbService.updateOrder(orderId, { status: newStatus });
     await loadOrdersData();
     renderOrdersList();
+    
+    // Send notification to customer
+    if (order && order.userId) {
+      setTimeout(() => {
+        notifyCustomerOrderStatus(orderId, newStatus, order.userId, order.customerName || 'Customer')
+          .then(success => {
+            if (success) {
+              showAdminNotification('✓ Notification Sent', `Customer notified: Order ${orderId} → ${newStatus}`, 'success');
+            }
+          })
+          .catch(err => console.warn('Notification error:', err));
+      }, 500);
+    }
     
     // Update dashboard statistics if on dashboard section
     if (state.currentSection === 'dashboard') {
@@ -854,6 +872,17 @@ async function handleAdminLogin(e) {
 
     // Load dashboard data
     await initializeDashboard();
+    
+    // Setup notifications for admin/staff
+    try {
+      const notifEnabled = await setupAdminNotifications();
+      if (notifEnabled) {
+        console.log('🔔 Admin notifications enabled');
+        showAdminNotification('✓ Notifications Enabled', 'You will receive order updates', 'success');
+      }
+    } catch (notifError) {
+      console.warn('⚠️ Could not setup notifications:', notifError);
+    }
 
     console.log('✅ Admin dashboard loaded');
   } catch (error) {
