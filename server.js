@@ -378,6 +378,84 @@ app.post('/api/notify-order-status', async (req, res) => {
   }
 });
 
+// Notify admin when customer places new order
+app.post('/api/notify-admin-new-order', async (req, res) => {
+  try {
+    const { orderId, customerName, orderTotal, itemCount } = req.body;
+
+    if (!orderId || !customerName) {
+      return res.status(400).json({ error: 'Order ID and customer name are required' });
+    }
+
+    if (!adminDb) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    // Get all admin tokens (admins have null or 'admin' userId)
+    const snapshot = await adminDb.collection('fcm_tokens')
+      .where('active', '==', true)
+      .get();
+
+    const adminTokens = snapshot.docs
+      .map(doc => doc.data().token)
+      .filter(token => token); // Filter out any undefined
+
+    if (adminTokens.length === 0) {
+      console.log('⚠️ No admin tokens found for new order notification');
+      return res.json({ success: true, sent: 0, message: 'No admin tokens found' });
+    }
+
+    const message = {
+      notification: {
+        title: 'طلب جديد! 🍽️',
+        body: `طلب جديد من ${customerName} - ${itemCount || 'عدة'} عناصر - ${orderTotal || 'بدون سعر'}`
+      },
+      data: {
+        orderId,
+        customerName,
+        type: 'new_order',
+        url: `/admin.html#orders`,
+        timestamp: Date.now().toString()
+      }
+    };
+
+    let successCount = 0;
+    let failureCount = 0;
+    const invalidTokens = [];
+
+    for (const token of adminTokens) {
+      try {
+        await admin.messaging().send({ ...message, token });
+        successCount++;
+        console.log(`📱 Admin notification sent for order #${orderId}`);
+      } catch (error) {
+        failureCount++;
+        console.error(`Error sending admin notification: ${error.message}`);
+        if (error.code === 'messaging/registration-token-not-registered' ||
+            error.code === 'messaging/invalid-registration-token') {
+          invalidTokens.push(token);
+        }
+      }
+    }
+
+    // Mark invalid tokens as inactive
+    for (const token of invalidTokens) {
+      await adminDb.collection('fcm_tokens').doc(token).update({ active: false });
+    }
+
+    console.log(`✅ Admin notifications: ${successCount} sent, ${failureCount} failed for order #${orderId}`);
+    res.json({
+      success: true,
+      sent: successCount,
+      failed: failureCount,
+      invalidTokensRemoved: invalidTokens.length
+    });
+  } catch (error) {
+    console.error('Error notifying admin:', error);
+    res.status(500).json({ error: 'Failed to notify admin' });
+  }
+});
+
 // Export admin instances for use in other modules
 module.exports.adminApp = adminApp;
 module.exports.adminDb = adminDb;

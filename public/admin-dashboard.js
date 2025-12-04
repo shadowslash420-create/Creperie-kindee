@@ -28,6 +28,22 @@ function showAdminNotification(title, message, type = 'info') {
   setTimeout(() => div.remove(), 4000);
 }
 
+// Save admin FCM token when token is available
+async function saveAdminFCMToken(token) {
+  try {
+    const response = await fetch('/api/save-fcm-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, userId: null })
+    });
+    console.log('💾 Admin FCM token saved');
+    return response.ok;
+  } catch (error) {
+    console.warn('Error saving admin FCM token:', error);
+    return false;
+  }
+}
+
 // Setup admin notifications on login (handles Median & web)
 async function setupAdminNotifications() {
   try {
@@ -39,6 +55,19 @@ async function setupAdminNotifications() {
     }
     if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
       const perm = await Notification.requestPermission();
+      if (perm === 'granted') {
+        // Get FCM token and save it
+        if (window.notificationService && window.notificationService.initialize) {
+          const vapidResponse = await fetch('/api/vapid-key');
+          if (vapidResponse.ok) {
+            const { vapidKey } = await vapidResponse.json();
+            const result = await window.notificationService.initialize(vapidKey);
+            if (result && result.success && result.token) {
+              await saveAdminFCMToken(result.token);
+            }
+          }
+        }
+      }
       return perm === 'granted';
     }
     return true;

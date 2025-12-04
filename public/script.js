@@ -2603,6 +2603,19 @@ function checkoutFlowOriginal(){
 
     try {
       const orderId = await placeOrderToFirebase(order); // Use original function call
+      
+      // Notify admins of new order
+      fetch('/api/notify-admin-new-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          customerName: name,
+          orderTotal: total.toFixed(2) + ' DZD',
+          itemCount: cartItems.length
+        })
+      }).catch(e => console.warn('Admin notification failed (non-blocking):', e));
+      
       cart = []; // Clear cart using original cart variable
       saveCart(); // Use original saveCart function
       closeCheckoutModal();
