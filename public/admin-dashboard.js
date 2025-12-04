@@ -1,6 +1,53 @@
 /* ==================== CREPERIE KINDER ADMIN DASHBOARD ==================== */
 /* Works with classic script loading - all functions are exposed to window */
 
+// ==================== ADMIN NOTIFICATIONS ====================
+
+// Send notification to customer when order status changes
+async function notifyCustomerOrderStatus(orderId, status, userId, customerName) {
+  try {
+    const response = await fetch('/api/notify-order-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, status, userId, customerName })
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    return false;
+  }
+}
+
+// Show in-app notification for admin
+function showAdminNotification(title, message, type = 'info') {
+  const bgColor = type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1';
+  const div = document.createElement('div');
+  div.style.cssText = `position:fixed;top:20px;right:20px;background:${bgColor};color:white;padding:16px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-weight:600;`;
+  div.innerHTML = `<div style="font-weight:600;">${title}</div><div style="font-size:14px;opacity:0.95;margin-top:4px;">${message}</div>`;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 4000);
+}
+
+// Setup admin notifications on login (handles Median & web)
+async function setupAdminNotifications() {
+  try {
+    console.log('🔔 Setting up admin notifications...');
+    if (window.FCMBridge && window.FCMBridge.isMedianApp && window.FCMBridge.isMedianApp()) {
+      console.log('📱 Running in Median - requesting FCM token');
+      if (window.FCMBridge.requestToken) window.FCMBridge.requestToken();
+      return true;
+    }
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      const perm = await Notification.requestPermission();
+      return perm === 'granted';
+    }
+    return true;
+  } catch (error) {
+    console.warn('Notification setup error:', error);
+    return true;
+  }
+}
+
 // ==================== STATE MANAGEMENT ====================
 const state = {
   currentSection: 'dashboard',
