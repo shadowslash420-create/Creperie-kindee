@@ -1,0 +1,115 @@
+<script>
+/* ---------- Median FCM JavaScript Bridge ---------- */
+
+const FCMBridge = (() => {
+    let fcmToken = null;
+
+    /** Send messages to native */
+    function sendToNative(action, payload = {}) {
+        if (window.MedianBridge && window.MedianBridge.postMessage) {
+            window.MedianBridge.postMessage(JSON.stringify({ action, payload }));
+        } else {
+            console.warn("MedianBridge not available!");
+        }
+    }
+
+    /** Request FCM token from native */
+    function requestToken() {
+        sendToNative("getFCMToken");
+    }
+
+    /** Handle incoming messages from native */
+    function handleNativeMessage(data) {
+        console.log("Native message received:", data);
+
+        if (data.action === "fcmToken") {
+            fcmToken = data.payload.token;
+            console.log("FCM Token received:", fcmToken);
+
+            // Store locally
+            localStorage.setItem("fcmToken", fcmToken);
+
+            // Send token to backend
+            sendTokenToServer(fcmToken);
+        }
+
+        if (data.action === "notification") {
+            // Example: display notification in-page
+            displayNotification(data.payload.title, data.payload.body);
+        }
+    }
+
+    /** Send token to your backend */
+    function sendTokenToServer(token) {
+        fetch("https://creperie-kindee.vercel.app/api/save-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token })
+        }).then(res => console.log("Token sent to server:", res.status))
+          .catch(err => console.error("Error sending token:", err));
+    }
+
+    /** Display in-page notification (optional) */
+    function displayNotification(title, body) {
+        const container = document.getElementById("notification-container") || createContainer();
+        const el = document.createElement("div");
+        el.className = "fcm-notification";
+        el.innerHTML = `<strong>${title}</strong><p>${body}</p>`;
+        container.appendChild(el);
+
+        setTimeout(() => el.remove(), 5000);
+    }
+
+    function createContainer() {
+        const container = document.createElement("div");
+        container.id = "notification-container";
+        container.style.position = "fixed";
+        container.style.top = "10px";
+        container.style.right = "10px";
+        container.style.width = "300px";
+        container.style.zIndex = 9999;
+        document.body.appendChild(container);
+        return container;
+    }
+
+    /** Trigger native toast */
+    function showToast(message) {
+        sendToNative("showToast", { message });
+    }
+
+    /** Trigger native page refresh */
+    function refreshPage() {
+        sendToNative("refreshPage");
+    }
+
+    /** Public API */
+    return {
+        requestToken,
+        handleNativeMessage,
+        showToast,
+        refreshPage,
+        getToken: () => fcmToken || localStorage.getItem("fcmToken")
+    };
+})();
+
+/* --- Setup: Listen for native messages --- */
+window.onNativeMessage = FCMBridge.handleNativeMessage;
+
+/* --- Auto-request FCM token on page load --- */
+document.addEventListener("DOMContentLoaded", () => {
+    FCMBridge.requestToken();
+});
+</script>
+
+<style>
+/* Optional notification styling */
+.fcm-notification {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    box-shadow: 0px 2px 4px rgba(0,0,0,0.2);
+    font-family: Arial, sans-serif;
+}
+</style>
