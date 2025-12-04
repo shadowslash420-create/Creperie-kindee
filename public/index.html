@@ -240,10 +240,41 @@
       try {
         console.log('🔔 Starting notification setup...');
 
-        // Check if running in Median app
-        if (window.FCMBridge && window.FCMBridge.isMedianApp()) {
-          console.log('📱 Running in Median app - using native notifications');
-          window.FCMBridge.requestToken();
+        // Check if running in Median app (uses OneSignal)
+        if (typeof median !== 'undefined' && median.onesignal) {
+          console.log('📱 Running in Median app - using OneSignal notifications');
+          try {
+            // Request push notification permission via Median's OneSignal bridge
+            median.onesignal.push.register();
+            
+            // Get OneSignal info
+            const info = await median.onesignal.info();
+            console.log('📱 OneSignal info:', info);
+            
+            if (info && info.oneSignalUserId) {
+              console.log('✅ OneSignal User ID:', info.oneSignalUserId);
+              notificationInitialized = true;
+              localStorage.setItem('notifications_enabled', 'true');
+              localStorage.setItem('onesignal_user_id', info.oneSignalUserId);
+              showNotificationSuccess();
+              if (banner) banner.remove();
+              return;
+            }
+          } catch (medianError) {
+            console.error('Median OneSignal error:', medianError);
+          }
+          
+          // Even if we couldn't get the ID, notifications may still work
+          notificationInitialized = true;
+          localStorage.setItem('notifications_enabled', 'true');
+          showNotificationSuccess();
+          if (banner) banner.remove();
+          return;
+        }
+        
+        // Legacy check for older Median versions or FCMBridge
+        if (window.gonative || window.median || (typeof gonative !== 'undefined')) {
+          console.log('📱 Running in Median/GoNative app - native notifications');
           notificationInitialized = true;
           localStorage.setItem('notifications_enabled', 'true');
           showNotificationSuccess();

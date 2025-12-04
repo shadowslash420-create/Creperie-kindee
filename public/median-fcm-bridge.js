@@ -1,21 +1,99 @@
 
-/* ---------- Median FCM JavaScript Bridge ---------- */
+/* ---------- Median Push Notification Bridge ---------- */
 
 const FCMBridge = (() => {
     let fcmToken = null;
+    let oneSignalUserId = null;
 
-    /** Send messages to native */
+    /** Check if running in Median wrapper (OneSignal approach) */
+    function isMedianApp() {
+        return typeof median !== 'undefined' || 
+               typeof gonative !== 'undefined' || 
+               typeof window.median !== 'undefined' ||
+               typeof window.gonative !== 'undefined' ||
+               typeof window.MedianBridge !== 'undefined';
+    }
+
+    /** Check if OneSignal is available */
+    function hasOneSignal() {
+        return typeof median !== 'undefined' && median.onesignal;
+    }
+
+    /** Request push notification permission and token */
+    async function requestToken() {
+        console.log('📱 FCMBridge: Requesting notification token...');
+        
+        // Try Median OneSignal first
+        if (hasOneSignal()) {
+            console.log('📱 Using Median OneSignal bridge');
+            try {
+                // Register for push notifications
+                median.onesignal.push.register();
+                
+                // Try to get OneSignal info
+                const info = await getOneSignalInfo();
+                if (info && info.oneSignalUserId) {
+                    oneSignalUserId = info.oneSignalUserId;
+                    console.log('✅ OneSignal User ID:', oneSignalUserId);
+                    localStorage.setItem('onesignal_user_id', oneSignalUserId);
+                    
+                    if (info.oneSignalPushToken) {
+                        fcmToken = info.oneSignalPushToken;
+                        localStorage.setItem('fcmToken', fcmToken);
+                        sendTokenToServer(fcmToken);
+                    }
+                    return true;
+                }
+            } catch (err) {
+                console.warn('OneSignal registration error:', err);
+            }
+        }
+        
+        // Fallback to legacy MedianBridge
+        if (window.MedianBridge && window.MedianBridge.postMessage) {
+            console.log('📱 Using legacy MedianBridge');
+            sendToNative("getFCMToken");
+            return true;
+        }
+        
+        console.log('⚠️ No Median notification bridge available');
+        return false;
+    }
+
+    /** Get OneSignal info with promise wrapper */
+    function getOneSignalInfo() {
+        return new Promise((resolve) => {
+            if (!hasOneSignal()) {
+                resolve(null);
+                return;
+            }
+            
+            try {
+                // Try promise-based API first
+                if (median.onesignal.info && typeof median.onesignal.info === 'function') {
+                    median.onesignal.info()
+                        .then(info => resolve(info))
+                        .catch(() => resolve(null));
+                } else {
+                    resolve(null);
+                }
+            } catch (err) {
+                console.warn('Error getting OneSignal info:', err);
+                resolve(null);
+            }
+            
+            // Timeout fallback
+            setTimeout(() => resolve(null), 3000);
+        });
+    }
+
+    /** Send messages to native (legacy) */
     function sendToNative(action, payload = {}) {
         if (window.MedianBridge && window.MedianBridge.postMessage) {
             window.MedianBridge.postMessage(JSON.stringify({ action, payload }));
         } else {
             console.warn("MedianBridge not available!");
         }
-    }
-
-    /** Request FCM token from native */
-    function requestToken() {
-        sendToNative("getFCMToken");
     }
 
     /** Handle incoming messages from native */
@@ -25,16 +103,11 @@ const FCMBridge = (() => {
         if (data.action === "fcmToken") {
             fcmToken = data.payload.token;
             console.log("FCM Token received:", fcmToken);
-
-            // Store locally
             localStorage.setItem("fcmToken", fcmToken);
-
-            // Send token to backend
             sendTokenToServer(fcmToken);
         }
 
         if (data.action === "notification") {
-            // Display notification in-page using existing notification system
             if (window.notificationService && window.notificationService.showInAppNotification) {
                 window.notificationService.showInAppNotification({
                     notification: {
@@ -50,6 +123,8 @@ const FCMBridge = (() => {
 
     /** Send token to your backend */
     async function sendTokenToServer(token) {
+        if (!token) return;
+        
         try {
             const response = await fetch('/api/save-fcm-token', {
                 method: 'POST',
@@ -58,7 +133,7 @@ const FCMBridge = (() => {
             });
             
             if (response.ok) {
-                console.log("✅ FCM token saved to server");
+                console.log("✅ Push token saved to server");
             } else {
                 console.error("Failed to save token:", response.status);
             }
@@ -74,7 +149,6 @@ const FCMBridge = (() => {
         el.className = "fcm-notification";
         el.innerHTML = `<strong>${title}</strong><p>${body}</p>`;
         container.appendChild(el);
-
         setTimeout(() => el.remove(), 5000);
     }
 
@@ -100,11 +174,6 @@ const FCMBridge = (() => {
         sendToNative("refreshPage");
     }
 
-    /** Check if running in Median wrapper */
-    function isMedianApp() {
-        return typeof window.MedianBridge !== 'undefined';
-    }
-
     /** Public API */
     return {
         requestToken,
@@ -112,18 +181,32 @@ const FCMBridge = (() => {
         showToast,
         refreshPage,
         isMedianApp,
-        getToken: () => fcmToken || localStorage.getItem("fcmToken")
+        hasOneSignal,
+        getOneSignalInfo,
+        getToken: () => fcmToken || localStorage.getItem("fcmToken"),
+        getOneSignalUserId: () => oneSignalUserId || localStorage.getItem("onesignal_user_id")
     };
 })();
 
 /* --- Setup: Listen for native messages --- */
 window.onNativeMessage = FCMBridge.handleNativeMessage;
 
-/* --- Auto-request FCM token on page load --- */
+/* --- Callback for OneSignal info (legacy) --- */
+window.median_onesignal_info = function(info) {
+    console.log('📱 OneSignal info callback:', info);
+    if (info && info.oneSignalUserId) {
+        localStorage.setItem('onesignal_user_id', info.oneSignalUserId);
+    }
+    if (info && info.oneSignalPushToken) {
+        localStorage.setItem('fcmToken', info.oneSignalPushToken);
+    }
+};
+
+/* --- Auto-request token on page load --- */
 document.addEventListener("DOMContentLoaded", () => {
     if (FCMBridge.isMedianApp()) {
-        console.log("📱 Running in Median app wrapper - requesting FCM token");
-        FCMBridge.requestToken();
+        console.log("📱 Running in Median app wrapper");
+        // Don't auto-request - let user click the notification button
     } else {
         console.log("🌐 Running in web browser - using web notifications");
     }
