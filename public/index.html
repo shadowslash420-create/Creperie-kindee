@@ -236,21 +236,35 @@
       }
       
       try {
-        const vapidResponse = await fetch('/api/vapid-key');
-        if (!vapidResponse.ok) {
-          throw new Error('VAPID key not configured');
-        }
-        const { vapidKey } = await vapidResponse.json();
-        
-        if (window.notificationService) {
-          const result = await window.notificationService.initialize(vapidKey);
-          if (result.success) {
-            notificationInitialized = true;
-            localStorage.setItem('notifications_enabled', 'true');
-            showNotificationSuccess();
+        // Fetch VAPID key
+        let vapidKey = null;
+        try {
+          const vapidResponse = await fetch('/api/vapid-key', { method: 'GET', cache: 'no-store' });
+          if (vapidResponse.ok) {
+            const data = await vapidResponse.json();
+            vapidKey = data.vapidKey;
           } else {
-            showNotificationError(result.reason);
+            console.warn('VAPID key endpoint returned:', vapidResponse.status);
           }
+        } catch (fetchError) {
+          console.warn('Failed to fetch VAPID key:', fetchError);
+        }
+        
+        if (!vapidKey) {
+          throw new Error('الإشعارات غير متاحة حالياً. يرجى المحاولة لاحقاً.');
+        }
+        
+        if (!window.notificationService) {
+          throw new Error('خدمة الإشعارات لم تُحمّل بشكل صحيح');
+        }
+        
+        const result = await window.notificationService.initialize(vapidKey);
+        if (result.success) {
+          notificationInitialized = true;
+          localStorage.setItem('notifications_enabled', 'true');
+          showNotificationSuccess();
+        } else {
+          showNotificationError(result.reason);
         }
       } catch (error) {
         console.error('Notification setup error:', error);

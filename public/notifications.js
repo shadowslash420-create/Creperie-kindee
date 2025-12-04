@@ -90,26 +90,38 @@ export async function getFCMToken(vapidKey) {
       throw new Error('Messaging not initialized');
     }
 
+    if (!vapidKey) {
+      throw new Error('VAPID key is required for push notifications');
+    }
+
     const registration = await registerServiceWorker();
     if (!registration) {
       throw new Error('Service worker registration failed');
     }
 
-    const token = await getToken(messaging, {
-      vapidKey: vapidKey,
-      serviceWorkerRegistration: registration
-    });
+    try {
+      const token = await getToken(messaging, {
+        vapidKey: vapidKey,
+        serviceWorkerRegistration: registration
+      });
 
-    if (token) {
-      console.log('FCM Token obtained:', token.substring(0, 20) + '...');
-      return token;
-    } else {
-      console.warn('No registration token available');
-      return null;
+      if (token) {
+        console.log('FCM Token obtained:', token.substring(0, 20) + '...');
+        return token;
+      } else {
+        console.warn('No registration token available - this may be a permissions issue');
+        throw new Error('Failed to get FCM token from Firebase');
+      }
+    } catch (fcmError) {
+      console.error('Firebase FCM error:', fcmError);
+      if (fcmError.message.includes('Unsupported')) {
+        throw new Error('Your browser does not support web push notifications');
+      }
+      throw fcmError;
     }
   } catch (error) {
     console.error('Error getting FCM token:', error);
-    return null;
+    throw error;
   }
 }
 
