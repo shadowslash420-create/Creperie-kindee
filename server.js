@@ -179,10 +179,13 @@ app.get('/api/firebase-config', (req, res) => {
 
 // Get VAPID key for web push
 app.get('/api/vapid-key', (req, res) => {
+  console.log('🔑 VAPID key requested');
   const vapidKey = process.env.FIREBASE_VAPID_KEY;
   if (!vapidKey) {
+    console.error('❌ VAPID key not configured in environment variables');
     return res.status(404).json({ error: 'VAPID key not configured' });
   }
+  console.log('✅ VAPID key found');
   res.json({ vapidKey });
 });
 
@@ -191,13 +194,19 @@ app.get('/api/vapid-key', (req, res) => {
 // Save FCM token
 app.post('/api/save-fcm-token', async (req, res) => {
   try {
+    console.log('📱 Received FCM token save request');
     const { token, userId } = req.body;
 
     if (!token) {
+      console.error('❌ No token provided');
       return res.status(400).json({ error: 'Token is required' });
     }
 
+    console.log('🔑 Token:', token.substring(0, 20) + '...');
+    console.log('👤 User ID:', userId || 'None');
+
     if (!adminDb) {
+      console.error('❌ Database not initialized');
       return res.status(500).json({ error: 'Database not initialized' });
     }
 

@@ -238,12 +238,47 @@
       }
       
       try {
-        // Simple notification enable - just mark as enabled
-        notificationInitialized = true;
-        localStorage.setItem('notifications_enabled', 'true');
-        showNotificationSuccess();
+        console.log('🔔 Starting notification setup...');
+        
+        // Check if running in Median app
+        if (window.FCMBridge && window.FCMBridge.isMedianApp()) {
+          console.log('📱 Running in Median app - using native notifications');
+          window.FCMBridge.requestToken();
+          notificationInitialized = true;
+          localStorage.setItem('notifications_enabled', 'true');
+          showNotificationSuccess();
+          if (banner) banner.remove();
+          return;
+        }
+        
+        // Web notifications
+        console.log('🌐 Running in browser - using web notifications');
+        
+        // Get VAPID key
+        const vapidResponse = await fetch('/api/vapid-key');
+        if (!vapidResponse.ok) {
+          throw new Error('Could not get VAPID key from server');
+        }
+        const { vapidKey } = await vapidResponse.json();
+        console.log('✅ VAPID key retrieved');
+        
+        // Initialize notifications
+        if (window.notificationService && window.notificationService.initialize) {
+          const result = await window.notificationService.initialize(vapidKey);
+          console.log('📱 Notification initialization result:', result);
+          
+          if (result.success) {
+            notificationInitialized = true;
+            localStorage.setItem('notifications_enabled', 'true');
+            showNotificationSuccess();
+          } else {
+            throw new Error(result.error || result.reason || 'Failed to initialize notifications');
+          }
+        } else {
+          throw new Error('Notification service not available');
+        }
       } catch (error) {
-        console.error('Notification setup error:', error);
+        console.error('❌ Notification setup error:', error);
         showNotificationError(error.message || 'Unknown error');
       }
       

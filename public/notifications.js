@@ -6,12 +6,13 @@ let notificationPermission = Notification.permission;
 
 async function initializeMessaging() {
   try {
+    console.log('🔔 Initializing Firebase Messaging...');
     const app = await getAppInstance();
     messaging = getMessaging(app);
-    console.log('Firebase Messaging initialized');
+    console.log('✅ Firebase Messaging initialized successfully');
     return messaging;
   } catch (error) {
-    console.error('Error initializing messaging:', error);
+    console.error('❌ Error initializing messaging:', error);
     return null;
   }
 }
@@ -82,39 +83,49 @@ async function registerServiceWorker() {
 }
 
 export async function requestNotificationPermission() {
+  console.log('🔔 Requesting notification permission...');
+  
   if (!('Notification' in window)) {
-    console.warn('Notifications not supported in this browser');
+    console.warn('⚠️ Notifications not supported in this browser');
     return { success: false, reason: 'not_supported' };
   }
 
+  console.log('Current permission status:', Notification.permission);
+
   if (Notification.permission === 'granted') {
+    console.log('✅ Permission already granted');
     return { success: true, permission: 'granted' };
   }
 
   if (Notification.permission === 'denied') {
+    console.warn('⚠️ Permission previously denied');
     return { success: false, reason: 'denied' };
   }
 
   try {
+    console.log('📱 Prompting user for permission...');
     const permission = await Notification.requestPermission();
     notificationPermission = permission;
     
     if (permission === 'granted') {
-      console.log('Notification permission granted');
+      console.log('✅ Notification permission granted');
       return { success: true, permission: 'granted' };
     } else {
-      console.log('Notification permission denied');
+      console.log('❌ Notification permission denied');
       return { success: false, reason: 'denied' };
     }
   } catch (error) {
-    console.error('Error requesting notification permission:', error);
+    console.error('❌ Error requesting notification permission:', error);
     return { success: false, reason: 'error', error };
   }
 }
 
 export async function getFCMToken(vapidKey) {
   try {
+    console.log('🔑 Getting FCM Token...');
+    
     if (!messaging) {
+      console.log('📱 Messaging not initialized, initializing now...');
       await initializeMessaging();
     }
 
@@ -123,13 +134,20 @@ export async function getFCMToken(vapidKey) {
     }
 
     if (!vapidKey) {
+      console.error('❌ No VAPID key provided');
       throw new Error('VAPID key is required for push notifications');
     }
+
+    console.log('✅ VAPID key available');
+    console.log('🔧 Registering service worker...');
 
     const registration = await registerServiceWorker();
     if (!registration) {
       throw new Error('Service worker registration failed');
     }
+
+    console.log('✅ Service worker registered');
+    console.log('🎫 Requesting FCM token from Firebase...');
 
     try {
       const token = await getToken(messaging, {
@@ -138,21 +156,21 @@ export async function getFCMToken(vapidKey) {
       });
 
       if (token) {
-        console.log('FCM Token obtained:', token.substring(0, 20) + '...');
+        console.log('✅ FCM Token obtained successfully:', token.substring(0, 20) + '...');
         return token;
       } else {
-        console.warn('No registration token available - this may be a permissions issue');
+        console.warn('⚠️ No registration token available');
         throw new Error('Failed to get FCM token from Firebase');
       }
     } catch (fcmError) {
-      console.error('Firebase FCM error:', fcmError);
-      if (fcmError.message.includes('Unsupported')) {
+      console.error('❌ Firebase FCM error:', fcmError);
+      if (fcmError.message && fcmError.message.includes('Unsupported')) {
         throw new Error('Your browser does not support web push notifications');
       }
       throw fcmError;
     }
   } catch (error) {
-    console.error('Error getting FCM token:', error);
+    console.error('❌ Error getting FCM token:', error);
     throw error;
   }
 }
@@ -237,36 +255,48 @@ export function showInAppNotification(payload) {
 
 export async function initializeNotifications(vapidKey, userId = null) {
   try {
+    console.log('🚀 Starting notification initialization...');
+    console.log('VAPID Key provided:', vapidKey ? 'Yes' : 'No');
+    console.log('User ID:', userId || 'None');
+    
     const permissionResult = await requestNotificationPermission();
     
     if (!permissionResult.success) {
+      console.log('❌ Permission denied:', permissionResult.reason);
       return { success: false, reason: permissionResult.reason };
     }
 
+    console.log('✅ Permission granted, initializing messaging...');
     await initializeMessaging();
     
     try {
+      console.log('🎫 Getting FCM token...');
       const token = await getFCMToken(vapidKey);
       
       if (!token) {
-        console.warn('No token obtained, but continuing with notifications');
+        console.warn('⚠️ No token obtained');
         return { success: true, token: null, partial: true };
       }
 
+      console.log('💾 Saving token to server...');
       const saved = await saveTokenToServer(token, userId);
       if (!saved) {
-        console.warn('Token obtained but could not save to server');
+        console.warn('⚠️ Token obtained but could not save to server');
+      } else {
+        console.log('✅ Token saved to server');
       }
 
+      console.log('👂 Setting up foreground message handler...');
       setupForegroundMessageHandler();
 
+      console.log('✅ Notification initialization complete!');
       return { success: true, token };
     } catch (tokenError) {
-      console.error('Error during token setup:', tokenError);
+      console.error('❌ Error during token setup:', tokenError);
       return { success: false, reason: 'token_setup_error', error: tokenError.message };
     }
   } catch (error) {
-    console.error('Notification initialization error:', error);
+    console.error('❌ Notification initialization error:', error);
     return { success: false, reason: 'init_error', error: error.message };
   }
 }
