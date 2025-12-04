@@ -236,39 +236,64 @@
       }
       
       try {
-        // Fetch VAPID key
-        let vapidKey = null;
-        try {
-          const vapidResponse = await fetch('/api/vapid-key', { method: 'GET', cache: 'no-store' });
-          if (vapidResponse.ok) {
-            const data = await vapidResponse.json();
-            vapidKey = data.vapidKey;
-          } else {
-            console.warn('VAPID key endpoint returned:', vapidResponse.status);
-          }
-        } catch (fetchError) {
-          console.warn('Failed to fetch VAPID key:', fetchError);
-        }
-        
-        if (!vapidKey) {
-          throw new Error('الإشعارات غير متاحة حالياً. يرجى المحاولة لاحقاً.');
-        }
-        
         if (!window.notificationService) {
           throw new Error('خدمة الإشعارات لم تُحمّل بشكل صحيح');
         }
         
-        const result = await window.notificationService.initialize(vapidKey);
-        if (result.success) {
+        // Fetch VAPID key with timeout
+        let vapidKey = null;
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          
+          const vapidResponse = await fetch('/api/vapid-key', { 
+            method: 'GET', 
+            cache: 'no-store',
+            signal: controller.signal 
+          });
+          clearTimeout(timeoutId);
+          
+          if (vapidResponse.ok) {
+            const data = await vapidResponse.json();
+            vapidKey = data.vapidKey;
+            console.log('✅ VAPID key fetched');
+          } else {
+            console.warn('VAPID key endpoint returned:', vapidResponse.status);
+          }
+        } catch (fetchError) {
+          console.warn('Failed to fetch VAPID key:', fetchError.message);
+        }
+        
+        if (!vapidKey) {
+          console.warn('VAPID key not available, notifications may be limited');
+        }
+        
+        // Initialize with timeout
+        const initPromise = new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Notification setup timeout'));
+          }, 10000);
+          
+          window.notificationService.initialize(vapidKey || '').then(result => {
+            clearTimeout(timeout);
+            resolve(result);
+          }).catch(err => {
+            clearTimeout(timeout);
+            reject(err);
+          });
+        });
+        
+        const result = await initPromise;
+        if (result.success || result.partial) {
           notificationInitialized = true;
           localStorage.setItem('notifications_enabled', 'true');
           showNotificationSuccess();
         } else {
-          showNotificationError(result.reason);
+          showNotificationError(result.reason || 'unknown');
         }
       } catch (error) {
         console.error('Notification setup error:', error);
-        showNotificationError(error.message);
+        showNotificationError(error.message || 'Unknown error');
       }
       
       if (banner) banner.remove();

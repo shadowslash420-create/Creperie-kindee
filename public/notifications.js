@@ -23,28 +23,60 @@ async function registerServiceWorker() {
   }
 
   try {
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-    console.log('Service Worker registered:', registration.scope);
-
-    const config = await fetch('/api/firebase-config').then(r => r.json());
-    
-    if (registration.active) {
-      registration.active.postMessage({
-        type: 'FIREBASE_CONFIG',
-        config: config
-      });
+    // Try to unregister any existing service worker first
+    try {
+      const existing = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+      if (existing) {
+        await existing.unregister();
+        console.log('Unregistered old service worker');
+      }
+    } catch (e) {
+      // No existing registration, that's fine
     }
 
-    navigator.serviceWorker.ready.then((reg) => {
-      reg.active.postMessage({
-        type: 'FIREBASE_CONFIG',
-        config: config
-      });
+    // Register the service worker
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      scope: '/'
     });
+    console.log('✅ Service Worker registered:', registration.scope);
+
+    // Fetch and send config to service worker
+    try {
+      const configResponse = await fetch('/api/firebase-config');
+      if (!configResponse.ok) {
+        console.warn('Could not fetch Firebase config');
+        return registration;
+      }
+      const config = await configResponse.json();
+      
+      // Send config to active worker
+      if (registration.active) {
+        registration.active.postMessage({
+          type: 'FIREBASE_CONFIG',
+          config: config
+        });
+        console.log('📨 Config sent to active service worker');
+      }
+
+      // Also send when worker becomes ready
+      const ready = await navigator.serviceWorker.ready;
+      if (ready.active) {
+        ready.active.postMessage({
+          type: 'FIREBASE_CONFIG',
+          config: config
+        });
+        console.log('📨 Config sent to ready service worker');
+      }
+    } catch (configError) {
+      console.warn('Could not send config to service worker:', configError);
+    }
 
     return registration;
   } catch (error) {
-    console.error('Service Worker registration failed:', error);
+    console.error('❌ Service Worker registration failed:', error);
+    if (error.message.includes('https')) {
+      console.error('ℹ️ Service Workers require HTTPS or localhost');
+    }
     return null;
   }
 }
