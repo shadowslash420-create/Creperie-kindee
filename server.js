@@ -177,6 +177,198 @@ app.get('/api/firebase-config', (req, res) => {
   });
 });
 
+// Get VAPID key for web push
+app.get('/api/vapid-key', (req, res) => {
+  const vapidKey = process.env.FIREBASE_VAPID_KEY;
+  if (!vapidKey) {
+    return res.status(404).json({ error: 'VAPID key not configured' });
+  }
+  res.json({ vapidKey });
+});
+
+// ========== PUSH NOTIFICATION ENDPOINTS ==========
+
+// Save FCM token
+app.post('/api/save-fcm-token', async (req, res) => {
+  try {
+    const { token, userId } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Token is required' });
+    }
+
+    if (!adminDb) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    const tokenDoc = {
+      token,
+      userId: userId || null,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      active: true
+    };
+
+    await adminDb.collection('fcm_tokens').doc(token).set(tokenDoc, { merge: true });
+
+    console.log('📱 FCM token saved:', token.substring(0, 20) + '...');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving FCM token:', error);
+    res.status(500).json({ error: 'Failed to save token' });
+  }
+});
+
+// Send notification to specific user or all users
+app.post('/api/send-notification', async (req, res) => {
+  try {
+    const { title, body, icon, url, userId, sendToAll } = req.body;
+
+    if (!title || !body) {
+      return res.status(400).json({ error: 'Title and body are required' });
+    }
+
+    if (!adminDb) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    let tokens = [];
+
+    if (sendToAll) {
+      const snapshot = await adminDb.collection('fcm_tokens')
+        .where('active', '==', true)
+        .get();
+      tokens = snapshot.docs.map(doc => doc.data().token);
+    } else if (userId) {
+      const snapshot = await adminDb.collection('fcm_tokens')
+        .where('userId', '==', userId)
+        .where('active', '==', true)
+        .get();
+      tokens = snapshot.docs.map(doc => doc.data().token);
+    }
+
+    if (tokens.length === 0) {
+      return res.json({ success: true, sent: 0, message: 'No tokens found' });
+    }
+
+    const message = {
+      notification: {
+        title,
+        body,
+        ...(icon && { icon })
+      },
+      data: {
+        title,
+        body,
+        ...(url && { url }),
+        timestamp: Date.now().toString()
+      }
+    };
+
+    let successCount = 0;
+    let failureCount = 0;
+    const invalidTokens = [];
+
+    for (const token of tokens) {
+      try {
+        await admin.messaging().send({ ...message, token });
+        successCount++;
+      } catch (error) {
+        failureCount++;
+        if (error.code === 'messaging/registration-token-not-registered' ||
+            error.code === 'messaging/invalid-registration-token') {
+          invalidTokens.push(token);
+        }
+      }
+    }
+
+    for (const token of invalidTokens) {
+      await adminDb.collection('fcm_tokens').doc(token).update({ active: false });
+    }
+
+    console.log(`📨 Notifications sent: ${successCount} success, ${failureCount} failed`);
+    res.json({
+      success: true,
+      sent: successCount,
+      failed: failureCount,
+      invalidTokensRemoved: invalidTokens.length
+    });
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    res.status(500).json({ error: 'Failed to send notification' });
+  }
+});
+
+// Send order status notification
+app.post('/api/notify-order-status', async (req, res) => {
+  try {
+    const { orderId, status, userId, customerName } = req.body;
+
+    if (!orderId || !status) {
+      return res.status(400).json({ error: 'Order ID and status are required' });
+    }
+
+    const statusMessages = {
+      'pending': { title: 'طلب جديد', body: `تم استلام طلبك #${orderId}` },
+      'confirmed': { title: 'تم تأكيد الطلب', body: `تم تأكيد طلبك #${orderId} وجاري تحضيره` },
+      'preparing': { title: 'جاري التحضير', body: `طلبك #${orderId} قيد التحضير الآن` },
+      'ready': { title: 'طلبك جاهز!', body: `طلبك #${orderId} جاهز للاستلام` },
+      'delivered': { title: 'تم التوصيل', body: `تم توصيل طلبك #${orderId} بنجاح` },
+      'cancelled': { title: 'تم إلغاء الطلب', body: `تم إلغاء طلبك #${orderId}` }
+    };
+
+    const notification = statusMessages[status] || {
+      title: 'تحديث الطلب',
+      body: `تم تحديث حالة طلبك #${orderId}`
+    };
+
+    if (!adminDb) {
+      return res.status(500).json({ error: 'Database not initialized' });
+    }
+
+    let tokens = [];
+    if (userId) {
+      const snapshot = await adminDb.collection('fcm_tokens')
+        .where('userId', '==', userId)
+        .where('active', '==', true)
+        .get();
+      tokens = snapshot.docs.map(doc => doc.data().token);
+    }
+
+    if (tokens.length === 0) {
+      return res.json({ success: true, sent: 0, message: 'No tokens found for user' });
+    }
+
+    const message = {
+      notification: {
+        title: notification.title,
+        body: notification.body
+      },
+      data: {
+        orderId,
+        status,
+        url: `/my-orders.html?highlight=${orderId}`,
+        timestamp: Date.now().toString()
+      }
+    };
+
+    let successCount = 0;
+    for (const token of tokens) {
+      try {
+        await admin.messaging().send({ ...message, token });
+        successCount++;
+      } catch (error) {
+        console.error('Error sending to token:', error.message);
+      }
+    }
+
+    res.json({ success: true, sent: successCount });
+  } catch (error) {
+    console.error('Error sending order notification:', error);
+    res.status(500).json({ error: 'Failed to send notification' });
+  }
+});
+
 // Export admin instances for use in other modules
 module.exports.adminApp = adminApp;
 module.exports.adminDb = adminDb;
