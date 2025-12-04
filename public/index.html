@@ -257,7 +257,9 @@
         // Get VAPID key
         const vapidResponse = await fetch('/api/vapid-key');
         if (!vapidResponse.ok) {
-          throw new Error('Could not get VAPID key from server');
+          const errorData = await vapidResponse.json().catch(() => ({}));
+          console.error('❌ VAPID key error:', errorData);
+          throw new Error(errorData.message || 'Could not get VAPID key from server. Please configure FIREBASE_VAPID_KEY in Vercel.');
         }
         const { vapidKey } = await vapidResponse.json();
         console.log('✅ VAPID key retrieved');
