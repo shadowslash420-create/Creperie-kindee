@@ -250,6 +250,7 @@
     </div>
   </div>
 
+  <script src="median-fcm-bridge.js"></script>
   <script type="module">
     import dbService from './db-service.js';
     import { getAuthInstance } from './firebase-config.js';
@@ -262,7 +263,7 @@
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         const auth = await getAuthInstance();
-        
+
         // Setup auth state listener first
         auth.onAuthStateChanged(async (user) => {
           if (!user && pageLoaded) {
@@ -273,7 +274,7 @@
             // User is logged in, load data
             pageLoaded = true;
             console.log('User authenticated, loading staff data...');
-            
+
             // Enable notifications for staff
             try {
               const vapidResponse = await fetch('/api/vapid-key');
@@ -287,12 +288,12 @@
             } catch (error) {
               console.warn('⚠️ Could not enable staff notifications:', error);
             }
-            
+
             await loadStaffOrders();
             setupRealtimeListener();
           }
         });
-        
+
       } catch (error) {
         console.error('Error during initialization:', error);
       }
@@ -323,13 +324,13 @@
             const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
             return dateB - dateA;
           })[0];
-          
+
           if (newestOrder) {
             const message = `📦 طلب جديد / New Order! Customer: ${newestOrder.name || newestOrder.customerName || 'Guest'} | Total: ${(newestOrder.total || 0).toFixed(2)} DZD`;
             showNotification('Order', message);
           }
         }
-        
+
         initialOrderCount = updatedOrders.length;
         staffOrders = updatedOrders;
         renderOrdersTable();
@@ -373,10 +374,10 @@
     window.showOrderDetails = function(orderId) {
       console.log('📋 Show order details clicked for:', orderId);
       console.log('📋 Available orders:', staffOrders.length, staffOrders);
-      
+
       const order = staffOrders.find(o => o.id === orderId);
       console.log('📋 Found order:', order);
-      
+
       if (!order) {
         console.error('❌ Order not found:', orderId);
         alert('Order not found');
@@ -392,10 +393,10 @@
           <td style="text-align: right; font-weight: 600;">${((item.price || 0) * (item.qty || 1)).toFixed(2)} DZD</td>
         </tr>
       `).join('');
-      
+
       const html = `
         <h2 style="color: #E30613; margin-bottom: 20px; text-align: center;">📋 Order Details - تفاصيل الطلب</h2>
-        
+
         <div style="background: #f7fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
           <h3 style="color: #2d3748; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">👤 Customer Information</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; line-height: 1.6;">
@@ -453,7 +454,7 @@
           </div>
         </div>
       `;
-      
+
       document.getElementById('order-details-content').innerHTML = html;
       document.getElementById('order-details-modal').classList.add('show');
       console.log('✅ Modal shown');
@@ -553,7 +554,7 @@
       `;
       notification.innerHTML = `<strong>${title}:</strong> ${message}`;
       document.body.appendChild(notification);
-      
+
       // Auto remove after 5 seconds
       setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease-out';
