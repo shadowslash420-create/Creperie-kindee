@@ -378,6 +378,15 @@
     });
   </script>
   <!-- Global notification handler for all pages -->
+  <script type="module">
+    (async () => {
+      await import("./notifications.js");
+      if (window.notificationService?.ensureForegroundHandler) {
+        await window.notificationService.ensureForegroundHandler();
+        console.log("✅ Foreground handler active");
+      }
+    })();
+  </script>
   <script src="global-notifications.js"></script>
 </body>
 </html>

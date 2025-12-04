@@ -1,11 +1,21 @@
-// Global Notification Handler - Loads on all pages
-// Ensures customers see notifications everywhere, not just on one page
-
+// Global Notification Handler - Auto-setup on all pages after modules load
 (function() {
-  // Auto-initialize foreground message handler when notifications module is ready
-  if (window.notificationService && window.notificationService.ensureForegroundHandler) {
-    window.notificationService.ensureForegroundHandler()
-      .then(() => console.log('✅ Global foreground notification handler active'))
-      .catch(e => console.warn('⚠️ Could not activate global foreground handler:', e));
-  }
+  // Wait for modules to load then setup foreground handler
+  const setupHandler = async () => {
+    let attempts = 0;
+    const maxAttempts = 50; // 25 seconds
+    
+    while (attempts < maxAttempts) {
+      if (window.notificationService && typeof window.notificationService.ensureForegroundHandler === 'function') {
+        console.log('✅ Global foreground notification handler active');
+        await window.notificationService.ensureForegroundHandler();
+        return;
+      }
+      attempts++;
+      await new Promise(r => setTimeout(r, 500));
+    }
+    console.warn('⚠️ Notification service not available after 25 seconds');
+  };
+  
+  setupHandler().catch(e => console.warn('Global notification error:', e));
 })();

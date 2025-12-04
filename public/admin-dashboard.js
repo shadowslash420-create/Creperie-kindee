@@ -44,6 +44,38 @@ async function saveAdminFCMToken(token) {
   }
 }
 
+// Setup real-time order listener for admin
+async function setupAdminRealtimeOrders() {
+  try {
+    console.log('👂 Setting up real-time order listener for admin...');
+    if (!window.dbService) return;
+    
+    await window.dbService.init();
+    const db = await window.getFirestoreInstance();
+    const { collection, onSnapshot, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    
+    // Listen to orders collection for new orders
+    const ordersRef = collection(db, 'orders');
+    const q = query(ordersRef, orderBy('createdAt', 'desc'));
+    
+    onSnapshot(q, (snapshot) => {
+      console.log('📨 New orders detected, updating list...');
+      loadOrdersData().then(() => {
+        if (state.currentSection === 'orders') {
+          renderOrdersList();
+        }
+        renderDashboard(); // Update dashboard stats
+      });
+    }, (error) => {
+      console.warn('⚠️ Real-time listener error:', error);
+    });
+    
+    console.log('✅ Real-time order listener active');
+  } catch (error) {
+    console.warn('Could not setup real-time orders:', error);
+  }
+}
+
 // Setup admin notifications on login (handles Median & web)
 async function setupAdminNotifications() {
   try {
@@ -949,12 +981,13 @@ async function handleAdminLogin(e) {
     // Load dashboard data
     await initializeDashboard();
     
-    // Setup notifications for admin/staff
+    // Setup notifications for admin/staff AND real-time updates
     try {
       const notifEnabled = await setupAdminNotifications();
       if (notifEnabled) {
         console.log('🔔 Admin notifications enabled');
         showAdminNotification('✓ Notifications Enabled', 'You will receive order updates', 'success');
+        setupAdminRealtimeOrders(); // Real-time order updates
       }
     } catch (notifError) {
       console.warn('⚠️ Could not setup notifications:', notifError);
