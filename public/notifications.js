@@ -239,7 +239,7 @@ export function setupForegroundMessageHandler(callback) {
   }
 
   onMessage(messaging, (payload) => {
-    console.log('Foreground message received:', payload);
+    console.log('🔔 Foreground message received:', payload);
 
     if (callback) {
       callback(payload);
@@ -247,6 +247,22 @@ export function setupForegroundMessageHandler(callback) {
       showInAppNotification(payload);
     }
   });
+}
+
+// Automatically setup foreground handler when messaging is ready
+export async function ensureForegroundHandler() {
+  if (!messaging) {
+    try {
+      await initializeMessaging();
+    } catch (e) {
+      console.warn('Could not initialize messaging for foreground handler');
+      return;
+    }
+  }
+  
+  if (messaging) {
+    setupForegroundMessageHandler();
+  }
 }
 
 export function showInAppNotification(payload) {
@@ -368,12 +384,19 @@ export async function unsubscribeFromNotifications() {
   }
 }
 
+// Setup foreground handler on all pages when Firebase is ready
 if (typeof window !== 'undefined') {
+  // Auto-setup foreground handler when messaging becomes available
+  if (window.notificationService?.getMessagingInstance) {
+    ensureForegroundHandler().catch(e => console.warn('Foreground handler setup failed:', e));
+  }
+  
   window.notificationService = {
     initialize: initializeNotifications,
     requestPermission: requestNotificationPermission,
     getPermissionStatus: getNotificationPermissionStatus,
     showInAppNotification,
+    ensureForegroundHandler,
     unsubscribe: unsubscribeFromNotifications
   };
 }
