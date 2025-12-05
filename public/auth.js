@@ -97,34 +97,10 @@ async function checkIfStaff(email) {
 
 export async function initAuthUI() {
   try {
-    await onAuthChange(async (user) => { // Added async here
+    await onAuthChange(async (user) => {
       if (user) {
         console.log('✅ User logged in:', user.email);
         updateAuthButton(user);
-
-        // Check if email is admin or staff
-        const isAdminOrStaff = user.email === 'oussamaanis2005@gmail.com' ||
-                               await checkIfStaff(user.email);
-
-        if (isAdminOrStaff) {
-          console.log('🔐 Admin/Staff user detected - initializing notifications');
-
-          // Initialize notifications for admin/staff
-          try {
-            const vapidResponse = await fetch('/api/vapid-key');
-            if (vapidResponse.ok) {
-              const { vapidKey } = await vapidResponse.json();
-              if (window.notificationService?.initialize) {
-                const result = await window.notificationService.initialize(vapidKey, user.email);
-                if (result.success) {
-                  console.log('✅ Admin/Staff notifications enabled');
-                }
-              }
-            }
-          } catch (error) {
-            console.warn('⚠️ Could not enable notifications:', error);
-          }
-        }
       } else {
         updateAuthButton(user);
       }

@@ -1,83 +1,6 @@
 /* ==================== CREPERIE KINDER ADMIN DASHBOARD ==================== */
 /* Works with classic script loading - all functions are exposed to window */
 
-// ==================== ADMIN NOTIFICATIONS ====================
-
-// Send notification to customer when order status changes
-async function notifyCustomerOrderStatus(orderId, status, userId, customerName) {
-  try {
-    const response = await fetch('/api/notify-order-status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId, status, userId, customerName })
-    });
-    return response.ok;
-  } catch (error) {
-    console.error('Error sending notification:', error);
-    return false;
-  }
-}
-
-// Show in-app notification for admin
-function showAdminNotification(title, message, type = 'info') {
-  const bgColor = type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1';
-  const div = document.createElement('div');
-  div.style.cssText = `position:fixed;top:20px;right:20px;background:${bgColor};color:white;padding:16px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-weight:600;`;
-  div.innerHTML = `<div style="font-weight:600;">${title}</div><div style="font-size:14px;opacity:0.95;margin-top:4px;">${message}</div>`;
-  document.body.appendChild(div);
-  setTimeout(() => div.remove(), 4000);
-}
-
-// Save admin FCM token when token is available
-async function saveAdminFCMToken(token) {
-  try {
-    const response = await fetch('/api/save-fcm-token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, userId: null })
-    });
-    console.log('💾 Admin FCM token saved');
-    return response.ok;
-  } catch (error) {
-    console.warn('Error saving admin FCM token:', error);
-    return false;
-  }
-}
-
-// Setup real-time order listener for admin
-async function setupAdminRealtimeOrders() {
-  try {
-    console.log('👂 Setting up real-time order listener for admin...');
-    if (!window.dbService) return;
-    
-    await window.dbService.init();
-    const db = await window.getFirestoreInstance();
-    const { collection, onSnapshot, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-    
-    // Listen to orders collection for new orders
-    const ordersRef = collection(db, 'orders');
-    const q = query(ordersRef, orderBy('createdAt', 'desc'));
-    
-    onSnapshot(q, (snapshot) => {
-      console.log('📨 New orders detected, updating list...');
-      loadOrdersData().then(() => {
-        if (state.currentSection === 'orders') {
-          renderOrdersList();
-        }
-        renderDashboard(); // Update dashboard stats
-      });
-    }, (error) => {
-      console.warn('⚠️ Real-time listener error:', error);
-    });
-    
-    console.log('✅ Real-time order listener active');
-  } catch (error) {
-    console.warn('Could not setup real-time orders:', error);
-  }
-}
-
-// Notifications removed - no longer needed
-
 // ==================== STATE MANAGEMENT ====================
 const state = {
   currentSection: 'dashboard',
@@ -715,41 +638,10 @@ async function updateOrderStatus(orderId, newStatus) {
     console.log('🔄 Updating order status:', orderId, '→', newStatus);
     if (!window.dbService) throw new Error('dbService not available');
     
-    // Get order data before update
-    const order = state.orders.find(o => o.id === orderId);
-    
     // Update in database
     await window.dbService.updateOrder(orderId, { status: newStatus });
     await loadOrdersData();
     renderOrdersList();
-    
-    // Send notification to customer
-    if (order) {
-      setTimeout(async () => {
-        try {
-          const response = await fetch('/api/notify-order-status', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId,
-              status: newStatus,
-              userId: order.email || order.userId,
-              customerName: order.name || order.customerName || 'Customer'
-            })
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            console.log('📲 Customer notification sent:', result);
-            showAdminNotification('✓ Notification Sent', `Customer notified: Order ${orderId.substring(0, 8)} → ${newStatus}`, 'success');
-          } else {
-            console.warn('⚠️ Notification failed:', response.status);
-          }
-        } catch (err) {
-          console.warn('⚠️ Could not send customer notification:', err);
-        }
-      }, 500);
-    }
     
     // Update dashboard statistics if on dashboard section
     if (state.currentSection === 'dashboard') {
@@ -965,18 +857,6 @@ async function handleAdminLogin(e) {
     // Load dashboard data
     await initializeDashboard();
     
-    // Setup notifications for admin/staff AND real-time updates
-    try {
-      const notifEnabled = await setupAdminNotifications();
-      if (notifEnabled) {
-        console.log('🔔 Admin notifications enabled');
-        showAdminNotification('✓ Notifications Enabled', 'You will receive order updates', 'success');
-        setupAdminRealtimeOrders(); // Real-time order updates
-      }
-    } catch (notifError) {
-      console.warn('⚠️ Could not setup notifications:', notifError);
-    }
-
     console.log('✅ Admin dashboard loaded');
   } catch (error) {
     console.error('❌ Login error:', error);
