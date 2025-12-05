@@ -695,21 +695,27 @@ window.submitCheckoutForm = async function(event) {
     const orderId = await placeOrderToFirebase(orderData);
     console.log('✅ Order created:', orderId);
 
-    // Send notification to admin and staff
+    // Send notification to admin and staff via OneSignal
     try {
-      await fetch('/api/notify-new-order', {
+      const notifyResponse = await fetch('/api/notify-admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId,
           customerName: fullName,
-          total: total.toFixed(2),
-          items: cart.length
+          total: total.toFixed(2) + ' DZD',
+          itemCount: cart.length
         })
       });
-      console.log('✅ Notification sent to admin/staff');
+      
+      if (notifyResponse.ok) {
+        const result = await notifyResponse.json();
+        console.log('✅ Admin notification sent via OneSignal:', result.recipients, 'recipients');
+      } else {
+        console.warn('⚠️ Admin notification failed');
+      }
     } catch (notifyError) {
-      console.warn('⚠️ Could not send notification:', notifyError);
+      console.warn('⚠️ Could not send admin notification:', notifyError);
     }
 
     // Clear cart

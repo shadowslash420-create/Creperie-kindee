@@ -638,6 +638,10 @@ async function updateOrderStatus(orderId, newStatus) {
     console.log('🔄 Updating order status:', orderId, '→', newStatus);
     if (!window.dbService) throw new Error('dbService not available');
     
+    // Get order details before updating
+    const order = state.orders.find(o => o.id === orderId);
+    const customerEmail = order?.email;
+    
     // Update in database
     await window.dbService.updateOrder(orderId, { status: newStatus });
     await loadOrdersData();
@@ -646,6 +650,28 @@ async function updateOrderStatus(orderId, newStatus) {
     // Update dashboard statistics if on dashboard section
     if (state.currentSection === 'dashboard') {
       renderDashboard();
+    }
+    
+    // Send notification to customer via OneSignal
+    if (customerEmail) {
+      try {
+        const notifyResponse = await fetch('/api/notify-customer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId,
+            status: newStatus,
+            customerEmail
+          })
+        });
+        
+        if (notifyResponse.ok) {
+          const result = await notifyResponse.json();
+          console.log('✅ Customer notification sent:', result.recipients, 'recipients');
+        }
+      } catch (notifyError) {
+        console.warn('⚠️ Could not send customer notification:', notifyError);
+      }
     }
     
     console.log('✅ Order status updated');
