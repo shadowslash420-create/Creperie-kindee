@@ -26,7 +26,7 @@ function initializeFirebase() {
       const notificationTitle = payload.notification?.title || payload.data?.title || 'Creperie Kinder';
       const notificationOptions = {
         body: payload.notification?.body || payload.data?.body || 'لديك إشعار جديد',
-        icon: payload.notification?.icon || '/images/logo.png',
+        icon: payload.notification?.icon || '/images/logo.jpg',
         badge: '/images/badge.png',
         tag: payload.data?.tag || 'default',
         data: payload.data,
