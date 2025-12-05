@@ -230,6 +230,20 @@
       setTimeout(() => banner.classList.add('show'), 10);
     }
 
+    // Helper function to check if running in Median app
+    function isMedianApp() {
+      return typeof median !== 'undefined' || 
+             typeof gonative !== 'undefined' || 
+             window.median || 
+             window.gonative ||
+             window.Median ||
+             window.GoNative ||
+             navigator.userAgent.includes('Median') ||
+             navigator.userAgent.includes('GoNative') ||
+             // Check for Median's injected objects
+             document.querySelector('script[src*="median"]') !== null;
+    }
+
     async function enableNotifications() {
       const banner = document.querySelector('.notification-permission-banner');
       if (banner) {
@@ -239,42 +253,40 @@
 
       try {
         console.log('🔔 Starting notification setup...');
+        console.log('📱 Checking environment...');
+        console.log('   - median:', typeof median);
+        console.log('   - gonative:', typeof gonative);
+        console.log('   - window.median:', !!window.median);
+        console.log('   - userAgent:', navigator.userAgent);
 
         // Check if running in Median app (uses OneSignal)
-        if (typeof median !== 'undefined' && median.onesignal) {
-          console.log('📱 Running in Median app - using OneSignal notifications');
-          try {
-            // Request push notification permission via Median's OneSignal bridge
-            median.onesignal.push.register();
-            
-            // Get OneSignal info
-            const info = await median.onesignal.info();
-            console.log('📱 OneSignal info:', info);
-            
-            if (info && info.oneSignalUserId) {
-              console.log('✅ OneSignal User ID:', info.oneSignalUserId);
-              notificationInitialized = true;
-              localStorage.setItem('notifications_enabled', 'true');
-              localStorage.setItem('onesignal_user_id', info.oneSignalUserId);
-              showNotificationSuccess();
-              if (banner) banner.remove();
-              return;
+        if (isMedianApp()) {
+          console.log('📱 Detected Median/GoNative app environment');
+          
+          // Try OneSignal first
+          if (typeof median !== 'undefined' && median.onesignal) {
+            console.log('📱 Using Median OneSignal bridge');
+            try {
+              median.onesignal.push.register();
+              
+              // Wait a moment for registration
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              try {
+                const info = await median.onesignal.info();
+                console.log('📱 OneSignal info:', info);
+                if (info && info.oneSignalUserId) {
+                  localStorage.setItem('onesignal_user_id', info.oneSignalUserId);
+                }
+              } catch (infoErr) {
+                console.log('Could not get OneSignal info:', infoErr);
+              }
+            } catch (regErr) {
+              console.log('OneSignal registration:', regErr);
             }
-          } catch (medianError) {
-            console.error('Median OneSignal error:', medianError);
           }
           
-          // Even if we couldn't get the ID, notifications may still work
-          notificationInitialized = true;
-          localStorage.setItem('notifications_enabled', 'true');
-          showNotificationSuccess();
-          if (banner) banner.remove();
-          return;
-        }
-        
-        // Legacy check for older Median versions or FCMBridge
-        if (window.gonative || window.median || (typeof gonative !== 'undefined')) {
-          console.log('📱 Running in Median/GoNative app - native notifications');
+          // Success - Median handles notifications natively
           notificationInitialized = true;
           localStorage.setItem('notifications_enabled', 'true');
           showNotificationSuccess();
@@ -282,7 +294,7 @@
           return;
         }
 
-        // Web notifications
+        // Not in Median - use web notifications
         console.log('🌐 Running in browser - using web notifications');
 
         // Get VAPID key
@@ -329,17 +341,28 @@
           banner.querySelector('.permission-btn-allow').disabled = false;
         }
 
-        // Show detailed error
-        const errorDetails = [
-          'فشل تفعيل الإشعارات',
-          '',
-          'الخطأ: ' + error.message,
-          '',
-          'يرجى التأكد من:',
-          '1. تفعيل الإشعارات في المتصفح',
-          '2. استخدام HTTPS',
-          '3. ضبط FIREBASE_VAPID_KEY في Vercel'
-        ].join('\n');
+        // Show detailed error - different message for app vs browser
+        let errorDetails;
+        if (isMedianApp()) {
+          errorDetails = [
+            'فشل تفعيل الإشعارات',
+            '',
+            'يرجى التأكد من:',
+            '1. تفعيل الإشعارات في إعدادات التطبيق',
+            '2. السماح للتطبيق بإرسال الإشعارات',
+            '3. إعادة تشغيل التطبيق'
+          ].join('\n');
+        } else {
+          errorDetails = [
+            'فشل تفعيل الإشعارات',
+            '',
+            'الخطأ: ' + error.message,
+            '',
+            'يرجى التأكد من:',
+            '1. تفعيل الإشعارات في المتصفح',
+            '2. استخدام HTTPS'
+          ].join('\n');
+        }
 
         alert(errorDetails);
       }
