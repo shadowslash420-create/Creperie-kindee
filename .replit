@@ -100,3 +100,4 @@ run = ["python", "server.py"]
 [userenv]
 
 [userenv.shared]
+ONESIGNAL_APP_ID = "193da0a0-041a-4a8c-aa55-a0f4e8e0e399"
