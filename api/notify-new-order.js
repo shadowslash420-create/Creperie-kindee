@@ -88,9 +88,38 @@ export default async function handler(req, res) {
 
     for (const token of adminStaffTokens) {
       try {
-        await admin.messaging().send({ ...message, token });
-        successCount++;
-        console.log(`✅ Notification sent to token: ${token.substring(0, 20)}...`);
+        // Check if this is a OneSignal User ID (starts with random chars, not typical FCM format)
+        const isOneSignal = token.length < 200 && !token.includes(':');
+        
+        if (isOneSignal && process.env.ONESIGNAL_APP_ID && process.env.ONESIGNAL_REST_API_KEY) {
+          // Send via OneSignal REST API
+          const response = await fetch('https://onesignal.com/api/v1/notifications', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Basic ${process.env.ONESIGNAL_REST_API_KEY}`
+            },
+            body: JSON.stringify({
+              app_id: process.env.ONESIGNAL_APP_ID,
+              include_player_ids: [token],
+              headings: { en: message.notification.title, ar: message.notification.title },
+              contents: { en: message.notification.body, ar: message.notification.body },
+              data: message.data
+            })
+          });
+          
+          if (response.ok) {
+            successCount++;
+            console.log(`✅ OneSignal notification sent to: ${token.substring(0, 20)}...`);
+          } else {
+            throw new Error(`OneSignal API error: ${response.status}`);
+          }
+        } else {
+          // Send via FCM (web browsers)
+          await admin.messaging().send({ ...message, token });
+          successCount++;
+          console.log(`✅ FCM notification sent to: ${token.substring(0, 20)}...`);
+        }
       } catch (error) {
         failureCount++;
         console.error(`❌ Failed to send to token ${token.substring(0, 20)}...:`, error.message);

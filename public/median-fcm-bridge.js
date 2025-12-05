@@ -126,10 +126,19 @@ const FCMBridge = (() => {
         if (!token) return;
         
         try {
+            // Get user email if available
+            const userEmail = localStorage.getItem('userEmail') || 
+                             localStorage.getItem('customerEmail') || 
+                             null;
+            
             const response = await fetch('/api/save-fcm-token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token })
+                body: JSON.stringify({ 
+                    token,
+                    userId: userEmail,
+                    isOneSignal: hasOneSignal()
+                })
             });
             
             if (response.ok) {
