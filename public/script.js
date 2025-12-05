@@ -695,16 +695,15 @@ window.submitCheckoutForm = async function(event) {
     const orderId = await placeOrderToFirebase(orderData);
     console.log('✅ Order created:', orderId);
 
-    // Send notification to admin and staff via OneSignal
+    // Send notification to admin and staff via OneSignal (using new unified endpoint)
     try {
-      const notifyResponse = await fetch('/api/notify-admin', {
+      const notifyResponse = await fetch('/api/send-notification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          type: 'admin',
           orderId,
-          customerName: fullName,
-          total: total.toFixed(2) + ' DZD',
-          itemCount: cart.length
+          customerName: fullName
         })
       });
       

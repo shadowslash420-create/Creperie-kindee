@@ -652,15 +652,15 @@ async function updateOrderStatus(orderId, newStatus) {
       renderDashboard();
     }
     
-    // Send notification to customer via OneSignal
+    // Send notification to customer via OneSignal (using new unified endpoint)
     if (customerEmail) {
       try {
-        const notifyResponse = await fetch('/api/notify-customer', {
+        const notifyResponse = await fetch('/api/send-notification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            type: 'customer',
             orderId,
-            status: newStatus,
             customerEmail
           })
         });
