@@ -202,7 +202,7 @@ export async function placeOrderToFirebase(orderData) {
     const docRef = await dbService.createOrder(orderData);
     const orderId = docRef.id;
     console.log('✅ Order saved to Firestore with ID:', orderId);
-    
+
     // Ensure customer's FCM token is registered with their email
     const customerEmail = orderData.email;
     if (customerEmail && window.notificationService) {
@@ -230,7 +230,7 @@ export async function placeOrderToFirebase(orderData) {
           items: orderData.items?.length || 0
         })
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('📲 Notification sent to admin/staff:', result.sent, 'recipients');

@@ -190,7 +190,6 @@
   </div>
 
   <link rel="stylesheet" href="median-styles.css">
-  <script src="median-fcm-bridge.js"></script>
   <script type="module" src="script.js" defer></script>
   <script type="module" src="auth.js" defer></script>
   <script type="module" src="notifications.js" defer></script>
@@ -229,9 +228,9 @@
 
     // Helper function to check if running in Median app
     function isMedianApp() {
-      return typeof median !== 'undefined' || 
-             typeof gonative !== 'undefined' || 
-             window.median || 
+      return typeof median !== 'undefined' ||
+             typeof gonative !== 'undefined' ||
+             window.median ||
              window.gonative ||
              window.Median ||
              window.GoNative ||
@@ -259,16 +258,16 @@
         // Check if running in Median app (uses OneSignal)
         if (isMedianApp()) {
           console.log('📱 Detected Median/GoNative app environment');
-          
+
           // Try OneSignal first
           if (typeof median !== 'undefined' && median.onesignal) {
             console.log('📱 Using Median OneSignal bridge');
             try {
               median.onesignal.push.register();
-              
+
               // Wait a moment for registration
               await new Promise(resolve => setTimeout(resolve, 1000));
-              
+
               try {
                 const info = await median.onesignal.info();
                 console.log('📱 OneSignal info:', info);
@@ -282,7 +281,7 @@
               console.log('OneSignal registration:', regErr);
             }
           }
-          
+
           // Success - Median handles notifications natively
           notificationInitialized = true;
           localStorage.setItem('notifications_enabled', 'true');
@@ -340,12 +339,12 @@
 
         // Show detailed error - different message for app vs browser
         let errorDetails;
-        
+
         // Check if we're in a webview but bridge isn't available
-        const inWebView = /wv|WebView/i.test(navigator.userAgent) || 
+        const inWebView = /wv|WebView/i.test(navigator.userAgent) ||
                           (window.navigator.standalone === true) ||
                           window.matchMedia('(display-mode: standalone)').matches;
-        
+
         if (inWebView && !window.median && !window.gonative) {
           // In Median app but JavaScript Bridge not enabled
           errorDetails = [
@@ -452,6 +451,5 @@
       }
     })();
   </script>
-  <script type="module" src="global-notifications.js"></script>
 </body>
-</html>
+</html

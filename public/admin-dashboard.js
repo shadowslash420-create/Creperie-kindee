@@ -76,38 +76,7 @@ async function setupAdminRealtimeOrders() {
   }
 }
 
-// Setup admin notifications on login (handles Median & web)
-async function setupAdminNotifications() {
-  try {
-    console.log('🔔 Setting up admin notifications...');
-    if (window.FCMBridge && window.FCMBridge.isMedianApp && window.FCMBridge.isMedianApp()) {
-      console.log('📱 Running in Median - requesting FCM token');
-      if (window.FCMBridge.requestToken) window.FCMBridge.requestToken();
-      return true;
-    }
-    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-      const perm = await Notification.requestPermission();
-      if (perm === 'granted') {
-        // Get FCM token and save it
-        if (window.notificationService && window.notificationService.initialize) {
-          const vapidResponse = await fetch('/api/vapid-key');
-          if (vapidResponse.ok) {
-            const { vapidKey } = await vapidResponse.json();
-            const result = await window.notificationService.initialize(vapidKey);
-            if (result && result.success && result.token) {
-              await saveAdminFCMToken(result.token);
-            }
-          }
-        }
-      }
-      return perm === 'granted';
-    }
-    return true;
-  } catch (error) {
-    console.warn('Notification setup error:', error);
-    return true;
-  }
-}
+// Notifications removed - no longer needed
 
 // ==================== STATE MANAGEMENT ====================
 const state = {
