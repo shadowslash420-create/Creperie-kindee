@@ -66,16 +66,25 @@ export default async function handler(req, res) {
 
     const statusMsg = statusMessages[status] || statusMessages['pending'];
 
-    // Get customer's FCM tokens using their email
+    // Get customer's FCM tokens using their email or userId
     let tokens = [];
     if (userId) {
       const normalizedEmail = userId.toLowerCase().trim();
+      
+      // Try to find tokens by userId (email) or by exact match
       const tokensSnapshot = await db.collection('fcm_tokens')
-        .where('userId', '==', normalizedEmail)
         .where('active', '==', true)
         .get();
 
-      tokens = tokensSnapshot.docs.map(doc => doc.data().token);
+      // Filter tokens that match the customer's email/userId
+      tokens = tokensSnapshot.docs
+        .filter(doc => {
+          const tokenUserId = doc.data().userId?.toLowerCase().trim();
+          return tokenUserId === normalizedEmail || tokenUserId === userId;
+        })
+        .map(doc => doc.data().token);
+      
+      console.log(`📱 Found ${tokens.length} active tokens for customer: ${normalizedEmail}`);
     }
 
     if (tokens.length === 0) {

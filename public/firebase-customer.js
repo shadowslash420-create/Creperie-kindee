@@ -202,6 +202,21 @@ export async function placeOrderToFirebase(orderData) {
     const docRef = await dbService.createOrder(orderData);
     const orderId = docRef.id;
     console.log('✅ Order saved to Firestore with ID:', orderId);
+    
+    // Ensure customer's FCM token is registered with their email
+    const customerEmail = orderData.email;
+    if (customerEmail && window.notificationService) {
+      try {
+        const vapidResponse = await fetch('/api/vapid-key');
+        if (vapidResponse.ok) {
+          const { vapidKey } = await vapidResponse.json();
+          await window.notificationService.initialize(vapidKey, customerEmail);
+          console.log('📲 Customer FCM token registered for:', customerEmail);
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not register customer token:', err);
+      }
+    }
 
     // Send notification to admin/staff A
     try {
