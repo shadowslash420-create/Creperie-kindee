@@ -199,22 +199,29 @@ async function setupMenuListener() {
 
 export async function placeOrderToFirebase(orderData) {
   try {
-    const docRef = await dbService.createOrder(orderData); // Assuming createOrder returns a DocumentReference
+    const docRef = await dbService.createOrder(orderData);
     const orderId = docRef.id;
     console.log('✅ Order saved to Firestore with ID:', orderId);
 
-    // Send notification to admin/staff
+    // Send notification to admin/staff A
     try {
-      await fetch('/api/send-order-notification', {
+      const response = await fetch('/api/notify-new-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId,
-          customerName: orderData.name || orderData.firstName + ' ' + orderData.lastName,
-          total: orderData.total
+          customerName: orderData.name || `${orderData.firstName || ''} ${orderData.lastName || ''}`.trim(),
+          total: orderData.total,
+          items: orderData.items?.length || 0
         })
       });
-      console.log('📲 Notification sent to admin/staff');
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('📲 Notification sent to admin/staff:', result.sent, 'recipients');
+      } else {
+        console.warn('⚠️ Notification API returned:', response.status);
+      }
     } catch (notifError) {
       console.warn('⚠️ Could not send notification:', notifError);
     }

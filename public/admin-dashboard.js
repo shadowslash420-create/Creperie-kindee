@@ -755,15 +755,30 @@ async function updateOrderStatus(orderId, newStatus) {
     renderOrdersList();
     
     // Send notification to customer
-    if (order && order.userId) {
-      setTimeout(() => {
-        notifyCustomerOrderStatus(orderId, newStatus, order.userId, order.customerName || 'Customer')
-          .then(success => {
-            if (success) {
-              showAdminNotification('✓ Notification Sent', `Customer notified: Order ${orderId} → ${newStatus}`, 'success');
-            }
-          })
-          .catch(err => console.warn('Notification error:', err));
+    if (order) {
+      setTimeout(async () => {
+        try {
+          const response = await fetch('/api/notify-order-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId,
+              status: newStatus,
+              userId: order.email || order.userId,
+              customerName: order.name || order.customerName || 'Customer'
+            })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            console.log('📲 Customer notification sent:', result);
+            showAdminNotification('✓ Notification Sent', `Customer notified: Order ${orderId.substring(0, 8)} → ${newStatus}`, 'success');
+          } else {
+            console.warn('⚠️ Notification failed:', response.status);
+          }
+        } catch (err) {
+          console.warn('⚠️ Could not send customer notification:', err);
+        }
       }, 500);
     }
     

@@ -510,8 +510,33 @@
     // Update order status
     window.updateOrderStatus = async function(orderId, newStatus) {
       try {
+        const order = staffOrders.find(o => o.id === orderId);
+        
         await dbService.updateOrderStatus(orderId, newStatus);
         await loadStaffOrders();
+        
+        // Send notification to customer
+        if (order) {
+          try {
+            const response = await fetch('/api/notify-order-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderId,
+                status: newStatus,
+                userId: order.email || order.userId,
+                customerName: order.name || order.customerName || 'Customer'
+              })
+            });
+            
+            if (response.ok) {
+              console.log('📲 Customer notification sent');
+            }
+          } catch (err) {
+            console.warn('⚠️ Could not send customer notification:', err);
+          }
+        }
+        
         alert('✅ تم تحديث حالة الطلب / Order status updated!');
       } catch (error) {
         console.error('Error updating order:', error);
