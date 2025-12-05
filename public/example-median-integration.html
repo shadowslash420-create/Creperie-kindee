@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Median Notifications Example</title>
+  <link rel="stylesheet" href="median-styles.css">
+</head>
+<body>
+  <h1>Median App Notifications</h1>
+  <button onclick="enableNotifications()">Enable Notifications</button>
+  <div id="status"></div>
+
+  <!-- Include the Median FCM Bridge -->
+  <script src="median-fcm-bridge.js"></script>
+  
+  <script>
+    async function enableNotifications() {
+      const statusEl = document.getElementById('status');
+      
+      try {
+        // Check if running in Median app
+        if (FCMBridge.isMedianApp()) {
+          statusEl.textContent = '📱 Detected Median app, requesting token...';
+          
+          // Request notification token
+          const success = await FCMBridge.requestToken();
+          
+          if (success) {
+            // Wait for token
+            setTimeout(() => {
+              const token = FCMBridge.getToken();
+              const userId = FCMBridge.getOneSignalUserId();
+              
+              if (token || userId) {
+                statusEl.textContent = `✅ Notifications enabled!\nUser ID: ${userId || 'N/A'}`;
+              } else {
+                statusEl.textContent = '⏳ Waiting for token...';
+              }
+            }, 3000);
+          } else {
+            statusEl.textContent = '⚠️ Could not request token';
+          }
+        } else {
+          statusEl.textContent = '🌐 Not running in Median app - using web notifications';
+          
+          // Fall back to web notifications
+          if (window.notificationService) {
+            const result = await window.notificationService.initialize(
+              'YOUR_VAPID_KEY', 
+              'user@example.com'
+            );
+            statusEl.textContent = result.success ? '✅ Web notifications enabled' : '❌ Failed';
+          }
+        }
+      } catch (error) {
+        statusEl.textContent = `❌ Error: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
