@@ -2026,7 +2026,7 @@ button:disabled{
   
   .orders-table td{
     padding:4px 2px;
-    font-size:8px;
+    font-size:7px;
   }
   
   .orders-table-row::after{
