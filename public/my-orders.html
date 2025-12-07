@@ -560,7 +560,7 @@
           <td>${order.name}</td>
           <td>${order.phone}</td>
           <td><strong>${order.total.toFixed(2)} DZD</strong></td>
-          <td><span class="status-badge" style="background-color:${statusColor}">${statusLabel}</span></td>
+          <td><div style="width:20px;height:20px;border-radius:50%;background-color:${statusColor};cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.2);" title="${statusLabel}"></div></td>
         `;
 
         tbody.appendChild(row);
@@ -724,7 +724,6 @@
       `;
 
       modal.style.display = 'flex';
-      modal.style.animation = 'fadeIn 0.3s ease';
       modalBody.scrollTop = 0;
 
       // Add scroll listener for header hide/show on scroll direction
