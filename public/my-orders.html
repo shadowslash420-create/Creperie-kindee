@@ -170,10 +170,15 @@
         status: 'الحالة',
         pending: 'في الانتظار',
         received: 'تم استلام الطلب',
+        received_msg: 'لقد استلمنا طلبك وجاري التحقق منه.',
         preparing: 'جاري تحضير طلبك',
+        preparing_msg: 'المطعم يعمل على تحضير طلبك الآن.',
         ready: 'جاهز للاستلام',
+        ready_msg: 'طلبك مُحضّر وينتظر السائق.',
         picked_up: 'تم الالتقاط من قبل السائق',
+        picked_up_msg: 'السائق قد التقط طلبك بنجاح.',
         in_transit: 'في الطريق',
+        in_transit_msg: 'طلبك في الطريق إلى موقعك الآن.',
         cancelled: 'تم الإلغاء',
         specialInstructions: 'تعليمات خاصة',
         noInstructions: 'لا توجد تعليمات خاصة',
@@ -200,10 +205,15 @@
         status: 'Status',
         pending: 'Pending',
         received: 'Order Received',
+        received_msg: "We've got your order and it's being checked.",
         preparing: 'Preparing Your Order',
+        preparing_msg: 'The restaurant is working on your order.',
         ready: 'Ready for Pickup',
+        ready_msg: 'Your order is prepared and waiting for the driver.',
         picked_up: 'Picked Up',
+        picked_up_msg: 'The driver has collected your order.',
         in_transit: 'On the Way',
+        in_transit_msg: 'Your order is on the way to your location.',
         cancelled: 'Cancelled',
         specialInstructions: 'Special Instructions',
         noInstructions: 'No special instructions',
@@ -590,9 +600,18 @@
         'cancelled': t.cancelled
       };
 
+      const statusMessages = {
+        'received': t.received_msg,
+        'preparing': t.preparing_msg,
+        'ready': t.ready_msg,
+        'picked_up': t.picked_up_msg,
+        'in_transit': t.in_transit_msg
+      };
+
       const status = order.status || 'pending';
       const statusColor = statusColors[status] || statusColors.pending;
       const statusLabel = statusLabels[status] || statusLabels.pending || t.pending;
+      const statusMessage = statusMessages[status] || '';
 
       let orderDate;
       if (order.createdAt && order.createdAt.toDate) {
@@ -649,9 +668,10 @@
               <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">📍 ${t.address}</div>
               <div style="font-size:16px;color:#2C1810;font-weight:600;line-height:1.5;">${order.address || 'Not provided'}</div>
             </div>
-            <div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;padding-top:8px;">
-              <span style="font-size:12px;color:#666;font-weight:600;">📦 ${t.status}:</span>
-              <span class="status-badge" style="background-color:${statusColor}">${statusLabel}</span>
+            <div style="grid-column:1/-1;padding-top:8px;">
+              <span style="font-size:12px;color:#666;font-weight:600;display:block;margin-bottom:8px;">📦 ${t.status}:</span>
+              <span class="status-badge" style="background-color:${statusColor};display:inline-block;margin-bottom:8px;">${statusLabel}</span>
+              ${statusMessage ? `<div style="font-size:14px;color:#555;line-height:1.6;background:#f8f9fa;padding:12px;border-radius:8px;border-left:3px solid ${statusColor};margin-top:8px;">${statusMessage}</div>` : ''}
             </div>
           </div>
         </div>
