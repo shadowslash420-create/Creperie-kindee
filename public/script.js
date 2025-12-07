@@ -2737,7 +2737,7 @@ function renderAdminOrdersOriginal(){
     const status = document.createElement('div');
     status.style.marginTop='6px';
     const sel = document.createElement('select');
-    const statusMap = {'pending': 'Pending', 'in-progress': 'In Progress', 'delivered': 'Delivered'};
+    const statusMap = {'received': 'Order Received', 'preparing': 'Preparing', 'ready': 'Ready', 'picked_up': 'Picked Up', 'in_transit': 'On the Way', 'cancelled': 'Cancelled'};
     Object.keys(statusMap).forEach(key=>{
       const opt = document.createElement('option');
       opt.value=key;
@@ -2772,7 +2772,7 @@ function renderAdminOrdersOriginal(){
     const top = Object.entries(popular).sort((a,b)=>b[1]-a[1]).slice(0,5);
     statsEl.innerHTML = '<div class="stat-card"><strong>المبيعات الإجمالية</strong><div style="font-size:20px;margin-top:6px">'+ totalSales.toFixed(2) +' DZD</div></div>';
     statsEl.innerHTML += '<div class="stat-card"><strong>عدد الطلبات</strong><div style="font-size:18px;margin-top:6px">'+ totalOrders +'</div></div>';
-    statsEl.innerHTML += '<div class="stat-card"><strong>حسب الحالة</strong><div style="margin-top:6px">Pending: '+(byStatus.pending||0)+' • In Progress: '+(byStatus['in-progress']||0)+' • Delivered: '+(byStatus.delivered||0)+'</div></div>';
+    statsEl.innerHTML += '<div class="stat-card"><strong>حسب الحالة</strong><div style="margin-top:6px">Received: '+(byStatus.received||0)+' • Preparing: '+(byStatus.preparing||0)+' • Ready: '+(byStatus.ready||0)+' • Picked Up: '+(byStatus.picked_up||0)+' • In Transit: '+(byStatus.in_transit||0)+'</div></div>';
     statsEl.innerHTML += '<div class="stat-card"><strong>الأكثر مبيعًا</strong><ul>' + top.map(t=>'<li>'+t[0]+' — '+t[1]+'</li>').join('') + '</ul></div>';
   }
 }
@@ -2797,7 +2797,7 @@ function updateOrderStatusOriginal(id, status){
   const orders = getOrders(); // Assuming getOrders is available
   const o = orders.find(x=> x.id===id);
   if(!o) return;
-  const statusMap = {'Pending': 'pending', 'In Progress': 'in-progress', 'Delivered': 'delivered'};
+  const statusMap = {'Order Received': 'received', 'Preparing': 'preparing', 'Ready': 'ready', 'Picked Up': 'picked_up', 'On the Way': 'in_transit', 'Cancelled': 'cancelled'};
   o.status = statusMap[status] || status.toLowerCase();
   saveOrders(orders); // Assuming saveOrders is available
   renderAdminOrdersOriginal();

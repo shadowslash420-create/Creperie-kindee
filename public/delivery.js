@@ -63,7 +63,7 @@ function loadDeliveryOrders() {
   }
   
   // Count new orders accepted for delivery
-  const newOrders = orders.filter(o => o.status === 'in-progress' && o.acceptedForDelivery).length;
+  const newOrders = orders.filter(o => o.status === 'ready' && o.acceptedForDelivery).length;
   updateNewOrdersBadge(newOrders);
   
   let html = '<table class="orders-table"><thead><tr>';
@@ -74,7 +74,7 @@ function loadDeliveryOrders() {
     html += '<tr><td colspan="8" style="text-align:center;color:#999;padding:40px;">No orders found</td></tr>';
   } else {
     filteredOrders.reverse().forEach(order => {
-      const isNew = order.status === 'in-progress' && order.acceptedForDelivery;
+      const isNew = order.status === 'ready' && order.acceptedForDelivery;
       const rowStyle = isNew ? ' style="background-color:#fff3e0;"' : '';
       html += '<tr' + rowStyle + '>';
       html += '<td class="order-id">#' + order.id + (isNew ? ' <span style="color:#FF6B35;font-weight:bold;">NEW</span>' : '') + '</td>';
@@ -192,14 +192,14 @@ function updateDeliveryOrderStatus(orderId) {
   if (orderIndex === -1) return;
   
   const order = orders[orderIndex];
-  const statusFlow = ['pending', 'in-progress', 'delivered'];
+  const statusFlow = ['received', 'preparing', 'ready', 'picked_up', 'in_transit'];
   const currentIndex = statusFlow.indexOf(order.status);
   
   if (currentIndex < statusFlow.length - 1) {
     order.status = statusFlow[currentIndex + 1];
     
     // Clear new order flag when moving to delivered
-    if (order.status === 'delivered') {
+    if (order.status === 'in_transit') {
       delete order.acceptedForDelivery;
     }
     

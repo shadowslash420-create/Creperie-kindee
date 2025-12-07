@@ -318,12 +318,12 @@ app.post('/api/notify-order-status', async (req, res) => {
     }
 
     const statusMessages = {
-      'pending': { title: 'طلب جديد', body: `تم استلام طلبك #${orderId}` },
-      'confirmed': { title: 'تم تأكيد الطلب', body: `تم تأكيد طلبك #${orderId} وجاري تحضيره` },
-      'preparing': { title: 'جاري التحضير', body: `طلبك #${orderId} قيد التحضير الآن` },
-      'ready': { title: 'طلبك جاهز!', body: `طلبك #${orderId} جاهز للاستلام` },
-      'delivered': { title: 'تم التوصيل', body: `تم توصيل طلبك #${orderId} بنجاح` },
-      'cancelled': { title: 'تم إلغاء الطلب', body: `تم إلغاء طلبك #${orderId}` }
+      'received': { title: 'Order Received', body: `We've got your order #${orderId} and it's being checked.` },
+      'preparing': { title: 'Preparing Your Order', body: `The restaurant is working on your order #${orderId}.` },
+      'ready': { title: 'Ready for Pickup', body: `Your order #${orderId} is prepared and waiting for the driver.` },
+      'picked_up': { title: 'Picked Up', body: `The driver has collected your order #${orderId}.` },
+      'in_transit': { title: 'On the Way', body: `Your order #${orderId} is on the way to your location.` },
+      'cancelled': { title: 'Order Cancelled', body: `Your order #${orderId} has been cancelled.` }
     };
 
     const notification = statusMessages[status] || {

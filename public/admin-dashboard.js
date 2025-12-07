@@ -312,8 +312,8 @@ async function renderDashboard() {
     const statElements = {
       'stat-revenue': `${totalRevenue.toFixed(2)} DZD`,
       'stat-total-orders': totalOrders,
-      'stat-pending': state.orders.filter(o => o.status === 'pending').length,
-      'stat-completed': state.orders.filter(o => o.status === 'delivered').length
+      'stat-pending': state.orders.filter(o => o.status === 'received').length,
+      'stat-completed': state.orders.filter(o => o.status === 'in_transit').length
     };
 
     console.log('Updating stat elements:', statElements);
@@ -400,8 +400,8 @@ async function renderOrdersList() {
     }
 
     // Calculate order stats
-    const confirmed = state.orders.filter(o => o.status === 'confirmed').length;
-    const pending = state.orders.filter(o => o.status === 'pending').length;
+    const confirmed = state.orders.filter(o => o.status === 'preparing').length;
+    const pending = state.orders.filter(o => o.status === 'received').length;
     const unconfirmed = state.orders.filter(o => o.status === 'unconfirmed').length;
     const total = state.orders.length;
 
@@ -459,8 +459,12 @@ async function renderOrdersList() {
                   <td>
                     <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;background:white;transition:all 0.3s;text-transform:uppercase;">
                       <option value="unconfirmed" ${order.status === 'unconfirmed' ? 'selected' : ''}>🔴 Unconfirmed</option>
-                      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-                      <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>✅ Confirmed</option>
+                      <option value="received" ${order.status === 'received' ? 'selected' : ''}>📦 Order Received</option>
+                      <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>👨‍🍳 Preparing Your Order</option>
+                      <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>✅ Ready for Pickup</option>
+                      <option value="picked_up" ${order.status === 'picked_up' ? 'selected' : ''}>🚗 Picked Up</option>
+                      <option value="in_transit" ${order.status === 'in_transit' ? 'selected' : ''}>🚚 On the Way</option>
+                      <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
                     </select>
                   </td>
                   <td style="color:#4a5568;font-size:13px;">${date}</td>
