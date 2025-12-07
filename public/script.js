@@ -729,6 +729,9 @@ window.submitCheckoutForm = async function(event) {
     updateCart();
     renderCart();
 
+    // Clear saved checkout form data after successful order
+    clearCheckoutFormData();
+
     // Reset submission flag
     isCheckoutSubmitting = false;
 
@@ -800,6 +803,35 @@ window.submitCheckoutForm = async function(event) {
   }
 }
 
+// Save checkout form data to localStorage (auto-save during typing)
+function saveCheckoutFormData() {
+  const firstName = document.getElementById('checkout-firstname')?.value || '';
+  const lastName = document.getElementById('checkout-lastname')?.value || '';
+  const phone = document.getElementById('checkout-phone')?.value || '';
+  const address = document.getElementById('checkout-address')?.value || '';
+  const notes = document.getElementById('checkout-notes')?.value || '';
+  const lat = document.getElementById('checkout-lat')?.value || '';
+  const lng = document.getElementById('checkout-lng')?.value || '';
+
+  const formData = {
+    firstName,
+    lastName,
+    phone,
+    address,
+    notes,
+    lat,
+    lng,
+    timestamp: Date.now()
+  };
+
+  localStorage.setItem('kc_checkout_form_data', JSON.stringify(formData));
+}
+
+// Clear checkout form data after successful order
+function clearCheckoutFormData() {
+  localStorage.removeItem('kc_checkout_form_data');
+}
+
 // Checkout flow with modal
 window.checkoutFlow = async function() {
   const t = getT();
@@ -811,8 +843,20 @@ window.checkoutFlow = async function() {
 
   closeAllSidebars();
 
-  // Get saved info
-  const savedInfo = JSON.parse(localStorage.getItem('kc_customer_info') || '{}');
+  // Get saved info - prioritize checkout form data over customer info
+  const checkoutFormData = JSON.parse(localStorage.getItem('kc_checkout_form_data') || '{}');
+  const savedCustomerInfo = JSON.parse(localStorage.getItem('kc_customer_info') || '{}');
+  
+  // Merge data, with checkout form data taking priority (more recent)
+  const savedInfo = {
+    firstName: checkoutFormData.firstName || savedCustomerInfo.firstName || '',
+    lastName: checkoutFormData.lastName || savedCustomerInfo.lastName || '',
+    phone: checkoutFormData.phone || savedCustomerInfo.phone || '',
+    address: checkoutFormData.address || savedCustomerInfo.address || '',
+    notes: checkoutFormData.notes || '',
+    lat: checkoutFormData.lat || savedCustomerInfo.lat || '',
+    lng: checkoutFormData.lng || savedCustomerInfo.lng || ''
+  };
 
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
@@ -1122,6 +1166,29 @@ window.checkoutFlow = async function() {
 
   document.body.appendChild(modal);
 
+  // Add auto-save listeners to all form inputs
+  setTimeout(() => {
+    const formInputs = [
+      'checkout-firstname',
+      'checkout-lastname', 
+      'checkout-phone',
+      'checkout-address',
+      'checkout-notes',
+      'checkout-lat',
+      'checkout-lng'
+    ];
+
+    formInputs.forEach(inputId => {
+      const input = document.getElementById(inputId);
+      if (input) {
+        input.addEventListener('input', saveCheckoutFormData);
+        input.addEventListener('change', saveCheckoutFormData);
+      }
+    });
+
+    console.log('✅ Checkout form auto-save enabled');
+  }, 100);
+
   // Add click event listener to close button
   setTimeout(() => {
     const closeBtn = document.getElementById('checkout-close-btn');
@@ -1333,6 +1400,9 @@ function setMapLocation(lat, lng) {
     latInput.value = preciseLat.toString();
     lngInput.value = preciseLng.toString();
     console.log('✅ Coordinates saved to hidden inputs:', latInput.value, lngInput.value);
+    
+    // Auto-save the location to localStorage
+    saveCheckoutFormData();
   } else {
     console.error('❌ Could not find lat/lng input fields!');
   }
@@ -1364,6 +1434,9 @@ function setupMarkerDrag(marker) {
       lngInput.value = preciseLng.toString();
       console.log('📍 Marker moved to:', preciseLat, preciseLng);
       console.log('✅ Updated inputs:', latInput.value, lngInput.value);
+      
+      // Auto-save the location
+      saveCheckoutFormData();
     }
 
     showLocationConfirmation();
