@@ -402,7 +402,7 @@ async function renderOrdersList() {
     // Calculate order stats
     const confirmed = state.orders.filter(o => o.status === 'preparing').length;
     const pending = state.orders.filter(o => o.status === 'received').length;
-    const unconfirmed = state.orders.filter(o => o.status === 'unconfirmed').length;
+    const unconfirmed = state.orders.filter(o => o.status === 'pending').length;
     const total = state.orders.length;
 
     // Stats cards HTML
@@ -458,7 +458,7 @@ async function renderOrdersList() {
                   <td style="font-weight:700;color:#E30613;font-size:15px;">${(order.total || 0).toFixed(2)} DZD</td>
                   <td>
                     <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;background:white;transition:all 0.3s;text-transform:uppercase;">
-                      <option value="unconfirmed" ${order.status === 'unconfirmed' ? 'selected' : ''}>🔴 Unconfirmed</option>
+                      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>🔴 Pending</option>
                       <option value="received" ${order.status === 'received' ? 'selected' : ''}>📦 Order Received</option>
                       <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>👨‍🍳 Preparing Your Order</option>
                       <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>✅ Ready for Pickup</option>
