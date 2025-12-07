@@ -1944,7 +1944,7 @@ button:disabled{
   overflow:hidden;
   box-shadow:0 4px 20px rgba(0,0,0,0.08);
   animation:fadeIn 0.5s ease-out;
-  table-layout:fixed;
+  table-layout:auto;
 }
 
 .orders-table thead{
@@ -1953,7 +1953,7 @@ button:disabled{
 }
 
 .orders-table th{
-  padding:20px 18px;
+  padding:18px 14px;
   text-align:left;
   font-weight:700;
   font-size:13px;
@@ -1961,6 +1961,31 @@ button:disabled{
   letter-spacing:0.5px;
   font-family:'Inter', sans-serif;
   white-space:nowrap;
+}
+
+.orders-table th:first-child{
+  min-width:100px;
+}
+
+.orders-table th:nth-child(2){
+  min-width:85px;
+}
+
+.orders-table th:nth-child(3){
+  min-width:110px;
+}
+
+.orders-table th:nth-child(4){
+  min-width:95px;
+}
+
+.orders-table th:nth-child(5){
+  min-width:90px;
+}
+
+.orders-table th:last-child{
+  min-width:50px;
+  text-align:center;
 }
 
 .orders-table-row{
@@ -1999,11 +2024,15 @@ button:disabled{
 }
 
 .orders-table td{
-  padding:18px 18px;
-  font-size:15px;
+  padding:16px 14px;
+  font-size:14px;
   color:var(--text-primary);
   word-break:break-word;
   vertical-align:middle;
+}
+
+.orders-table td:last-child{
+  text-align:center;
 }
 
 .status-badge{
