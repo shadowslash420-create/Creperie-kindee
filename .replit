@@ -101,3 +101,10 @@ run = ["python", "server.py"]
 
 [userenv.shared]
 ONESIGNAL_APP_ID = "193da0a0-041a-4a8c-aa55-a0f4e8e0e399"
+FIREBASE_API_KEY = "AIzaSyApo_-Y96wRPfJ3zdDWmzOuj3E66c1hFxk"
+FIREBASE_AUTH_DOMAIN = "kinder-87e7e.firebaseapp.com"
+FIREBASE_PROJECT_ID = "kinder-87e7e"
+FIREBASE_STORAGE_BUCKET = "kinder-87e7e.firebasestorage.app"
+FIREBASE_MESSAGING_SENDER_ID = "447252216729"
+FIREBASE_APP_ID = "1:447252216729:web:371d0ec1dce02b52db7108"
+FIREBASE_VAPID_KEY = "7jLRXnLod9OEeinbF-kPDTXXiCS6cFMtrvmOQ34dzxo"

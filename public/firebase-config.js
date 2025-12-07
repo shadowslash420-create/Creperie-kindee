@@ -15,34 +15,30 @@ let initPromise = null;
 // Firebase configuration object - will be loaded from backend
 let firebaseConfig = null;
 
-// Load Firebase config from backend API or fallback to hardcoded values
+// Load Firebase config from environment variables
 async function loadFirebaseConfig() {
   if (firebaseConfig) {
     return firebaseConfig;
   }
   
   try {
+    // Load from environment variables (set via Replit secrets)
     const response = await fetch('/api/firebase-config');
     if (!response.ok) {
       throw new Error('Failed to load Firebase config from API');
     }
     firebaseConfig = await response.json();
-    console.log('Firebase config loaded successfully');
+    console.log('Firebase config loaded successfully from API');
     return firebaseConfig;
   } catch (error) {
-    console.warn('API endpoint failed, using embedded config:', error.message);
-    // Fallback to embedded config from environment variables
-    // These are set by Replit and are safe to use in frontend (public API keys)
-    firebaseConfig = {
-      apiKey: 'AIzaSyApo_-Y96wRPfJ3zdDWmzOuj3E66c1hFxk',
-      authDomain: 'kinder-87e7e.firebaseapp.com',
-      projectId: 'kinder-87e7e',
-      storageBucket: 'kinder-87e7e.appspot.com',
-      messagingSenderId: '447252216729',
-      appId: '1:447252216729:web:371d0ec1dce02b52db7108'
-    };
-    console.log('Firebase config loaded successfully from embedded values');
-    return firebaseConfig;
+    console.warn('API endpoint failed, checking window environment:', error.message);
+    // Fallback: try to get from window object (populated by server)
+    if (window.FIREBASE_CONFIG) {
+      firebaseConfig = window.FIREBASE_CONFIG;
+      console.log('Firebase config loaded from window object');
+      return firebaseConfig;
+    }
+    throw new Error('Firebase configuration not available');
   }
 }
 
