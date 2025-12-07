@@ -2001,27 +2001,27 @@ button:disabled{
   }
   
   .orders-table th:first-child{
-    min-width:32px;
+    min-width:28px;
   }
 
   .orders-table th:nth-child(2){
-    min-width:30px;
+    min-width:25px;
   }
 
   .orders-table th:nth-child(3){
-    min-width:35px;
+    min-width:30px;
   }
 
   .orders-table th:nth-child(4){
-    min-width:32px;
+    min-width:28px;
   }
 
   .orders-table th:nth-child(5){
-    min-width:35px;
+    min-width:30px;
   }
 
   .orders-table th:last-child{
-    min-width:18px;
+    min-width:15px;
   }
   
   .orders-table td{
