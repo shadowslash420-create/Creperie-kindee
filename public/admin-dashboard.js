@@ -39,7 +39,7 @@ async function checkUserStaffStatus() {
       state.currentUserRole = null;
       return;
     }
-    
+
     const userEmail = auth.currentUser.email;
     if (userEmail === 'oussamaanis2005@gmail.com') {
       state.isStaffUser = true;
@@ -47,12 +47,12 @@ async function checkUserStaffStatus() {
       console.log('✅ Admin user detected:', userEmail);
       return;
     }
-    
+
     if (!window.dbService) return;
     await window.dbService.init();
     const allStaff = await window.dbService.getAllStaff();
     const staffMember = allStaff.find(s => s.email?.toLowerCase() === userEmail?.toLowerCase());
-    
+
     if (staffMember) {
       state.isStaffUser = true;
       state.currentUserRole = staffMember.role;
@@ -189,7 +189,7 @@ async function loadCustomersData() {
 
     // Extract unique customers from orders
     const customerMap = new Map();
-    
+
     state.orders.forEach(order => {
       if (order.email) {
         const email = order.email.toLowerCase();
@@ -204,11 +204,11 @@ async function loadCustomersData() {
             lastOrderDate: null
           });
         }
-        
+
         const customer = customerMap.get(email);
         customer.totalOrders++;
         customer.totalSpent += (order.total || 0);
-        
+
         const orderDate = order.createdAt ? (order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt)) : null;
         if (orderDate && (!customer.lastOrderDate || orderDate > customer.lastOrderDate)) {
           customer.lastOrderDate = orderDate;
@@ -233,11 +233,11 @@ function toggleSidebar() {
   const sidebar = document.getElementById('dashboard-sidebar');
   const overlay = document.querySelector('.sidebar-overlay');
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-  
+
   if (!sidebar) return;
-  
+
   const isActive = sidebar.classList.contains('active');
-  
+
   if (isActive) {
     sidebar.classList.remove('active');
     if (overlay) overlay.classList.remove('active');
@@ -252,9 +252,9 @@ function toggleSidebar() {
 function showSection(section, event) {
   if (event) event.preventDefault();
   console.log('📄 Showing section:', section);
-  
+
   state.currentSection = section;
-  
+
   // Hide ALL sections - use more specific selector
   document.querySelectorAll('.content-section, [id^="section-"]').forEach(el => {
     el.classList.remove('active');
@@ -301,7 +301,7 @@ function showSection(section, event) {
   const sidebar = document.getElementById('dashboard-sidebar');
   const overlay = document.querySelector('.sidebar-overlay');
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-  
+
   if (sidebar) sidebar.classList.remove('active');
   if (overlay) overlay.classList.remove('active');
   if (mobileMenuBtn) mobileMenuBtn.classList.remove('active');
@@ -319,7 +319,7 @@ async function renderDashboard() {
     const totalReviews = state.reviews.length;
     const totalMessages = state.messages?.length || 0;
     const totalRevenue = state.orders.reduce((sum, order) => sum + (order.total || 0), 0);
-    const avgRating = state.reviews.length > 0 
+    const avgRating = state.reviews.length > 0
       ? (state.reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / state.reviews.length).toFixed(1)
       : 0;
 
@@ -414,11 +414,14 @@ async function renderOrdersList() {
       return;
     }
 
-    // Calculate order stats
-    const confirmed = state.orders.filter(o => o.status === 'confirmed').length;
-    const pending = state.orders.filter(o => o.status === 'pending').length;
-    const unconfirmed = state.orders.filter(o => o.status === 'unconfirmed').length;
+    // Calculate order stats for all status types
     const total = state.orders.length;
+    const pending = state.orders.filter(o => o.status === 'pending').length;
+    const received = state.orders.filter(o => o.status === 'received').length;
+    const preparing = state.orders.filter(o => o.status === 'preparing').length;
+    const ready = state.orders.filter(o => o.status === 'ready').length;
+    const picked_up = state.orders.filter(o => o.status === 'picked_up').length;
+    const in_transit = state.orders.filter(o => o.status === 'in_transit').length;
 
     // Apply filter if exists
     let filteredOrders = state.orders;
@@ -426,24 +429,36 @@ async function renderOrdersList() {
       filteredOrders = state.orders.filter(o => o.status === state.orderFilter);
     }
 
-    // Stats cards HTML with click handlers
+    // Stats cards HTML with click handlers - matching staff-a layout
     const statsHtml = `
       <div class="stats-grid">
         <div class="stat-card ${state.orderFilter === 'all' ? 'active' : ''}" onclick="filterOrdersByStatus('all')" style="cursor:pointer;">
           <div class="stat-value">${total}</div>
           <div class="stat-label">الكل / All</div>
         </div>
-        <div class="stat-card ${state.orderFilter === 'unconfirmed' ? 'active' : ''}" onclick="filterOrdersByStatus('unconfirmed')" style="cursor:pointer;">
-          <div class="stat-value">${unconfirmed}</div>
-          <div class="stat-label">غير مؤكدة / Unconfirmed</div>
-        </div>
         <div class="stat-card ${state.orderFilter === 'pending' ? 'active' : ''}" onclick="filterOrdersByStatus('pending')" style="cursor:pointer;">
           <div class="stat-value">${pending}</div>
-          <div class="stat-label">قيد الانتظار / Pending</div>
+          <div class="stat-label">🔴 قيد الانتظار / Pending</div>
         </div>
-        <div class="stat-card ${state.orderFilter === 'confirmed' ? 'active' : ''}" onclick="filterOrdersByStatus('confirmed')" style="cursor:pointer;">
-          <div class="stat-value">${confirmed}</div>
-          <div class="stat-label">مؤكدة / Confirmed</div>
+        <div class="stat-card ${state.orderFilter === 'received' ? 'active' : ''}" onclick="filterOrdersByStatus('received')" style="cursor:pointer;">
+          <div class="stat-value">${received}</div>
+          <div class="stat-label">📦 تم الاستلام / Received</div>
+        </div>
+        <div class="stat-card ${state.orderFilter === 'preparing' ? 'active' : ''}" onclick="filterOrdersByStatus('preparing')" style="cursor:pointer;">
+          <div class="stat-value">${preparing}</div>
+          <div class="stat-label">👨‍🍳 جاري التحضير / Preparing</div>
+        </div>
+        <div class="stat-card ${state.orderFilter === 'ready' ? 'active' : ''}" onclick="filterOrdersByStatus('ready')" style="cursor:pointer;">
+          <div class="stat-value">${ready}</div>
+          <div class="stat-label">✅ جاهز / Ready</div>
+        </div>
+        <div class="stat-card ${state.orderFilter === 'picked_up' ? 'active' : ''}" onclick="filterOrdersByStatus('picked_up')" style="cursor:pointer;">
+          <div class="stat-value">${picked_up}</div>
+          <div class="stat-label">🚗 تم الاستلام / Picked Up</div>
+        </div>
+        <div class="stat-card ${state.orderFilter === 'in_transit' ? 'active' : ''}" onclick="filterOrdersByStatus('in_transit')" style="cursor:pointer;">
+          <div class="stat-value">${in_transit}</div>
+          <div class="stat-label">🚚 في الطريق / In Transit</div>
         </div>
       </div>
     `;
@@ -513,9 +528,9 @@ function viewOrderDetails(orderId) {
     alert('Order not found');
     return;
   }
-  
+
   const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() + ' ' + new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleTimeString() : 'N/A';
-  
+
   const itemsRows = (order.items || []).map(item => `
     <tr style="border-bottom:1px solid #e2e8f0;">
       <td style="padding:12px;text-align:left;color:#2d3748;font-weight:500;">${item.name || 'N/A'}</td>
@@ -524,15 +539,15 @@ function viewOrderDetails(orderId) {
       <td style="padding:12px;text-align:right;color:#2d3748;font-weight:700;">${((item.price || 0) * (item.qty || 1)).toFixed(2)} DZD</td>
     </tr>
   `).join('');
-  
+
   // Create modal overlay
   const modalOverlay = document.createElement('div');
   modalOverlay.className = 'modal-overlay';
   modalOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;overflow-y:auto;';
-  
+
   const modalContent = document.createElement('div');
   modalContent.style.cssText = 'background:white;border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
-  
+
   modalContent.innerHTML = `
     <div style="position:sticky;top:0;background:linear-gradient(135deg,#FF1111 0%,#E60000 100%);color:white;padding:24px;border-radius:16px 16px 0 0;z-index:1000;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -541,7 +556,7 @@ function viewOrderDetails(orderId) {
       </div>
       <p style="margin:8px 0 0 0;opacity:0.9;font-size:14px;">Order ID: ${orderId.substring(0, 12)}</p>
     </div>
-    
+
     <div style="padding:24px;">
       <div style="background:#f7fafc;padding:20px;border-radius:12px;margin-bottom:20px;border:2px solid #e2e8f0;">
         <h3 style="color:#2d3748;margin:0 0 16px 0;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;">
@@ -565,7 +580,7 @@ function viewOrderDetails(orderId) {
         <p style="margin:12px 0 0 0;color:#718096;font-size:13px;">📌 Coordinates: ${order.location.lat.toFixed(6)}, ${order.location.lng.toFixed(6)}</p>
       </div>
       ` : ''}
-      
+
       <div style="background:#f7fafc;padding:20px;border-radius:12px;margin-bottom:20px;border:2px solid #e2e8f0;">
         <h3 style="color:#2d3748;margin:0 0 16px 0;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;">
           <span style="font-size:24px;">📦</span> Order Items
@@ -582,7 +597,7 @@ function viewOrderDetails(orderId) {
           <tbody>${itemsRows}</tbody>
         </table>
       </div>
-      
+
       <div style="background:linear-gradient(135deg,#FF1111 0%,#E60000 100%);color:white;padding:24px;border-radius:12px;box-shadow:0 4px 20px rgba(255,17,17,0.3);">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;font-size:15px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.2);">
           <div><strong>Subtotal:</strong> ${(order.subtotal || 0).toFixed(2)} DZD</div>
@@ -594,10 +609,10 @@ function viewOrderDetails(orderId) {
       </div>
     </div>
   `;
-  
+
   modalOverlay.appendChild(modalContent);
   document.body.appendChild(modalOverlay);
-  
+
   // Initialize map if location exists
   if (order.location && order.location.lat && order.location.lng && typeof L !== 'undefined') {
     setTimeout(() => {
@@ -609,14 +624,14 @@ function viewOrderDetails(orderId) {
             position: 'topright'
           }
         }).setView([order.location.lat, order.location.lng], 15);
-        
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '© OpenStreetMap contributors'
         }).addTo(map);
-        
+
         const marker = L.marker([order.location.lat, order.location.lng]).addTo(map);
         marker.bindPopup(`<b>${order.name || 'Customer'}</b><br>${order.address || 'Delivery Location'}`).openPopup();
-        
+
         // Fix zoom controls styling
         const style = document.createElement('style');
         style.textContent = `
@@ -651,7 +666,7 @@ function viewOrderDetails(orderId) {
       }
     }, 100);
   }
-  
+
   // Close on outside click
   modalOverlay.addEventListener('click', (e) => {
     if (e.target === modalOverlay) {
@@ -664,21 +679,21 @@ async function updateOrderStatus(orderId, newStatus) {
   try {
     console.log('🔄 Updating order status:', orderId, '→', newStatus);
     if (!window.dbService) throw new Error('dbService not available');
-    
+
     // Get order details before updating
     const order = state.orders.find(o => o.id === orderId);
     const customerEmail = order?.email;
-    
+
     // Update in database
     await window.dbService.updateOrder(orderId, { status: newStatus });
     await loadOrdersData();
     renderOrdersList();
-    
+
     // Update dashboard statistics if on dashboard section
     if (state.currentSection === 'dashboard') {
       renderDashboard();
     }
-    
+
     // Send notification to customer via OneSignal (using new unified endpoint)
     if (customerEmail) {
       try {
@@ -691,7 +706,7 @@ async function updateOrderStatus(orderId, newStatus) {
             customerEmail
           })
         });
-        
+
         if (notifyResponse.ok) {
           const result = await notifyResponse.json();
           console.log('✅ Customer notification sent:', result.recipients, 'recipients');
@@ -700,7 +715,7 @@ async function updateOrderStatus(orderId, newStatus) {
         console.warn('⚠️ Could not send customer notification:', notifyError);
       }
     }
-    
+
     console.log('✅ Order status updated');
   } catch (error) {
     console.error('❌ Error updating order:', error);
@@ -824,7 +839,7 @@ async function initializeDashboard() {
     if (!window.getAuthInstance) {
       throw new Error('Firebase not initialized');
     }
-    
+
     const auth = await window.getAuthInstance();
     if (!auth.currentUser) {
       console.log('No user logged in');
@@ -898,7 +913,7 @@ async function handleAdminLogin(e) {
     // Step 2: Use custom token to sign in with Firebase
     const auth = await window.getAuthInstance();
     const { signInWithCustomToken } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-    
+
     const userCredential = await signInWithCustomToken(auth, loginData.token);
     console.log('✅ Admin signed in successfully:', userCredential.user.email);
 
@@ -912,7 +927,7 @@ async function handleAdminLogin(e) {
 
     // Load dashboard data
     await initializeDashboard();
-    
+
     console.log('✅ Admin dashboard loaded');
   } catch (error) {
     console.error('❌ Login error:', error);
@@ -925,14 +940,14 @@ async function handleAdminLogin(e) {
 
 async function handleAdminLogout() {
   if (!confirm('Are you sure you want to logout?')) return;
-  
+
   try {
     console.log('🚪 Admin logout');
     const auth = await window.getAuthInstance();
     const { signOut } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
-    
+
     await signOut(auth);
-    
+
     // Clear session storage
     sessionStorage.removeItem('admin_token');
     sessionStorage.removeItem('admin_user');
@@ -940,7 +955,7 @@ async function handleAdminLogout() {
     // Show login page, hide dashboard
     document.getElementById('login-section').classList.remove('hidden');
     document.getElementById('admin-section').classList.add('hidden');
-    
+
     // Reset form
     document.getElementById('admin-login-form').reset();
     document.getElementById('login-error').style.display = 'none';
@@ -958,7 +973,7 @@ async function openAddModal() {
   document.getElementById('menu-item-modal').classList.add('active');
   document.getElementById('menu-item-form').reset();
   state.editingItem = null;
-  
+
   // Populate category dropdown
   const categorySelect = document.getElementById('item-category');
   if (categorySelect && state.categories) {
@@ -983,7 +998,7 @@ async function editMenuItem(itemId) {
   const item = state.menuItems.find(m => m.id === itemId);
   if (!item) return;
   state.editingItem = item;
-  
+
   // Populate category dropdown first
   const categorySelect = document.getElementById('item-category');
   if (categorySelect && state.categories) {
@@ -995,7 +1010,7 @@ async function editMenuItem(itemId) {
       categorySelect.appendChild(option);
     });
   }
-  
+
   document.getElementById('item-name').value = item.name;
   document.getElementById('item-price').value = item.price;
   document.getElementById('item-desc').value = item.description || '';
@@ -1018,11 +1033,11 @@ async function saveMenuItem(e) {
   }
 
   try {
-    const itemData = { 
-      name, 
-      price, 
-      description, 
-      category, 
+    const itemData = {
+      name,
+      price,
+      description,
+      category,
       image: imageUrl,
       img: imageUrl  // Store in both fields for backwards compatibility
     };
@@ -1175,11 +1190,11 @@ async function renderCustomersTable() {
           </thead>
           <tbody>
             ${state.customers.map((customer, index) => {
-              const lastOrderDate = customer.lastOrderDate 
+              const lastOrderDate = customer.lastOrderDate
                 ? customer.lastOrderDate.toLocaleDateString() + ' ' + customer.lastOrderDate.toLocaleTimeString()
                 : 'N/A';
               const bgColor = index % 2 === 0 ? '#f7fafc' : 'white';
-              
+
               return `
                 <tr style="background:${bgColor};border-bottom:1px solid #e2e8f0;">
                   <td style="padding:16px;color:#2d3748;font-weight:500;">${customer.email}</td>
@@ -1198,7 +1213,7 @@ async function renderCustomersTable() {
           </tbody>
         </table>
       </div>
-      
+
       <div style="margin-top:24px;padding:16px;background:#f7fafc;border-radius:8px;border-left:4px solid #667eea;">
         <p style="margin:0;color:#2d3748;font-weight:600;">📊 Total Customers: ${state.customers.length}</p>
         <p style="margin:8px 0 0 0;color:#718096;font-size:13px;">Customer data is automatically extracted from order history</p>
@@ -1361,9 +1376,9 @@ async function waitForDependencies(maxWait = 5000) {
 (async () => {
   // Clear cache first for admin panel
   clearAdminCache();
-  
+
   await waitForDependencies();
-  
+
   try {
     console.log('🔍 Checking if user is logged in...');
     const auth = await window.getAuthInstance();

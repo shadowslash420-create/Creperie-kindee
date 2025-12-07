@@ -346,17 +346,29 @@
         <div class="stat-value" id="total-orders">0</div>
         <div class="stat-label">الكل / All</div>
       </div>
-      <div class="stat-card" onclick="filterOrders('unconfirmed')" id="stat-unconfirmed">
-        <div class="stat-value" id="unconfirmed-count">0</div>
-        <div class="stat-label">غير مؤكدة / Unconfirmed</div>
-      </div>
       <div class="stat-card" onclick="filterOrders('pending')" id="stat-pending">
         <div class="stat-value" id="pending-count">0</div>
-        <div class="stat-label">قيد الانتظار / Pending</div>
+        <div class="stat-label">🔴 قيد الانتظار / Pending</div>
       </div>
-      <div class="stat-card" onclick="filterOrders('confirmed')" id="stat-confirmed">
-        <div class="stat-value" id="confirmed-count">0</div>
-        <div class="stat-label">مؤكدة / Confirmed</div>
+      <div class="stat-card" onclick="filterOrders('received')" id="stat-received">
+        <div class="stat-value" id="received-count">0</div>
+        <div class="stat-label">📦 تم الاستلام / Received</div>
+      </div>
+      <div class="stat-card" onclick="filterOrders('preparing')" id="stat-preparing">
+        <div class="stat-value" id="preparing-count">0</div>
+        <div class="stat-label">👨‍🍳 جاري التحضير / Preparing</div>
+      </div>
+      <div class="stat-card" onclick="filterOrders('ready')" id="stat-ready">
+        <div class="stat-value" id="ready-count">0</div>
+        <div class="stat-label">✅ جاهز / Ready</div>
+      </div>
+      <div class="stat-card" onclick="filterOrders('picked_up')" id="stat-picked_up">
+        <div class="stat-value" id="picked_up-count">0</div>
+        <div class="stat-label">🚗 تم الاستلام / Picked Up</div>
+      </div>
+      <div class="stat-card" onclick="filterOrders('in_transit')" id="stat-in_transit">
+        <div class="stat-value" id="in_transit-count">0</div>
+        <div class="stat-label">🚚 في الطريق / In Transit</div>
       </div>
     </div>
 
@@ -749,9 +761,12 @@
 
     function updateStats() {
       document.getElementById('total-orders').textContent = staffOrders.length;
-      document.getElementById('unconfirmed-count').textContent = staffOrders.filter(o => o.status === 'unconfirmed').length;
       document.getElementById('pending-count').textContent = staffOrders.filter(o => o.status === 'pending').length;
-      document.getElementById('confirmed-count').textContent = staffOrders.filter(o => o.status === 'confirmed').length;
+      document.getElementById('received-count').textContent = staffOrders.filter(o => o.status === 'received').length;
+      document.getElementById('preparing-count').textContent = staffOrders.filter(o => o.status === 'preparing').length;
+      document.getElementById('ready-count').textContent = staffOrders.filter(o => o.status === 'ready').length;
+      document.getElementById('picked_up-count').textContent = staffOrders.filter(o => o.status === 'picked_up').length;
+      document.getElementById('in_transit-count').textContent = staffOrders.filter(o => o.status === 'in_transit').length;
     }
 
     window.handleStaffLogout = async function() {
