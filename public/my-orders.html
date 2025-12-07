@@ -503,22 +503,22 @@
       const tbody = document.createElement('tbody');
 
       const statusColors = {
-        'unconfirmed': '#e74c3c',
         'pending': '#e67e22',
-        'confirmed': '#3498db',
-        'in-progress': '#9b59b6',
-        'delivered': '#27ae60',
-        'refused': '#e74c3c',
-        'cancelled': '#95a5a6'
+        'received': '#3498db',
+        'preparing': '#9b59b6',
+        'ready': '#27ae60',
+        'picked_up': '#f39c12',
+        'in_transit': '#1abc9c',
+        'cancelled': '#e74c3c'
       };
 
       const statusLabels = {
-        'unconfirmed': t.unconfirmed,
         'pending': t.pending,
-        'confirmed': t.confirmed,
-        'in-progress': t['in-progress'],
-        'delivered': t.delivered,
-        'refused': t.refused,
+        'received': t.received,
+        'preparing': t.preparing,
+        'ready': t.ready,
+        'picked_up': t.picked_up,
+        'in_transit': t.in_transit,
         'cancelled': t.cancelled
       };
 
@@ -540,9 +540,9 @@
         }
 
         const date = orderDate.toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'en-US');
-        const status = order.status || 'unconfirmed';
-        const statusColor = statusColors[status] || statusColors.unconfirmed;
-        const statusLabel = statusLabels[status] || statusLabels.unconfirmed || t.unconfirmed;
+        const status = order.status || 'pending';
+        const statusColor = statusColors[status] || statusColors.pending;
+        const statusLabel = statusLabels[status] || statusLabels.pending || t.pending;
 
         row.innerHTML = `
           <td><strong>${order.id}</strong></td>
@@ -571,28 +571,28 @@
       const modalDate = document.getElementById('order-modal-date');
 
       const statusColors = {
-        'unconfirmed': '#e74c3c',
         'pending': '#e67e22',
-        'confirmed': '#3498db',
-        'in-progress': '#9b59b6',
-        'delivered': '#27ae60',
-        'refused': '#e74c3c',
-        'cancelled': '#95a5a6'
+        'received': '#3498db',
+        'preparing': '#9b59b6',
+        'ready': '#27ae60',
+        'picked_up': '#f39c12',
+        'in_transit': '#1abc9c',
+        'cancelled': '#e74c3c'
       };
 
       const statusLabels = {
-        'unconfirmed': t.unconfirmed,
         'pending': t.pending,
-        'confirmed': t.confirmed,
-        'in-progress': t['in-progress'],
-        'delivered': t.delivered,
-        'refused': t.refused,
+        'received': t.received,
+        'preparing': t.preparing,
+        'ready': t.ready,
+        'picked_up': t.picked_up,
+        'in_transit': t.in_transit,
         'cancelled': t.cancelled
       };
 
-      const status = order.status || 'unconfirmed';
-      const statusColor = statusColors[status] || statusColors.unconfirmed;
-      const statusLabel = statusLabels[status] || statusLabels.unconfirmed || t.unconfirmed;
+      const status = order.status || 'pending';
+      const statusColor = statusColors[status] || statusColors.pending;
+      const statusLabel = statusLabels[status] || statusLabels.pending || t.pending;
 
       let orderDate;
       if (order.createdAt && order.createdAt.toDate) {
