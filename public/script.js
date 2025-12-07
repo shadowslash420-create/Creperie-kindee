@@ -432,9 +432,12 @@ window.renderCart = function() {
   const checkoutFormData = JSON.parse(localStorage.getItem('kc_checkout_form_data') || '{}');
   const hasUnsavedCheckout = checkoutFormData.firstName || checkoutFormData.phone || checkoutFormData.address;
 
-  let checkoutReminderBanner = '';
+  let html = '';
+  
+  // Show reminder banner only if there's saved data
+  const hasUnsavedCheckout = checkoutFormData.firstName || checkoutFormData.phone || checkoutFormData.address;
   if (hasUnsavedCheckout) {
-    checkoutReminderBanner = `
+    html += `
       <div style="
         background: linear-gradient(135deg, #FFF3CD 0%, #FFE69C 100%);
         border: 2px solid #FFC107;
@@ -498,8 +501,6 @@ window.renderCart = function() {
       </div>
     `;
   }
-
-  let html = checkoutReminderBanner;
   let subtotal = 0;
 
   cart.forEach((item, idx) => {
@@ -578,19 +579,16 @@ let isCheckoutSubmitting = false;
 
 // Close checkout modal
 window.closeCheckoutModal = function(event) {
-  // Prevent submission if in progress
-  if (isCheckoutSubmitting) {
-    console.log('⏳ Cannot close modal during order submission');
-    return;
-  }
-
   // Prevent event bubbling if called from click event
   if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
 
-  console.log('🔴 Closing checkout modal');
+  console.log('🔴 Forcing checkout modal close');
+
+  // Force reset submission flag
+  isCheckoutSubmitting = false;
 
   // Find and remove all checkout modals
   const modals = document.querySelectorAll('.checkout-modal-overlay, #checkout-modal');
@@ -607,12 +605,9 @@ window.closeCheckoutModal = function(event) {
       checkoutMap = null;
       checkoutMarker = null;
     } catch (e) {
-      console.log('Error cleaning up map:', e);
+      console.log('Map cleanup:', e);
     }
   }
-
-  // Reset submission flag
-  isCheckoutSubmitting = false;
 
   // Re-enable body scroll
   document.body.style.overflow = '';
@@ -1269,30 +1264,60 @@ window.checkoutFlow = async function() {
     console.log('✅ Checkout form auto-save enabled');
   }, 100);
 
-  // Add click event listener to close button - MUST be synchronous
-  const closeBtn = document.getElementById('checkout-close-btn');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('🔴 Close button clicked');
-      closeCheckoutModal();
-    });
+  // Add click event listener to close button with immediate priority
+  setTimeout(() => {
+    const closeBtn = document.getElementById('checkout-close-btn');
+    if (closeBtn) {
+      // Remove any existing listeners
+      const newCloseBtn = closeBtn.cloneNode(true);
+      closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+      
+      // Add fresh listener
+      newCloseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        console.log('🔴 Close button clicked');
+        
+        // Force close even if submitting
+        isCheckoutSubmitting = false;
+        
+        // Remove modal immediately
+        const modals = document.querySelectorAll('.checkout-modal-overlay, #checkout-modal');
+        modals.forEach(modal => {
+          if (modal) {
+            modal.remove();
+          }
+        });
+        
+        // Clean up map
+        if (checkoutMap) {
+          try {
+            checkoutMap.remove();
+            checkoutMap = null;
+            checkoutMarker = null;
+          } catch (e) {
+            console.log('Map cleanup:', e);
+          }
+        }
+        
+        // Re-enable body scroll
+        document.body.style.overflow = '';
+      }, { capture: true });
 
-    closeBtn.addEventListener('mouseover', () => {
-      if (!isCheckoutSubmitting) {
-        closeBtn.style.background = 'rgba(255,255,255,0.4)';
-        closeBtn.style.transform = 'scale(1.1)';
-      }
-    });
+      newCloseBtn.addEventListener('mouseover', () => {
+        newCloseBtn.style.background = 'rgba(255,255,255,0.4)';
+        newCloseBtn.style.transform = 'scale(1.1)';
+      });
 
-    closeBtn.addEventListener('mouseout', () => {
-      closeBtn.style.background = 'rgba(255,255,255,0.25)';
-      closeBtn.style.transform = 'scale(1)';
-    });
+      newCloseBtn.addEventListener('mouseout', () => {
+        newCloseBtn.style.background = 'rgba(255,255,255,0.25)';
+        newCloseBtn.style.transform = 'scale(1)';
+      });
 
-    console.log('✅ Close button event listener attached');
-  }
+      console.log('✅ Close button event listener attached');
+    }
+  }, 200);
 
   // Initialize map after modal is fully rendered with longer delays
   setTimeout(() => {
