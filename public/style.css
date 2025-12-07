@@ -2025,8 +2025,8 @@ button:disabled{
   }
   
   .orders-table td{
-    padding:3px 1px;
-    font-size:5.5px;
+    padding:2px 1px;
+    font-size:5px;
   }
   
   .orders-table-row::after{
