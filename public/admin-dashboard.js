@@ -458,13 +458,13 @@ async function renderOrdersList() {
                   <td style="font-weight:700;color:#E30613;font-size:15px;">${(order.total || 0).toFixed(2)} DZD</td>
                   <td>
                     <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;background:white;transition:all 0.3s;text-transform:uppercase;">
-                      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>🔴 Pending</option>
-                      <option value="received" ${order.status === 'received' ? 'selected' : ''}>📦 Order Received</option>
-                      <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>👨‍🍳 Preparing Your Order</option>
-                      <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>✅ Ready for Pickup</option>
-                      <option value="picked_up" ${order.status === 'picked_up' ? 'selected' : ''}>🚗 Picked Up</option>
-                      <option value="in_transit" ${order.status === 'in_transit' ? 'selected' : ''}>🚚 On the Way</option>
-                      <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+                      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>🔴 ${window.getT?.().status_pending || 'Pending'}</option>
+                      <option value="received" ${order.status === 'received' ? 'selected' : ''}>📦 ${window.getT?.().status_received || 'Order Received'}</option>
+                      <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>👨‍🍳 ${window.getT?.().status_preparing || 'Preparing'}</option>
+                      <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>✅ ${window.getT?.().status_ready || 'Ready'}</option>
+                      <option value="picked_up" ${order.status === 'picked_up' ? 'selected' : ''}>🚗 ${window.getT?.().status_picked_up || 'Picked Up'}</option>
+                      <option value="in_transit" ${order.status === 'in_transit' ? 'selected' : ''}>🚚 ${window.getT?.().status_in_transit || 'On the Way'}</option>
+                      <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ ${window.getT?.().status_cancelled || 'Cancelled'}</option>
                     </select>
                   </td>
                   <td style="color:#4a5568;font-size:13px;">${date}</td>

@@ -221,7 +221,10 @@ const translations = {
     'faq-q5': 'كم يستغرق التحضير والتوصيل؟', 'faq-a5': 'عادة يستغرق التحضير 10-15 دقيقة، والتوصيل 20-30 دقيقة حسب موقعك',
     selectItem: 'اختر منتج', noFeedback: 'لا توجد تقييمات حتى الآن', feedbackSuccess: 'شكراً لتقييمك!',
     feedbackFormTitle: 'شاركنا تجربتك', feedbackNameLabel: 'اسمك:', feedbackRatingLabel: 'التقييم:', feedbackCommentLabel: 'تعليقك:',
-    feedbackSubmitBtn: 'إرسال التقييم', feedbackReviewsTitle: 'تقييمات العملاء'
+    feedbackSubmitBtn: 'إرسال التقييم', feedbackReviewsTitle: 'تقييمات العملاء',
+    status_pending: 'في الانتظار', status_received: 'تم استلام الطلب', status_preparing: 'جاري تحضير طلبك', 
+    status_ready: 'جاهز للاستلام', status_picked_up: 'تم الالتقاط من قبل السائق', status_in_transit: 'في الطريق', 
+    status_cancelled: 'تم الإلغاء'
   },
   en: {
     home: 'Home', about: 'About Us', menu: 'Menu', orders: 'My Orders', faq: 'FAQ', feedback: 'Feedback', contact: 'Contact',
@@ -256,7 +259,10 @@ const translations = {
     'faq-q5': 'How long does preparation and delivery take?', 'faq-a5': 'Usually preparation takes 10-15 minutes, and delivery takes 20-30 minutes depending on your location',
     selectItem: 'Select Product', noFeedback: 'No reviews yet', feedbackSuccess: 'Thank you for your review!',
     feedbackFormTitle: 'Share Your Experience', feedbackNameLabel: 'Your Name:', feedbackRatingLabel: 'Rating:', feedbackCommentLabel: 'Your Comment:',
-    feedbackSubmitBtn: 'Submit Feedback', feedbackReviewsTitle: 'Customer Reviews'
+    feedbackSubmitBtn: 'Submit Feedback', feedbackReviewsTitle: 'Customer Reviews',
+    status_pending: 'Pending', status_received: 'Order Received', status_preparing: 'Preparing Your Order', 
+    status_ready: 'Ready for Pickup', status_picked_up: 'Picked Up', status_in_transit: 'On the Way', 
+    status_cancelled: 'Cancelled'
   }
 };
 
