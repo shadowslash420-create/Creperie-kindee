@@ -1189,64 +1189,71 @@ window.checkoutFlow = async function() {
     console.log('✅ Checkout form auto-save enabled');
   }, 100);
 
-  // Add click event listener to close button
+  // Add click event listener to close button - MUST be synchronous
+  const closeBtn = document.getElementById('checkout-close-btn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('🔴 Close button clicked');
+      closeCheckoutModal();
+    });
+
+    closeBtn.addEventListener('mouseover', () => {
+      if (!isCheckoutSubmitting) {
+        closeBtn.style.background = 'rgba(255,255,255,0.4)';
+        closeBtn.style.transform = 'scale(1.1)';
+      }
+    });
+
+    closeBtn.addEventListener('mouseout', () => {
+      closeBtn.style.background = 'rgba(255,255,255,0.25)';
+      closeBtn.style.transform = 'scale(1)';
+    });
+
+    console.log('✅ Close button event listener attached');
+  }
+
+  // Initialize map after modal is fully rendered with longer delays
   setTimeout(() => {
-    const closeBtn = document.getElementById('checkout-close-btn');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeCheckoutModal();
-      });
-
-      closeBtn.addEventListener('mouseover', () => {
-        if (!isCheckoutSubmitting) {
-          closeBtn.style.background = 'rgba(255,255,255,0.4)';
-          closeBtn.style.transform = 'scale(1.1)';
-        }
-      });
-
-      closeBtn.addEventListener('mouseout', () => {
-        closeBtn.style.background = 'rgba(255,255,255,0.25)';
-        closeBtn.style.transform = 'scale(1)';
-      });
-
-      console.log('✅ Close button event listener attached');
-    }
-  }, 100);
-
-  // Initialize map after modal is fully rendered
-  setTimeout(() => {
+    console.log('🗺️ Starting map initialization...');
     initCheckoutMap(savedInfo);
+  }, 500);
 
-    // Focus first input after map is initialized
-    setTimeout(() => {
-      const firstInput = document.getElementById('checkout-firstname');
-      if (firstInput) firstInput.focus();
-    }, 300);
+  // Focus first input
+  setTimeout(() => {
+    const firstInput = document.getElementById('checkout-firstname');
+    if (firstInput) firstInput.focus();
+  }, 600);
 
-    // Force map to resize multiple times to ensure visibility
-    setTimeout(() => {
-      if (checkoutMap) {
-        checkoutMap.invalidateSize();
-        console.log('🗺️ Map size invalidated (1000ms)');
-      }
-    }, 1000);
+  // Multiple aggressive map resize attempts with longer delays
+  setTimeout(() => {
+    if (checkoutMap) {
+      checkoutMap.invalidateSize(true);
+      console.log('🗺️ Map size invalidated (1000ms)');
+    }
+  }, 1000);
 
-    setTimeout(() => {
-      if (checkoutMap) {
-        checkoutMap.invalidateSize();
-        console.log('🗺️ Map size invalidated (1500ms)');
-      }
-    }, 1500);
+  setTimeout(() => {
+    if (checkoutMap) {
+      checkoutMap.invalidateSize(true);
+      console.log('🗺️ Map size invalidated (1500ms)');
+    }
+  }, 1500);
 
-    setTimeout(() => {
-      if (checkoutMap) {
-        checkoutMap.invalidateSize();
-        console.log('🗺️ Map size invalidated (2000ms)');
-      }
-    }, 2000);
-  }, 200);
+  setTimeout(() => {
+    if (checkoutMap) {
+      checkoutMap.invalidateSize(true);
+      console.log('🗺️ Map size invalidated (2500ms)');
+    }
+  }, 2500);
+
+  setTimeout(() => {
+    if (checkoutMap) {
+      checkoutMap.invalidateSize(true);
+      console.log('🗺️ Map size invalidated (3500ms)');
+    }
+  }, 3500);
 }
 
 // Map variables
@@ -1286,8 +1293,13 @@ function initCheckoutMap(savedInfo) {
 
   console.log('🗺️ Initializing map at:', defaultLat, defaultLng, 'Has existing:', hasExistingLocation);
 
+  // Ensure map container is visible before initializing
+  mapContainer.style.display = 'block';
+  mapContainer.style.visibility = 'visible';
+  
   // Initialize map
   try {
+    console.log('🗺️ Creating Leaflet map instance...');
     checkoutMap = L.map(mapContainer, {
       center: [defaultLat, defaultLng],
       zoom: hasExistingLocation ? 16 : 13,
@@ -1296,7 +1308,8 @@ function initCheckoutMap(savedInfo) {
       touchZoom: true,
       doubleClickZoom: true,
       attributionControl: true,
-      preferCanvas: false
+      preferCanvas: false,
+      trackResize: true
     });
 
     // Add tile layer (OpenStreetMap) with error handling
@@ -1371,12 +1384,29 @@ function initCheckoutMap(savedInfo) {
     // Use whenReady callback to ensure tiles load
     checkoutMap.whenReady(() => {
       console.log('🗺️ Map is ready and visible');
+      
+      // Aggressive resize attempts
       setTimeout(() => {
         if (checkoutMap) {
-          checkoutMap.invalidateSize();
-          console.log('🗺️ Map size invalidated (whenReady)');
+          checkoutMap.invalidateSize(true);
+          console.log('🗺️ Map size invalidated (whenReady 100ms)');
         }
       }, 100);
+      
+      setTimeout(() => {
+        if (checkoutMap) {
+          checkoutMap.invalidateSize(true);
+          checkoutMap.setView([defaultLat, defaultLng], hasExistingLocation ? 16 : 13);
+          console.log('🗺️ Map size invalidated and view reset (whenReady 500ms)');
+        }
+      }, 500);
+      
+      setTimeout(() => {
+        if (checkoutMap) {
+          checkoutMap.invalidateSize(true);
+          console.log('🗺️ Map size invalidated (whenReady 1000ms)');
+        }
+      }, 1000);
     });
 
     console.log('✅ Map initialized successfully');
