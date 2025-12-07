@@ -396,19 +396,37 @@
     const statusColors = {
       'unconfirmed': '#e74c3c',
       'pending': '#e67e22',
-      'confirmed': '#27ae60'
+      'confirmed': '#27ae60',
+      'received': '#3498db',
+      'preparing': '#f39c12',
+      'ready': '#1abc9c',
+      'picked_up': '#9b59b6',
+      'in_transit': '#7f8c8d',
+      'cancelled': '#c0392b'
     };
 
     const statusIcons = {
       'unconfirmed': '🔴',
       'pending': '⏳',
-      'confirmed': '✅'
+      'confirmed': '✅',
+      'received': '📦',
+      'preparing': '👨‍🍳',
+      'ready': '✅',
+      'picked_up': '🚗',
+      'in_transit': '🚚',
+      'cancelled': '❌'
     };
 
     const statusLabels = {
       'unconfirmed': 'غير مؤكد / Unconfirmed',
       'pending': 'قيد الانتظار / Pending',
-      'confirmed': 'مؤكد / Confirmed'
+      'confirmed': 'مؤكد / Confirmed',
+      'received': 'تم الاستلام / Order Received',
+      'preparing': 'جاري التحضير / Preparing',
+      'ready': 'جاهز / Ready',
+      'picked_up': 'تم الاستلام / Picked Up',
+      'in_transit': 'في الطريق / On the Way',
+      'cancelled': 'ملغى / Cancelled'
     };
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -420,7 +438,7 @@
             window.location.href = '/login.html';
           } else if (user && !pageLoaded) {
             pageLoaded = true;
-            
+
             try {
               const vapidResponse = await fetch('/api/vapid-key');
               if (vapidResponse.ok) {
@@ -484,10 +502,10 @@
 
     window.filterOrders = function(filter) {
       currentFilter = filter;
-      
+
       document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
       document.getElementById('stat-' + (filter === 'all' ? 'all' : filter)).classList.add('active');
-      
+
       applyFilter();
     };
 
@@ -502,7 +520,7 @@
 
     function renderOrdersGrid() {
       const container = document.getElementById('orders-container');
-      
+
       if (filteredOrders.length === 0) {
         container.innerHTML = `
           <div class="no-data">
@@ -526,7 +544,7 @@
             const statusColor = statusColors[order.status] || '#999';
             const statusIcon = statusIcons[order.status] || '❓';
             const itemCount = (order.items || []).reduce((sum, item) => sum + (item.qty || 1), 0);
-            
+
             return `
               <div class="staff-order-card">
                 <div class="staff-order-header">
@@ -562,9 +580,13 @@
                   <div class="staff-order-total">${(order.total || 0).toFixed(2)} DZD</div>
                   <div class="staff-order-actions">
                     <select class="status-select" onchange="updateOrderStatus('${order.id}', this.value); event.stopPropagation();">
-                      <option value="unconfirmed" ${order.status === 'unconfirmed' ? 'selected' : ''}>🔴 Unconfirmed</option>
-                      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-                      <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>✅ Confirmed</option>
+                      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>🔴 ${window.getT?.().status_pending || 'Pending'}</option>
+                      <option value="received" ${order.status === 'received' ? 'selected' : ''}>📦 ${window.getT?.().status_received || 'Order Received'}</option>
+                      <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>👨‍🍳 ${window.getT?.().status_preparing || 'Preparing'}</option>
+                      <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>✅ ${window.getT?.().status_ready || 'Ready'}</option>
+                      <option value="picked_up" ${order.status === 'picked_up' ? 'selected' : ''}>🚗 ${window.getT?.().status_picked_up || 'Picked Up'}</option>
+                      <option value="in_transit" ${order.status === 'in_transit' ? 'selected' : ''}>🚚 ${window.getT?.().status_in_transit || 'On the Way'}</option>
+                      <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ ${window.getT?.().status_cancelled || 'Cancelled'}</option>
                     </select>
                     <button class="view-btn" onclick="showOrderDetails('${order.id}')">👁️ عرض</button>
                   </div>
@@ -683,7 +705,7 @@
 
             L.marker([order.location.lat, order.location.lng], { icon: redIcon }).addTo(map);
             mapDiv._leafletMap = map;
-            
+
             setTimeout(() => map.invalidateSize(), 100);
           }
         }, 300);
@@ -697,10 +719,10 @@
     window.updateOrderStatus = async function(orderId, newStatus) {
       try {
         const order = staffOrders.find(o => o.id === orderId);
-        
+
         await dbService.updateOrderStatus(orderId, newStatus);
         await loadStaffOrders();
-        
+
         if (order) {
           try {
             await fetch('/api/notify-order-status', {
@@ -717,7 +739,7 @@
             console.warn('Could not send notification:', err);
           }
         }
-        
+
         showNotification('تم التحديث', 'Order status updated successfully');
       } catch (error) {
         console.error('Error updating order:', error);

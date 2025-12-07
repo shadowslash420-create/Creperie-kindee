@@ -102,6 +102,21 @@ async function loadOrdersData() {
   }
 }
 
+// Setup real-time order listener for admin
+function setupOrdersListener() {
+  if (!window.dbService) return;
+  window.dbService.listenToOrderChanges((updatedOrders) => {
+    console.log('🔄 Orders updated in real-time:', updatedOrders.length);
+    state.orders = updatedOrders;
+    if (state.currentSection === 'orders') {
+      renderOrdersList();
+    }
+    if (state.currentSection === 'dashboard') {
+      renderDashboard();
+    }
+  });
+}
+
 async function loadCategoriesData() {
   try {
     console.log('📂 Loading categories...');
@@ -400,39 +415,46 @@ async function renderOrdersList() {
     }
 
     // Calculate order stats
-    const confirmed = state.orders.filter(o => o.status === 'preparing').length;
-    const pending = state.orders.filter(o => o.status === 'received').length;
-    const unconfirmed = state.orders.filter(o => o.status === 'pending').length;
+    const confirmed = state.orders.filter(o => o.status === 'confirmed').length;
+    const pending = state.orders.filter(o => o.status === 'pending').length;
+    const unconfirmed = state.orders.filter(o => o.status === 'unconfirmed').length;
     const total = state.orders.length;
 
-    // Stats cards HTML
+    // Apply filter if exists
+    let filteredOrders = state.orders;
+    if (state.orderFilter && state.orderFilter !== 'all') {
+      filteredOrders = state.orders.filter(o => o.status === state.orderFilter);
+    }
+
+    // Stats cards HTML with click handlers
     const statsHtml = `
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value">${confirmed}</div>
-          <div class="stat-label">Confirmed / مؤكدة</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${pending}</div>
-          <div class="stat-label">Pending / قيد الانتظار</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${unconfirmed}</div>
-          <div class="stat-label">Unconfirmed / غير مؤكدة</div>
-        </div>
-        <div class="stat-card">
+        <div class="stat-card ${state.orderFilter === 'all' ? 'active' : ''}" onclick="filterOrdersByStatus('all')" style="cursor:pointer;">
           <div class="stat-value">${total}</div>
-          <div class="stat-label">Total Orders / إجمالي الطلبات</div>
+          <div class="stat-label">الكل / All</div>
+        </div>
+        <div class="stat-card ${state.orderFilter === 'unconfirmed' ? 'active' : ''}" onclick="filterOrdersByStatus('unconfirmed')" style="cursor:pointer;">
+          <div class="stat-value">${unconfirmed}</div>
+          <div class="stat-label">غير مؤكدة / Unconfirmed</div>
+        </div>
+        <div class="stat-card ${state.orderFilter === 'pending' ? 'active' : ''}" onclick="filterOrdersByStatus('pending')" style="cursor:pointer;">
+          <div class="stat-value">${pending}</div>
+          <div class="stat-label">قيد الانتظار / Pending</div>
+        </div>
+        <div class="stat-card ${state.orderFilter === 'confirmed' ? 'active' : ''}" onclick="filterOrdersByStatus('confirmed')" style="cursor:pointer;">
+          <div class="stat-value">${confirmed}</div>
+          <div class="stat-label">مؤكدة / Confirmed</div>
         </div>
       </div>
     `;
 
-    // Orders table HTML
+    // Orders table HTML with scrollable container
     const tableHtml = `
       <div class="section">
         <div class="section-title">📋 الطلبات الحالية - Current Orders</div>
         <p style="color: #718096; font-size: 14px; margin-bottom: 20px; font-weight: 500;">💡 Click on order status to update it / اضغط على حالة الطلب لتحديثها</p>
-        <table class="orders-table">
+        <div class="orders-table-container" style="overflow-x:auto;max-width:100%;">
+        <table class="orders-table" style="min-width:1000px;">
           <thead>
             <tr>
               <th style="min-width: 140px;">🔢 رقم الطلب<br/>Order ID</th>
@@ -446,7 +468,7 @@ async function renderOrdersList() {
             </tr>
           </thead>
           <tbody>
-            ${state.orders.map(order => {
+            ${filteredOrders.map(order => {
               const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() + ' ' + new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleTimeString() : 'N/A';
               const statusClass = `status-${order.status}`;
               return `
@@ -474,6 +496,7 @@ async function renderOrdersList() {
             }).join('')}
           </tbody>
         </table>
+        </div>
       </div>
     `;
 
@@ -821,6 +844,9 @@ async function initializeDashboard() {
       loadStaffData()
     ]);
 
+    // Setup real-time listeners
+    setupOrdersListener();
+
     console.log('✅ Dashboard initialized');
     showSection('dashboard');
   } catch (error) {
@@ -1018,13 +1044,10 @@ async function saveMenuItem(e) {
 
 // ==================== ORDERS MANAGEMENT ====================
 
-function filterOrdersByStatus(status) {
+window.filterOrdersByStatus = function(status) {
   state.orderFilter = status;
   renderOrdersList();
-  const buttons = document.querySelectorAll('.filter-tab');
-  buttons.forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
-}
+};
 
 function filterOrders(event) {
   const searchTerm = event.target.value.toLowerCase();
@@ -1304,6 +1327,7 @@ window.renderStaffTable = renderStaffTable;
 window.renderCustomersTable = renderCustomersTable;
 window.updateOrderStatus = updateOrderStatus;
 window.viewOrderDetails = viewOrderDetails;
+window.filterOrdersByStatus = filterOrdersByStatus;
 
 console.log('✅ Admin dashboard script loaded');
 
