@@ -1953,10 +1953,10 @@ button:disabled{
 }
 
 .orders-table th{
-  padding:16px 12px;
+  padding:20px 18px;
   text-align:left;
   font-weight:700;
-  font-size:12px;
+  font-size:13px;
   text-transform:uppercase;
   letter-spacing:0.5px;
   font-family:'Inter', sans-serif;
@@ -1980,8 +1980,8 @@ button:disabled{
 }
 
 .orders-table td{
-  padding:16px 12px;
-  font-size:14px;
+  padding:18px 18px;
+  font-size:15px;
   color:var(--text-primary);
   word-break:break-word;
   vertical-align:middle;
