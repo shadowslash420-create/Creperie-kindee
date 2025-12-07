@@ -1,6 +1,6 @@
-// Authentication Logic - Firebase + Native Google Sign-In + Demo Mode
+// Authentication Logic - Firebase + Native Google Sign-In
 
-import { getAuthInstance, isFirebaseAvailable } from './firebase-config.js';
+import { getAuthInstance } from './firebase-config.js';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -11,31 +11,10 @@ import {
   GoogleAuthProvider
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-// Demo user storage
-const demoUsers = new Map();
-const demosessionKey = 'demo_session_user';
-
 // ===== FIREBASE AUTHENTICATION FUNCTIONS =====
 
 export async function signInWithEmail(email, password) {
   try {
-    const firebaseAvailable = isFirebaseAvailable();
-    
-    if (!firebaseAvailable) {
-      // Demo mode - check if user exists
-      console.log('⚠️ Firebase not available - using DEMO MODE');
-      if (!demoUsers.has(email.toLowerCase())) {
-        throw { code: 'auth/user-not-found', message: 'User not found' };
-      }
-      const user = demoUsers.get(email.toLowerCase());
-      if (user.password !== password) {
-        throw { code: 'auth/wrong-password', message: 'Wrong password' };
-      }
-      localStorage.setItem(demosessionKey, JSON.stringify(user));
-      console.log('✅ Demo login successful');
-      return user;
-    }
-    
     const auth = await getAuthInstance();
     if (!auth) throw new Error('Firebase auth not initialized');
     const result = await signInWithEmailAndPassword(auth, email, password);
@@ -49,27 +28,6 @@ export async function signInWithEmail(email, password) {
 
 export async function signUpWithEmail(email, password, displayName) {
   try {
-    const firebaseAvailable = isFirebaseAvailable();
-    
-    if (!firebaseAvailable) {
-      // Demo mode - create user
-      console.log('⚠️ Firebase not available - using DEMO MODE');
-      const lowerEmail = email.toLowerCase();
-      if (demoUsers.has(lowerEmail)) {
-        throw { code: 'auth/email-already-in-use', message: 'Email already in use' };
-      }
-      const user = {
-        uid: 'demo_' + Date.now(),
-        email: email,
-        displayName: displayName || 'User',
-        password: password
-      };
-      demoUsers.set(lowerEmail, user);
-      localStorage.setItem(demosessionKey, JSON.stringify(user));
-      console.log('✅ Demo signup successful');
-      return user;
-    }
-    
     const auth = await getAuthInstance();
     if (!auth) throw new Error('Firebase auth not initialized');
     const result = await createUserWithEmailAndPassword(auth, email, password);
@@ -86,15 +44,6 @@ export async function signUpWithEmail(email, password, displayName) {
 
 export async function signOutUser() {
   try {
-    const firebaseAvailable = isFirebaseAvailable();
-    
-    if (!firebaseAvailable) {
-      // Demo mode
-      localStorage.removeItem(demosessionKey);
-      console.log('✅ Demo logout successful');
-      return;
-    }
-    
     const auth = await getAuthInstance();
     if (!auth) throw new Error('Firebase auth not initialized');
     await firebaseSignOut(auth);
@@ -107,23 +56,6 @@ export async function signOutUser() {
 
 export async function onAuthChange(callback) {
   try {
-    const firebaseAvailable = isFirebaseAvailable();
-    
-    if (!firebaseAvailable) {
-      // Demo mode - check localStorage for session
-      const sessionUser = localStorage.getItem(demosessionKey);
-      const user = sessionUser ? JSON.parse(sessionUser) : null;
-      callback(user);
-      
-      // Setup listener for storage changes
-      const handleStorageChange = () => {
-        const updated = localStorage.getItem(demosessionKey);
-        callback(updated ? JSON.parse(updated) : null);
-      };
-      window.addEventListener('storage', handleStorageChange);
-      return () => window.removeEventListener('storage', handleStorageChange);
-    }
-    
     const auth = await getAuthInstance();
     if (!auth) return () => {};
     return onAuthStateChanged(auth, callback);

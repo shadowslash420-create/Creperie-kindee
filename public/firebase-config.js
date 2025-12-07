@@ -14,8 +14,6 @@ let initPromise = null;
 
 // Firebase configuration object - will be loaded from backend
 let firebaseConfig = null;
-let firebaseInitialized = false;
-let firebaseError = null;
 
 // Load Firebase config from backend API or fallback to hardcoded values
 async function loadFirebaseConfig() {
@@ -48,11 +46,6 @@ async function loadFirebaseConfig() {
   }
 }
 
-// Check if Firebase initialized successfully
-export function isFirebaseAvailable() {
-  return firebaseInitialized && !firebaseError;
-}
-
 // Initialize Firebase (singleton pattern)
 async function initializeFirebase() {
   if (initPromise) {
@@ -75,17 +68,12 @@ async function initializeFirebase() {
         console.warn('⚠️ Could not set persistence:', persistError.message);
       }
       
-      firebaseInitialized = true;
       console.log('Firebase initialized successfully with Firestore and Storage');
       return { app, auth, db, storage };
     } catch (error) {
       console.error('Firebase initialization failed:', error);
-      firebaseError = error;
-      firebaseInitialized = false;
       initPromise = null; // Reset so it can be retried
-      // Don't throw - allow app to continue in demo mode
-      console.warn('⚠️ App will run in DEMO MODE without Firebase');
-      return { app: null, auth: null, db: null, storage: null };
+      throw error;
     }
   })();
 
