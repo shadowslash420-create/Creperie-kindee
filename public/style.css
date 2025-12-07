@@ -1945,7 +1945,7 @@ button:disabled{
   box-shadow:0 2px 8px rgba(0,0,0,0.06);
   animation:fadeIn 0.5s ease-out;
   table-layout:auto;
-  font-size:9px;
+  font-size:8px;
 }
 
 .orders-table thead{
@@ -1957,7 +1957,7 @@ button:disabled{
   padding:6px 8px;
   text-align:left;
   font-weight:600;
-  font-size:9px;
+  font-size:8px;
   text-transform:uppercase;
   letter-spacing:0.2px;
   font-family:'Inter', sans-serif;
@@ -1992,12 +1992,12 @@ button:disabled{
 
 @media (max-width:768px){
   .orders-table{
-    font-size:9px;
+    font-size:8px;
   }
   
   .orders-table th{
     padding:5px 6px;
-    font-size:9px;
+    font-size:8px;
     word-break:break-word;
     line-height:1.1;
   }
@@ -2028,11 +2028,11 @@ button:disabled{
   
   .orders-table td{
     padding:5px 6px;
-    font-size:9px;
+    font-size:8px;
   }
   
   .orders-table-row::after{
-    font-size:9px;
+    font-size:8px;
   }
 }
 
@@ -2057,7 +2057,7 @@ button:disabled{
   transform:translateY(-50%);
   color:#E30613;
   font-weight:700;
-  font-size:10px;
+  font-size:8px;
   opacity:0;
   transition:opacity 0.2s ease;
   pointer-events:none;
@@ -2073,7 +2073,7 @@ button:disabled{
 
 .orders-table td{
   padding:6px 8px;
-  font-size:9px;
+  font-size:8px;
   color:var(--text-primary);
   word-break:break-word;
   vertical-align:middle;
