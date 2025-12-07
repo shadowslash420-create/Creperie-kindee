@@ -420,6 +420,7 @@ window.renderCart = function() {
 
   const t = getT();
   const lang = getCurrentLang();
+  const isArabic = lang === 'ar';
 
   if (cart.length === 0) {
     cartContents.innerHTML = `<p style="text-align:center;color:#999;padding:40px 20px;">${t.emptyCart}</p>`;
@@ -427,7 +428,78 @@ window.renderCart = function() {
     return;
   }
 
-  let html = '';
+  // Check for unsaved checkout data
+  const checkoutFormData = JSON.parse(localStorage.getItem('kc_checkout_form_data') || '{}');
+  const hasUnsavedCheckout = checkoutFormData.firstName || checkoutFormData.phone || checkoutFormData.address;
+
+  let checkoutReminderBanner = '';
+  if (hasUnsavedCheckout) {
+    checkoutReminderBanner = `
+      <div style="
+        background: linear-gradient(135deg, #FFF3CD 0%, #FFE69C 100%);
+        border: 2px solid #FFC107;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+      ">
+        <div style="display: flex; align-items: start; gap: 12px;">
+          <div style="font-size: 24px; flex-shrink: 0;">⚠️</div>
+          <div style="flex: 1;">
+            <div style="font-weight: 700; color: #856404; margin-bottom: 6px; font-size: 15px;">
+              ${isArabic ? '⏳ لم تكمل طلبك!' : '⏳ You didn\'t complete your order!'}
+            </div>
+            <div style="color: #856404; font-size: 13px; line-height: 1.5; margin-bottom: 12px;">
+              ${isArabic 
+                ? `لديك معلومات محفوظة: ${checkoutFormData.firstName || ''} ${checkoutFormData.lastName || ''}`
+                : `You have saved information: ${checkoutFormData.firstName || ''} ${checkoutFormData.lastName || ''}`
+              }
+            </div>
+            <button 
+              onclick="resumeCheckout()"
+              style="
+                background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(227, 6, 19, 0.3);
+                transition: all 0.3s ease;
+              "
+              onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(227, 6, 19, 0.4)';"
+              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(227, 6, 19, 0.3)';"
+            >
+              ${isArabic ? '✅ استكمل الطلب' : '✅ Resume Checkout'}
+            </button>
+            <button 
+              onclick="clearCheckoutFormData(); renderCart();"
+              style="
+                background: transparent;
+                color: #856404;
+                border: 1px solid #856404;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                margin-left: 8px;
+                transition: all 0.3s ease;
+              "
+              onmouseover="this.style.background='rgba(133, 100, 4, 0.1)';"
+              onmouseout="this.style.background='transparent';"
+            >
+              ${isArabic ? '🗑️ مسح' : '🗑️ Clear'}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  let html = checkoutReminderBanner;
   let subtotal = 0;
 
   cart.forEach((item, idx) => {
@@ -830,6 +902,14 @@ function saveCheckoutFormData() {
 // Clear checkout form data after successful order
 function clearCheckoutFormData() {
   localStorage.removeItem('kc_checkout_form_data');
+}
+
+// Resume checkout with saved data
+window.resumeCheckout = function() {
+  closeAllSidebars();
+  setTimeout(() => {
+    checkoutFlow();
+  }, 300);
 }
 
 // Checkout flow with modal
