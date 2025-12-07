@@ -1990,41 +1990,41 @@ button:disabled{
 
 @media (max-width:768px){
   .orders-table{
-    font-size:11px;
-  }
-  
-  .orders-table th{
-    padding:8px 5px;
     font-size:10px;
   }
   
-  .orders-table th:first-child{
-    min-width:50px;
+  .orders-table th{
+    padding:6px 4px;
+    font-size:9px;
   }
-
-  .orders-table th:nth-child(2){
+  
+  .orders-table th:first-child{
     min-width:45px;
   }
 
-  .orders-table th:nth-child(3){
-    min-width:55px;
+  .orders-table th:nth-child(2){
+    min-width:40px;
   }
 
-  .orders-table th:nth-child(4){
+  .orders-table th:nth-child(3){
     min-width:50px;
   }
 
+  .orders-table th:nth-child(4){
+    min-width:45px;
+  }
+
   .orders-table th:nth-child(5){
-    min-width:55px;
+    min-width:50px;
   }
 
   .orders-table th:last-child{
-    min-width:30px;
+    min-width:28px;
   }
   
   .orders-table td{
-    padding:10px 5px;
-    font-size:12px;
+    padding:8px 4px;
+    font-size:11px;
   }
   
   .orders-table-row::after{
