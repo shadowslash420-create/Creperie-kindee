@@ -486,9 +486,13 @@
 
             L.marker([order.location.lat, order.location.lng], { icon: redIcon }).addTo(map);
             mapDiv._leafletMap = map;
-            map.invalidateSize();
+            
+            // Force map size recalculation
+            setTimeout(() => {
+              map.invalidateSize();
+            }, 100);
           }
-        }, 200);
+        }, 300);
       }
     };
 

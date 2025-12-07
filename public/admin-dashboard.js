@@ -538,7 +538,7 @@ function viewOrderDetails(orderId) {
         <h3 style="color:#2d3748;margin:0 0 16px 0;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;">
           <span style="font-size:24px;">📍</span> Delivery Location
         </h3>
-        <div id="order-location-map-${orderId}" style="width:100%;height:300px;border-radius:8px;border:2px solid #cbd5e0;"></div>
+        <div id="order-location-map-${orderId}" style="width:100%;height:350px;min-height:350px;border-radius:8px;border:2px solid #cbd5e0;background:#e2e8f0;"></div>
         <p style="margin:12px 0 0 0;color:#718096;font-size:13px;">📌 Coordinates: ${order.location.lat.toFixed(6)}, ${order.location.lng.toFixed(6)}</p>
       </div>
       ` : ''}

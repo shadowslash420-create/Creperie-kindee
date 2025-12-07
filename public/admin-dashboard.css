@@ -1249,6 +1249,15 @@
   }
 }
 
+/* Map container explicit sizing */
+[id^="order-location-map-"] {
+  width: 100% !important;
+  height: 350px !important;
+  min-height: 350px !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
 /* Leaflet map zoom controls - position below header */
 .leaflet-top {
   top: 80px !important; /* Push zoom controls below the header */
