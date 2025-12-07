@@ -53,21 +53,21 @@
   </header>
 
   <div class="container">
-    <section class="section">
-      <div style="margin-bottom:30px;">
-        <h2 class="section-title" id="orders-title" style="text-align:center;margin-bottom:12px;">طلباتي</h2>
-        <p style="text-align:center;color:#888;font-size:15px;margin:0;">👇 Click on any order to view details, track status & messages</p>
-        <div id="orders-summary" style="text-align:center;margin-top:16px;font-size:14px;color:#666;"></div>
+    <section class="section" style="max-width:900px;margin:0 auto;padding:40px 20px;">
+      <div style="margin-bottom:24px;">
+        <h2 class="section-title" id="orders-title" style="text-align:center;margin-bottom:10px;font-size:28px;">طلباتي</h2>
+        <p style="text-align:center;color:#888;font-size:13px;margin:0;">👇 Click on any order to view details, track status & messages</p>
+        <div id="orders-summary" style="text-align:center;margin-top:12px;font-size:12px;color:#666;"></div>
       </div>
 
       <!-- Loading Indicator -->
-      <div id="orders-loader" style="display:none;text-align:center;padding:60px 20px;">
-        <div style="display:inline-block;width:40px;height:40px;border:3px solid #ddd;border-top-color:#E30613;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-        <p style="margin-top:20px;color:#999;font-size:14px;">جاري تحميل الطلبات...</p>
+      <div id="orders-loader" style="display:none;text-align:center;padding:40px 20px;">
+        <div style="display:inline-block;width:32px;height:32px;border:3px solid #ddd;border-top-color:#E30613;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+        <p style="margin-top:16px;color:#999;font-size:12px;">جاري تحميل الطلبات...</p>
       </div>
 
       <!-- Orders Table -->
-      <div id="orders-list"></div>
+      <div id="orders-list" style="overflow-x:auto;"></div>
     </section>
 
     <footer class="footer">
