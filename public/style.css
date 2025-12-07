@@ -1994,34 +1994,34 @@ button:disabled{
   }
   
   .orders-table th{
-    padding:3px 2px;
-    font-size:6px;
+    padding:2px 1px;
+    font-size:5px;
     word-break:break-word;
-    line-height:1.1;
+    line-height:1;
   }
   
   .orders-table th:first-child{
-    min-width:35px;
+    min-width:30px;
   }
 
   .orders-table th:nth-child(2){
-    min-width:32px;
+    min-width:28px;
   }
 
   .orders-table th:nth-child(3){
-    min-width:38px;
+    min-width:32px;
   }
 
   .orders-table th:nth-child(4){
-    min-width:35px;
+    min-width:30px;
   }
 
   .orders-table th:nth-child(5){
-    min-width:38px;
+    min-width:32px;
   }
 
   .orders-table th:last-child{
-    min-width:20px;
+    min-width:18px;
   }
   
   .orders-table td{
