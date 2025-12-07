@@ -520,12 +520,12 @@
       const thead = document.createElement('thead');
       const headerRow = document.createElement('tr');
       headerRow.innerHTML = `
-        <th style="min-width:100px;">${t.orderNumber}</th>
-        <th style="min-width:90px;">${t.date}</th>
-        <th style="min-width:100px;">${t.customer}</th>
-        <th style="min-width:100px;">${t.phone}</th>
-        <th style="min-width:90px;">${t.total}</th>
-        <th style="min-width:80px;text-align:center;">${t.status}</th>
+        <th style="min-width:60px;">${t.orderNumber}</th>
+        <th style="min-width:55px;">${t.date}</th>
+        <th style="min-width:60px;">${t.customer}</th>
+        <th style="min-width:55px;">${t.phone}</th>
+        <th style="min-width:55px;">${t.total}</th>
+        <th style="min-width:35px;text-align:center;">${t.status}</th>
       `;
       thead.appendChild(headerRow);
       table.appendChild(thead);
@@ -576,12 +576,12 @@
         const statusColor = statusColors[status] || statusColors.pending;
 
         row.innerHTML = `
-          <td style="font-size:13px;"><strong>${order.id}</strong></td>
-          <td style="font-size:13px;">${date}</td>
-          <td style="font-size:13px;">${order.name}</td>
-          <td style="font-size:13px;">${order.phone}</td>
-          <td style="font-size:13px;"><strong>${order.total.toFixed(2)} DZD</strong></td>
-          <td style="text-align:center;"><div style="width:20px;height:20px;border-radius:50%;background-color:${statusColor};cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.2);margin:0 auto;" title="${statusLabel}"></div></td>
+          <td><strong>${order.id}</strong></td>
+          <td>${date}</td>
+          <td>${order.name}</td>
+          <td>${order.phone}</td>
+          <td><strong>${order.total.toFixed(2)}</strong></td>
+          <td style="text-align:center;"><div style="width:14px;height:14px;border-radius:50%;background-color:${statusColor};cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.2);margin:0 auto;" title="${statusLabel}"></div></td>
         `;
 
         tbody.appendChild(row);
