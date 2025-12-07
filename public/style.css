@@ -1944,8 +1944,7 @@ button:disabled{
   overflow:hidden;
   box-shadow:0 4px 20px rgba(0,0,0,0.08);
   animation:fadeIn 0.5s ease-out;
-  display:block;
-  overflow-x:auto;
+  table-layout:fixed;
 }
 
 .orders-table thead{
