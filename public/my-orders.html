@@ -54,7 +54,11 @@
 
   <div class="container">
     <section class="section">
-      <h2 class="section-title" id="orders-title" style="text-align:center">طلباتي</h2>
+      <div style="margin-bottom:30px;">
+        <h2 class="section-title" id="orders-title" style="text-align:center;margin-bottom:12px;">طلباتي</h2>
+        <p style="text-align:center;color:#888;font-size:15px;margin:0;">👇 Click on any order to view details, track status & messages</p>
+        <div id="orders-summary" style="text-align:center;margin-top:16px;font-size:14px;color:#666;"></div>
+      </div>
 
       <!-- Loading Indicator -->
       <div id="orders-loader" style="display:none;text-align:center;padding:60px 20px;">
@@ -480,11 +484,27 @@
     function displayOrders(orders){
       const container = document.getElementById('orders-list');
       const loader = document.getElementById('orders-loader');
+      const summary = document.getElementById('orders-summary');
       const t = getOrderTranslations();
       const lang = getCurrentLang();
 
       container.innerHTML = '';
       loader.style.display = 'none';
+      
+      // Show order count and last order date
+      if(orders.length > 0) {
+        const lastOrder = orders[0];
+        let lastOrderDate = '';
+        if (lastOrder.createdAt && lastOrder.createdAt.toDate) {
+          lastOrderDate = lastOrder.createdAt.toDate().toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'en-US');
+        } else if (lastOrder.createdAt) {
+          lastOrderDate = new Date(lastOrder.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'en-US');
+        }
+        const summaryText = lang === 'ar' 
+          ? `📦 لديك ${orders.length} طلب | آخر طلب: ${lastOrderDate}`
+          : `📦 You have ${orders.length} order${orders.length !== 1 ? 's' : ''} | Last order: ${lastOrderDate}`;
+        summary.textContent = summaryText;
+      }
 
       if(orders.length === 0){
         const msg = lang === 'ar' ? 'لم تقم بأي طلبات حتى الآن. ابدأ التسوق الآن!' : 'You haven\'t placed any orders yet. Start shopping now!';
@@ -536,6 +556,9 @@
         const row = document.createElement('tr');
         row.className = 'orders-table-row';
         row.style.cursor = 'pointer';
+        const status = order.status || 'pending';
+        const statusLabel = statusLabels[status] || statusLabels.pending || t.pending;
+        row.title = `Click to view details • Status: ${statusLabel}`;
         row.onclick = () => openOrderModal(order, t, lang);
 
         let orderDate;
@@ -550,9 +573,7 @@
         }
 
         const date = orderDate.toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'en-US');
-        const status = order.status || 'pending';
         const statusColor = statusColors[status] || statusColors.pending;
-        const statusLabel = statusLabels[status] || statusLabels.pending || t.pending;
 
         row.innerHTML = `
           <td><strong>${order.id}</strong></td>
