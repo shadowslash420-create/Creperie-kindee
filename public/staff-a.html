@@ -26,7 +26,7 @@
       align-items: center;
     }
     .header-title {
-      font-size: 28px;
+      font-size: 24px;
       font-weight: bold;
     }
     .logout-btn {
@@ -49,95 +49,205 @@
       margin-bottom: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
     .section-title {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 600;
       color: #E30613;
-      margin-bottom: 20px;
-      border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 10px;
-    }
-    .orders-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .orders-table thead {
-      background: #f7fafc;
-    }
-    .orders-table th,
-    .orders-table td {
-      padding: 12px;
-      text-align: right;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .orders-table th {
-      font-weight: 600;
-      color: #2d3748;
-    }
-    .status-unconfirmed {
-      background: #FFE0E0;
-      color: #c53030;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .status-pending {
-      background: #FFF3CD;
-      color: #856404;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .status-confirmed {
-      background: #D4EDDA;
-      color: #155724;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .view-btn {
-      padding: 6px 12px;
-      background: #4299E1;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .view-btn:hover {
-      background: #2b7bc4;
     }
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
       margin-bottom: 20px;
     }
     .stat-card {
       background: linear-gradient(135deg, #E30613 0%, #FF6B35 100%);
       color: white;
-      padding: 20px;
+      padding: 16px;
       border-radius: 12px;
       text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 3px solid transparent;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(227,6,19,0.3);
+    }
+    .stat-card.active {
+      border-color: white;
+      box-shadow: 0 0 0 3px #E30613;
     }
     .stat-value {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: bold;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
     .stat-label {
-      font-size: 14px;
+      font-size: 12px;
       opacity: 0.9;
+    }
+    .filter-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 8px 16px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      color: #666;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.3s;
+    }
+    .filter-btn:hover {
+      border-color: #E30613;
+      color: #E30613;
+    }
+    .filter-btn.active {
+      background: #E30613;
+      border-color: #E30613;
+      color: white;
+    }
+    .staff-orders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      padding: 8px 0;
+    }
+    .staff-order-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      overflow: hidden;
+      border: 1px solid #f0f0f0;
+    }
+    .staff-order-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(227,6,19,0.15);
+      border-color: #E30613;
+    }
+    .staff-order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
+      color: #fff;
+    }
+    .staff-order-id {
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+    .staff-status-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .staff-order-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .staff-order-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #555;
+    }
+    .staff-order-row .icon {
+      font-size: 16px;
+      min-width: 20px;
+    }
+    .staff-order-row .label {
+      font-weight: 600;
+      color: #333;
+      min-width: 60px;
+    }
+    .staff-order-row .value {
+      flex: 1;
+      word-break: break-all;
+    }
+    .staff-order-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #f9f9f9;
+      border-top: 1px solid #eee;
+      gap: 12px;
+    }
+    .staff-order-total {
+      font-weight: 700;
+      font-size: 16px;
+      color: #E30613;
+    }
+    .staff-order-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .status-select {
+      padding: 6px 10px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: white;
+      min-width: 130px;
+    }
+    .status-select:focus {
+      border-color: #E30613;
+      outline: none;
+    }
+    .view-btn {
+      padding: 8px 14px;
+      background: #E30613;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .view-btn:hover {
+      background: #B30510;
+      transform: translateY(-1px);
     }
     .no-data {
       text-align: center;
       color: #666;
-      padding: 40px;
+      padding: 60px 20px;
       font-size: 16px;
+      background: #f9f9f9;
+      border-radius: 12px;
+    }
+    .no-data-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
     }
     .modal {
       display: none;
@@ -189,60 +299,82 @@
     .modal-close:hover {
       color: #000;
     }
+    .skeleton-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .skeleton-card {
+      background: #f0f0f0;
+      border-radius: 12px;
+      height: 220px;
+      animation: skeleton-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes skeleton-pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    @media (max-width: 768px) {
+      .header-title {
+        font-size: 18px;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .staff-orders-grid {
+        grid-template-columns: 1fr;
+      }
+      .staff-order-footer {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .staff-order-actions {
+        justify-content: space-between;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="staff-container">
     <div class="header-bar">
-      <div class="header-title">👨‍💼 لوحة الموظفين - Staff A Dashboard</div>
-      <button class="logout-btn" onclick="handleStaffLogout()">تسجيل خروج - Logout</button>
+      <div class="header-title">👨‍💼 لوحة الموظفين - Staff A</div>
+      <button class="logout-btn" onclick="handleStaffLogout()">تسجيل خروج</button>
     </div>
 
-    <!-- Stats Section -->
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card active" onclick="filterOrders('all')" id="stat-all">
         <div class="stat-value" id="total-orders">0</div>
-        <div class="stat-label">إجمالي الطلبات / Total Orders</div>
+        <div class="stat-label">الكل / All</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="filterOrders('unconfirmed')" id="stat-unconfirmed">
         <div class="stat-value" id="unconfirmed-count">0</div>
         <div class="stat-label">غير مؤكدة / Unconfirmed</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="filterOrders('pending')" id="stat-pending">
         <div class="stat-value" id="pending-count">0</div>
         <div class="stat-label">قيد الانتظار / Pending</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" onclick="filterOrders('confirmed')" id="stat-confirmed">
         <div class="stat-value" id="confirmed-count">0</div>
         <div class="stat-label">مؤكدة / Confirmed</div>
       </div>
     </div>
 
-    <!-- Orders Section -->
     <div class="section">
-      <div class="section-title">📋 الطلبات الحالية - Current Orders</div>
-      <p style="color: #666; font-size: 13px; margin-bottom: 12px;">💡 اضغط على حالة الطلب لتحديثها / Click on order status to update it</p>
-      <table class="orders-table" id="orders-table-staff">
-        <thead>
-          <tr>
-            <th>رقم الطلب / Order ID</th>
-            <th>العميل / Customer</th>
-            <th>البريد الإلكتروني / Email</th>
-            <th>الهاتف / Phone</th>
-            <th>المبلغ / Total</th>
-            <th>الحالة / Status</th>
-            <th>التاريخ / Date</th>
-            <th>الإجراءات / Actions</th>
-          </tr>
-        </thead>
-        <tbody id="orders-tbody-staff">
-          <tr><td colspan="8" class="no-data">جاري التحميل... Loading...</td></tr>
-        </tbody>
-      </table>
+      <div class="section-header">
+        <div class="section-title">📋 الطلبات الحالية - Current Orders</div>
+      </div>
+      <p style="color: #666; font-size: 13px; margin-bottom: 16px;">💡 اضغط على الطلب لعرض التفاصيل أو تغيير الحالة من القائمة / Click card to view details or change status from dropdown</p>
+      <div id="orders-container">
+        <div class="skeleton-grid">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Order Details Modal -->
   <div class="modal" id="order-details-modal">
     <div class="modal-content">
       <span class="modal-close" onclick="closeOrderModal()">&times;</span>
@@ -257,36 +389,48 @@
     import { signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     let staffOrders = [];
+    let filteredOrders = [];
+    let currentFilter = 'all';
     let pageLoaded = false;
 
-    // Initialize on page load
+    const statusColors = {
+      'unconfirmed': '#e74c3c',
+      'pending': '#e67e22',
+      'confirmed': '#27ae60'
+    };
+
+    const statusIcons = {
+      'unconfirmed': '🔴',
+      'pending': '⏳',
+      'confirmed': '✅'
+    };
+
+    const statusLabels = {
+      'unconfirmed': 'غير مؤكد / Unconfirmed',
+      'pending': 'قيد الانتظار / Pending',
+      'confirmed': 'مؤكد / Confirmed'
+    };
+
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         const auth = await getAuthInstance();
 
-        // Setup auth state listener first
         auth.onAuthStateChanged(async (user) => {
           if (!user && pageLoaded) {
-            // Only redirect if user logs out AFTER page loaded
-            console.log('User logged out, redirecting to login...');
             window.location.href = '/login.html';
           } else if (user && !pageLoaded) {
-            // User is logged in, load data
             pageLoaded = true;
-            console.log('User authenticated, loading staff data...');
-
-            // Enable notifications for staff
+            
             try {
               const vapidResponse = await fetch('/api/vapid-key');
               if (vapidResponse.ok) {
                 const { vapidKey } = await vapidResponse.json();
                 if (window.notificationService?.initialize) {
                   await window.notificationService.initialize(vapidKey, user.email);
-                  console.log('✅ Staff notifications enabled');
                 }
               }
             } catch (error) {
-              console.warn('⚠️ Could not enable staff notifications:', error);
+              console.warn('Could not enable notifications:', error);
             }
 
             await loadStaffOrders();
@@ -299,25 +443,26 @@
       }
     });
 
-    // Load orders from Firebase
     async function loadStaffOrders() {
       try {
-        console.log('📋 Staff A: Loading orders from Firebase...');
         await dbService.init();
         staffOrders = await dbService.getAllOrders();
-        console.log('✅ Staff A: Orders loaded:', staffOrders.length, staffOrders);
-        renderOrdersTable();
+        applyFilter();
         updateStats();
       } catch (error) {
-        console.error('❌ Staff A: Error loading orders:', error);
+        console.error('Error loading orders:', error);
+        document.getElementById('orders-container').innerHTML = `
+          <div class="no-data">
+            <div class="no-data-icon">❌</div>
+            <div>خطأ في تحميل الطلبات / Error loading orders</div>
+          </div>
+        `;
       }
     }
 
-    // Setup real-time listener
     let initialOrderCount = 0;
     function setupRealtimeListener() {
       dbService.listenToOrderChanges((updatedOrders) => {
-        // Detect new orders and show notification
         if (initialOrderCount > 0 && updatedOrders.length > initialOrderCount) {
           const newestOrder = updatedOrders.sort((a, b) => {
             const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
@@ -326,60 +471,114 @@
           })[0];
 
           if (newestOrder) {
-            const message = `📦 طلب جديد / New Order! Customer: ${newestOrder.name || newestOrder.customerName || 'Guest'} | Total: ${(newestOrder.total || 0).toFixed(2)} DZD`;
-            showNotification('Order', message);
+            showNotification('طلب جديد', `Customer: ${newestOrder.name || 'Guest'} | Total: ${(newestOrder.total || 0).toFixed(2)} DZD`);
           }
         }
 
         initialOrderCount = updatedOrders.length;
         staffOrders = updatedOrders;
-        renderOrdersTable();
+        applyFilter();
         updateStats();
       });
     }
 
-    // Render orders table
-    function renderOrdersTable() {
-      const tbody = document.getElementById('orders-tbody-staff');
-      if (staffOrders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="no-data">لا توجد طلبات حالياً / No orders yet</td></tr>';
+    window.filterOrders = function(filter) {
+      currentFilter = filter;
+      
+      document.querySelectorAll('.stat-card').forEach(card => card.classList.remove('active'));
+      document.getElementById('stat-' + (filter === 'all' ? 'all' : filter)).classList.add('active');
+      
+      applyFilter();
+    };
+
+    function applyFilter() {
+      if (currentFilter === 'all') {
+        filteredOrders = [...staffOrders];
+      } else {
+        filteredOrders = staffOrders.filter(o => o.status === currentFilter);
+      }
+      renderOrdersGrid();
+    }
+
+    function renderOrdersGrid() {
+      const container = document.getElementById('orders-container');
+      
+      if (filteredOrders.length === 0) {
+        container.innerHTML = `
+          <div class="no-data">
+            <div class="no-data-icon">📭</div>
+            <div>لا توجد طلبات / No orders found</div>
+          </div>
+        `;
         return;
       }
 
-      tbody.innerHTML = staffOrders.map(order => {
-        const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString('ar') : 'N/A';
-        const statusClass = `status-${order.status}`;
-        return `
-          <tr>
-            <td>${order.id}</td>
-            <td>${order.name || order.customerName || 'N/A'}</td>
-            <td>${order.email || 'N/A'}</td>
-            <td>${order.phone || 'N/A'}</td>
-            <td>${(order.total || 0).toFixed(2)} DZD</td>
-            <td>
-              <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding: 6px 8px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 12px; font-weight: 600; background: ${getStatusColorStaffA(order.status)}; cursor: pointer;">
-                <option value="unconfirmed" ${order.status === 'unconfirmed' ? 'selected' : ''}>🔴 Unconfirmed</option>
-                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-                <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>✅ Confirmed</option>
-              </select>
-            </td>
-            <td>${date}</td>
-            <td><button class="view-btn" onclick="showOrderDetails('${order.id}')">👁️ عرض / View</button></td>
-          </tr>
-        `;
-      }).join('');
+      const sortedOrders = filteredOrders.sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+        return dateB - dateA;
+      });
+
+      container.innerHTML = `
+        <div class="staff-orders-grid">
+          ${sortedOrders.map(order => {
+            const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString('ar') : 'N/A';
+            const statusColor = statusColors[order.status] || '#999';
+            const statusIcon = statusIcons[order.status] || '❓';
+            const itemCount = (order.items || []).reduce((sum, item) => sum + (item.qty || 1), 0);
+            
+            return `
+              <div class="staff-order-card">
+                <div class="staff-order-header">
+                  <div class="staff-order-id">#${order.id.slice(-6).toUpperCase()}</div>
+                  <div class="staff-status-badge" style="background: ${statusColor}">
+                    <span>${statusIcon}</span>
+                    <span>${order.status}</span>
+                  </div>
+                </div>
+                <div class="staff-order-body">
+                  <div class="staff-order-row">
+                    <span class="icon">👤</span>
+                    <span class="label">العميل:</span>
+                    <span class="value">${order.name || order.customerName || 'N/A'}</span>
+                  </div>
+                  <div class="staff-order-row">
+                    <span class="icon">📞</span>
+                    <span class="label">الهاتف:</span>
+                    <span class="value">${order.phone || 'N/A'}</span>
+                  </div>
+                  <div class="staff-order-row">
+                    <span class="icon">📦</span>
+                    <span class="label">العناصر:</span>
+                    <span class="value">${itemCount} عنصر</span>
+                  </div>
+                  <div class="staff-order-row">
+                    <span class="icon">📅</span>
+                    <span class="label">التاريخ:</span>
+                    <span class="value">${date}</span>
+                  </div>
+                </div>
+                <div class="staff-order-footer">
+                  <div class="staff-order-total">${(order.total || 0).toFixed(2)} DZD</div>
+                  <div class="staff-order-actions">
+                    <select class="status-select" onchange="updateOrderStatus('${order.id}', this.value); event.stopPropagation();">
+                      <option value="unconfirmed" ${order.status === 'unconfirmed' ? 'selected' : ''}>🔴 Unconfirmed</option>
+                      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                      <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>✅ Confirmed</option>
+                    </select>
+                    <button class="view-btn" onclick="showOrderDetails('${order.id}')">👁️ عرض</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
     }
 
-    // Show order details
     window.showOrderDetails = function(orderId) {
-      console.log('📋 Show order details clicked for:', orderId);
-      console.log('📋 Available orders:', staffOrders.length, staffOrders);
-
       const order = staffOrders.find(o => o.id === orderId);
-      console.log('📋 Found order:', order);
-
       if (!order) {
-        console.error('❌ Order not found:', orderId);
         alert('Order not found');
         return;
       }
@@ -393,6 +592,8 @@
           <td style="text-align: right; font-weight: 600;">${((item.price || 0) * (item.qty || 1)).toFixed(2)} DZD</td>
         </tr>
       `).join('');
+
+      const statusColor = statusColors[order.status] || '#999';
 
       const html = `
         <h2 style="color: #E30613; margin-bottom: 20px; text-align: center;">📋 Order Details - تفاصيل الطلب</h2>
@@ -413,7 +614,7 @@
           <h3 style="color: #2d3748; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📍 Delivery Location</h3>
           <div id="order-location-map" style="width: 100%; height: 250px; border-radius: 8px; border: 2px solid #cbd5e0; background: #f7fafc;"></div>
           <p style="font-size: 12px; color: #666; margin-top: 8px; text-align: center;">
-            📍 Latitude: <strong>${order.location.lat.toFixed(6)}</strong> | Longitude: <strong>${order.location.lng.toFixed(6)}</strong>
+            📍 Lat: <strong>${order.location.lat.toFixed(6)}</strong> | Lng: <strong>${order.location.lng.toFixed(6)}</strong>
           </p>
         </div>
         ` : ''}
@@ -423,10 +624,10 @@
           <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
             <thead>
               <tr style="background: #e2e8f0;">
-                <th style="padding: 8px; text-align: left; font-weight: 600; color: #2d3748;">Item Name</th>
-                <th style="padding: 8px; text-align: center; font-weight: 600; color: #2d3748;">Qty</th>
-                <th style="padding: 8px; text-align: right; font-weight: 600; color: #2d3748;">Price</th>
-                <th style="padding: 8px; text-align: right; font-weight: 600; color: #2d3748;">Total</th>
+                <th style="padding: 8px; text-align: left; font-weight: 600;">Item</th>
+                <th style="padding: 8px; text-align: center; font-weight: 600;">Qty</th>
+                <th style="padding: 8px; text-align: right; font-weight: 600;">Price</th>
+                <th style="padding: 8px; text-align: right; font-weight: 600;">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -438,7 +639,7 @@
         <div style="background: linear-gradient(135deg, #E30613 0%, #B30510 100%); color: white; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px;">
             <div><strong>Subtotal:</strong> ${(order.subtotal || 0).toFixed(2)} DZD</div>
-            <div><strong>Delivery Fee:</strong> ${(order.deliveryFee || 0).toFixed(2)} DZD</div>
+            <div><strong>Delivery:</strong> ${(order.deliveryFee || 0).toFixed(2)} DZD</div>
           </div>
           <div style="border-top: 1px solid rgba(255,255,255,0.2); margin-top: 10px; padding-top: 10px; font-size: 16px; font-weight: bold; text-align: right;">
             Total: ${(order.total || 0).toFixed(2)} DZD
@@ -448,18 +649,16 @@
         <div style="background: #f0fdf4; padding: 15px; border-radius: 8px;">
           <h3 style="color: #166534; margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">✓ Order Status</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; line-height: 1.6;">
-            <div><strong>Status:</strong> <span style="background: ${getStatusColorStaffA(order.status)}; padding: 4px 8px; border-radius: 4px; font-weight: 600;">${order.status.toUpperCase()}</span></div>
+            <div><strong>Status:</strong> <span style="background: ${statusColor}; color: white; padding: 4px 8px; border-radius: 4px; font-weight: 600;">${order.status.toUpperCase()}</span></div>
             <div><strong>Date:</strong> ${date}</div>
-            <div style="grid-column: 1 / -1;"><strong>Special Instructions:</strong> ${order.specialInstructions || 'None'}</div>
+            <div style="grid-column: 1 / -1;"><strong>Notes:</strong> ${order.specialInstructions || 'None'}</div>
           </div>
         </div>
       `;
 
       document.getElementById('order-details-content').innerHTML = html;
       document.getElementById('order-details-modal').classList.add('show');
-      console.log('✅ Modal shown');
 
-      // Initialize map if location exists
       if (order.location && order.location.lat && order.location.lng && window.L) {
         setTimeout(() => {
           const mapDiv = document.getElementById('order-location-map');
@@ -470,13 +669,11 @@
               zoomControl: true
             });
 
-            // Add tile layer
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
               attribution: '© OpenStreetMap',
               maxZoom: 19
             }).addTo(map);
 
-            // Add red marker
             const redIcon = L.divIcon({
               className: 'custom-marker',
               html: '<div style="background:#E30613;width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
@@ -487,31 +684,16 @@
             L.marker([order.location.lat, order.location.lng], { icon: redIcon }).addTo(map);
             mapDiv._leafletMap = map;
             
-            // Force map size recalculation
-            setTimeout(() => {
-              map.invalidateSize();
-            }, 100);
+            setTimeout(() => map.invalidateSize(), 100);
           }
         }, 300);
       }
     };
 
-    // Close modal
     window.closeOrderModal = function() {
       document.getElementById('order-details-modal').classList.remove('show');
     };
 
-    // Get status color
-    window.getStatusColorStaffA = function(status) {
-      const colors = {
-        'unconfirmed': '#FFE0E0',
-        'pending': '#FFF3CD',
-        'confirmed': '#D4EDDA'
-      };
-      return colors[status] || '#E2E8F0';
-    };
-
-    // Update order status
     window.updateOrderStatus = async function(orderId, newStatus) {
       try {
         const order = staffOrders.find(o => o.id === orderId);
@@ -519,10 +701,9 @@
         await dbService.updateOrderStatus(orderId, newStatus);
         await loadStaffOrders();
         
-        // Send notification to customer
         if (order) {
           try {
-            const response = await fetch('/api/notify-order-status', {
+            await fetch('/api/notify-order-status', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -532,23 +713,18 @@
                 customerName: order.name || order.customerName || 'Customer'
               })
             });
-            
-            if (response.ok) {
-              console.log('📲 Customer notification sent');
-            }
           } catch (err) {
-            console.warn('⚠️ Could not send customer notification:', err);
+            console.warn('Could not send notification:', err);
           }
         }
         
-        alert('✅ تم تحديث حالة الطلب / Order status updated!');
+        showNotification('تم التحديث', 'Order status updated successfully');
       } catch (error) {
         console.error('Error updating order:', error);
-        alert('❌ خطأ في التحديث / Error updating order');
+        alert('Error updating order');
       }
     };
 
-    // Update stats
     function updateStats() {
       document.getElementById('total-orders').textContent = staffOrders.length;
       document.getElementById('unconfirmed-count').textContent = staffOrders.filter(o => o.status === 'unconfirmed').length;
@@ -556,14 +732,12 @@
       document.getElementById('confirmed-count').textContent = staffOrders.filter(o => o.status === 'confirmed').length;
     }
 
-    // Logout
     window.handleStaffLogout = async function() {
       const auth = await getAuthInstance();
       await signOut(auth);
       window.location.href = '/login.html';
     };
 
-    // Show notification
     function showNotification(title, message) {
       const notification = document.createElement('div');
       notification.style.cssText = `
@@ -584,11 +758,12 @@
       notification.innerHTML = `<strong>${title}:</strong> ${message}`;
       document.body.appendChild(notification);
 
-      // Auto remove after 5 seconds
       setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-out';
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        notification.style.transition = 'all 0.3s ease';
         setTimeout(() => notification.remove(), 300);
-      }, 5000);
+      }, 4000);
     }
   </script>
 </body>
