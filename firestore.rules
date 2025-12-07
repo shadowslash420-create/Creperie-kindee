@@ -20,6 +20,11 @@ service cloud.firestore {
              );
     }
     
+    // Check if status is valid
+    function isValidStatus(status) {
+      return status in ['pending', 'received', 'preparing', 'ready', 'picked_up', 'in_transit', 'cancelled'];
+    }
+    
     // Check if current user is staff with role B (manage messages & reviews only)
     function isStaffB() {
       return request.auth != null &&
@@ -55,10 +60,11 @@ service cloud.firestore {
                      (request.auth != null && request.auth.uid == resource.data.userId);
       
       // Admin: full update access
-      // Staff A: can update status and notes only
+      // Staff A: can update status and notes only (status must be valid)
       allow update: if isAdmin() || 
                        (isStaffA() && 
-                        (request.resource.data.status != null || request.resource.data.notes != null));
+                        ((request.resource.data.status != null && isValidStatus(request.resource.data.status)) || 
+                         request.resource.data.notes != null));
       
       // Admin: full delete access
       // Customers: can delete their own pending orders only
