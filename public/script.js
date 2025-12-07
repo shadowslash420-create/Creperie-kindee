@@ -1224,6 +1224,28 @@ window.checkoutFlow = async function() {
       const firstInput = document.getElementById('checkout-firstname');
       if (firstInput) firstInput.focus();
     }, 300);
+
+    // Force map to resize multiple times to ensure visibility
+    setTimeout(() => {
+      if (checkoutMap) {
+        checkoutMap.invalidateSize();
+        console.log('🗺️ Map size invalidated (1000ms)');
+      }
+    }, 1000);
+
+    setTimeout(() => {
+      if (checkoutMap) {
+        checkoutMap.invalidateSize();
+        console.log('🗺️ Map size invalidated (1500ms)');
+      }
+    }, 1500);
+
+    setTimeout(() => {
+      if (checkoutMap) {
+        checkoutMap.invalidateSize();
+        console.log('🗺️ Map size invalidated (2000ms)');
+      }
+    }, 2000);
   }, 200);
 }
 
@@ -1345,6 +1367,17 @@ function initCheckoutMap(savedInfo) {
         console.log('🗺️ Map size invalidated (500ms)');
       }
     }, 500);
+
+    // Use whenReady callback to ensure tiles load
+    checkoutMap.whenReady(() => {
+      console.log('🗺️ Map is ready and visible');
+      setTimeout(() => {
+        if (checkoutMap) {
+          checkoutMap.invalidateSize();
+          console.log('🗺️ Map size invalidated (whenReady)');
+        }
+      }, 100);
+    });
 
     console.log('✅ Map initialized successfully');
   } catch (error) {
