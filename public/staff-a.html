@@ -341,7 +341,7 @@
       <button class="logout-btn" onclick="handleStaffLogout()">تسجيل خروج</button>
     </div>
 
-    <div class="stats-grid">
+    <div class="stats-grid" id="stats-grid">
       <div class="stat-card active" onclick="filterOrders('all')" id="stat-all">
         <div class="stat-value" id="total-orders">0</div>
         <div class="stat-label">الكل / All</div>
@@ -369,6 +369,10 @@
       <div class="stat-card" onclick="filterOrders('in_transit')" id="stat-in_transit">
         <div class="stat-value" id="in_transit-count">0</div>
         <div class="stat-label">🚚 في الطريق / In Transit</div>
+      </div>
+      <div class="stat-card" onclick="filterOrders('cancelled')" id="stat-cancelled">
+        <div class="stat-value" id="cancelled-count">0</div>
+        <div class="stat-label">❌ ملغى / Cancelled</div>
       </div>
     </div>
 
@@ -767,6 +771,7 @@
       document.getElementById('ready-count').textContent = staffOrders.filter(o => o.status === 'ready').length;
       document.getElementById('picked_up-count').textContent = staffOrders.filter(o => o.status === 'picked_up').length;
       document.getElementById('in_transit-count').textContent = staffOrders.filter(o => o.status === 'in_transit').length;
+      document.getElementById('cancelled-count').textContent = staffOrders.filter(o => o.status === 'cancelled').length;
     }
 
     window.handleStaffLogout = async function() {
