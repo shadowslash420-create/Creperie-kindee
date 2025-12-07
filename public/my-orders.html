@@ -515,25 +515,6 @@
         return;
       }
 
-      // Create table
-      const table = document.createElement('table');
-      table.className = 'orders-table';
-
-      const thead = document.createElement('thead');
-      const headerRow = document.createElement('tr');
-      headerRow.innerHTML = `
-        <th style="min-width:60px;">${t.orderNumber}</th>
-        <th style="min-width:55px;">${t.date}</th>
-        <th style="min-width:60px;">${t.customer}</th>
-        <th style="min-width:55px;">${t.phone}</th>
-        <th style="min-width:55px;">${t.total}</th>
-        <th style="min-width:35px;text-align:center;">${t.status}</th>
-      `;
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
-
-      const tbody = document.createElement('tbody');
-
       const statusColors = {
         'pending': '#e67e22',
         'received': '#3498db',
@@ -554,14 +535,17 @@
         'cancelled': t.cancelled
       };
 
+      // Create grid container
+      const grid = document.createElement('div');
+      grid.className = 'orders-grid';
+
       orders.forEach(order => {
-        const row = document.createElement('tr');
-        row.className = 'orders-table-row';
-        row.style.cursor = 'pointer';
+        const card = document.createElement('div');
+        card.className = 'order-card';
         const status = order.status || 'pending';
         const statusLabel = statusLabels[status] || statusLabels.pending || t.pending;
-        row.title = `Click to view details • Status: ${statusLabel}`;
-        row.onclick = () => openOrderModal(order, t, lang);
+        card.title = `Click to view details`;
+        card.onclick = () => openOrderModal(order, t, lang);
 
         let orderDate;
         if (order.createdAt && order.createdAt.toDate) {
@@ -577,20 +561,32 @@
         const date = orderDate.toLocaleDateString(lang === 'ar' ? 'ar-DZ' : 'en-US');
         const statusColor = statusColors[status] || statusColors.pending;
 
-        row.innerHTML = `
-          <td><strong>${order.id}</strong></td>
-          <td>${date}</td>
-          <td>${order.name}</td>
-          <td>${order.phone}</td>
-          <td><strong>${order.total.toFixed(2)}</strong></td>
-          <td style="text-align:center;"><div style="width:14px;height:14px;border-radius:50%;background-color:${statusColor};cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.2);margin:0 auto;" title="${statusLabel}"></div></td>
+        // Get item count
+        const itemCount = order.items ? order.items.length : 0;
+        const itemsText = lang === 'ar' 
+          ? `${itemCount} ${itemCount === 1 ? 'منتج' : 'منتجات'}`
+          : `${itemCount} item${itemCount !== 1 ? 's' : ''}`;
+
+        card.innerHTML = `
+          <div class="order-card-header">
+            <span class="order-card-id">#${order.id}</span>
+            <div class="order-card-status" style="background-color:${statusColor};" title="${statusLabel}"></div>
+          </div>
+          <div class="order-card-body">
+            <div class="order-card-date">📅 ${date}</div>
+            <div class="order-card-customer">👤 ${order.name || 'Customer'}</div>
+            <div class="order-card-items">📦 ${itemsText}</div>
+          </div>
+          <div class="order-card-footer">
+            <span class="order-card-total">${order.total.toFixed(2)} DZD</span>
+            <span class="order-card-arrow">→</span>
+          </div>
         `;
 
-        tbody.appendChild(row);
+        grid.appendChild(card);
       });
 
-      table.appendChild(tbody);
-      container.appendChild(table);
+      container.appendChild(grid);
     }
 
     window.openOrderModal = function(order, t, lang) {
