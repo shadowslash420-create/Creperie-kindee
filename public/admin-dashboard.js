@@ -466,20 +466,20 @@ async function renderOrdersList() {
     // Orders table HTML with scrollable container
     const tableHtml = `
       <div class="section">
-        <div class="section-title">📋 الطلبات الحالية - Current Orders</div>
-        <p style="color: #718096; font-size: 14px; margin-bottom: 20px; font-weight: 500;">💡 Click on order status to update it / اضغط على حالة الطلب لتحديثها</p>
-        <div class="orders-table-container" style="overflow-x:auto;max-width:100%;">
-        <table class="orders-table" style="min-width:1000px;">
+        <div class="section-title">📋 Current Orders</div>
+        <p style="color: #718096; font-size: 13px; margin-bottom: 16px; font-weight: 500;">💡 Click on order status to update it</p>
+        <div class="orders-table-container">
+        <table class="orders-table">
           <thead>
             <tr>
-              <th style="min-width: 140px;">🔢 رقم الطلب<br/>Order ID</th>
-              <th style="min-width: 160px;">👤 العميل<br/>Customer</th>
-              <th style="min-width: 200px;">📧 البريد الإلكتروني<br/>Email</th>
-              <th style="min-width: 140px;">📱 الهاتف<br/>Phone</th>
-              <th style="min-width: 120px;">💰 المبلغ<br/>Total</th>
-              <th style="min-width: 180px;">📊 الحالة<br/>Status</th>
-              <th style="min-width: 180px;">📅 التاريخ<br/>Date</th>
-              <th style="min-width: 140px;">⚡ الإجراءات<br/>Actions</th>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -488,24 +488,24 @@ async function renderOrdersList() {
               const statusClass = `status-${order.status}`;
               return `
                 <tr class="orders-table-row">
-                  <td style="font-weight:700;color:#E30613;">#${order.id?.substring(0,8).toUpperCase()}</td>
-                  <td style="font-weight:600;">${order.name || 'N/A'}</td>
-                  <td style="color:#4a5568;">${order.email || 'N/A'}</td>
+                  <td style="font-weight:700;color:#E30613;" title="${order.id}">#${order.id?.substring(0,6).toUpperCase()}</td>
+                  <td style="font-weight:600;" title="${order.name || 'N/A'}">${(order.name || 'N/A').substring(0, 15)}${(order.name || '').length > 15 ? '...' : ''}</td>
+                  <td style="color:#4a5568;" title="${order.email || 'N/A'}">${(order.email || 'N/A').substring(0, 20)}${(order.email || '').length > 20 ? '...' : ''}</td>
                   <td style="font-weight:600;color:#2d3748;">${order.phone || 'N/A'}</td>
-                  <td style="font-weight:700;color:#E30613;font-size:15px;">${(order.total || 0).toFixed(2)} DZD</td>
+                  <td style="font-weight:700;color:#E30613;">${(order.total || 0).toFixed(0)} DZD</td>
                   <td>
-                    <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;background:white;transition:all 0.3s;text-transform:uppercase;">
-                      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>🔴 ${window.getT?.().status_pending || 'Pending'}</option>
-                      <option value="received" ${order.status === 'received' ? 'selected' : ''}>📦 ${window.getT?.().status_received || 'Order Received'}</option>
-                      <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>👨‍🍳 ${window.getT?.().status_preparing || 'Preparing'}</option>
-                      <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>✅ ${window.getT?.().status_ready || 'Ready'}</option>
-                      <option value="picked_up" ${order.status === 'picked_up' ? 'selected' : ''}>🚗 ${window.getT?.().status_picked_up || 'Picked Up'}</option>
-                      <option value="in_transit" ${order.status === 'in_transit' ? 'selected' : ''}>🚚 ${window.getT?.().status_in_transit || 'On the Way'}</option>
-                      <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ ${window.getT?.().status_cancelled || 'Cancelled'}</option>
+                    <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:6px 8px;border:2px solid #e2e8f0;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;background:white;width:100%;max-width:130px;">
+                      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>🔴 Pending</option>
+                      <option value="received" ${order.status === 'received' ? 'selected' : ''}>📦 Received</option>
+                      <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>👨‍🍳 Preparing</option>
+                      <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>✅ Ready</option>
+                      <option value="picked_up" ${order.status === 'picked_up' ? 'selected' : ''}>🚗 Picked Up</option>
+                      <option value="in_transit" ${order.status === 'in_transit' ? 'selected' : ''}>🚚 In Transit</option>
+                      <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
                     </select>
                   </td>
-                  <td style="color:#4a5568;font-size:13px;">${date}</td>
-                  <td><button onclick="viewOrderDetails('${order.id}')" class="view-btn">👁️ View</button></td>
+                  <td style="color:#4a5568;font-size:12px;">${date.split(' ')[0]}<br/><span style="font-size:10px;color:#999;">${date.split(' ')[1] || ''}</span></td>
+                  <td><button onclick="viewOrderDetails('${order.id}')" class="view-btn" style="padding:6px 12px;font-size:11px;white-space:nowrap;">👁️ View</button></td>
                 </tr>
               `;
             }).join('')}
