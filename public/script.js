@@ -1719,11 +1719,6 @@ window.toggleLanguage = function() {
   currentLang = currentLang === 'ar' ? 'en' : 'ar';
   localStorage.setItem(LANG_KEY, currentLang);
 
-  const langBtn = document.getElementById('lang-btn');
-  if (langBtn) {
-    langBtn.textContent = currentLang === 'ar' ? 'EN' : 'ع';
-  }
-
   applyTranslations();
 
   if (typeof window.applyOrderTranslations === 'function') {
@@ -2216,12 +2211,6 @@ function setupFooterAdminClick() {
 // SINGLE CONSOLIDATED INITIALIZATION - runs only ONCE
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🔄 PAGE INITIALIZATION STARTED (single listener)');
-
-  // Language button setup
-  const langBtn = document.getElementById('lang-btn');
-  if (langBtn) {
-    langBtn.textContent = currentLang === 'ar' ? 'EN' : 'ع';
-  }
 
   applyTranslations();
 
