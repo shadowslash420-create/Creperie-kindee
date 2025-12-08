@@ -463,54 +463,59 @@ async function renderOrdersList() {
       </div>
     `;
 
-    // Orders table HTML with scrollable container
+    // Orders table HTML with scrollable container - styled like customers table
     const tableHtml = `
       <div class="section">
         <div class="section-title">📋 Current Orders</div>
         <p style="color: #718096; font-size: 13px; margin-bottom: 16px; font-weight: 500;">💡 Click on order status to update it</p>
-        <div class="orders-table-container">
-        <table class="orders-table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${filteredOrders.map(order => {
-              const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() + ' ' + new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleTimeString() : 'N/A';
-              const statusClass = `status-${order.status}`;
-              return `
-                <tr class="orders-table-row">
-                  <td style="font-weight:700;color:#E30613;" title="${order.id}">#${order.id?.substring(0,6).toUpperCase()}</td>
-                  <td style="font-weight:600;" title="${order.name || 'N/A'}">${(order.name || 'N/A').substring(0, 15)}${(order.name || '').length > 15 ? '...' : ''}</td>
-                  <td style="color:#4a5568;" title="${order.email || 'N/A'}">${(order.email || 'N/A').substring(0, 20)}${(order.email || '').length > 20 ? '...' : ''}</td>
-                  <td style="font-weight:600;color:#2d3748;">${order.phone || 'N/A'}</td>
-                  <td style="font-weight:700;color:#E30613;">${(order.total || 0).toFixed(0)} DZD</td>
-                  <td>
-                    <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:6px 8px;border:2px solid #e2e8f0;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;background:white;width:100%;max-width:130px;">
-                      <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>🔴 Pending</option>
-                      <option value="received" ${order.status === 'received' ? 'selected' : ''}>📦 Received</option>
-                      <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>👨‍🍳 Preparing</option>
-                      <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>✅ Ready</option>
-                      <option value="picked_up" ${order.status === 'picked_up' ? 'selected' : ''}>🚗 Picked Up</option>
-                      <option value="in_transit" ${order.status === 'in_transit' ? 'selected' : ''}>🚚 In Transit</option>
-                      <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
-                    </select>
-                  </td>
-                  <td style="color:#4a5568;font-size:12px;">${date.split(' ')[0]}<br/><span style="font-size:10px;color:#999;">${date.split(' ')[1] || ''}</span></td>
-                  <td><button onclick="viewOrderDetails('${order.id}')" class="view-btn" style="padding:6px 12px;font-size:11px;white-space:nowrap;">👁️ View</button></td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+            <thead>
+              <tr style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;">
+                <th style="padding:16px;text-align:left;font-weight:600;">🆔 Order ID</th>
+                <th style="padding:16px;text-align:left;font-weight:600;">👤 Customer</th>
+                <th style="padding:16px;text-align:left;font-weight:600;">📧 Email</th>
+                <th style="padding:16px;text-align:left;font-weight:600;">📱 Phone</th>
+                <th style="padding:16px;text-align:left;font-weight:600;">💰 Total</th>
+                <th style="padding:16px;text-align:left;font-weight:600;">📊 Status</th>
+                <th style="padding:16px;text-align:left;font-weight:600;">📅 Date</th>
+                <th style="padding:16px;text-align:left;font-weight:600;">⚡ Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredOrders.map((order, index) => {
+                const date = order.createdAt ? new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleDateString() + ' ' + new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleTimeString() : 'N/A';
+                const bgColor = index % 2 === 0 ? '#f7fafc' : 'white';
+                return `
+                  <tr style="background:${bgColor};border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:16px;font-weight:700;color:#E30613;" title="${order.id}">#${order.id?.substring(0,6).toUpperCase()}</td>
+                    <td style="padding:16px;color:#2d3748;font-weight:600;" title="${order.name || 'N/A'}">${(order.name || 'N/A').substring(0, 15)}${(order.name || '').length > 15 ? '...' : ''}</td>
+                    <td style="padding:16px;color:#2d3748;font-weight:500;" title="${order.email || 'N/A'}">${(order.email || 'N/A').substring(0, 20)}${(order.email || '').length > 20 ? '...' : ''}</td>
+                    <td style="padding:16px;color:#2d3748;">${order.phone || 'N/A'}</td>
+                    <td style="padding:16px;color:#E30613;font-weight:700;">${(order.total || 0).toFixed(0)} DZD</td>
+                    <td style="padding:16px;">
+                      <select onchange="updateOrderStatus('${order.id}', this.value)" style="padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;background:white;width:100%;max-width:140px;">
+                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>🔴 Pending</option>
+                        <option value="received" ${order.status === 'received' ? 'selected' : ''}>📦 Received</option>
+                        <option value="preparing" ${order.status === 'preparing' ? 'selected' : ''}>👨‍🍳 Preparing</option>
+                        <option value="ready" ${order.status === 'ready' ? 'selected' : ''}>✅ Ready</option>
+                        <option value="picked_up" ${order.status === 'picked_up' ? 'selected' : ''}>🚗 Picked Up</option>
+                        <option value="in_transit" ${order.status === 'in_transit' ? 'selected' : ''}>🚚 In Transit</option>
+                        <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+                      </select>
+                    </td>
+                    <td style="padding:16px;color:#718096;font-size:13px;">${date.split(' ')[0]}<br/><span style="font-size:11px;color:#999;">${date.split(' ')[1] || ''}</span></td>
+                    <td style="padding:16px;"><button onclick="viewOrderDetails('${order.id}')" style="padding:8px 16px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;white-space:nowrap;">👁️ View</button></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:24px;padding:16px;background:#f7fafc;border-radius:8px;border-left:4px solid #667eea;">
+          <p style="margin:0;color:#2d3748;font-weight:600;">📊 Total Orders: ${filteredOrders.length}${state.orderFilter && state.orderFilter !== 'all' ? ' (filtered)' : ''}</p>
+          <p style="margin:8px 0 0 0;color:#718096;font-size:13px;">Click on a row's View button to see full order details</p>
         </div>
       </div>
     `;
