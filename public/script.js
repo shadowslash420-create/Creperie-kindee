@@ -1531,112 +1531,256 @@ function showLocationConfirmation() {
   }
 }
 
-// Use current location
+// Map popup state
+let locationPickerMap = null;
+let locationPickerMarker = null;
+
+// Open location picker modal with map
 window.useMyLocation = function() {
   const btn = document.getElementById('use-my-location-btn');
-  const latInput = document.getElementById('checkout-lat');
-  const lngInput = document.getElementById('checkout-lng');
   const isArabic = currentLang === 'ar';
 
-  console.log('📍 Requesting current location...');
+  console.log('📍 Opening location picker...');
 
-  if (!navigator.geolocation) {
-    const errorMsg = isArabic ? 'المتصفح لا يدعم تحديد الموقع' : 'Geolocation is not supported by your browser';
-    alert(errorMsg);
-    console.error('❌ Geolocation not supported');
+  // Create popup modal for location picking
+  const popupModal = document.createElement('div');
+  popupModal.id = 'location-picker-modal';
+  popupModal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  `;
+
+  popupModal.innerHTML = `
+    <div style="
+      background: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+      max-height: 600px;
+      overflow: hidden;
+    ">
+      <!-- Header -->
+      <div style="
+        background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
+        padding: 20px 24px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+      ">
+        <h3 style="margin: 0; font-size: 18px; font-weight: 700;">
+          ${isArabic ? '📍 اختر موقعك' : '📍 Select Your Location'}
+        </h3>
+        <button id="close-location-picker" style="
+          background: rgba(255,255,255,0.25);
+          border: 2px solid rgba(255,255,255,0.4);
+          color: white;
+          font-size: 24px;
+          cursor: pointer;
+          padding: 0;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          font-weight: 300;
+        ">×</button>
+      </div>
+
+      <!-- Map Container -->
+      <div id="location-picker-map" style="
+        flex: 1;
+        width: 100%;
+        background: #f5f5f5;
+        position: relative;
+      "></div>
+
+      <!-- Instructions -->
+      <div style="
+        padding: 12px 24px;
+        background: #f9f9f9;
+        border-top: 1px solid #FFE4E1;
+        font-size: 13px;
+        color: #666;
+        text-align: center;
+      ">
+        ${isArabic ? 'انقر على الخريطة لتحديد موقعك أو اسحب العلامة' : 'Click on map to set location or drag the marker'}
+      </div>
+
+      <!-- Buttons -->
+      <div style="
+        padding: 16px 24px;
+        display: flex;
+        gap: 10px;
+        flex-shrink: 0;
+      ">
+        <button id="cancel-location-picker" style="
+          flex: 1;
+          padding: 12px;
+          background: #f5f5f5;
+          border: 2px solid #FFE4E1;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          color: #666;
+        ">
+          ${isArabic ? 'إلغاء' : 'Cancel'}
+        </button>
+        <button id="done-location-picker" style="
+          flex: 1;
+          padding: 12px;
+          background: linear-gradient(135deg, #52C41A 0%, #389E0D 100%);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+        ">
+          ${isArabic ? '✅ تم' : '✅ Done'}
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(popupModal);
+
+  // Close handlers
+  const closeBtn = document.getElementById('close-location-picker');
+  const cancelBtn = document.getElementById('cancel-location-picker');
+  closeBtn?.addEventListener('click', () => popupModal.remove());
+  cancelBtn?.addEventListener('click', () => popupModal.remove());
+
+  // Initialize map in popup
+  setTimeout(() => {
+    initLocationPickerMap();
+  }, 100);
+
+  // Done button - save location and close
+  const doneBtn = document.getElementById('done-location-picker');
+  doneBtn?.addEventListener('click', () => {
+    if (locationPickerMarker) {
+      const pos = locationPickerMarker.getPosition();
+      const lat = pos.lat();
+      const lng = pos.lng();
+
+      // Save to checkout form
+      const latInput = document.getElementById('checkout-lat');
+      const lngInput = document.getElementById('checkout-lng');
+      if (latInput && lngInput) {
+        latInput.value = lat;
+        lngInput.value = lng;
+        console.log('✅ Location saved:', lat, lng);
+        saveCheckoutFormData();
+      }
+
+      // Update checkout map if it exists
+      if (checkoutMap) {
+        setMapLocation(lat, lng);
+      }
+
+      // Close popup
+      popupModal.remove();
+    }
+  });
+}
+
+// Initialize map in location picker popup
+function initLocationPickerMap() {
+  const mapContainer = document.getElementById('location-picker-map');
+  if (!mapContainer) return;
+
+  if (!window.google || !window.google.maps) {
+    setTimeout(initLocationPickerMap, 500);
     return;
   }
 
-  // Show loading state
-  if (btn) {
-    btn.innerHTML = `<span style="display:flex;align-items:center;gap:8px;">⏳ ${isArabic ? 'جاري تحديد الموقع...' : 'Getting location...'}</span>`;
-    btn.disabled = true;
-    btn.style.opacity = '0.7';
+  const isArabic = currentLang === 'ar';
+  
+  // Get current location
+  if (!navigator.geolocation) {
+    alert(isArabic ? 'المتصفح لا يدعم تحديد الموقع' : 'Geolocation not supported');
+    return;
   }
+
+  // Show loading
+  mapContainer.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">
+      ⏳ ${isArabic ? 'جاري تحديد الموقع...' : 'Getting your location...'}
+    </div>
+  `;
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
-      const accuracy = position.coords.accuracy;
 
-      console.log('✅ Location obtained:', { lat, lng, accuracy: accuracy + 'm' });
+      console.log('✅ Current location:', lat, lng);
 
-      // CRITICAL: Set the hidden input values FIRST
-      if (latInput && lngInput) {
-        latInput.value = lat;
-        lngInput.value = lng;
-        console.log('✅ Coordinates saved to inputs:', latInput.value, lngInput.value);
-      }
+      // Clear loading message
+      mapContainer.innerHTML = '';
 
-      // Then update the map visualization
-      setMapLocation(lat, lng);
+      // Create map
+      const defaultLocation = { lat, lng };
+      locationPickerMap = new google.maps.Map(mapContainer, {
+        zoom: 15,
+        center: defaultLocation,
+        mapTypeControl: true,
+        fullscreenControl: false,
+        streetViewControl: false,
+        gestureHandling: 'greedy'
+      });
 
-      // Update address field with coordinates
-      const addressField = document.getElementById('checkout-address');
-      if (addressField && !addressField.value.trim()) {
-        addressField.value = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
-        addressField.placeholder = isArabic ? 'أضف تفاصيل إضافية للعنوان...' : 'Add additional address details...';
-      }
+      // Add marker
+      const markerIcon = {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 12,
+        fillColor: '#E30613',
+        fillOpacity: 1,
+        strokeColor: 'white',
+        strokeWeight: 3
+      };
 
-      // Show confirmation
-      showLocationConfirmation();
+      locationPickerMarker = new google.maps.Marker({
+        position: defaultLocation,
+        map: locationPickerMap,
+        icon: markerIcon,
+        draggable: true
+      });
 
-      // Reset button with success state
-      if (btn) {
-        btn.innerHTML = `✅ ${isArabic ? 'تم تحديد الموقع' : 'Location Set'}`;
-        btn.style.background = 'linear-gradient(135deg, #52C41A 0%, #389E0D 100%)';
-        btn.style.opacity = '1';
+      // Click to set location
+      locationPickerMap.addListener('click', (e) => {
+        const clickPos = e.latLng;
+        locationPickerMarker.setPosition(clickPos);
+        locationPickerMap.setCenter(clickPos);
+      });
 
-        setTimeout(() => {
-          btn.innerHTML = `📍 ${isArabic ? 'استخدم موقعي الحالي' : 'Use My Current Location'}`;
-          btn.style.background = 'linear-gradient(135deg, #52C41A 0%, #389E0D 100%)';
-          btn.disabled = false;
-        }, 2000);
-      }
+      // Trigger resize
+      google.maps.event.trigger(locationPickerMap, 'resize');
+      setTimeout(() => locationPickerMap.setCenter(defaultLocation), 50);
+
+      console.log('✅ Location picker map initialized');
     },
     (error) => {
-      console.error('❌ Geolocation error:', error.code, error.message);
-
-      let errorMsg = isArabic ? 'تعذر تحديد موقعك' : 'Could not get your location';
-      let detailMsg = '';
-
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-          errorMsg = isArabic ? 'تم رفض الإذن بالوصول إلى الموقع' : 'Location permission denied';
-          detailMsg = isArabic 
-            ? 'يرجى السماح بالوصول إلى موقعك في إعدادات المتصفح' 
-            : 'Please allow location access in your browser settings';
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMsg = isArabic ? 'الموقع غير متاح' : 'Location unavailable';
-          detailMsg = isArabic 
-            ? 'تأكد من تفعيل GPS على جهازك' 
-            : 'Make sure GPS is enabled on your device';
-          break;
-        case error.TIMEOUT:
-          errorMsg = isArabic ? 'انتهت مهلة تحديد الموقع' : 'Location request timed out';
-          detailMsg = isArabic 
-            ? 'يرجى المحاولة مرة أخرى' 
-            : 'Please try again';
-          break;
-      }
-
-      alert(errorMsg + '\n\n' + detailMsg);
-
-      // Reset button
-      if (btn) {
-        btn.innerHTML = `📍 ${isArabic ? 'استخدم موقعي الحالي' : 'Use My Current Location'}`;
-        btn.style.background = 'linear-gradient(135deg, #52C41A 0%, #389E0D 100%)';
-        btn.style.opacity = '1';
-        btn.disabled = false;
-      }
+      console.error('❌ Geolocation error:', error);
+      const msg = isArabic ? 'تعذر الوصول إلى موقعك' : 'Could not access your location';
+      mapContainer.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#E30613;font-weight:600;">${msg}</div>`;
     },
-    {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0
-    }
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
   );
 }
 
