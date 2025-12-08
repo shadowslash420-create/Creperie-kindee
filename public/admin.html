@@ -613,7 +613,7 @@
     }
 
     // Check authentication on page load
-    onAuthChange(async (user) => {
+    window.checkExistingAuth = onAuthChange(async (user) => {
       // Check Firebase user OR localStorage for Google Sign-In
       let currentUser = user;
       if (!currentUser) {
@@ -713,5 +713,13 @@
   <script type="module" src="auth.js"></script>
   <!-- Load admin dashboard after module script starts -->
   <script src="admin-dashboard.js?v=20251203194700"></script>
+  <script type="module">
+    // Auto-login if user is already authenticated
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (window.checkExistingAuth) {
+        await window.checkExistingAuth();
+      }
+    });
+  </script>
 </body>
 </html>

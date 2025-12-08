@@ -838,6 +838,54 @@ async function deleteMessage(messageId) {
 
 // ==================== INITIALIZATION ====================
 
+// Check if user is already logged in via Firebase Auth
+async function checkExistingAuth() {
+  try {
+    const auth = await window.getAuthInstance();
+    if (auth.currentUser) {
+      console.log('✅ User already authenticated:', auth.currentUser.email);
+      
+      // Check if user is admin
+      const ADMIN_EMAILS = ['oussamaanis2005@gmail.com'];
+      if (ADMIN_EMAILS.includes(auth.currentUser.email)) {
+        console.log('✅ Admin user detected, auto-logging in');
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('admin-section').classList.remove('hidden');
+        await initializeDashboard();
+        return true;
+      }
+      
+      // Check if user is staff
+      const isStaff = await checkIfUserIsStaff(auth.currentUser.email);
+      if (isStaff) {
+        console.log('✅ Staff user detected, auto-logging in');
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('admin-section').classList.remove('hidden');
+        await initializeDashboard();
+        return true;
+      }
+      
+      console.log('❌ User is not authorized as admin/staff');
+      return false;
+    }
+  } catch (error) {
+    console.error('Error checking existing auth:', error);
+  }
+  return false;
+}
+
+async function checkIfUserIsStaff(email) {
+  try {
+    if (!window.dbService) return false;
+    await window.dbService.init();
+    const staff = await window.dbService.getAllStaff();
+    return staff.some(s => s.email?.toLowerCase() === email?.toLowerCase());
+  } catch (error) {
+    console.error('Error checking staff status:', error);
+    return false;
+  }
+}
+
 async function initializeDashboard() {
   try {
     console.log('🔄 Initializing dashboard...');
@@ -875,6 +923,9 @@ async function initializeDashboard() {
 }
 
 // ==================== ADMIN LOGIN HANDLER ====================
+
+// Expose globally for auto-login
+window.checkExistingAuth = checkExistingAuth;
 
 async function handleAdminLogin(e) {
   e.preventDefault();
