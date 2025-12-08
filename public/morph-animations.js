@@ -20,17 +20,17 @@
   };
 
   const config = {
-    morphDuration: 3000,
-    swipeThreshold: 50,
-    swipeVelocityThreshold: 0.3,
+    morphDuration: 4000,
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
   };
 
   let currentMorphIndex = 0;
-  let morphIntervals = [];
+  let morphAnimationFrames = [];
   let touchStartX = 0;
   let touchStartY = 0;
   let touchStartTime = 0;
+  let lastMouseX = 0;
+  let lastMouseY = 0;
 
   function createSVGElement(tag) {
     return document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -50,6 +50,8 @@
       opacity: opacity,
       pointerEvents: 'none',
       zIndex: '0',
+      willChange: 'transform',
+      transform: 'translate3d(0,0,0)',
       ...position
     });
 
@@ -99,7 +101,7 @@
       'rgba(255, 215, 0, 0.05)',
       '0.4',
       '300px',
-      { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+      { top: '50%', left: '50%', transform: 'translate3d(-50%, -50%, 0)' }
     );
 
     heroSection.insertBefore(blob1, heroSection.firstChild);
@@ -132,14 +134,12 @@
       card.insertBefore(miniBlob, card.firstChild);
       
       card.addEventListener('mouseenter', () => {
-        miniBlob.style.transform = 'scale(1.3) rotate(15deg)';
-        miniBlob.style.opacity = '0.5';
-      });
+        miniBlob.style.transform = 'translate3d(0, 0, 0) scale(1.3) rotate(15deg)';
+      }, { passive: true });
       
       card.addEventListener('mouseleave', () => {
-        miniBlob.style.transform = 'scale(1) rotate(0deg)';
-        miniBlob.style.opacity = '0.3';
-      });
+        miniBlob.style.transform = 'translate3d(0, 0, 0) scale(1) rotate(0deg)';
+      }, { passive: true });
     });
   }
 
@@ -147,12 +147,19 @@
     if (config.reducedMotion) return;
 
     blobs.forEach((blob, index) => {
-      const interval = setInterval(() => {
-        currentMorphIndex++;
-        morphPath(blob.element, blob.shapes, currentMorphIndex + index);
-      }, config.morphDuration);
+      let lastMorphTime = Date.now();
       
-      morphIntervals.push(interval);
+      function animate() {
+        const now = Date.now();
+        if (now - lastMorphTime >= config.morphDuration) {
+          currentMorphIndex++;
+          morphPath(blob.element, blob.shapes, currentMorphIndex + index);
+          lastMorphTime = now;
+        }
+        morphAnimationFrames.push(requestAnimationFrame(animate));
+      }
+      
+      animate();
     });
   }
 
@@ -170,11 +177,10 @@
     const heroContent = document.querySelector('.home-hero-content');
     if (heroContent) {
       const offset = direction === 'left' ? -10 : 10;
-      heroContent.style.transition = 'transform 0.3s ease-out';
-      heroContent.style.transform = `translateX(${offset}px)`;
+      heroContent.style.transform = `translate3d(${offset}px, 0, 0)`;
       
       setTimeout(() => {
-        heroContent.style.transform = 'translateX(0)';
+        heroContent.style.transform = 'translate3d(0, 0, 0)';
       }, 300);
     }
   }
@@ -196,10 +202,7 @@
     
     const velocity = Math.abs(deltaX) / deltaTime;
     
-    if (Math.abs(deltaX) > config.swipeThreshold && 
-        Math.abs(deltaX) > Math.abs(deltaY) &&
-        velocity > config.swipeVelocityThreshold) {
-      
+    if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) && velocity > 0.3) {
       const direction = deltaX > 0 ? 'right' : 'left';
       triggerSwipeMorph(direction);
     }
@@ -207,6 +210,11 @@
 
   function handleMouseMove(e) {
     if (config.reducedMotion) return;
+    
+    const now = Date.now();
+    if (now - lastMouseX < 16) return;
+    
+    lastMouseX = now;
     
     const heroSection = document.querySelector('.home-hero');
     if (!heroSection) return;
@@ -217,9 +225,9 @@
     
     const blobs = heroSection.querySelectorAll('.morph-blob');
     blobs.forEach((blob, index) => {
-      const offsetX = (x - 0.5) * 30 * (index + 1);
-      const offsetY = (y - 0.5) * 20 * (index + 1);
-      blob.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+      const offsetX = (x - 0.5) * 20 * (index + 1);
+      const offsetY = (y - 0.5) * 15 * (index + 1);
+      blob.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
     });
   }
 
@@ -236,18 +244,22 @@
     const style = document.createElement('style');
     style.textContent = `
       .morph-blob {
-        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        transform: translate3d(0,0,0) !important;
+        will-change: transform;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        perspective: 1000px;
       }
       
       .morph-blob path {
-        transition: d 3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translate3d(0,0,0);
+        will-change: d;
       }
       
       @media (prefers-reduced-motion: reduce) {
         .morph-blob,
         .morph-blob path {
-          transition: none !important;
-          animation: none !important;
+          will-change: auto !important;
         }
       }
       
@@ -259,15 +271,23 @@
       .home-hero-content {
         position: relative;
         z-index: 1;
+        will-change: transform;
+        transform: translate3d(0,0,0);
+      }
+      
+      .offering-card {
+        position: relative;
+        overflow: hidden;
       }
       
       .offering-card .morph-blob {
-        transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        will-change: transform;
       }
       
       @keyframes floatBlob {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-20px) rotate(5deg); }
+        0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+        50% { transform: translate3d(0, -15px, 0) rotate(3deg); }
       }
       
       .morph-blob.animate-float {
@@ -278,7 +298,6 @@
   }
 
   function init() {
-    // Defer morph animations to avoid blocking page load
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
         setTimeout(initAll, 2500);
@@ -306,7 +325,7 @@
 
   window.morphAnimations = {
     triggerSwipeMorph,
-    pause: () => morphIntervals.forEach(clearInterval),
+    pause: () => morphAnimationFrames.forEach(id => cancelAnimationFrame(id)),
     resume: () => initHeroMorphShapes()
   };
 
