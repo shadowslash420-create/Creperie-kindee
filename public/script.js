@@ -2159,20 +2159,57 @@ function renderHomeMenuPreview() {
 
   console.log('🎨 Rendering home menu preview with', menuItems.length, 'items');
   const t = getT();
-  const featured = menuItems.slice(0, 6);
+  const lang = getCurrentLang();
+  const isArabic = lang === 'ar';
+
+  // Group items by category
+  const itemsByCategory = {};
+  menuItems.forEach(item => {
+    if (!itemsByCategory[item.category]) {
+      itemsByCategory[item.category] = [];
+    }
+    itemsByCategory[item.category].push(item);
+  });
+
+  // Select up to 9 items from different categories
+  const featured = [];
+  const categoryKeys = Object.keys(itemsByCategory);
+  let categoryIndex = 0;
+  
+  while (featured.length < 9 && categoryKeys.length > 0) {
+    const category = categoryKeys[categoryIndex % categoryKeys.length];
+    if (itemsByCategory[category] && itemsByCategory[category].length > 0) {
+      featured.push(itemsByCategory[category].shift());
+    }
+    if (itemsByCategory[category].length === 0) {
+      categoryKeys.splice(categoryIndex % categoryKeys.length, 1);
+    } else {
+      categoryIndex++;
+    }
+  }
 
   if (featured.length === 0) {
     container.innerHTML = `
       <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: var(--text-secondary);">
         <div style="font-size: 48px; margin-bottom: 16px;">🍽️</div>
-        <p>قريباً... منتجات شهية في انتظاركم</p>
+        <p>${isArabic ? 'قريباً... منتجات شهية في انتظاركم' : 'Coming soon... delicious products await you'}</p>
       </div>
     `;
     return;
   }
 
+  // Get category labels
+  const getCategoryLabel = (categoryId) => {
+    const categoryObj = categories.find(c => c.id === categoryId);
+    if (categoryObj) {
+      return isArabic ? (categoryObj.nameAr || categoryObj.name) : categoryObj.name;
+    }
+    return categoryId;
+  };
+
   container.innerHTML = featured.map(item => `
-    <div class="menu-card">
+    <div class="menu-card home-preview-card">
+      <div class="category-badge">${getCategoryLabel(item.category)}</div>
       <div class="menu-card-image" style="background-image:url('${item.img || 'images/placeholder.svg'}')"></div>
       <div class="menu-card-content">
         <h3 class="menu-card-title">${item.name}</h3>
