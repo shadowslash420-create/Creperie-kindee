@@ -1571,6 +1571,7 @@ window.useMyLocation = function() {
       height: 80vh;
       max-height: 600px;
       overflow: hidden;
+      position: relative;
     ">
       <!-- Header -->
       <div style="
@@ -1606,8 +1607,10 @@ window.useMyLocation = function() {
       <div id="location-picker-map" style="
         flex: 1;
         width: 100%;
+        min-height: 250px;
         background: #f5f5f5;
         position: relative;
+        overflow: hidden;
       "></div>
 
       <!-- Instructions -->
@@ -1673,8 +1676,12 @@ window.useMyLocation = function() {
   // Done button - save location and close
   const doneBtn = document.getElementById('done-location-picker');
   doneBtn?.addEventListener('click', () => {
-    if (locationPickerMarker) {
+    if (locationPickerMarker && locationPickerMap) {
       const pos = locationPickerMarker.getPosition();
+      if (!pos) {
+        console.error('❌ Marker position undefined');
+        return;
+      }
       const lat = pos.lat();
       const lng = pos.lng();
 
@@ -1731,9 +1738,15 @@ function initLocationPickerMap() {
 
       console.log('✅ Current location:', lat, lng);
 
-      // Clear loading message
-      mapContainer.innerHTML = '';
-
+      // Ensure container has proper dimensions - critical for map render
+      mapContainer.style.width = '100%';
+      mapContainer.style.height = '100%';
+      mapContainer.style.position = 'relative';
+      
+      // Get actual dimensions
+      const rect = mapContainer.getBoundingClientRect();
+      console.log('🗺️ Location picker map container dimensions:', rect.width, 'x', rect.height);
+      
       // Create map
       const defaultLocation = { lat, lng };
       locationPickerMap = new google.maps.Map(mapContainer, {
@@ -1745,7 +1758,7 @@ function initLocationPickerMap() {
         gestureHandling: 'greedy'
       });
 
-      // Add marker
+      // Add marker immediately
       const markerIcon = {
         path: google.maps.SymbolPath.CIRCLE,
         scale: 12,
@@ -1762,18 +1775,23 @@ function initLocationPickerMap() {
         draggable: true
       });
 
+      console.log('✅ Marker created at:', defaultLocation);
+
       // Click to set location
       locationPickerMap.addListener('click', (e) => {
         const clickPos = e.latLng;
-        locationPickerMarker.setPosition(clickPos);
-        locationPickerMap.setCenter(clickPos);
+        if (locationPickerMarker) {
+          locationPickerMarker.setPosition(clickPos);
+          locationPickerMap.setCenter(clickPos);
+        }
       });
 
       // Trigger resize
-      google.maps.event.trigger(locationPickerMap, 'resize');
-      setTimeout(() => locationPickerMap.setCenter(defaultLocation), 50);
-
-      console.log('✅ Location picker map initialized');
+      setTimeout(() => {
+        google.maps.event.trigger(locationPickerMap, 'resize');
+        locationPickerMap.setCenter(defaultLocation);
+        console.log('✅ Location picker map initialized');
+      }, 150);
     },
     (error) => {
       console.error('❌ Geolocation error:', error);
