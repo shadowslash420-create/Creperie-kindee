@@ -109,29 +109,17 @@ export async function getMenuFromFirebase() {
       return [];
     }
 
-    // Check in-memory cache first
-    if (menuCache) {
-      console.log('📦 Returning cached menu (memory):', menuCache.length, 'items');
-      return menuCache;
-    }
-
-    // Check localStorage next
-    if (isCacheValid(CACHE_KEYS.MENU_TIMESTAMP)) {
-      const cached = loadFromLocalStorage(CACHE_KEYS.MENU);
-      if (cached) {
-        console.log('📦 Returning cached menu (localStorage):', cached.length, 'items');
-        menuCache = cached;
-        // Still setup real-time listener in background
-        setupMenuListener();
-        return cached;
-      }
-    }
+    // TEMPORARILY DISABLE CACHE - Force fresh fetch to debug
+    console.log('🧹 Clearing menu cache to force fresh fetch...');
+    menuCache = null;
+    localStorage.removeItem(CACHE_KEYS.MENU);
+    localStorage.removeItem(CACHE_KEYS.MENU_TIMESTAMP);
 
     // Fetch from Firestore
     console.log('🔄 Fetching fresh menu from Firestore...');
     const menu = await dbService.getAllMenuItems();
     console.log('✅ Menu fetched from Firestore:', menu.length, 'items');
-    console.log('📊 Item details:', menu.map(item => ({ name: item.name, category: item.category })));
+    console.log('📊 Item details:', menu.map(item => ({ name: item.name, category: item.category, id: item.id })));
 
     // Update both caches
     menuCache = menu;
@@ -143,6 +131,7 @@ export async function getMenuFromFirebase() {
     return menu;
   } catch (error) {
     console.error('❌ Failed to load menu from Firebase:', error);
+    console.error('Error details:', error.message, error.code);
 
     // Try to return localStorage data even if fetch failed
     const cached = loadFromLocalStorage(CACHE_KEYS.MENU);

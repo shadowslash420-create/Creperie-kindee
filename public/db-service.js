@@ -39,9 +39,12 @@ class DatabaseService {
 
   async getAllMenuItems() {
     await this.init();
+    console.log('🔍 Fetching all menu items from Firestore...');
     const menuRef = collection(this.db, 'menu');
     const snapshot = await getDocs(menuRef);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log('📊 Raw Firestore items:', items.length, 'items:', items);
+    return items;
   }
 
   async getMenuItemsByCategory(category) {
