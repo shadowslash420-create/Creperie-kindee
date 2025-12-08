@@ -1299,44 +1299,60 @@ window.checkoutFlow = async function() {
     console.log('✅ Close button event listener attached');
   }
 
-  // Initialize map after modal is fully rendered and visible
-  function waitAndInitMap(attempts = 0) {
-    const mapContainer = document.getElementById('checkout-map');
+  // Defer map initialization until modal is actually visible using MutationObserver
+  function setupMapInitializationObserver() {
     const modal = document.querySelector('.checkout-modal-overlay');
-    
-    if (!mapContainer || !modal) {
-      if (attempts < 10) {
-        setTimeout(() => waitAndInitMap(attempts + 1), 100);
+    if (!modal) return;
+
+    // Create observer to watch for visibility changes
+    const observer = new MutationObserver(() => {
+      const mapContainer = document.getElementById('checkout-map');
+      if (!mapContainer) return;
+
+      // Check if modal is now visible
+      const modalStyle = window.getComputedStyle(modal);
+      const isVisible = modalStyle.display !== 'none' && 
+                       modalStyle.visibility !== 'hidden' && 
+                       modalStyle.opacity !== '0';
+
+      const rect = mapContainer.getBoundingClientRect();
+      const hasHeight = mapContainer.offsetHeight > 0 && rect.height > 0;
+      const hasWidth = mapContainer.offsetWidth > 0 && rect.width > 0;
+
+      console.log(`🗺️ Modal visibility check: visible=${isVisible}, width=${mapContainer.offsetWidth}, height=${mapContainer.offsetHeight}`);
+
+      // Initialize map only when modal is fully visible with dimensions
+      if (isVisible && hasHeight && hasWidth && !checkoutMap) {
+        console.log('🗺️ Modal shown! Container visible with dimensions:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
+        observer.disconnect();
+        initCheckoutMap(savedInfo);
       }
-      return;
-    }
+    });
 
-    // Check parent modal visibility
-    const modalStyle = window.getComputedStyle(modal);
-    const isModalVisible = modalStyle.display !== 'none' && modalStyle.visibility !== 'hidden';
-    
-    const rect = mapContainer.getBoundingClientRect();
-    const hasHeight = mapContainer.offsetHeight > 0 && rect.height > 0;
-    const hasWidth = mapContainer.offsetWidth > 0 && rect.width > 0;
+    // Start observing modal for style/class changes
+    observer.observe(modal, {
+      attributes: true,
+      attributeFilter: ['style', 'class'],
+      subtree: true
+    });
 
-    console.log(`🗺️ Map init attempt ${attempts}: visible=${isModalVisible}, width=${mapContainer.offsetWidth}, height=${mapContainer.offsetHeight}`);
-
-    if (isModalVisible && hasHeight && hasWidth && attempts > 2) {
-      console.log('🗺️ Container ready. Initializing map with dimensions:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
-      initCheckoutMap(savedInfo);
-      return;
-    }
-
-    if (attempts < 30) {
-      setTimeout(() => waitAndInitMap(attempts + 1), 150);
-    } else {
-      console.warn('🗺️ Map initialization timeout - forcing init anyway');
-      initCheckoutMap(savedInfo);
-    }
+    // Fallback: check immediately in case modal is already visible
+    setTimeout(() => {
+      const mapContainer = document.getElementById('checkout-map');
+      if (mapContainer && !checkoutMap) {
+        const modalStyle = window.getComputedStyle(modal);
+        const isVisible = modalStyle.display !== 'none' && modalStyle.visibility !== 'hidden';
+        if (isVisible) {
+          console.log('🗺️ Modal already visible - initializing map immediately');
+          observer.disconnect();
+          initCheckoutMap(savedInfo);
+        }
+      }
+    }, 100);
   }
   
-  // Wait for modal to be fully visible before initializing map
-  setTimeout(() => waitAndInitMap(), 300);
+  // Setup observer to watch for modal visibility
+  setupMapInitializationObserver();
 
   // Focus first input
   setTimeout(() => {
@@ -1398,14 +1414,19 @@ function initCheckoutMap(savedInfo) {
       gestureHandling: 'greedy'
     });
 
-    // Force resize and recenter after a brief delay to ensure proper rendering
+    // Trigger resize to ensure map renders correctly in modal
     setTimeout(() => {
-      if (checkoutMap) {
+      if (checkoutMap && google && google.maps) {
+        console.log('🗺️ Triggering map resize event...');
         google.maps.event.trigger(checkoutMap, 'resize');
-        checkoutMap.setCenter(defaultLocation);
-        console.log('🗺️ Map resized and recentered');
+        
+        // Re-center map after resize
+        setTimeout(() => {
+          checkoutMap.setCenter(defaultLocation);
+          console.log('🗺️ Map resized and recentered at:', defaultLocation);
+        }, 100);
       }
-    }, 200);
+    }, 50);
 
     // Create red marker icon
     const markerIcon = {
