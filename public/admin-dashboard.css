@@ -164,24 +164,48 @@
 .login-btn {
   width: 100%;
   padding: 16px;
-  background: linear-gradient(135deg, #FF1111 0%, #FF6666 100%);
+  background: var(--gradient-primary);
   color: #ffffff;
   border: none;
   border-radius: 50px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   margin-top: 8px;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  box-shadow: 0 4px 14px rgba(255,17,17,0.3);
+  box-shadow: 0 12px 32px rgba(227, 6, 19, 0.3), 0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
 }
 
 .login-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255,17,17,0.5);
-  background: linear-gradient(135deg, #E60000 0%, #FF1111 100%);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(227, 6, 19, 0.4), 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.login-btn:hover::before {
+  width: 400px;
+  height: 400px;
+}
+
+.login-btn:active {
+  transform: translateY(-2px) scale(0.98);
+  box-shadow: 0 8px 20px rgba(227, 6, 19, 0.25);
 }
 
 /* Dashboard Layout */
