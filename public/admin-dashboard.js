@@ -422,6 +422,7 @@ async function renderOrdersList() {
     const ready = state.orders.filter(o => o.status === 'ready').length;
     const picked_up = state.orders.filter(o => o.status === 'picked_up').length;
     const in_transit = state.orders.filter(o => o.status === 'in_transit').length;
+    const completed = state.orders.filter(o => o.status === 'completed').length; // Added for completed
 
     // Apply filter if exists
     let filteredOrders = state.orders;
@@ -429,36 +430,56 @@ async function renderOrdersList() {
       filteredOrders = state.orders.filter(o => o.status === state.orderFilter);
     }
 
-    // Stats cards HTML with click handlers - matching staff-a layout
+    // Stats cards HTML with click handlers - matching staff-a layout with proper contrast
     const statsHtml = `
       <div class="stats-grid">
-        <div class="stat-card ${state.orderFilter === 'all' ? 'active' : ''}" onclick="filterOrdersByStatus('all')" style="cursor:pointer;">
-          <div class="stat-value">${total}</div>
-          <div class="stat-label">الكل / All</div>
+        <div class="stat-card ${state.orderFilter === 'all' ? 'active' : ''}" onclick="filterOrdersByStatus('all')">
+          <div class="stat-info">
+            <div class="stat-value">${total}</div>
+            <div class="stat-label">الكل / All</div>
+          </div>
         </div>
-        <div class="stat-card ${state.orderFilter === 'pending' ? 'active' : ''}" onclick="filterOrdersByStatus('pending')" style="cursor:pointer;">
-          <div class="stat-value">${pending}</div>
-          <div class="stat-label">🔴 قيد الانتظار / Pending</div>
+        <div class="stat-card ${state.orderFilter === 'pending' ? 'active' : ''}" onclick="filterOrdersByStatus('pending')">
+          <div class="stat-info">
+            <div class="stat-value">${pending}</div>
+            <div class="stat-label">🔴 قيد الانتظار / Pending</div>
+          </div>
         </div>
-        <div class="stat-card ${state.orderFilter === 'received' ? 'active' : ''}" onclick="filterOrdersByStatus('received')" style="cursor:pointer;">
-          <div class="stat-value">${received}</div>
-          <div class="stat-label">📦 تم الاستلام / Received</div>
+        <div class="stat-card ${state.orderFilter === 'received' ? 'active' : ''}" onclick="filterOrdersByStatus('received')">
+          <div class="stat-info">
+            <div class="stat-value">${received}</div>
+            <div class="stat-label">📦 تم الاستلام / Received</div>
+          </div>
         </div>
-        <div class="stat-card ${state.orderFilter === 'preparing' ? 'active' : ''}" onclick="filterOrdersByStatus('preparing')" style="cursor:pointer;">
-          <div class="stat-value">${preparing}</div>
-          <div class="stat-label">👨‍🍳 جاري التحضير / Preparing</div>
+        <div class="stat-card ${state.orderFilter === 'preparing' ? 'active' : ''}" onclick="filterOrdersByStatus('preparing')">
+          <div class="stat-info">
+            <div class="stat-value">${preparing}</div>
+            <div class="stat-label">👨‍🍳 جاري التحضير / Preparing</div>
+          </div>
         </div>
-        <div class="stat-card ${state.orderFilter === 'ready' ? 'active' : ''}" onclick="filterOrdersByStatus('ready')" style="cursor:pointer;">
-          <div class="stat-value">${ready}</div>
-          <div class="stat-label">✅ جاهز / Ready</div>
+        <div class="stat-card ${state.orderFilter === 'ready' ? 'active' : ''}" onclick="filterOrdersByStatus('ready')">
+          <div class="stat-info">
+            <div class="stat-value">${ready}</div>
+            <div class="stat-label">✅ جاهز / Ready</div>
+          </div>
         </div>
-        <div class="stat-card ${state.orderFilter === 'picked_up' ? 'active' : ''}" onclick="filterOrdersByStatus('picked_up')" style="cursor:pointer;">
-          <div class="stat-value">${picked_up}</div>
-          <div class="stat-label">🚗 تم الاستلام / Picked Up</div>
+        <div class="stat-card ${state.orderFilter === 'picked_up' ? 'active' : ''}" onclick="filterOrdersByStatus('picked_up')">
+          <div class="stat-info">
+            <div class="stat-value">${picked_up}</div>
+            <div class="stat-label">🚗 تم الاستلام / Picked Up</div>
+          </div>
         </div>
-        <div class="stat-card ${state.orderFilter === 'in_transit' ? 'active' : ''}" onclick="filterOrdersByStatus('in_transit')" style="cursor:pointer;">
-          <div class="stat-value">${in_transit}</div>
-          <div class="stat-label">🚚 في الطريق / In Transit</div>
+        <div class="stat-card ${state.orderFilter === 'in_transit' ? 'active' : ''}" onclick="filterOrdersByStatus('in_transit')">
+          <div class="stat-info">
+            <div class="stat-value">${in_transit}</div>
+            <div class="stat-label">🚚 في الطريق / In Transit</div>
+          </div>
+        </div>
+        <div class="stat-card ${state.orderFilter === 'completed' ? 'active' : ''}" onclick="filterOrdersByStatus('completed')">
+          <div class="stat-info">
+            <div class="stat-value">${completed}</div>
+            <div class="stat-label">✔️ مكتمل / Completed</div>
+          </div>
         </div>
       </div>
     `;
@@ -502,6 +523,7 @@ async function renderOrdersList() {
                         <option value="picked_up" ${order.status === 'picked_up' ? 'selected' : ''}>🚗 Picked Up</option>
                         <option value="in_transit" ${order.status === 'in_transit' ? 'selected' : ''}>🚚 In Transit</option>
                         <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+                        <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>✔️ Completed</option>
                       </select>
                     </td>
                     <td style="padding:16px;color:#718096;font-size:13px;">${date.split(' ')[0]}<br/><span style="font-size:11px;color:#999;">${date.split(' ')[1] || ''}</span></td>
@@ -844,7 +866,7 @@ async function checkExistingAuth() {
     const auth = await window.getAuthInstance();
     if (auth.currentUser) {
       console.log('✅ User already authenticated:', auth.currentUser.email);
-      
+
       // Check if user is admin
       const ADMIN_EMAILS = ['oussamaanis2005@gmail.com'];
       if (ADMIN_EMAILS.includes(auth.currentUser.email)) {
@@ -854,7 +876,7 @@ async function checkExistingAuth() {
         await initializeDashboard();
         return true;
       }
-      
+
       // Check if user is staff
       const isStaff = await checkIfUserIsStaff(auth.currentUser.email);
       if (isStaff) {
@@ -864,7 +886,7 @@ async function checkExistingAuth() {
         await initializeDashboard();
         return true;
       }
-      
+
       console.log('❌ User is not authorized as admin/staff');
       return false;
     }
