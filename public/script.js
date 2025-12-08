@@ -1299,11 +1299,32 @@ window.checkoutFlow = async function() {
     console.log('✅ Close button event listener attached');
   }
 
-  // Initialize map after modal is fully rendered with longer delays
-  setTimeout(() => {
-    console.log('🗺️ Starting map initialization...');
-    initCheckoutMap(savedInfo);
-  }, 500);
+  // Initialize map after modal is fully rendered and has proper dimensions
+  function waitAndInitMap(attempts = 0) {
+    const mapContainer = document.getElementById('checkout-map');
+    if (!mapContainer) {
+      if (attempts < 10) {
+        setTimeout(() => waitAndInitMap(attempts + 1), 100);
+      }
+      return;
+    }
+
+    const rect = mapContainer.getBoundingClientRect();
+    const hasHeight = mapContainer.offsetHeight > 0 && rect.height > 0;
+    const hasWidth = mapContainer.offsetWidth > 0 && rect.width > 0;
+
+    if (hasHeight && hasWidth && attempts > 3) {
+      console.log('🗺️ Container ready. Initializing map...');
+      initCheckoutMap(savedInfo);
+      return;
+    }
+
+    if (attempts < 20) {
+      setTimeout(() => waitAndInitMap(attempts + 1), 150);
+    }
+  }
+  
+  waitAndInitMap();
 
   // Focus first input
   setTimeout(() => {
