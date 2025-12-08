@@ -1123,15 +1123,15 @@ window.checkoutFlow = async function() {
             >
               📍 ${isArabic ? 'استخدم موقعي الحالي' : 'Use My Current Location'}
             </button>
-            <div id="checkout-map" style="
+            <!-- Map Container with fixed dimensions -->
+            <div id="delivery-map" style="
               width: 100%;
-              height: 250px;
+              height: 300px;
               border-radius: 8px;
               border: 2px solid #FFE4E1;
               margin-bottom: 10px;
-              z-index: 1000;
-              position: relative;
               background: #f5f5f5;
+              position: relative;
             "></div>
             <input type="hidden" id="checkout-lat" value="${savedInfo.lat || ''}" />
             <input type="hidden" id="checkout-lng" value="${savedInfo.lng || ''}" />
@@ -1251,6 +1251,30 @@ window.checkoutFlow = async function() {
 
   document.body.appendChild(modal);
 
+  // Initialize map when modal is shown
+  setTimeout(() => {
+    const modalOverlay = document.getElementById('checkout-modal');
+    if (modalOverlay) {
+      // Trigger map initialization when modal is visible
+      if (!checkoutMap) {
+        console.log('🗺️ Modal added - initializing map');
+        initCheckoutMapOnOpen(savedInfo);
+      }
+      
+      // Trigger resize to ensure map renders properly
+      setTimeout(() => {
+        if (checkoutMap) {
+          google.maps.event.trigger(checkoutMap, 'resize');
+          // Recenter if we have saved coordinates
+          if (savedInfo.lat && savedInfo.lng) {
+            const center = { lat: parseFloat(savedInfo.lat), lng: parseFloat(savedInfo.lng) };
+            checkoutMap.setCenter(center);
+          }
+        }
+      }, 100);
+    }
+  }, 50);
+
   // Add auto-save listeners to all form inputs
   setTimeout(() => {
     const formInputs = [
@@ -1274,7 +1298,7 @@ window.checkoutFlow = async function() {
     console.log('✅ Checkout form auto-save enabled');
   }, 100);
 
-  // Add click event listener to close button - MUST be synchronous
+  // Add click event listener to close button
   const closeBtn = document.getElementById('checkout-close-btn');
   if (closeBtn) {
     closeBtn.addEventListener('click', (e) => {
@@ -1299,77 +1323,26 @@ window.checkoutFlow = async function() {
     console.log('✅ Close button event listener attached');
   }
 
-  // Defer map initialization until modal is actually visible using MutationObserver
-  function setupMapInitializationObserver() {
-    const modal = document.querySelector('.checkout-modal-overlay');
-    if (!modal) return;
-
-    // Create observer to watch for visibility changes
-    const observer = new MutationObserver(() => {
-      const mapContainer = document.getElementById('checkout-map');
-      if (!mapContainer) return;
-
-      // Check if modal is now visible
-      const modalStyle = window.getComputedStyle(modal);
-      const isVisible = modalStyle.display !== 'none' && 
-                       modalStyle.visibility !== 'hidden' && 
-                       modalStyle.opacity !== '0';
-
-      const rect = mapContainer.getBoundingClientRect();
-      const hasHeight = mapContainer.offsetHeight > 0 && rect.height > 0;
-      const hasWidth = mapContainer.offsetWidth > 0 && rect.width > 0;
-
-      console.log(`🗺️ Modal visibility check: visible=${isVisible}, width=${mapContainer.offsetWidth}, height=${mapContainer.offsetHeight}`);
-
-      // Initialize map only when modal is fully visible with dimensions
-      if (isVisible && hasHeight && hasWidth && !checkoutMap) {
-        console.log('🗺️ Modal shown! Container visible with dimensions:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
-        observer.disconnect();
-        initCheckoutMap(savedInfo);
-      }
-    });
-
-    // Start observing modal for style/class changes
-    observer.observe(modal, {
-      attributes: true,
-      attributeFilter: ['style', 'class'],
-      subtree: true
-    });
-
-    // Fallback: check immediately in case modal is already visible
-    setTimeout(() => {
-      const mapContainer = document.getElementById('checkout-map');
-      if (mapContainer && !checkoutMap) {
-        const modalStyle = window.getComputedStyle(modal);
-        const isVisible = modalStyle.display !== 'none' && modalStyle.visibility !== 'hidden';
-        if (isVisible) {
-          console.log('🗺️ Modal already visible - initializing map immediately');
-          observer.disconnect();
-          initCheckoutMap(savedInfo);
-        }
-      }
-    }, 100);
-  }
-  
-  // Setup observer to watch for modal visibility
-  setupMapInitializationObserver();
-
   // Focus first input
   setTimeout(() => {
     const firstInput = document.getElementById('checkout-firstname');
     if (firstInput) firstInput.focus();
   }, 300);
-
-  // Google Maps handles sizing automatically, no resize needed
 }
 
 // Map variables
 let checkoutMap = null;
 let checkoutMarker = null;
 
-// Initialize checkout map with Google Maps
-function initCheckoutMap(savedInfo) {
-  const mapContainer = document.getElementById('checkout-map');
+// Global map initialization function (called by Google Maps API callback)
+function initMap() {
+  console.log('✅ Google Maps API callback - initMap() called');
+  // API is ready, actual map creation happens when modal opens
+}
+
+// Initialize checkout map when modal opens
+function initCheckoutMapOnOpen(savedInfo) {
+  const mapContainer = document.getElementById('delivery-map');
   if (!mapContainer) {
     console.error('⚠️ Map container not found');
     return;
@@ -1378,7 +1351,13 @@ function initCheckoutMap(savedInfo) {
   // Wait for Google Maps to load
   if (!window.google || !window.google.maps) {
     console.warn('⚠️ Google Maps not loaded yet, retrying in 500ms...');
-    setTimeout(() => initCheckoutMap(savedInfo), 500);
+    setTimeout(() => initCheckoutMapOnOpen(savedInfo), 500);
+    return;
+  }
+
+  // Verify container exists with proper dimensions
+  if (!mapContainer || mapContainer.offsetHeight === 0 || mapContainer.offsetWidth === 0) {
+    console.error('❌ Map container invalid: height=' + (mapContainer?.offsetHeight || 0) + ', width=' + (mapContainer?.offsetWidth || 0));
     return;
   }
 
@@ -1387,14 +1366,7 @@ function initCheckoutMap(savedInfo) {
   const defaultLng = savedInfo.lng ? parseFloat(savedInfo.lng) : 2.8277;
   const hasExistingLocation = savedInfo.lat && savedInfo.lng;
 
-  console.log('🗺️ Initializing Google Map at:', defaultLat, defaultLng, 'Has existing:', hasExistingLocation);
-
-  // Ensure map container is visible and has explicit dimensions
-  mapContainer.style.display = 'block';
-  mapContainer.style.visibility = 'visible';
-  mapContainer.style.width = '100%';
-  mapContainer.style.height = '250px';
-  mapContainer.style.minHeight = '250px';
+  console.log('🗺️ Initializing Google Map - Container:', mapContainer.offsetWidth + 'x' + mapContainer.offsetHeight + 'px, Center:', defaultLat, defaultLng);
 
   try {
     const defaultLocation = { lat: defaultLat, lng: defaultLng };
@@ -1414,18 +1386,12 @@ function initCheckoutMap(savedInfo) {
       gestureHandling: 'greedy'
     });
 
-    // Trigger resize to ensure map renders correctly in modal
+    // Trigger resize immediately to ensure map displays correctly
+    console.log('🗺️ Map created, triggering resize and recenter...');
+    google.maps.event.trigger(checkoutMap, 'resize');
     setTimeout(() => {
-      if (checkoutMap && google && google.maps) {
-        console.log('🗺️ Triggering map resize event...');
-        google.maps.event.trigger(checkoutMap, 'resize');
-        
-        // Re-center map after resize
-        setTimeout(() => {
-          checkoutMap.setCenter(defaultLocation);
-          console.log('🗺️ Map resized and recentered at:', defaultLocation);
-        }, 100);
-      }
+      checkoutMap.setCenter(defaultLocation);
+      console.log('✅ Map resize complete, centered at:', defaultLocation);
     }, 50);
 
     // Create red marker icon
