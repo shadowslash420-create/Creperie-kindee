@@ -1104,7 +1104,6 @@ async function saveMenuItem(e) {
   const description = document.getElementById('item-desc').value.trim();
   const category = document.getElementById('item-category').value;
   const imageUrl = document.getElementById('item-image-url').value.trim();
-  const useResponsive = document.getElementById('use-responsive-images').checked;
 
   if (!name || !price || !category) {
     alert('❌ Please fill required fields');
@@ -1120,22 +1119,6 @@ async function saveMenuItem(e) {
       image: imageUrl,
       img: imageUrl  // Store in both fields for backwards compatibility
     };
-
-    // Add responsive image URLs if enabled
-    if (useResponsive) {
-      const desktopUrl = document.getElementById('item-image-desktop').value.trim();
-      const tabletUrl = document.getElementById('item-image-tablet').value.trim();
-      const mobileUrl = document.getElementById('item-image-mobile').value.trim();
-
-      if (desktopUrl || tabletUrl || mobileUrl) {
-        itemData.responsiveImages = {
-          desktop: desktopUrl,
-          tablet: tabletUrl,
-          mobile: mobileUrl || imageUrl
-        };
-      }
-    }
-
     if (state.editingItem) {
       await window.dbService.updateMenuItem(state.editingItem.id, itemData);
       alert('✅ Menu item updated!');
@@ -1149,15 +1132,6 @@ async function saveMenuItem(e) {
   } catch (error) {
     console.error('Error saving menu item:', error);
     alert('❌ Failed to save: ' + error.message);
-  }
-}
-
-// Toggle responsive image fields visibility
-function toggleResponsiveImageFields() {
-  const checkbox = document.getElementById('use-responsive-images');
-  const fields = document.getElementById('responsive-image-fields');
-  if (fields) {
-    fields.style.display = checkbox.checked ? 'flex' : 'none';
   }
 }
 
@@ -1509,4 +1483,4 @@ if (window.onAuthChange) {
       initializeDashboard().catch(err => console.error('❌ Reinit error:', err));
     }
   });
-}window.toggleResponsiveImageFields = toggleResponsiveImageFields;
+}
