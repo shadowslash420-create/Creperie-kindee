@@ -640,56 +640,21 @@ function viewOrderDetails(orderId) {
   modalOverlay.appendChild(modalContent);
   document.body.appendChild(modalOverlay);
 
-  // Initialize map if location exists
-  if (order.location && order.location.lat && order.location.lng && typeof L !== 'undefined') {
+  // Initialize Google Maps embed if location exists
+  if (order.location && order.location.lat && order.location.lng) {
     setTimeout(() => {
       const mapElement = document.getElementById(`order-location-map-${orderId}`);
       if (mapElement) {
-        const map = L.map(`order-location-map-${orderId}`, {
-          zoomControl: true,
-          zoomControlOptions: {
-            position: 'topright'
-          }
-        }).setView([order.location.lat, order.location.lng], 15);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        const marker = L.marker([order.location.lat, order.location.lng]).addTo(map);
-        marker.bindPopup(`<b>${order.name || 'Customer'}</b><br>${order.address || 'Delivery Location'}`).openPopup();
-
-        // Fix zoom controls styling
-        const style = document.createElement('style');
-        style.textContent = `
-          #order-location-map-${orderId} .leaflet-control-zoom {
-            border: 2px solid rgba(0,0,0,0.2);
-            border-radius: 8px !important;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-          }
-          #order-location-map-${orderId} .leaflet-control-zoom a {
-            width: 36px !important;
-            height: 36px !important;
-            line-height: 36px !important;
-            font-size: 20px !important;
-            font-weight: bold !important;
-            background: white !important;
-            color: #333 !important;
-            border: none !important;
-            display: block !important;
-            text-align: center !important;
-            text-decoration: none !important;
-          }
-          #order-location-map-${orderId} .leaflet-control-zoom a:hover {
-            background: #f0f0f0 !important;
-            color: #E30613 !important;
-          }
-          #order-location-map-${orderId} .leaflet-control-zoom-in {
-            border-bottom: 1px solid #ccc !important;
-          }
+        const embedUrl = `https://www.google.com/maps?q=${order.location.lat},${order.location.lng}&output=embed`;
+        mapElement.innerHTML = `
+          <iframe 
+            width="100%" 
+            height="100%"
+            style="border:none;border-radius:8px;" 
+            src="${embedUrl}">
+          </iframe>
         `;
-        document.head.appendChild(style);
+        console.log('✅ Google Maps embed loaded for order:', orderId);
       }
     }, 100);
   }

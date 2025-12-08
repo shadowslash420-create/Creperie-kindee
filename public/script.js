@@ -815,12 +815,13 @@ window.submitCheckoutForm = async function(event) {
     // Close modal only after success
     closeCheckoutModal();
 
-    alert(t.orderPlaced + '\n' + t.orderConfirmation);
+    // Show beautiful thank you popup
+    showThankYouPopup(fullName, orderId);
 
-    // Redirect to orders page after successful order
+    // Redirect to orders page after successful order (after popup closes)
     setTimeout(() => {
       window.location.href = 'my-orders.html?order=' + orderId;
-    }, 1000);
+    }, 3500);
   } catch (error) {
     console.error('Error placing order:', error);
 
@@ -1256,29 +1257,10 @@ window.checkoutFlow = async function() {
 
   document.body.appendChild(modal);
 
-  // Initialize map when modal is shown
-  setTimeout(() => {
-    const modalOverlay = document.getElementById('checkout-modal');
-    if (modalOverlay) {
-      // Trigger map initialization when modal is visible
-      if (!checkoutMap) {
-        console.log('🗺️ Modal added - initializing map');
-        initCheckoutMapOnOpen(savedInfo);
-      }
-      
-      // Trigger resize to ensure map renders properly
-      setTimeout(() => {
-        if (checkoutMap) {
-          google.maps.event.trigger(checkoutMap, 'resize');
-          // Recenter if we have saved coordinates
-          if (savedInfo.lat && savedInfo.lng) {
-            const center = { lat: parseFloat(savedInfo.lat), lng: parseFloat(savedInfo.lng) };
-            checkoutMap.setCenter(center);
-          }
-        }
-      }, 100);
-    }
-  }, 50);
+  // Show location if already selected
+  if (savedInfo.lat && savedInfo.lng) {
+    showLocationOnCheckout(parseFloat(savedInfo.lat), parseFloat(savedInfo.lng));
+  }
 
   // Add auto-save listeners to all form inputs
   setTimeout(() => {
