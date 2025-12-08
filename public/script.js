@@ -1123,16 +1123,21 @@ window.checkoutFlow = async function() {
             >
               📍 ${isArabic ? 'استخدم موقعي الحالي' : 'Use My Current Location'}
             </button>
-            <!-- Map Container with fixed dimensions -->
-            <div id="delivery-map" style="
+            <!-- Location Display -->
+            <div id="location-display" style="
               width: 100%;
-              height: 300px;
+              padding: 16px;
               border-radius: 8px;
               border: 2px solid #FFE4E1;
               margin-bottom: 10px;
-              background: #f5f5f5;
-              position: relative;
-            "></div>
+              background: #f9f9f9;
+              text-align: center;
+              display: none;
+            ">
+              <p style="margin: 0; color: #5C4033; font-size: 14px;">
+                <strong id="location-coords">📍 Location: Not set</strong>
+              </p>
+            </div>
             <input type="hidden" id="checkout-lat" value="${savedInfo.lat || ''}" />
             <input type="hidden" id="checkout-lng" value="${savedInfo.lng || ''}" />
             <textarea 
@@ -1330,205 +1335,26 @@ window.checkoutFlow = async function() {
   }, 300);
 }
 
-// Map variables
-let checkoutMap = null;
-let checkoutMarker = null;
-
-// Global map initialization function (called by Google Maps API callback)
-function initMap() {
-  console.log('✅ Google Maps API callback - initMap() called');
-  // API is ready, actual map creation happens when modal opens
-}
-
-// Initialize checkout map when modal opens
-function initCheckoutMapOnOpen(savedInfo) {
-  const mapContainer = document.getElementById('delivery-map');
-  if (!mapContainer) {
-    console.error('⚠️ Map container not found');
-    return;
-  }
-
-  // Wait for Google Maps to load
-  if (!window.google || !window.google.maps) {
-    console.warn('⚠️ Google Maps not loaded yet, retrying in 500ms...');
-    setTimeout(() => initCheckoutMapOnOpen(savedInfo), 500);
-    return;
-  }
-
-  // Verify container exists with proper dimensions
-  if (!mapContainer || mapContainer.offsetHeight === 0 || mapContainer.offsetWidth === 0) {
-    console.error('❌ Map container invalid: height=' + (mapContainer?.offsetHeight || 0) + ', width=' + (mapContainer?.offsetWidth || 0));
-    return;
-  }
-
-  // Default to Algeria (Blida area - near Kinder 5)
-  const defaultLat = savedInfo.lat ? parseFloat(savedInfo.lat) : 36.4700;
-  const defaultLng = savedInfo.lng ? parseFloat(savedInfo.lng) : 2.8277;
-  const hasExistingLocation = savedInfo.lat && savedInfo.lng;
-
-  console.log('🗺️ Initializing Google Map - Container:', mapContainer.offsetWidth + 'x' + mapContainer.offsetHeight + 'px, Center:', defaultLat, defaultLng);
-
-  try {
-    const defaultLocation = { lat: defaultLat, lng: defaultLng };
-    
-    // Ensure container has explicit dimensions for Google Maps
-    const containerWidth = mapContainer.offsetWidth;
-    const containerHeight = mapContainer.offsetHeight;
-    console.log('🗺️ Map container dimensions:', containerWidth, 'x', containerHeight);
-    
-    // Create Google Map
-    checkoutMap = new google.maps.Map(mapContainer, {
-      zoom: hasExistingLocation ? 16 : 13,
-      center: defaultLocation,
-      mapTypeControl: true,
-      fullscreenControl: false,
-      streetViewControl: false,
-      gestureHandling: 'greedy'
-    });
-
-    // Trigger resize immediately to ensure map displays correctly
-    console.log('🗺️ Map created, triggering resize and recenter...');
-    google.maps.event.trigger(checkoutMap, 'resize');
-    setTimeout(() => {
-      checkoutMap.setCenter(defaultLocation);
-      console.log('✅ Map resize complete, centered at:', defaultLocation);
-    }, 50);
-
-    // Create red marker icon
-    const markerIcon = {
-      path: google.maps.SymbolPath.CIRCLE,
-      scale: 12,
-      fillColor: '#E30613',
-      fillOpacity: 1,
-      strokeColor: 'white',
-      strokeWeight: 3
-    };
-
-    // Add marker if location exists
-    if (hasExistingLocation) {
-      checkoutMarker = new google.maps.Marker({
-        position: defaultLocation,
-        map: checkoutMap,
-        icon: markerIcon,
-        draggable: true
-      });
-
-      // Update inputs with saved location
-      const latInput = document.getElementById('checkout-lat');
-      const lngInput = document.getElementById('checkout-lng');
-      if (latInput && lngInput) {
-        latInput.value = defaultLat.toString();
-        lngInput.value = defaultLng.toString();
-      }
-
-      setupMarkerDrag(checkoutMarker);
-      showLocationConfirmation();
-      console.log('✅ Marker added at saved location');
-    }
-
-    // Click on map to set location
-    checkoutMap.addListener('click', (e) => {
-      const clickLat = e.latLng.lat();
-      const clickLng = e.latLng.lng();
-      console.log('📍 Map clicked at:', clickLat, clickLng);
-      setMapLocation(clickLat, clickLng);
-    });
-
-    console.log('✅ Google Map initialized successfully');
-  } catch (error) {
-    console.error('❌ Error initializing map:', error);
-    mapContainer.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#E30613;font-weight:600;">
-        ⚠️ Error loading map. Please try again.
-      </div>
-    `;
-  }
-}
-
-// Set location on map
-function setMapLocation(lat, lng) {
-  if (!checkoutMap) {
-    console.error('❌ Map not initialized');
-    return;
-  }
-
-  const preciseLat = parseFloat(lat);
-  const preciseLng = parseFloat(lng);
-
-  console.log('📍 Setting location on map:', preciseLat, preciseLng);
-
-  const markerIcon = {
-    path: google.maps.SymbolPath.CIRCLE,
-    scale: 12,
-    fillColor: '#E30613',
-    fillOpacity: 1,
-    strokeColor: 'white',
-    strokeWeight: 3
-  };
-
-  // Remove existing marker
-  if (checkoutMarker) {
-    checkoutMarker.setMap(null);
-    console.log('🗑️ Removed old marker');
-  }
-
-  // Add new marker
-  const newLocation = { lat: preciseLat, lng: preciseLng };
-  checkoutMarker = new google.maps.Marker({
-    position: newLocation,
-    map: checkoutMap,
-    icon: markerIcon,
-    draggable: true
-  });
-  setupMarkerDrag(checkoutMarker);
-
-  // Update hidden inputs
+// Show location on checkout modal
+function showLocationOnCheckout(lat, lng) {
   const latInput = document.getElementById('checkout-lat');
   const lngInput = document.getElementById('checkout-lng');
-
+  const locationDisplay = document.getElementById('location-display');
+  
   if (latInput && lngInput) {
-    latInput.value = preciseLat.toString();
-    lngInput.value = preciseLng.toString();
-    console.log('✅ Coordinates saved to hidden inputs:', latInput.value, lngInput.value);
-    saveCheckoutFormData();
+    latInput.value = lat;
+    lngInput.value = lng;
   }
-
-  // Center map on new location
-  checkoutMap.setCenter(newLocation);
-  checkoutMap.setZoom(16);
-
-  showLocationConfirmation();
-  console.log('✅ Location set successfully:', preciseLat, preciseLng);
-}
-
-// Setup marker drag events
-function setupMarkerDrag(marker) {
-  marker.addListener('dragend', function(e) {
-    const position = marker.getPosition();
-    const preciseLat = position.lat();
-    const preciseLng = position.lng();
-
-    const latInput = document.getElementById('checkout-lat');
-    const lngInput = document.getElementById('checkout-lng');
-
-    if (latInput && lngInput) {
-      latInput.value = preciseLat.toString();
-      lngInput.value = preciseLng.toString();
-      console.log('📍 Marker moved to:', preciseLat, preciseLng);
-      console.log('✅ Updated inputs:', latInput.value, lngInput.value);
-      saveCheckoutFormData();
+  
+  if (locationDisplay) {
+    const coordText = document.getElementById('location-coords');
+    if (coordText) {
+      coordText.textContent = `📍 Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     }
-
-    showLocationConfirmation();
-  });
-}
-
-// Show location confirmation text
-function showLocationConfirmation() {
-  const confirmText = document.getElementById('selected-location-text');
-  if (confirmText) {
-    confirmText.style.display = 'block';
+    locationDisplay.style.display = 'block';
   }
+  
+  console.log('✅ Location displayed on checkout:', lat, lng);
 }
 
 // Map popup state
@@ -1686,11 +1512,9 @@ window.useMyLocation = function() {
       
       console.log('✅ Location confirmed:', lat, lng);
       saveCheckoutFormData();
-
-      // Update checkout map if it exists
-      if (checkoutMap) {
-        setMapLocation(lat, lng);
-      }
+      
+      // Show location on checkout modal
+      showLocationOnCheckout(lat, lng);
 
       // Close popup
       popupModal.remove();
