@@ -1506,7 +1506,10 @@ window.useMyLocation = function() {
   });
 }
 
-// Initialize map in location picker popup using Google Maps embed iframe
+// Initialize map in location picker popup using Google Maps with click support
+let locationPickerMapInstance = null;
+let locationPickerMapMarker = null;
+
 function initLocationPickerMap() {
   const mapContainer = document.getElementById('location-picker-map');
   if (!mapContainer) return;
@@ -1538,23 +1541,68 @@ function initLocationPickerMap() {
       const lngInput = document.getElementById('checkout-lng');
       if (latInput && lngInput) {
         latInput.value = lat;
-        lngInput.value = lng;
+        latInput.value = lng;
       }
 
-      // Create Google Maps embed iframe centered on current location
-      const query = `${lat},${lng}`;
-      const embedUrl = `https://www.google.com/maps?q=${query}&output=embed`;
+      // Clear container for interactive map
+      mapContainer.innerHTML = '';
+
+      // Check if Google Maps is loaded
+      if (typeof google === 'undefined' || !google.maps) {
+        console.warn('⚠️ Google Maps not loaded, using fallback');
+        const query = `${lat},${lng}`;
+        const embedUrl = `https://www.google.com/maps?q=${query}&output=embed`;
+        mapContainer.innerHTML = `
+          <iframe 
+            width="100%" 
+            height="100%"
+            style="border:none;border-radius:8px;" 
+            src="${embedUrl}">
+          </iframe>
+        `;
+        return;
+      }
+
+      // Initialize interactive Google Map
+      const mapOptions = {
+        center: { lat, lng },
+        zoom: 15,
+        mapTypeControl: false,
+        fullscreenControl: false,
+        streetViewControl: false
+      };
+
+      locationPickerMapInstance = new google.maps.Map(mapContainer, mapOptions);
+
+      // Add marker at current location
+      locationPickerMapMarker = new google.maps.Marker({
+        position: { lat, lng },
+        map: locationPickerMapInstance,
+        draggable: true,
+        animation: google.maps.Animation.DROP,
+        title: isArabic ? 'موقعك' : 'Your Location'
+      });
+
+      // Update coordinates when marker is dragged
+      google.maps.event.addListener(locationPickerMapMarker, 'dragend', function(event) {
+        const newLat = event.latLng.lat();
+        const newLng = event.latLng.lng();
+        
+        updateLocationCoordinates(newLat, newLng);
+      });
+
+      // Update coordinates when map is clicked
+      google.maps.event.addListener(locationPickerMapInstance, 'click', function(event) {
+        const newLat = event.latLng.lat();
+        const newLng = event.latLng.lng();
+        
+        // Move marker to clicked location
+        locationPickerMapMarker.setPosition({ lat: newLat, lng: newLng });
+        
+        updateLocationCoordinates(newLat, newLng);
+      });
       
-      mapContainer.innerHTML = `
-        <iframe 
-          width="100%" 
-          height="100%"
-          style="border:none;border-radius:8px;" 
-          src="${embedUrl}">
-        </iframe>
-      `;
-      
-      console.log('✅ Location picker map initialized with Google Maps embed');
+      console.log('✅ Interactive location picker map initialized');
     },
     (error) => {
       console.error('❌ Geolocation error:', error);
@@ -1563,6 +1611,28 @@ function initLocationPickerMap() {
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
   );
+}
+
+// Helper function to update location coordinates
+function updateLocationCoordinates(lat, lng) {
+  const latInput = document.getElementById('checkout-lat');
+  const lngInput = document.getElementById('checkout-lng');
+  
+  if (latInput && lngInput) {
+    latInput.value = lat;
+    lngInput.value = lng;
+  }
+
+  // Update the display
+  const locationDisplay = document.getElementById('location-display');
+  const coordText = document.getElementById('location-coords');
+  
+  if (locationDisplay && coordText) {
+    coordText.textContent = `📍 ${currentLang === 'ar' ? 'الموقع' : 'Location'}: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    locationDisplay.style.display = 'block';
+  }
+
+  console.log('✅ Location updated to:', lat, lng);
 }
 
 // Toggle language
