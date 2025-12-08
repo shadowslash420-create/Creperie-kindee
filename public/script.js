@@ -47,6 +47,11 @@ window.toggleCart = function() {
     } else {
       cartSide.classList.add('open');
       overlay.classList.add('active');
+      if (typeof renderCart === 'function') {
+        renderCart();
+      } else if (typeof window.renderCart === 'function') {
+        window.renderCart();
+      }
     }
   }
 }
@@ -991,7 +996,7 @@ window.checkoutFlow = async function() {
         <h2 style="margin: 0; font-size: 24px; font-weight: 700;">
           ${isArabic ? '🛒 إتمام الطلب' : '🛒 Complete Order'}
         </h2>
-        <button type="button" id="checkout-close-btn" style="
+        <button type="button" id="checkout-close-btn" onclick="window.closeCheckoutModal(event)" style="
           background: rgba(255,255,255,0.25);
           border: 2px solid rgba(255,255,255,0.4);
           color: white;
@@ -1373,9 +1378,15 @@ function initCheckoutMap(savedInfo) {
 
   console.log('🗺️ Initializing map at:', defaultLat, defaultLng, 'Has existing:', hasExistingLocation);
 
-  // Ensure map container is visible before initializing
+  // Ensure map container is visible and has explicit dimensions before initializing
   mapContainer.style.display = 'block';
   mapContainer.style.visibility = 'visible';
+  mapContainer.style.width = '100%';
+  mapContainer.style.height = '250px';
+  mapContainer.style.minHeight = '250px';
+  
+  // Force a reflow to ensure dimensions are applied
+  void mapContainer.offsetHeight;
   
   // Initialize map
   try {
@@ -2724,7 +2735,7 @@ function checkoutFlowOriginal(){
   modal.className = 'checkout-modal-overlay';
   modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
   modal.onclick = (e) => {
-    if(e.target === modal) closeCheckoutModal(); // Keep original close modal function
+    if(e.target === modal) window.closeCheckoutModal(); // Keep original close modal function
   };
 
   // Use original translation keys for labels
@@ -2778,7 +2789,7 @@ function checkoutFlowOriginal(){
           </div>
         </div>
         <div style="display:flex;gap:12px;">
-          <button type="button" onclick="closeCheckoutModal()" style="flex:1;padding:14px;border:1px solid var(--border);background:#fff;border-radius:4px;cursor:pointer;font-weight:600;transition:all 0.3s;">${savedCancelLabel}</button>
+          <button type="button" onclick="window.closeCheckoutModal()" style="flex:1;padding:14px;border:1px solid var(--border);background:#fff;border-radius:4px;cursor:pointer;font-weight:600;transition:all 0.3s;">${savedCancelLabel}</button>
           <button type="submit" style="flex:1;padding:14px;border:none;background:var(--gradient-primary);color:#fff;border-radius:4px;cursor:pointer;font-weight:700;transition:all 0.3s;">${savedPlaceOrderLabel}</button>
         </div>
       </form>
@@ -2845,7 +2856,7 @@ function checkoutFlowOriginal(){
       
       cart = []; // Clear cart using original cart variable
       saveCart(); // Use original saveCart function
-      closeCheckoutModal();
+      window.closeCheckoutModal();
       toggleCartOriginal(); // Use original toggle cart function
       showOrderConfirmation(orderId, order, lang); // Keep original confirmation function
     } catch (error) {
@@ -2855,10 +2866,14 @@ function checkoutFlowOriginal(){
   };
 }
 
-// Close checkout modal (Original)
-function closeCheckoutModal(){
-  const modal = document.querySelector('.checkout-modal-overlay');
-  if(modal) modal.remove();
+// Close checkout modal (Original) - calls the main window.closeCheckoutModal
+function closeCheckoutModalOriginal(){
+  if (typeof window.closeCheckoutModal === 'function') {
+    window.closeCheckoutModal();
+  } else {
+    const modal = document.querySelector('.checkout-modal-overlay');
+    if(modal) modal.remove();
+  }
 }
 
 // Show order confirmation (Original)
