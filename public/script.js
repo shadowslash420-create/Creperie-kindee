@@ -1330,36 +1330,15 @@ window.checkoutFlow = async function() {
   setTimeout(() => {
     const firstInput = document.getElementById('checkout-firstname');
     if (firstInput) firstInput.focus();
-  }, 600);
+  }, 300);
 
-  // Multiple aggressive map resize attempts with longer delays
+  // Optimized single map resize for better performance
   setTimeout(() => {
     if (checkoutMap) {
       checkoutMap.invalidateSize(true);
-      console.log('🗺️ Map size invalidated (1000ms)');
+      console.log('🗺️ Map size optimized');
     }
-  }, 1000);
-
-  setTimeout(() => {
-    if (checkoutMap) {
-      checkoutMap.invalidateSize(true);
-      console.log('🗺️ Map size invalidated (1500ms)');
-    }
-  }, 1500);
-
-  setTimeout(() => {
-    if (checkoutMap) {
-      checkoutMap.invalidateSize(true);
-      console.log('🗺️ Map size invalidated (2500ms)');
-    }
-  }, 2500);
-
-  setTimeout(() => {
-    if (checkoutMap) {
-      checkoutMap.invalidateSize(true);
-      console.log('🗺️ Map size invalidated (3500ms)');
-    }
-  }, 3500);
+  }, 800);
 }
 
 // Map variables

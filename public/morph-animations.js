@@ -278,10 +278,13 @@
   }
 
   function init() {
+    // Defer morph animations to avoid blocking page load
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initAll);
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initAll, 2500);
+      });
     } else {
-      initAll();
+      setTimeout(initAll, 2500);
     }
   }
 
