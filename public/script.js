@@ -1299,32 +1299,44 @@ window.checkoutFlow = async function() {
     console.log('✅ Close button event listener attached');
   }
 
-  // Initialize map after modal is fully rendered and has proper dimensions
+  // Initialize map after modal is fully rendered and visible
   function waitAndInitMap(attempts = 0) {
     const mapContainer = document.getElementById('checkout-map');
-    if (!mapContainer) {
+    const modal = document.querySelector('.checkout-modal-overlay');
+    
+    if (!mapContainer || !modal) {
       if (attempts < 10) {
         setTimeout(() => waitAndInitMap(attempts + 1), 100);
       }
       return;
     }
 
+    // Check parent modal visibility
+    const modalStyle = window.getComputedStyle(modal);
+    const isModalVisible = modalStyle.display !== 'none' && modalStyle.visibility !== 'hidden';
+    
     const rect = mapContainer.getBoundingClientRect();
     const hasHeight = mapContainer.offsetHeight > 0 && rect.height > 0;
     const hasWidth = mapContainer.offsetWidth > 0 && rect.width > 0;
 
-    if (hasHeight && hasWidth && attempts > 3) {
-      console.log('🗺️ Container ready. Initializing map...');
+    console.log(`🗺️ Map init attempt ${attempts}: visible=${isModalVisible}, width=${mapContainer.offsetWidth}, height=${mapContainer.offsetHeight}`);
+
+    if (isModalVisible && hasHeight && hasWidth && attempts > 2) {
+      console.log('🗺️ Container ready. Initializing map with dimensions:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
       initCheckoutMap(savedInfo);
       return;
     }
 
-    if (attempts < 20) {
+    if (attempts < 30) {
       setTimeout(() => waitAndInitMap(attempts + 1), 150);
+    } else {
+      console.warn('🗺️ Map initialization timeout - forcing init anyway');
+      initCheckoutMap(savedInfo);
     }
   }
   
-  waitAndInitMap();
+  // Wait for modal to be fully visible before initializing map
+  setTimeout(() => waitAndInitMap(), 300);
 
   // Focus first input
   setTimeout(() => {
@@ -1371,14 +1383,29 @@ function initCheckoutMap(savedInfo) {
   try {
     const defaultLocation = { lat: defaultLat, lng: defaultLng };
     
+    // Ensure container has explicit dimensions for Google Maps
+    const containerWidth = mapContainer.offsetWidth;
+    const containerHeight = mapContainer.offsetHeight;
+    console.log('🗺️ Map container dimensions:', containerWidth, 'x', containerHeight);
+    
     // Create Google Map
     checkoutMap = new google.maps.Map(mapContainer, {
       zoom: hasExistingLocation ? 16 : 13,
       center: defaultLocation,
       mapTypeControl: true,
       fullscreenControl: false,
-      streetViewControl: false
+      streetViewControl: false,
+      gestureHandling: 'greedy'
     });
+
+    // Force resize and recenter after a brief delay to ensure proper rendering
+    setTimeout(() => {
+      if (checkoutMap) {
+        google.maps.event.trigger(checkoutMap, 'resize');
+        checkoutMap.setCenter(defaultLocation);
+        console.log('🗺️ Map resized and recentered');
+      }
+    }, 200);
 
     // Create red marker icon
     const markerIcon = {
