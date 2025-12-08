@@ -1738,6 +1738,12 @@ window.toggleLanguage = function() {
   if (isHomePage) {
     renderHomeMenuPreview();
   }
+
+  // Update language button tooltip
+  const langBtn = document.getElementById('lang-btn');
+  if (langBtn) {
+    langBtn.title = currentLang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية';
+  }
 }
 
 // Apply translations to ALL pages including index sections
