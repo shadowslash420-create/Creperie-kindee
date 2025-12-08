@@ -57,15 +57,12 @@ initializeFirebaseAdmin();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Smart caching strategy for better performance
+// Disable caching for development - always get fresh code
 app.use((req, res, next) => {
-  // Cache static assets for 7 days
-  if (req.url.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/i)) {
-    res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
-  } else {
-    // Don't cache HTML pages
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-  }
+  // Never cache - always get fresh code
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0, s-maxage=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   next();
 });
