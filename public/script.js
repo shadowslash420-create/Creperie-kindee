@@ -1332,13 +1332,7 @@ window.checkoutFlow = async function() {
     if (firstInput) firstInput.focus();
   }, 300);
 
-  // Optimized single map resize for better performance
-  setTimeout(() => {
-    if (checkoutMap) {
-      checkoutMap.invalidateSize(true);
-      console.log('🗺️ Map size optimized');
-    }
-  }, 800);
+  // Google Maps handles sizing automatically, no resize needed
 }
 
 // Map variables

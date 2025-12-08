@@ -15,7 +15,12 @@
   <link rel="dns-prefetch" href="https://i.ibb.co">
   <title>Creperie Kinder</title>
   <link rel="stylesheet" href="style.css?v=2.0" />
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDqWxGLlWUBDv5QaUIxEhxH8Xz8M5KdKWs&libraries=places"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDqWxGLlWUBDv5QaUIxEhxH8Xz8M5KdKWs&callback=initMapsCallback&libraries=places"></script>
+  <script>
+    window.initMapsCallback = function() {
+      console.log('✅ Google Maps API loaded and ready');
+    };
+  </script>
   <script>
     const LANG_KEY = 'kc_lang';
     const savedLang = localStorage.getItem(LANG_KEY) || 'ar';
