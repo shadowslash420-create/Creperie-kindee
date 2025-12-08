@@ -1676,24 +1676,16 @@ window.useMyLocation = function() {
   // Done button - save location and close
   const doneBtn = document.getElementById('done-location-picker');
   doneBtn?.addEventListener('click', () => {
-    if (locationPickerMarker && locationPickerMap) {
-      const pos = locationPickerMarker.getPosition();
-      if (!pos) {
-        console.error('❌ Marker position undefined');
-        return;
-      }
-      const lat = pos.lat();
-      const lng = pos.lng();
-
-      // Save to checkout form
-      const latInput = document.getElementById('checkout-lat');
-      const lngInput = document.getElementById('checkout-lng');
-      if (latInput && lngInput) {
-        latInput.value = lat;
-        lngInput.value = lng;
-        console.log('✅ Location saved:', lat, lng);
-        saveCheckoutFormData();
-      }
+    // Get location from hidden inputs (set by geolocation)
+    const latInput = document.getElementById('checkout-lat');
+    const lngInput = document.getElementById('checkout-lng');
+    
+    if (latInput && lngInput && latInput.value && lngInput.value) {
+      const lat = parseFloat(latInput.value);
+      const lng = parseFloat(lngInput.value);
+      
+      console.log('✅ Location confirmed:', lat, lng);
+      saveCheckoutFormData();
 
       // Update checkout map if it exists
       if (checkoutMap) {
@@ -1702,19 +1694,16 @@ window.useMyLocation = function() {
 
       // Close popup
       popupModal.remove();
+    } else {
+      console.error('❌ Location not set');
     }
   });
 }
 
-// Initialize map in location picker popup
+// Initialize map in location picker popup using Google Maps embed iframe
 function initLocationPickerMap() {
   const mapContainer = document.getElementById('location-picker-map');
   if (!mapContainer) return;
-
-  if (!window.google || !window.google.maps) {
-    setTimeout(initLocationPickerMap, 500);
-    return;
-  }
 
   const isArabic = currentLang === 'ar';
   
@@ -1738,60 +1727,28 @@ function initLocationPickerMap() {
 
       console.log('✅ Current location:', lat, lng);
 
-      // Ensure container has proper dimensions - critical for map render
-      mapContainer.style.width = '100%';
-      mapContainer.style.height = '100%';
-      mapContainer.style.position = 'relative';
+      // Save to form inputs
+      const latInput = document.getElementById('checkout-lat');
+      const lngInput = document.getElementById('checkout-lng');
+      if (latInput && lngInput) {
+        latInput.value = lat;
+        lngInput.value = lng;
+      }
+
+      // Create Google Maps embed iframe centered on current location
+      const query = `${lat},${lng}`;
+      const embedUrl = `https://www.google.com/maps?q=${query}&output=embed`;
       
-      // Get actual dimensions
-      const rect = mapContainer.getBoundingClientRect();
-      console.log('🗺️ Location picker map container dimensions:', rect.width, 'x', rect.height);
+      mapContainer.innerHTML = `
+        <iframe 
+          width="100%" 
+          height="100%"
+          style="border:none;border-radius:8px;" 
+          src="${embedUrl}">
+        </iframe>
+      `;
       
-      // Create map
-      const defaultLocation = { lat, lng };
-      locationPickerMap = new google.maps.Map(mapContainer, {
-        zoom: 15,
-        center: defaultLocation,
-        mapTypeControl: true,
-        fullscreenControl: false,
-        streetViewControl: false,
-        gestureHandling: 'greedy'
-      });
-
-      // Add marker immediately
-      const markerIcon = {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 12,
-        fillColor: '#E30613',
-        fillOpacity: 1,
-        strokeColor: 'white',
-        strokeWeight: 3
-      };
-
-      locationPickerMarker = new google.maps.Marker({
-        position: defaultLocation,
-        map: locationPickerMap,
-        icon: markerIcon,
-        draggable: true
-      });
-
-      console.log('✅ Marker created at:', defaultLocation);
-
-      // Click to set location
-      locationPickerMap.addListener('click', (e) => {
-        const clickPos = e.latLng;
-        if (locationPickerMarker) {
-          locationPickerMarker.setPosition(clickPos);
-          locationPickerMap.setCenter(clickPos);
-        }
-      });
-
-      // Trigger resize
-      setTimeout(() => {
-        google.maps.event.trigger(locationPickerMap, 'resize');
-        locationPickerMap.setCenter(defaultLocation);
-        console.log('✅ Location picker map initialized');
-      }, 150);
+      console.log('✅ Location picker map initialized with Google Maps embed');
     },
     (error) => {
       console.error('❌ Geolocation error:', error);
