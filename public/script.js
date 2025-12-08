@@ -976,12 +976,12 @@ window.checkoutFlow = async function() {
       max-width: 500px;
       width: 100%;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      overflow: hidden;
+      overflow: visible;
       max-height: 90vh;
       display: flex;
       flex-direction: column;
       position: relative;
-      z-index: 1;
+      z-index: 10000;
     ">
       <div style="
         background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
@@ -1018,7 +1018,7 @@ window.checkoutFlow = async function() {
         ">×</button>
       </div>
 
-      <div style="padding: 24px; overflow-y: auto; flex: 1;">
+      <div style="padding: 24px; overflow-y: auto; flex: 1; position: relative; z-index: 1;">
         <form id="checkout-form" onsubmit="submitCheckoutForm(event); return false;">
           <div style="margin-bottom: 16px;">
             <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #2C1810;">
@@ -1129,7 +1129,7 @@ window.checkoutFlow = async function() {
               border-radius: 8px;
               border: 2px solid #FFE4E1;
               margin-bottom: 10px;
-              z-index: 100;
+              z-index: 1000;
               position: relative;
               background: #f5f5f5;
             "></div>
