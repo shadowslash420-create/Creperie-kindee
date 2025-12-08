@@ -1345,7 +1345,7 @@ window.checkoutFlow = async function() {
 let checkoutMap = null;
 let checkoutMarker = null;
 
-// Initialize checkout map
+// Initialize checkout map with Google Maps
 function initCheckoutMap(savedInfo) {
   const mapContainer = document.getElementById('checkout-map');
   if (!mapContainer) {
@@ -1353,22 +1353,11 @@ function initCheckoutMap(savedInfo) {
     return;
   }
 
-  // Wait for Leaflet to be fully loaded
-  if (!window.L) {
-    console.warn('⚠️ Leaflet not loaded yet, retrying in 500ms...');
+  // Wait for Google Maps to load
+  if (!window.google || !window.google.maps) {
+    console.warn('⚠️ Google Maps not loaded yet, retrying in 500ms...');
     setTimeout(() => initCheckoutMap(savedInfo), 500);
     return;
-  }
-
-  // If map already exists, destroy it first
-  if (checkoutMap) {
-    try {
-      checkoutMap.remove();
-    } catch (e) {
-      console.log('Error removing old map:', e);
-    }
-    checkoutMap = null;
-    checkoutMarker = null;
   }
 
   // Default to Algeria (Blida area - near Kinder 5)
@@ -1376,61 +1365,47 @@ function initCheckoutMap(savedInfo) {
   const defaultLng = savedInfo.lng ? parseFloat(savedInfo.lng) : 2.8277;
   const hasExistingLocation = savedInfo.lat && savedInfo.lng;
 
-  console.log('🗺️ Initializing map at:', defaultLat, defaultLng, 'Has existing:', hasExistingLocation);
+  console.log('🗺️ Initializing Google Map at:', defaultLat, defaultLng, 'Has existing:', hasExistingLocation);
 
-  // Ensure map container is visible and has explicit dimensions before initializing
+  // Ensure map container is visible and has explicit dimensions
   mapContainer.style.display = 'block';
   mapContainer.style.visibility = 'visible';
   mapContainer.style.width = '100%';
   mapContainer.style.height = '250px';
   mapContainer.style.minHeight = '250px';
-  
-  // Force a reflow to ensure dimensions are applied
-  void mapContainer.offsetHeight;
-  
-  // Initialize map
+
   try {
-    console.log('🗺️ Creating Leaflet map instance...');
-    checkoutMap = L.map(mapContainer, {
-      center: [defaultLat, defaultLng],
+    const defaultLocation = { lat: defaultLat, lng: defaultLng };
+    
+    // Create Google Map
+    checkoutMap = new google.maps.Map(mapContainer, {
       zoom: hasExistingLocation ? 16 : 13,
-      zoomControl: true,
-      scrollWheelZoom: true,
-      touchZoom: true,
-      doubleClickZoom: true,
-      attributionControl: true,
-      preferCanvas: false,
-      trackResize: true
+      center: defaultLocation,
+      mapTypeControl: true,
+      fullscreenControl: false,
+      streetViewControl: false
     });
 
-    // Add tile layer (OpenStreetMap) with error handling
-    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
-      maxZoom: 19,
-      minZoom: 3,
-      errorTileUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNTYiIGhlaWdodD0iMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2VlZSIvPjwvc3ZnPg=='
-    });
+    // Create red marker icon
+    const markerIcon = {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 12,
+      fillColor: '#E30613',
+      fillOpacity: 1,
+      strokeColor: 'white',
+      strokeWeight: 3
+    };
 
-    tileLayer.on('tileerror', function(error) {
-      console.warn('Tile loading error:', error);
-    });
-
-    tileLayer.addTo(checkoutMap);
-
-    // Custom red marker icon with better visibility
-    const redIcon = L.divIcon({
-      className: 'custom-marker',
-      html: '<div style="background:#E30613;width:32px;height:32px;border-radius:50%;border:4px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.4);"></div>',
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
-    });
-
-    // Add marker if there's an existing location
+    // Add marker if location exists
     if (hasExistingLocation) {
-      checkoutMarker = L.marker([defaultLat, defaultLng], { icon: redIcon, draggable: true }).addTo(checkoutMap);
-      setupMarkerDrag(checkoutMarker);
+      checkoutMarker = new google.maps.Marker({
+        position: defaultLocation,
+        map: checkoutMap,
+        icon: markerIcon,
+        draggable: true
+      });
 
-      // Update hidden inputs with saved location
+      // Update inputs with saved location
       const latInput = document.getElementById('checkout-lat');
       const lngInput = document.getElementById('checkout-lng');
       if (latInput && lngInput) {
@@ -1438,72 +1413,22 @@ function initCheckoutMap(savedInfo) {
         lngInput.value = defaultLng.toString();
       }
 
+      setupMarkerDrag(checkoutMarker);
       showLocationConfirmation();
       console.log('✅ Marker added at saved location');
     }
 
     // Click on map to set location
-    checkoutMap.on('click', function(e) {
-      const clickLat = e.latlng.lat;
-      const clickLng = e.latlng.lng;
+    checkoutMap.addListener('click', (e) => {
+      const clickLat = e.latLng.lat();
+      const clickLng = e.latLng.lng();
       console.log('📍 Map clicked at:', clickLat, clickLng);
       setMapLocation(clickLat, clickLng);
     });
 
-    // Force map to render correctly with multiple invalidateSize calls
-    setTimeout(() => {
-      if (checkoutMap) {
-        checkoutMap.invalidateSize();
-        console.log('🗺️ Map size invalidated (immediate)');
-      }
-    }, 100);
-
-    setTimeout(() => {
-      if (checkoutMap) {
-        checkoutMap.invalidateSize();
-        console.log('🗺️ Map size invalidated (200ms)');
-      }
-    }, 200);
-
-    setTimeout(() => {
-      if (checkoutMap) {
-        checkoutMap.invalidateSize();
-        console.log('🗺️ Map size invalidated (500ms)');
-      }
-    }, 500);
-
-    // Use whenReady callback to ensure tiles load
-    checkoutMap.whenReady(() => {
-      console.log('🗺️ Map is ready and visible');
-      
-      // Aggressive resize attempts
-      setTimeout(() => {
-        if (checkoutMap) {
-          checkoutMap.invalidateSize(true);
-          console.log('🗺️ Map size invalidated (whenReady 100ms)');
-        }
-      }, 100);
-      
-      setTimeout(() => {
-        if (checkoutMap) {
-          checkoutMap.invalidateSize(true);
-          checkoutMap.setView([defaultLat, defaultLng], hasExistingLocation ? 16 : 13);
-          console.log('🗺️ Map size invalidated and view reset (whenReady 500ms)');
-        }
-      }, 500);
-      
-      setTimeout(() => {
-        if (checkoutMap) {
-          checkoutMap.invalidateSize(true);
-          console.log('🗺️ Map size invalidated (whenReady 1000ms)');
-        }
-      }, 1000);
-    });
-
-    console.log('✅ Map initialized successfully');
+    console.log('✅ Google Map initialized successfully');
   } catch (error) {
     console.error('❌ Error initializing map:', error);
-    // Show error message to user
     mapContainer.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#E30613;font-weight:600;">
         ⚠️ Error loading map. Please try again.
@@ -1519,34 +1444,37 @@ function setMapLocation(lat, lng) {
     return;
   }
 
-  // Ensure precise coordinates
   const preciseLat = parseFloat(lat);
   const preciseLng = parseFloat(lng);
 
   console.log('📍 Setting location on map:', preciseLat, preciseLng);
 
-  const redIcon = L.divIcon({
-    className: 'custom-marker',
-    html: '<div style="background:#E30613;width:32px;height:32px;border-radius:50%;border:4px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.4);"></div>',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
-  });
+  const markerIcon = {
+    path: google.maps.SymbolPath.CIRCLE,
+    scale: 12,
+    fillColor: '#E30613',
+    fillOpacity: 1,
+    strokeColor: 'white',
+    strokeWeight: 3
+  };
 
   // Remove existing marker
   if (checkoutMarker) {
-    try {
-      checkoutMap.removeLayer(checkoutMarker);
-      console.log('🗑️ Removed old marker');
-    } catch (e) {
-      console.log('⚠️ Could not remove old marker:', e);
-    }
+    checkoutMarker.setMap(null);
+    console.log('🗑️ Removed old marker');
   }
 
   // Add new marker
-  checkoutMarker = L.marker([preciseLat, preciseLng], { icon: redIcon, draggable: true }).addTo(checkoutMap);
+  const newLocation = { lat: preciseLat, lng: preciseLng };
+  checkoutMarker = new google.maps.Marker({
+    position: newLocation,
+    map: checkoutMap,
+    icon: markerIcon,
+    draggable: true
+  });
   setupMarkerDrag(checkoutMarker);
 
-  // CRITICAL: Update hidden inputs with precise values
+  // Update hidden inputs
   const latInput = document.getElementById('checkout-lat');
   const lngInput = document.getElementById('checkout-lng');
 
@@ -1554,31 +1482,23 @@ function setMapLocation(lat, lng) {
     latInput.value = preciseLat.toString();
     lngInput.value = preciseLng.toString();
     console.log('✅ Coordinates saved to hidden inputs:', latInput.value, lngInput.value);
-    
-    // Auto-save the location to localStorage
     saveCheckoutFormData();
-  } else {
-    console.error('❌ Could not find lat/lng input fields!');
   }
 
-  // Center map on new location with smooth animation
-  checkoutMap.setView([preciseLat, preciseLng], 16, {
-    animate: true,
-    duration: 0.5
-  });
+  // Center map on new location
+  checkoutMap.setCenter(newLocation);
+  checkoutMap.setZoom(16);
 
-  // Show confirmation
   showLocationConfirmation();
-
   console.log('✅ Location set successfully:', preciseLat, preciseLng);
 }
 
 // Setup marker drag events
 function setupMarkerDrag(marker) {
-  marker.on('dragend', function(e) {
-    const latlng = e.target.getLatLng();
-    const preciseLat = parseFloat(latlng.lat);
-    const preciseLng = parseFloat(latlng.lng);
+  marker.addListener('dragend', function(e) {
+    const position = marker.getPosition();
+    const preciseLat = position.lat();
+    const preciseLng = position.lng();
 
     const latInput = document.getElementById('checkout-lat');
     const lngInput = document.getElementById('checkout-lng');
@@ -1588,8 +1508,6 @@ function setupMarkerDrag(marker) {
       lngInput.value = preciseLng.toString();
       console.log('📍 Marker moved to:', preciseLat, preciseLng);
       console.log('✅ Updated inputs:', latInput.value, lngInput.value);
-      
-      // Auto-save the location
       saveCheckoutFormData();
     }
 
