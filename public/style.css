@@ -3,29 +3,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;700&display=swap');
 
 :root{
-  --primary:#FF1111;
-  --primary-dark:#E60000;
+  --primary:#E30613;
+  --primary-dark:#B30510;
   --secondary:#FFFFFF;
   --accent:#FFD700;
   --success:#52C41A;
   --background:#FFF5F5;
   --surface:#ffffff;
   --cream:#FFFAFA;
-  --text-primary:#2C1810;
-  --text-secondary:#5C4033;
+  --text-primary:#1a1a1a;
+  --text-secondary:#505050;
   --text-light:#8B6F47;
   --border:#FFE4E1;
-  --warm-gold:#FF1111;
+  --warm-gold:#FF6B35;
   --light-cream:#FFF5F5;
   --charcoal:#2C1810;
   --burgundy:#8B0000;
-  --deep-gold:#FF1111;
-  --soft-shadow: 0 2px 20px rgba(255,17,17,0.15);
-  --medium-shadow: 0 8px 30px rgba(255,17,17,0.2);
-  --strong-shadow: 0 12px 40px rgba(255,17,17,0.25);
-  --gradient-primary:linear-gradient(135deg, #FF1111 0%, #E60000 100%);
-  --gradient-warm:linear-gradient(135deg, #FFFFFF 0%, #FFE4E1 100%);
-  --gradient-luxury:linear-gradient(135deg, #FF1111 0%, #8B0000 100%);
+  --deep-gold:#E30613;
+  --soft-shadow: 0 4px 15px rgba(227, 6, 19, 0.12);
+  --medium-shadow: 0 12px 40px rgba(227, 6, 19, 0.18);
+  --strong-shadow: 0 20px 60px rgba(227, 6, 19, 0.25);
+  --gradient-primary:linear-gradient(135deg, #E30613 0%, #B30510 100%);
+  --gradient-warm:linear-gradient(135deg, #FF8C42 0%, #FF6B35 100%);
+  --gradient-luxury:linear-gradient(135deg, #E30613 0%, #920B0B 100%);
+  --gradient-premium:linear-gradient(135deg, #E30613 0%, #FF6B35 100%);
 }
 
 *{box-sizing:border-box; margin:0; padding:0}
@@ -102,6 +103,35 @@ html{
   }
 }
 
+@keyframes slideInUp{
+  from{
+    opacity:0;
+    transform:translateY(40px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@keyframes buttonGlow{
+  from{
+    box-shadow:0 0 0 0 rgba(227, 6, 19, 0.7);
+  }
+  to{
+    box-shadow:0 0 0 20px rgba(227, 6, 19, 0);
+  }
+}
+
+@keyframes shimmer{
+  0%{
+    background-position:-1000px 0;
+  }
+  100%{
+    background-position:1000px 0;
+  }
+}
+
 .section{
   animation:fadeIn 0.6s ease-out;
   padding:40px 20px;
@@ -145,8 +175,8 @@ html{
 .menu-icon, .cart-icon{
   width:36px;
   height:36px;
-  border-radius:6px;
-  background:#FF1111;
+  border-radius:8px;
+  background:var(--gradient-primary);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -154,17 +184,20 @@ html{
   font-size:16px;
   cursor:pointer;
   flex-shrink:0;
-  transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:0 4px 12px rgba(255,17,17,0.4), 0 2px 6px rgba(0,0,0,0.2);
-  border:1px solid #FF1111;
+  transition:all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:0 6px 16px rgba(227, 6, 19, 0.35), 0 2px 6px rgba(0,0,0,0.2);
+  border:1px solid transparent;
 }
 
 .menu-icon:hover, .cart-icon:hover{
-  background:#E60000;
+  background:var(--gradient-premium);
   color:#fff;
-  border-color:#E60000;
-  transform:translateY(-2px);
-  box-shadow:var(--soft-shadow);
+  transform:translateY(-3px) scale(1.08);
+  box-shadow:0 10px 24px rgba(227, 6, 19, 0.45), 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.menu-icon:active, .cart-icon:active{
+  transform:translateY(-1px) scale(0.96);
 }
 
 .lang-btn{
@@ -1800,20 +1833,30 @@ label{
   background:var(--gradient-primary);
   color:#fff;
   padding:18px 40px;
-  border-radius:8px;
+  border-radius:12px;
   border:none;
   font-weight:700;
   cursor:pointer;
   font-size:14px;
   letter-spacing:2px;
   text-transform:uppercase;
-  transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:0 4px 16px rgba(227,6,19,0.3), 0 2px 8px rgba(0,0,0,0.15);
+  transition:all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow:0 8px 24px rgba(227, 6, 19, 0.35), 0 4px 12px rgba(0,0,0,0.1);
   font-family:'Inter', sans-serif;
   position:relative;
   overflow:hidden;
   min-width:180px;
   text-align:center;
+}
+
+.cta:hover{
+  transform:translateY(-4px) scale(1.02);
+  box-shadow:0 12px 32px rgba(227, 6, 19, 0.45), 0 6px 16px rgba(0,0,0,0.15);
+  animation:buttonGlow 0.6s ease-out;
+}
+
+.cta:active{
+  transform:translateY(-2px) scale(0.98);
 }
 
 .cta::after{
