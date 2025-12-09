@@ -6,6 +6,8 @@
   <title>القائمة - Creperie Kinder</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="median-styles.css">
+  <!-- Load Median bridge FIRST to ensure functions are available -->
+  <script src="median-fcm-bridge.js"></script>
   <script>
     const LANG_KEY = 'kc_lang';
     const savedLang = localStorage.getItem(LANG_KEY) || 'ar';
@@ -177,7 +179,6 @@
   <!-- Menu Overlay -->
   <div class="menu-overlay" id="menu-overlay" onclick="toggleMenu()"></div>
 
-  <script src="median-fcm-bridge.js"></script>
   <script type="module" src="script.js?v=2.0" defer></script>
   <script type="module" src="auth.js" defer></script>
   <script type="module" src="notifications.js"></script>
