@@ -786,11 +786,11 @@ window.submitCheckoutForm = async function(event) {
   }
 
   try {
-    closeAllSidebars();
+    console.log('📦 Submitting order to Firebase...');
 
     // Create order in Firebase
     const orderId = await placeOrderToFirebase(orderData);
-    console.log('✅ Order created:', orderId);
+    console.log('✅ Order created with ID:', orderId);
 
     // Send notification to admin and staff via OneSignal (using new unified endpoint)
     try {
@@ -826,8 +826,11 @@ window.submitCheckoutForm = async function(event) {
     // Reset submission flag
     isCheckoutSubmitting = false;
 
-    // Close modal only after success
+    // Close checkout modal
     closeCheckoutModal();
+
+    // Close all sidebars
+    closeAllSidebars();
 
     // Clear modal first
     closeCheckoutModal();
@@ -1589,7 +1592,7 @@ window.useMyLocation = function() {
   });
 }
 
-// Initialize map in location picker popup using OpenStreetMap (no API key needed)
+// Initialize map in location picker popup using Leaflet (OpenStreetMap)
 let locationPickerMapInstance = null;
 let locationPickerMapMarker = null;
 
@@ -1613,6 +1616,18 @@ function initLocationPickerMap() {
     return;
   }
 
+  // Check if Leaflet is loaded
+  if (!window.L) {
+    console.error('❌ Leaflet library not loaded');
+    mapContainer.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;">
+        <div style="font-size:48px;margin-bottom:12px;">❌</div>
+        <div style="color:#E30613;font-weight:600;">${isArabic ? 'خطأ في تحميل الخريطة' : 'Map library not loaded'}</div>
+      </div>
+    `;
+    return;
+  }
+
   // Show loading
   mapContainer.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#666;">
@@ -1630,34 +1645,60 @@ function initLocationPickerMap() {
 
       console.log('✅ Current location:', lat, lng);
 
-      // Save to form inputs immediately
-      const latInput = document.getElementById('checkout-lat');
-      const lngInput = document.getElementById('checkout-lng');
-      if (latInput && lngInput) {
-        latInput.value = lat;
-        lngInput.value = lng;
-        console.log('✅ Coordinates saved to inputs');
-      }
+      // Clear loading
+      mapContainer.innerHTML = '';
 
-      // Update location display
+      // Create Leaflet map
+      const map = L.map(mapContainer, {
+        center: [lat, lng],
+        zoom: 15,
+        zoomControl: true
+      });
+
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Create draggable marker
+      const redIcon = L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="background:#E30613;width:32px;height:32px;border-radius:50%;border:4px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.4);"></div>',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      const marker = L.marker([lat, lng], { 
+        icon: redIcon,
+        draggable: true
+      }).addTo(map);
+
+      // Update coordinates when marker is dragged
+      marker.on('dragend', function(e) {
+        const pos = marker.getLatLng();
+        updateLocationCoordinates(pos.lat, pos.lng);
+        console.log('📍 Marker dragged to:', pos.lat, pos.lng);
+      });
+
+      // Allow clicking on map to move marker
+      map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        updateLocationCoordinates(e.latlng.lat, e.latlng.lng);
+        console.log('📍 Map clicked at:', e.latlng.lat, e.latlng.lng);
+      });
+
+      // Save initial location
       updateLocationCoordinates(lat, lng);
 
-      // Use OpenStreetMap embed (no API key needed)
-      mapContainer.innerHTML = `
-        <div style="position:relative;width:100%;height:100%;">
-          <iframe
-            width="100%"
-            height="100%"
-            style="border:none;border-radius:8px;"
-            src="https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}"
-            loading="lazy">
-          </iframe>
-          <div style="position:absolute;bottom:8px;right:8px;background:white;padding:8px 12px;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.2);font-size:12px;color:#666;">
-            📍 ${isArabic ? 'موقعك الحالي' : 'Your current location'}
-          </div>
-        </div>
-      `;
-      console.log('✅ Map loaded using OpenStreetMap');
+      // Store map instance
+      locationPickerMapInstance = map;
+      locationPickerMapMarker = marker;
+
+      // Fix map rendering
+      setTimeout(() => map.invalidateSize(), 100);
+
+      console.log('✅ Interactive Leaflet map loaded');
     },
     (error) => {
       console.error('❌ Geolocation error:', error.code, error.message);
