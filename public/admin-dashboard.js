@@ -527,7 +527,12 @@ async function renderOrdersList() {
                       </select>
                     </td>
                     <td style="padding:16px;color:#718096;font-size:13px;">${date.split(' ')[0]}<br/><span style="font-size:11px;color:#999;">${date.split(' ')[1] || ''}</span></td>
-                    <td style="padding:16px;"><button onclick="viewOrderDetails('${order.id}')" style="padding:8px 16px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;white-space:nowrap;">👁️ View</button></td>
+                    <td style="padding:16px;">
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button onclick="viewOrderDetails('${order.id}')" style="padding:8px 16px;background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;white-space:nowrap;">👁️ View</button>
+                        <button onclick="deleteOrder('${order.id}')" style="padding:8px 16px;background:linear-gradient(135deg, #e53e3e 0%, #c53030 100%);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;white-space:nowrap;">🗑️ Delete</button>
+                      </div>
+                    </td>
                   </tr>
                 `;
               }).join('')}
@@ -712,6 +717,36 @@ async function updateOrderStatus(orderId, newStatus) {
   } catch (error) {
     console.error('❌ Error updating order:', error);
     alert('❌ Failed to update order: ' + error.message);
+  }
+}
+
+async function deleteOrder(orderId) {
+  if (!confirm('⚠️ Are you sure you want to delete this order? This action cannot be undone.')) {
+    return;
+  }
+
+  try {
+    console.log('🗑️ Deleting order:', orderId);
+    if (!window.dbService) throw new Error('dbService not available');
+
+    await window.dbService.deleteOrder(orderId);
+    
+    // Remove from state
+    state.orders = state.orders.filter(o => o.id !== orderId);
+    
+    // Re-render the orders list
+    renderOrdersList();
+    
+    // Update dashboard if on dashboard section
+    if (state.currentSection === 'dashboard') {
+      renderDashboard();
+    }
+
+    alert('✅ Order deleted successfully!');
+    console.log('✅ Order deleted successfully');
+  } catch (error) {
+    console.error('❌ Error deleting order:', error);
+    alert('❌ Failed to delete order: ' + error.message);
   }
 }
 
@@ -1386,6 +1421,7 @@ window.renderCustomersTable = renderCustomersTable;
 window.updateOrderStatus = updateOrderStatus;
 window.viewOrderDetails = viewOrderDetails;
 window.filterOrdersByStatus = filterOrdersByStatus;
+window.deleteOrder = deleteOrder;
 
 console.log('✅ Admin dashboard script loaded');
 
