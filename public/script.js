@@ -1656,7 +1656,7 @@ function initLocationPickerMap() {
       if (window.L) {
         clearInterval(checkLeaflet);
         console.log('✅ Leaflet loaded, initializing map...');
-        initLocationPickerMap(); // Re-call after Leaflet is loaded
+        initLocationPickerMap();
       } else if (attempts >= maxAttempts) {
         clearInterval(checkLeaflet);
         console.error('❌ Leaflet failed to load after', maxAttempts, 'attempts');
@@ -1680,8 +1680,9 @@ function initLocationPickerMap() {
     </div>
   `;
 
-  console.log('📍 Requesting geolocation...');
+  console.log('📍 Requesting geolocation with permission...');
 
+  // Request geolocation permission explicitly
   navigator.geolocation.getCurrentPosition(
     (position) => {
       const lat = position.coords.latitude;
@@ -1766,13 +1767,14 @@ function initLocationPickerMap() {
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;">
           <div style="font-size:48px;margin-bottom:12px;">❌</div>
           <div style="color:#E30613;font-weight:600;margin-bottom:8px;">${errorMsg}</div>
-          <div style="font-size:12px;color:#666;">${isArabic ? 'الرجاء تفعيل خدمات الموقع' : 'Please enable location services'}</div>
+          <div style="font-size:12px;color:#666;margin-bottom:12px;">${isArabic ? 'الرجاء تفعيل خدمات الموقع' : 'Please enable location services'}</div>
+          <button onclick="initLocationPickerMap()" style="padding:8px 16px;background:#E30613;color:white;border:none;border-radius:8px;cursor:pointer;">${isArabic ? 'إعادة المحاولة' : 'Retry'}</button>
         </div>
       `;
     },
     {
       enableHighAccuracy: true,
-      timeout: 10000,
+      timeout: 15000,
       maximumAge: 0
     }
   );
@@ -3640,6 +3642,7 @@ function updateFooterCategoryLinks() {
 // However, the primary logic now uses the updated functions.
 window.addToCart = addToCart; // Updated function
 window.updateFooterCategoryLinks = updateFooterCategoryLinks;
+window.initLocationPickerMap = initLocationPickerMap; // Make map init globally accessible
 window.removeFromCart = removeFromCart; // Updated function
 window.updateQuantity = updateQuantity; // Updated function (assuming this exists in updated code)
 window.toggleCart = toggleCart; // Updated function
