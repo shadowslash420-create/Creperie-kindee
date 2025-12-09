@@ -188,12 +188,33 @@ async function setupMenuListener() {
 
 export async function placeOrderToFirebase(orderData) {
   try {
-    const docRef = await dbService.createOrder(orderData);
-    const orderId = docRef.id;
-    console.log('✅ Order saved to Firestore with ID:', orderId);
+    console.log('📝 Creating order with email:', orderData.email);
+
+    // Get all staff to check if user is staff
+    const allStaff = await dbService.getAllStaff();
+    const staffMember = allStaff.find(s => s.email?.toLowerCase() === orderData.email?.toLowerCase());
+
+    if (staffMember) {
+      throw new Error('Staff members cannot place orders. Please use a customer account.');
+    }
+
+    // Ensure orderData has all required fields
+    const completeOrderData = {
+      ...orderData,
+      createdAt: new Date(),
+      status: orderData.status || 'pending'
+    };
+
+    const orderId = await dbService.addOrder(completeOrderData);
+    console.log('✅ Order created with ID:', orderId, 'for email:', orderData.email);
+
+    if (!orderId) {
+      throw new Error('Failed to create order - no ID returned');
+    }
+
     return orderId;
   } catch (error) {
-    console.error('Failed to place order to Firebase:', error);
+    console.error('❌ Error placing order:', error);
     throw error;
   }
 }

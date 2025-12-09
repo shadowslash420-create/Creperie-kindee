@@ -145,7 +145,7 @@ function updateFAQSettings() {
   // Update FAQ answer 1 for hours
   const q1 = document.getElementById('faq-a1');
   if (q1) {
-    q1.textContent = isArabic 
+    q1.textContent = isArabic
       ? `نحن مفتوحون يومياً من الساعة ${openTimeFormatted} حتى ${closeTimeFormatted}`
       : `We are open daily from ${openTimeFormatted} to ${closeTimeFormatted}`;
   }
@@ -154,7 +154,7 @@ function updateFAQSettings() {
   const q2 = document.getElementById('faq-a2');
   if (q2) {
     const freeDeliveryMin = restaurantSettings.freeDeliveryMin || 800;
-    q2.textContent = isArabic 
+    q2.textContent = isArabic
       ? `نعم، نوفر توصيل مجاني للطلبات التي تزيد عن ${freeDeliveryMin} DZD`
       : `Yes, we offer free delivery for orders over ${freeDeliveryMin} DZD`;
   }
@@ -235,8 +235,8 @@ const translations = {
     locationNotSupported: 'المتصفح لا يدعم خدمات الموقع',
     coordinates: 'الإحداثيات',
     dragToAdjust: 'اسحب لتعديل الموقع',
-    mapLoadError: 'تعذر تحميل الخريطة',
-    coordinatesSaved: 'تم حفظ إحداثياتك',
+    mapLoadError: 'Map could not load',
+    coordinatesSaved: 'Your coordinates have been saved',
   },
   en: {
     home: 'Home', about: 'About Us', menu: 'Menu', orders: 'My Orders', faq: 'FAQ', feedback: 'Feedback', contact: 'Contact',
@@ -839,7 +839,7 @@ window.submitCheckoutForm = async function(event) {
     const isArabic = currentLang === 'ar';
     const confirmModal = document.createElement('div');
     confirmModal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
-    
+
     confirmModal.innerHTML = `
       <div style="background:white;border-radius:16px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
         <div style="background:linear-gradient(135deg,#52C41A 0%,#389E0D 100%);padding:40px 24px;text-align:center;">
@@ -852,7 +852,7 @@ window.submitCheckoutForm = async function(event) {
               ${isArabic ? '📞 سنتصل بك قريباً' : '📞 We will call you soon'}
             </div>
             <div style="color:#2E7D32;font-size:14px;line-height:1.6;">
-              ${isArabic 
+              ${isArabic
                 ? 'انتظر مكالمتنا لتأكيد طلبك وتفاصيل التوصيل'
                 : 'Wait for our call to confirm your order and delivery details'}
             </div>
@@ -884,9 +884,9 @@ window.submitCheckoutForm = async function(event) {
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(confirmModal);
-    
+
     // Auto redirect after 5 seconds
     setTimeout(() => {
       confirmModal.remove();
@@ -1417,8 +1417,8 @@ function showLocationOnCheckout(lat, lng) {
 }
 
 // Map popup state
-let locationPickerMap = null;
-let locationPickerMarker = null;
+let locationPickerMapInstance = null;
+let locationPickerMapMarker = null;
 
 // Open location picker modal with map
 window.useMyLocation = function() {
@@ -1587,10 +1587,10 @@ window.useMyLocation = function() {
       const lng = parseFloat(lngInput.value);
 
       console.log('✅ Location confirmed:', lat, lng);
-      
+
       // Show location on checkout modal
       showLocationOnCheckout(lat, lng);
-      
+
       // Save form data
       saveCheckoutFormData();
 
@@ -1629,7 +1629,7 @@ function initLocationPickerMap() {
       locationPickerMapInstance = null;
       locationPickerMapMarker = null;
     } catch (e) {
-      console.log('Map cleanup:', e);
+      console.log('Cleanup previous map:', e);
     }
   }
 
@@ -1647,19 +1647,33 @@ function initLocationPickerMap() {
     return;
   }
 
-  // Check if Leaflet is loaded
+  // Wait for Leaflet to load if not ready
   if (!window.L) {
-    console.error('❌ Leaflet library not loaded');
-    mapContainer.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;">
-        <div style="font-size:48px;margin-bottom:12px;">❌</div>
-        <div style="color:#E30613;font-weight:600;">${isArabic ? 'خطأ في تحميل الخريطة' : 'Map library not loaded'}</div>
-      </div>
-    `;
+    console.warn('⏳ Waiting for Leaflet to load...');
+    let attempts = 0;
+    const maxAttempts = 20;
+    const checkLeaflet = setInterval(() => {
+      attempts++;
+      if (window.L) {
+        clearInterval(checkLeaflet);
+        console.log('✅ Leaflet loaded, initializing map...');
+        initLocationPickerMap(); // Re-call after Leaflet is loaded
+      } else if (attempts >= maxAttempts) {
+        clearInterval(checkLeaflet);
+        console.error('❌ Leaflet failed to load after', maxAttempts, 'attempts');
+        mapContainer.innerHTML = `
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;">
+            <div style="font-size:48px;margin-bottom:12px;">❌</div>
+            <div style="color:#E30613;font-weight:600;margin-bottom:12px;">${isArabic ? 'خطأ في تحميل الخريطة' : 'Map library not loaded'}</div>
+            <button onclick="initLocationPickerMap()" style="padding:8px 16px;background:#E30613;color:white;border:none;border-radius:8px;cursor:pointer;">${isArabic ? 'إعادة المحاولة' : 'Retry'}</button>
+          </div>
+        `;
+      }
+    }, 200);
     return;
   }
 
-  // Show loading
+  // Show loading indicator while getting location
   mapContainer.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#666;">
       <div style="font-size:32px;margin-bottom:12px;">📍</div>
@@ -1676,10 +1690,10 @@ function initLocationPickerMap() {
 
       console.log('✅ Current location:', lat, lng);
 
-      // Clear loading
+      // Clear loading indicator
       mapContainer.innerHTML = '';
 
-      // Small delay to ensure DOM is ready
+      // Small delay to ensure DOM is ready for Leaflet
       setTimeout(() => {
         // Create Leaflet map
         const map = L.map(mapContainer, {
@@ -1703,7 +1717,7 @@ function initLocationPickerMap() {
           iconAnchor: [16, 16]
         });
 
-        const marker = L.marker([lat, lng], { 
+        const marker = L.marker([lat, lng], {
           icon: redIcon,
           draggable: true
         }).addTo(map);
@@ -1729,7 +1743,7 @@ function initLocationPickerMap() {
         locationPickerMapInstance = map;
         locationPickerMapMarker = marker;
 
-        // Fix map rendering with multiple attempts
+        // Fix map rendering issues by invalidating size multiple times
         setTimeout(() => map.invalidateSize(), 100);
         setTimeout(() => map.invalidateSize(), 300);
         setTimeout(() => map.invalidateSize(), 500);
@@ -1740,7 +1754,7 @@ function initLocationPickerMap() {
     (error) => {
       console.error('❌ Geolocation error:', error.code, error.message);
       let errorMsg = isArabic ? 'تعذر الوصول إلى موقعك' : 'Could not access your location';
-      
+
       if (error.code === 1) {
         errorMsg = isArabic ? 'الرجاء السماح بالوصول إلى الموقع' : 'Please allow location access';
       } else if (error.code === 2) {
@@ -1757,10 +1771,10 @@ function initLocationPickerMap() {
         </div>
       `;
     },
-    { 
-      enableHighAccuracy: true, 
-      timeout: 10000, 
-      maximumAge: 0 
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
     }
   );
 }
@@ -1774,7 +1788,7 @@ function updateLocationCoordinates(lat, lng) {
     latInput.value = lat;
     lngInput.value = lng;
     console.log('✅ Coordinates saved to form inputs:', lat, lng);
-    
+
     // Save to localStorage as well
     saveCheckoutFormData();
   }
@@ -1798,7 +1812,7 @@ function updateLocationCoordinates(lat, lng) {
   console.log('✅ Location coordinates updated:', lat, lng);
 }
 
-// Toggle language
+// Translate language
 window.toggleLanguage = function() {
   currentLang = currentLang === 'ar' ? 'en' : 'ar';
   localStorage.setItem(LANG_KEY, currentLang);
@@ -2981,7 +2995,7 @@ function checkoutFlowOriginal(){
       saveCart(); // Use original saveCart function
       window.closeCheckoutModal();
       closeAllSidebars(); // Close all sidebars
-      
+
       // Show thank you popup using the global function
       if (typeof showThankYouPopup === 'function') {
         showThankYouPopup(name, orderId);
@@ -3661,12 +3675,6 @@ function updateQuantity(itemId, delta) {
   // This is a placeholder. The actual implementation should use `updateQuantityOriginal` or be integrated.
   console.warn("updateQuantity called, but using placeholder. Check for original implementation.");
   updateQuantityOriginal(itemId, delta); // Attempt to call original
-}
-
-// Add dummy implementations for other potentially missing functions if they cause errors
-// Example: If `applyOrderTranslations` is called elsewhere
-if (typeof window.applyOrderTranslations !== 'function') {
-  window.applyOrderTranslations = () => { console.log('applyOrderTranslations placeholder called.'); };
 }
 
 // Also ensure that the original `translations` object is available if the new `translations` object doesn't override everything.
