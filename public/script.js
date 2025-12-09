@@ -494,7 +494,7 @@ window.renderCart = function() {
               ${isArabic ? '✅ استكمل الطلب' : '✅ Resume Checkout'}
             </button>
             <button
-              onclick="clearCheckoutFormData(); renderCart();"
+              onclick="clearCheckoutData();"
               style="
                 background: transparent;
                 color: #856404;
@@ -930,6 +930,13 @@ window.resumeCheckout = function() {
   setTimeout(() => {
     checkoutFlow();
   }, 300);
+}
+
+// Clear checkout form data and re-render cart
+window.clearCheckoutData = function() {
+  clearCheckoutFormData();
+  renderCart();
+  showToast(currentLang === 'ar' ? '✅ تم مسح البيانات' : '✅ Data cleared', 'success');
 }
 
 // Checkout flow with modal
@@ -1535,22 +1542,33 @@ let locationPickerMapMarker = null;
 
 function initLocationPickerMap() {
   const mapContainer = document.getElementById('location-picker-map');
-  if (!mapContainer) return;
+  if (!mapContainer) {
+    console.error('❌ Map container not found');
+    return;
+  }
 
   const isArabic = currentLang === 'ar';
 
-  // Get current location
+  // Check geolocation support
   if (!navigator.geolocation) {
-    alert(isArabic ? 'المتصفح لا يدعم تحديد الموقع' : 'Geolocation not supported');
+    mapContainer.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;">
+        <div style="font-size:48px;margin-bottom:12px;">❌</div>
+        <div style="color:#E30613;font-weight:600;">${isArabic ? 'المتصفح لا يدعم تحديد الموقع' : 'Geolocation not supported'}</div>
+      </div>
+    `;
     return;
   }
 
   // Show loading
   mapContainer.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#666;">
-      ⏳ ${isArabic ? 'جاري تحديد الموقع...' : 'Getting your location...'}
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#666;">
+      <div style="font-size:32px;margin-bottom:12px;">📍</div>
+      <div style="font-weight:600;">⏳ ${isArabic ? 'جاري تحديد الموقع...' : 'Getting your location...'}</div>
     </div>
   `;
+
+  console.log('📍 Requesting geolocation...');
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
@@ -1559,80 +1577,123 @@ function initLocationPickerMap() {
 
       console.log('✅ Current location:', lat, lng);
 
-      // Save to form inputs
+      // Save to form inputs immediately
       const latInput = document.getElementById('checkout-lat');
       const lngInput = document.getElementById('checkout-lng');
       if (latInput && lngInput) {
         latInput.value = lat;
-        latInput.value = lng;
+        lngInput.value = lng;
+        console.log('✅ Coordinates saved to inputs');
       }
 
-      // Clear container for interactive map
-      mapContainer.innerHTML = '';
+      // Update location display
+      updateLocationCoordinates(lat, lng);
 
-      // Check if Google Maps is loaded
-      if (typeof google === 'undefined' || !google.maps) {
-        console.warn('⚠️ Google Maps not loaded, using fallback');
-        const query = `${lat},${lng}`;
-        const embedUrl = `https://www.google.com/maps?q=${query}&output=embed`;
-        mapContainer.innerHTML = `
-          <iframe
-            width="100%"
-            height="100%"
-            style="border:none;border-radius:8px;"
-            src="${embedUrl}">
-          </iframe>
-        `;
-        return;
-      }
+      // Wait for Google Maps to be available
+      const initMap = () => {
+        // Clear container
+        mapContainer.innerHTML = '';
 
-      // Initialize interactive Google Map
-      const mapOptions = {
-        center: { lat, lng },
-        zoom: 15,
-        mapTypeControl: false,
-        fullscreenControl: false,
-        streetViewControl: false
+        // Check if Google Maps is loaded
+        if (typeof google === 'undefined' || !google.maps) {
+          console.warn('⚠️ Google Maps not loaded, showing static map');
+          const query = `${lat},${lng}`;
+          const embedUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyDqWxGLlWUBDv5QaUIxEhxH8Xz8M5KdKWs&q=${lat},${lng}&zoom=15`;
+          mapContainer.innerHTML = `
+            <iframe
+              width="100%"
+              height="100%"
+              style="border:none;"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              src="${embedUrl}">
+            </iframe>
+          `;
+          return;
+        }
+
+        try {
+          // Initialize interactive Google Map
+          const mapOptions = {
+            center: { lat, lng },
+            zoom: 15,
+            mapTypeControl: false,
+            fullscreenControl: false,
+            streetViewControl: false,
+            zoomControl: true,
+            gestureHandling: 'greedy'
+          };
+
+          locationPickerMapInstance = new google.maps.Map(mapContainer, mapOptions);
+
+          // Add marker at current location
+          locationPickerMapMarker = new google.maps.Marker({
+            position: { lat, lng },
+            map: locationPickerMapInstance,
+            draggable: true,
+            animation: google.maps.Animation.DROP,
+            title: isArabic ? 'موقعك' : 'Your Location'
+          });
+
+          // Update coordinates when marker is dragged
+          google.maps.event.addListener(locationPickerMapMarker, 'dragend', function(event) {
+            const newLat = event.latLng.lat();
+            const newLng = event.latLng.lng();
+            updateLocationCoordinates(newLat, newLng);
+          });
+
+          // Update coordinates when map is clicked
+          google.maps.event.addListener(locationPickerMapInstance, 'click', function(event) {
+            const newLat = event.latLng.lat();
+            const newLng = event.latLng.lng();
+            locationPickerMapMarker.setPosition({ lat: newLat, lng: newLng });
+            updateLocationCoordinates(newLat, newLng);
+          });
+
+          console.log('✅ Interactive Google Map initialized');
+        } catch (error) {
+          console.error('❌ Error initializing map:', error);
+          mapContainer.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#E30613;padding:20px;text-align:center;">
+              <div>خطأ في تحميل الخريطة</div>
+            </div>
+          `;
+        }
       };
 
-      locationPickerMapInstance = new google.maps.Map(mapContainer, mapOptions);
-
-      // Add marker at current location
-      locationPickerMapMarker = new google.maps.Marker({
-        position: { lat, lng },
-        map: locationPickerMapInstance,
-        draggable: true,
-        animation: google.maps.Animation.DROP,
-        title: isArabic ? 'موقعك' : 'Your Location'
-      });
-
-      // Update coordinates when marker is dragged
-      google.maps.event.addListener(locationPickerMapMarker, 'dragend', function(event) {
-        const newLat = event.latLng.lat();
-        const newLng = event.latLng.lng();
-
-        updateLocationCoordinates(newLat, newLng);
-      });
-
-      // Update coordinates when map is clicked
-      google.maps.event.addListener(locationPickerMapInstance, 'click', function(event) {
-        const newLat = event.latLng.lat();
-        const newLng = event.latLng.lng();
-
-        // Move marker to clicked location
-        locationPickerMapMarker.setPosition({ lat: newLat, lng: newLng });
-
-        updateLocationCoordinates(newLat, newLng);
-      });
-
-      console.log('✅ Interactive location picker map initialized');
+      // Initialize map immediately or wait for Google Maps
+      if (typeof google !== 'undefined' && google.maps) {
+        initMap();
+      } else {
+        console.log('⏳ Waiting for Google Maps API...');
+        setTimeout(initMap, 1000);
+      }
     },
     (error) => {
-      console.error('❌ Geolocation error:', error);
-      const msg = isArabic ? 'تعذر الوصول إلى موقعك' : 'Could not access your location';
-      mapContainer.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#E30613;font-weight:600;">${msg}</div>`;
+      console.error('❌ Geolocation error:', error.code, error.message);
+      let errorMsg = isArabic ? 'تعذر الوصول إلى موقعك' : 'Could not access your location';
+      
+      if (error.code === 1) {
+        errorMsg = isArabic ? 'الرجاء السماح بالوصول إلى الموقع' : 'Please allow location access';
+      } else if (error.code === 2) {
+        errorMsg = isArabic ? 'موقعك غير متاح' : 'Location unavailable';
+      } else if (error.code === 3) {
+        errorMsg = isArabic ? 'انتهت مهلة تحديد الموقع' : 'Location timeout';
+      }
+
+      mapContainer.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;">
+          <div style="font-size:48px;margin-bottom:12px;">❌</div>
+          <div style="color:#E30613;font-weight:600;margin-bottom:8px;">${errorMsg}</div>
+          <div style="font-size:12px;color:#666;">${isArabic ? 'يمكنك النقر على الخريطة لتحديد الموقع يدوياً' : 'You can click on the map to set location manually'}</div>
+        </div>
+      `;
     },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    { 
+      enableHighAccuracy: true, 
+      timeout: 10000, 
+      maximumAge: 0 
+    }
   );
 }
 
@@ -1645,6 +1706,9 @@ function updateLocationCoordinates(lat, lng) {
     latInput.value = lat;
     lngInput.value = lng;
     console.log('✅ Coordinates saved to form inputs:', lat, lng);
+    
+    // Save to localStorage as well
+    saveCheckoutFormData();
   }
 
   // Update the display
@@ -1652,8 +1716,15 @@ function updateLocationCoordinates(lat, lng) {
   const coordText = document.getElementById('location-coords');
 
   if (locationDisplay && coordText) {
-    coordText.textContent = `📍 ${currentLang === 'ar' ? 'الموقع' : 'Location'}: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    const isArabic = currentLang === 'ar';
+    coordText.innerHTML = `<strong>📍 ${isArabic ? 'الموقع' : 'Location'}:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     locationDisplay.style.display = 'block';
+  }
+
+  // Show selected location text
+  const selectedText = document.getElementById('selected-location-text');
+  if (selectedText) {
+    selectedText.style.display = 'block';
   }
 
   console.log('✅ Location coordinates updated:', lat, lng);
