@@ -173,10 +173,8 @@ async function setupMenuListener() {
         // Update state
         window.menuItems = items;
 
-        // Re-render if we're on the home page
-        if (typeof renderHomeMenuPreview === 'function') {
-          renderHomeMenuPreview(items);
-        }
+        // Dispatch menuUpdated event so script.js can update its local menuItems
+        window.dispatchEvent(new CustomEvent('menuUpdated', { detail: items }));
 
         initialLoad = false;
       }

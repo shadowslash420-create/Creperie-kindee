@@ -1610,8 +1610,7 @@ window.useMyLocation = function() {
 }
 
 // Initialize map in location picker popup using Leaflet (OpenStreetMap)
-let locationPickerMapInstance = null;
-let locationPickerMapMarker = null;
+// Note: locationPickerMapInstance and locationPickerMapMarker are declared above
 
 function initLocationPickerMap() {
   const mapContainer = document.getElementById('location-picker-map');
@@ -2065,10 +2064,18 @@ function updateCarouselButtons() {
 
 // Render menu
 function renderMenu(filterCategory = null, searchQuery = '') {
+  console.log('🎨 renderMenu called with:', { filterCategory, searchQuery });
+  console.log('📊 menuItems:', menuItems.length, 'categories:', categories.length);
+  
   const container = document.getElementById('menu-container');
   const tabNav = document.getElementById('tab-nav');
 
-  if (!container || !tabNav) return;
+  console.log('🔍 DOM elements:', { container: !!container, tabNav: !!tabNav });
+
+  if (!container || !tabNav) {
+    console.error('❌ renderMenu: Required DOM elements not found');
+    return;
+  }
 
   const t = getT();
   const lang = getCurrentLang();
@@ -2120,6 +2127,18 @@ function renderMenu(filterCategory = null, searchQuery = '') {
     grouped[item.category].push(item);
   });
 
+  console.log('📦 Grouped items:', Object.keys(grouped).length, 'categories');
+  console.log('📦 Grouped details:', JSON.stringify(Object.keys(grouped)));
+  console.log('📦 First item sample:', filtered[0]);
+
+  // Helper function to sanitize image URLs (remove any extra HTML attributes)
+  function sanitizeImageUrl(url) {
+    if (!url) return null;
+    // Extract just the URL part before any quotes or HTML attributes
+    const match = url.match(/^(https?:\/\/[^\s"']+)/);
+    return match ? match[1] : null;
+  }
+
   // Render sections
   container.innerHTML = '';
   Object.keys(grouped).forEach(category => {
@@ -2127,25 +2146,37 @@ function renderMenu(filterCategory = null, searchQuery = '') {
     section.className = 'section';
 
     const categoryLabel = t[category] || category;
+    const itemsHtml = grouped[category].map(item => {
+      const imgUrl = sanitizeImageUrl(item.img || item.image);
+      const price = typeof item.price === 'number' ? item.price.toFixed(2) : '0.00';
+      const description = item.desc || item.description || '';
+      
+      return `
+        <div class="card menu-item">
+          ${imgUrl ? `<img src="${imgUrl}" alt="${item.name}" class="menu-item-img" onerror="this.style.display='none'">` : ''}
+          <h3 class="item-name">${item.name}</h3>
+          ${description ? `<p class="item-desc">${description}</p>` : ''}
+          <div class="item-footer">
+            <span class="price">${price} DZD</span>
+            <button class="cta" onclick="addToCart('${item.id}', event)">${t.addToCart}</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
     section.innerHTML = `
       <h2 class="section-title">${categoryLabel}</h2>
       <div class="grid">
-        ${grouped[category].map(item => `
-          <div class="card menu-item">
-            ${item.img ? `<img src="${item.img}" alt="${item.name}" class="menu-item-img">` : ''}
-            <h3 class="item-name">${item.name}</h3>
-            ${item.desc ? `<p class="item-desc">${item.desc}</p>` : ''}
-            <div class="item-footer">
-              <span class="price">${item.price.toFixed(2)} DZD</span>
-              <button class="cta" onclick="addToCart('${item.id}', event)">${t.addToCart}</button>
-            </div>
-          </div>
-        `).join('')}
+        ${itemsHtml}
       </div>
     `;
 
+    console.log('📝 Adding section for category:', category, 'with', grouped[category].length, 'items');
     container.appendChild(section);
   });
+
+  console.log('📝 Container after render:', container.children.length, 'sections');
+  console.log('📝 Container innerHTML length:', container.innerHTML.length, 'chars');
 
   if (filtered.length === 0) {
     container.innerHTML = `<p style="text-align:center;color:#999;padding:40px;">${t.errorLoading}</p>`;

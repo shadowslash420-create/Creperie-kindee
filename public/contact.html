@@ -12,6 +12,39 @@
   </script>
 </head>
 <body dir="ltr">
+  <!-- Critical UI Functions -->
+  <script>
+    window.toggleMenu = function() {
+      var navMenu = document.getElementById('nav-menu');
+      var overlay = document.getElementById('menu-overlay');
+      var cartSide = document.getElementById('cart-side');
+      if (navMenu && overlay) {
+        var isOpen = navMenu.classList.contains('open');
+        if (cartSide && cartSide.classList.contains('open')) cartSide.classList.remove('open');
+        if (isOpen) { navMenu.classList.remove('open'); overlay.classList.remove('active'); }
+        else { navMenu.classList.add('open'); overlay.classList.add('active'); }
+      }
+    };
+    window.toggleCart = function() {
+      var cartSide = document.getElementById('cart-side');
+      var overlay = document.getElementById('menu-overlay');
+      var navMenu = document.getElementById('nav-menu');
+      if (cartSide && overlay) {
+        var isOpen = cartSide.classList.contains('open');
+        if (navMenu && navMenu.classList.contains('open')) navMenu.classList.remove('open');
+        if (isOpen) { cartSide.classList.remove('open'); overlay.classList.remove('active'); }
+        else { cartSide.classList.add('open'); overlay.classList.add('active'); if (typeof window.renderCart === 'function') window.renderCart(); }
+      }
+    };
+    window.closeAllSidebars = function() {
+      var cartSide = document.getElementById('cart-side');
+      var navMenu = document.getElementById('nav-menu');
+      var overlay = document.getElementById('menu-overlay');
+      if (cartSide) cartSide.classList.remove('open');
+      if (navMenu) navMenu.classList.remove('open');
+      if (overlay) overlay.classList.remove('active');
+    };
+  </script>
   <header class="header">
     <div style="display:flex;gap:8px;align-items:center">
       <div class="menu-icon" onclick="toggleMenu()">☰</div>
