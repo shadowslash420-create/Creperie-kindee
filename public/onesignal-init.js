@@ -1,13 +1,21 @@
 
 // OneSignal initialization for Median WebView and Web
+console.log('📱 OneSignal initialization script loaded');
+
+// Check if running in Median app
+const isMedianApp = window.median && window.median.run;
+
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 
 OneSignalDeferred.push(async function(OneSignal) {
+  console.log('🔔 Initializing OneSignal...');
+  
   await OneSignal.init({
     appId: "193da0a0-041a-4a8c-aa55-a0f4e8e0e399",
-    safari_web_id: "web.onesignal.auto.your-safari-id", // Optional
+    safari_web_id: "web.onesignal.auto.your-safari-id",
+    allowLocalhostAsSecureOrigin: true,
     notifyButton: {
-      enable: true,
+      enable: !isMedianApp, // Disable notify button in Median app
       size: 'medium',
       position: 'bottom-right',
       offset: {
@@ -28,8 +36,36 @@ OneSignalDeferred.push(async function(OneSignal) {
         'dialog.blocked.title': 'إلغاء حظر الإشعارات',
         'dialog.blocked.message': 'اتبع التعليمات لإلغاء حظر الإشعارات:'
       }
-    },
-    allowLocalhostAsSecureOrigin: true,
+    }
+  });
+
+  console.log('✅ OneSignal initialized');
+
+  // Handle notification clicks
+  OneSignal.Notifications.addEventListener('click', (event) => {
+    console.log('🔔 Notification clicked:', event);
+    
+    // Navigate to order if orderId is present
+    if (event.data && event.data.orderId) {
+      window.location.href = '/my-orders.html?order=' + event.data.orderId;
+    }
+  });
+
+  // Handle notification display
+  OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+    console.log('🔔 Notification will display:', event);
+    
+    // Show custom notification in Median app
+    if (isMedianApp && window.MedianFCMBridge) {
+      event.preventDefault(); // Prevent default OneSignal notification
+      window.MedianFCMBridge.showNotification(
+        event.notification.body || 'New notification',
+        event.notification.data || {}
+      );
+    }
+  });
+
+  console.log('✅ OneSignal notification handlers configured');
     serviceWorkerParam: { scope: '/' },
     serviceWorkerPath: '/OneSignalSDKWorker.js'
   });
