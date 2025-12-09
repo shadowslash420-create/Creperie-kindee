@@ -1427,6 +1427,23 @@ window.useMyLocation = function() {
 
   console.log('📍 Opening location picker...');
 
+  // Clean up any existing map instances
+  if (locationPickerMapInstance) {
+    try {
+      locationPickerMapInstance.remove();
+      locationPickerMapInstance = null;
+      locationPickerMapMarker = null;
+    } catch (e) {
+      console.log('Cleanup previous map:', e);
+    }
+  }
+
+  // Remove any existing location picker modal
+  const existingModal = document.getElementById('location-picker-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
   // Create popup modal for location picking
   const popupModal = document.createElement('div');
   popupModal.id = 'location-picker-modal';
@@ -1605,6 +1622,20 @@ function initLocationPickerMap() {
 
   const isArabic = currentLang === 'ar';
 
+  // Clean up any existing map instance first
+  if (locationPickerMapInstance) {
+    try {
+      locationPickerMapInstance.remove();
+      locationPickerMapInstance = null;
+      locationPickerMapMarker = null;
+    } catch (e) {
+      console.log('Map cleanup:', e);
+    }
+  }
+
+  // Clear the container completely
+  mapContainer.innerHTML = '';
+
   // Check geolocation support
   if (!navigator.geolocation) {
     mapContainer.innerHTML = `
@@ -1648,57 +1679,63 @@ function initLocationPickerMap() {
       // Clear loading
       mapContainer.innerHTML = '';
 
-      // Create Leaflet map
-      const map = L.map(mapContainer, {
-        center: [lat, lng],
-        zoom: 15,
-        zoomControl: true
-      });
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        // Create Leaflet map
+        const map = L.map(mapContainer, {
+          center: [lat, lng],
+          zoom: 15,
+          zoomControl: true,
+          preferCanvas: true
+        });
 
-      // Add OpenStreetMap tiles
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
-        maxZoom: 19
-      }).addTo(map);
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap',
+          maxZoom: 19
+        }).addTo(map);
 
-      // Create draggable marker
-      const redIcon = L.divIcon({
-        className: 'custom-marker',
-        html: '<div style="background:#E30613;width:32px;height:32px;border-radius:50%;border:4px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.4);"></div>',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
-      });
+        // Create draggable marker
+        const redIcon = L.divIcon({
+          className: 'custom-marker',
+          html: '<div style="background:#E30613;width:32px;height:32px;border-radius:50%;border:4px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.4);"></div>',
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
 
-      const marker = L.marker([lat, lng], { 
-        icon: redIcon,
-        draggable: true
-      }).addTo(map);
+        const marker = L.marker([lat, lng], { 
+          icon: redIcon,
+          draggable: true
+        }).addTo(map);
 
-      // Update coordinates when marker is dragged
-      marker.on('dragend', function(e) {
-        const pos = marker.getLatLng();
-        updateLocationCoordinates(pos.lat, pos.lng);
-        console.log('📍 Marker dragged to:', pos.lat, pos.lng);
-      });
+        // Update coordinates when marker is dragged
+        marker.on('dragend', function(e) {
+          const pos = marker.getLatLng();
+          updateLocationCoordinates(pos.lat, pos.lng);
+          console.log('📍 Marker dragged to:', pos.lat, pos.lng);
+        });
 
-      // Allow clicking on map to move marker
-      map.on('click', function(e) {
-        marker.setLatLng(e.latlng);
-        updateLocationCoordinates(e.latlng.lat, e.latlng.lng);
-        console.log('📍 Map clicked at:', e.latlng.lat, e.latlng.lng);
-      });
+        // Allow clicking on map to move marker
+        map.on('click', function(e) {
+          marker.setLatLng(e.latlng);
+          updateLocationCoordinates(e.latlng.lat, e.latlng.lng);
+          console.log('📍 Map clicked at:', e.latlng.lat, e.latlng.lng);
+        });
 
-      // Save initial location
-      updateLocationCoordinates(lat, lng);
+        // Save initial location
+        updateLocationCoordinates(lat, lng);
 
-      // Store map instance
-      locationPickerMapInstance = map;
-      locationPickerMapMarker = marker;
+        // Store map instance
+        locationPickerMapInstance = map;
+        locationPickerMapMarker = marker;
 
-      // Fix map rendering
-      setTimeout(() => map.invalidateSize(), 100);
+        // Fix map rendering with multiple attempts
+        setTimeout(() => map.invalidateSize(), 100);
+        setTimeout(() => map.invalidateSize(), 300);
+        setTimeout(() => map.invalidateSize(), 500);
 
-      console.log('✅ Interactive Leaflet map loaded');
+        console.log('✅ Interactive Leaflet map loaded');
+      }, 100);
     },
     (error) => {
       console.error('❌ Geolocation error:', error.code, error.message);
@@ -2943,8 +2980,15 @@ function checkoutFlowOriginal(){
       cart = []; // Clear cart using original cart variable
       saveCart(); // Use original saveCart function
       window.closeCheckoutModal();
-      toggleCartOriginal(); // Use original toggle cart function
-      showOrderConfirmation(orderId, order, lang); // Keep original confirmation function
+      closeAllSidebars(); // Close all sidebars
+      
+      // Show thank you popup using the global function
+      if (typeof showThankYouPopup === 'function') {
+        showThankYouPopup(name, orderId);
+      } else {
+        // Fallback to confirmation modal
+        showOrderConfirmation(orderId, order, lang);
+      }
     } catch (error) {
       alert(lang === 'ar' ? 'فشل في إرسال الطلب. حاول مرة أخرى.' : 'Failed to place order. Please try again.');
       console.error('Order placement failed:', error);
