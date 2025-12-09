@@ -893,7 +893,13 @@ window.submitCheckoutForm = async function(event) {
       window.location.href = 'my-orders.html?order=' + orderId;
     }, 5000);
   } catch (error) {
-    console.error('Error placing order:', error);
+    console.error('❌ Error placing order:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      stack: error?.stack,
+      name: error?.name
+    });
 
     // Reset submission flag immediately
     isCheckoutSubmitting = false;
@@ -937,10 +943,18 @@ window.submitCheckoutForm = async function(event) {
       ? '❌ حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.'
       : '❌ Error placing order. Please try again.';
 
-    if (error.code === 'permission-denied') {
+    // Check for specific error types
+    if (error?.code === 'permission-denied') {
       errorMessage = currentLang === 'ar'
         ? '❌ عذراً، لا يمكن إتمام الطلب حالياً. يرجى الاتصال بنا مباشرة.'
         : '❌ Sorry, cannot complete order now. Please contact us directly.';
+    } else if (error?.code === 'unauthenticated') {
+      errorMessage = currentLang === 'ar'
+        ? '❌ يرجى تسجيل الدخول أولاً'
+        : '❌ Please sign in first';
+    } else if (error?.message) {
+      // Show the actual error message for debugging
+      errorMessage += ' (' + error.message + ')';
     }
 
     errorDiv.textContent = errorMessage;

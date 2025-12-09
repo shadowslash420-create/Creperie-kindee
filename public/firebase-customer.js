@@ -3,7 +3,10 @@ import { getFirestoreInstance } from './firebase-config.js';
 import {
   collection,
   query,
-  onSnapshot
+  onSnapshot,
+  getFirestore, // Added import
+  serverTimestamp, // Added import
+  addDoc // Added import
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 let menuCache = null;
@@ -186,33 +189,35 @@ async function setupMenuListener() {
 
 export async function placeOrderToFirebase(orderData) {
   try {
-    console.log('📝 Creating order with email:', orderData.email);
+    const db = getFirestore();
+    const ordersCollection = collection(db, 'orders');
 
-    // Get all staff to check if user is staff
-    const allStaff = await dbService.getAllStaff();
-    const staffMember = allStaff.find(s => s.email?.toLowerCase() === orderData.email?.toLowerCase());
-
-    if (staffMember) {
-      throw new Error('Staff members cannot place orders. Please use a customer account.');
+    // Ensure required fields
+    if (!orderData.email) {
+      console.error('❌ Missing email in order data');
+      throw new Error('Email is required for orders');
     }
 
-    // Ensure orderData has all required fields
-    const completeOrderData = {
+    // Add timestamp and default status
+    const orderWithMetadata = {
       ...orderData,
-      createdAt: new Date(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
       status: orderData.status || 'pending'
     };
 
-    const orderId = await dbService.addOrder(completeOrderData);
-    console.log('✅ Order created with ID:', orderId, 'for email:', orderData.email);
+    console.log('📝 Creating order with email:', orderData.email);
+    console.log('📦 Order data:', JSON.stringify(orderWithMetadata, null, 2));
 
-    if (!orderId) {
-      throw new Error('Failed to create order - no ID returned');
-    }
+    const docRef = await addDoc(ordersCollection, orderWithMetadata);
+    console.log('✅ Order created with ID:', docRef.id);
 
-    return orderId;
+    return docRef.id;
   } catch (error) {
-    console.error('❌ Error placing order:', error);
+    console.error('❌ Error creating order:', error);
+    console.error('Error code:', error?.code);
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
     throw error;
   }
 }
