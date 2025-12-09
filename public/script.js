@@ -227,9 +227,16 @@ const translations = {
     selectItem: 'اختر منتج', noFeedback: 'لا توجد تقييمات حتى الآن', feedbackSuccess: 'شكراً لتقييمك!',
     feedbackFormTitle: 'شاركنا تجربتك', feedbackNameLabel: 'اسمك:', feedbackRatingLabel: 'التقييم:', feedbackCommentLabel: 'تعليقك:',
     feedbackSubmitBtn: 'إرسال التقييم', feedbackReviewsTitle: 'تقييمات العملاء',
-    status_pending: 'في الانتظار', status_received: 'تم استلام الطلب', status_preparing: 'جاري تحضير طلبك', 
-    status_ready: 'جاهز للاستلام', status_picked_up: 'تم الالتقاط من قبل السائق', status_in_transit: 'في الطريق', 
-    status_cancelled: 'تم الإلغاء'
+    status_pending: 'في الانتظار', status_received: 'تم استلام الطلب', status_preparing: 'جاري تحضير طلبك',
+    status_ready: 'جاهز للاستلام', status_picked_up: 'تم الالتقاط من قبل السائق', status_in_transit: 'في الطريق',
+    status_cancelled: 'تم الإلغاء',
+    gettingLocation: 'الحصول على موقعك...',
+    locationError: 'تعذر الحصول على موقعك. يرجى تفعيل خدمات الموقع.',
+    locationNotSupported: 'المتصفح لا يدعم خدمات الموقع',
+    coordinates: 'الإحداثيات',
+    dragToAdjust: 'اسحب لتعديل الموقع',
+    mapLoadError: 'تعذر تحميل الخريطة',
+    coordinatesSaved: 'تم حفظ إحداثياتك',
   },
   en: {
     home: 'Home', about: 'About Us', menu: 'Menu', orders: 'My Orders', faq: 'FAQ', feedback: 'Feedback', contact: 'Contact',
@@ -265,9 +272,16 @@ const translations = {
     selectItem: 'Select Product', noFeedback: 'No reviews yet', feedbackSuccess: 'Thank you for your review!',
     feedbackFormTitle: 'Share Your Experience', feedbackNameLabel: 'Your Name:', feedbackRatingLabel: 'Rating:', feedbackCommentLabel: 'Your Comment:',
     feedbackSubmitBtn: 'Submit Feedback', feedbackReviewsTitle: 'Customer Reviews',
-    status_pending: 'Pending', status_received: 'Order Received', status_preparing: 'Preparing Your Order', 
-    status_ready: 'Ready for Pickup', status_picked_up: 'Picked Up', status_in_transit: 'On the Way', 
-    status_cancelled: 'Cancelled'
+    status_pending: 'Pending', status_received: 'Order Received', status_preparing: 'Preparing Your Order',
+    status_ready: 'Ready for Pickup', status_picked_up: 'Picked Up', status_in_transit: 'On the Way',
+    status_cancelled: 'Cancelled',
+    gettingLocation: 'Getting your location...',
+    locationError: 'Unable to get your location. Please enable location services.',
+    locationNotSupported: 'Geolocation is not supported by your browser',
+    coordinates: 'Coordinates',
+    dragToAdjust: 'Drag to adjust location',
+    mapLoadError: 'Map could not load',
+    coordinatesSaved: 'Your coordinates have been saved',
   }
 };
 
@@ -344,7 +358,7 @@ window.addToCart = function(itemId, event) {
   // Show toast notification
   const t = getT();
   const isArabic = currentLang === 'ar';
-  const message = wasInCart 
+  const message = wasInCart
     ? (isArabic ? `✅ تم زيادة الكمية: ${menuItem.name}` : `✅ Quantity increased: ${menuItem.name}`)
     : (isArabic ? `✅ تمت الإضافة للسلة: ${menuItem.name}` : `✅ Added to cart: ${menuItem.name}`);
 
@@ -455,12 +469,12 @@ window.renderCart = function() {
               ${isArabic ? '⏳ لم تكمل طلبك!' : '⏳ You didn\'t complete your order!'}
             </div>
             <div style="color: #856404; font-size: 13px; line-height: 1.5; margin-bottom: 12px;">
-              ${isArabic 
+              ${isArabic
                 ? `لديك معلومات محفوظة: ${checkoutFormData.firstName || ''} ${checkoutFormData.lastName || ''}`
                 : `You have saved information: ${checkoutFormData.firstName || ''} ${checkoutFormData.lastName || ''}`
               }
             </div>
-            <button 
+            <button
               onclick="resumeCheckout()"
               style="
                 background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
@@ -479,7 +493,7 @@ window.renderCart = function() {
             >
               ${isArabic ? '✅ استكمل الطلب' : '✅ Resume Checkout'}
             </button>
-            <button 
+            <button
               onclick="clearCheckoutFormData(); renderCart();"
               style="
                 background: transparent;
@@ -672,8 +686,8 @@ window.submitCheckoutForm = async function(event) {
 
   // Require authentication to place orders
   if (!userEmail || !currentUser) {
-    alert(currentLang === 'ar' 
-      ? 'يجب تسجيل الدخول أولاً لتقديم الطلب\n\nسيتم توجيهك إلى صفحة تسجيل الدخول...' 
+    alert(currentLang === 'ar'
+      ? 'يجب تسجيل الدخول أولاً لتقديم الطلب\n\nسيتم توجيهك إلى صفحة تسجيل الدخول...'
       : 'You must sign in to place an order\n\nRedirecting to login page...');
 
     closeCheckoutModal();
@@ -709,10 +723,10 @@ window.submitCheckoutForm = async function(event) {
   const fullName = `${firstName} ${lastName}`;
 
   // Save customer info including location
-  localStorage.setItem('kc_customer_info', JSON.stringify({ 
-    firstName, 
-    lastName, 
-    phone, 
+  localStorage.setItem('kc_customer_info', JSON.stringify({
+    firstName,
+    lastName,
+    phone,
     address,
     lat: parseFloat(lat),
     lng: parseFloat(lng)
@@ -789,7 +803,7 @@ window.submitCheckoutForm = async function(event) {
           customerName: fullName
         })
       });
-      
+
       if (notifyResponse.ok) {
         const result = await notifyResponse.json();
         console.log('✅ Admin notification sent via OneSignal:', result.recipients, 'recipients');
@@ -863,8 +877,8 @@ window.submitCheckoutForm = async function(event) {
     }
 
     // Show more specific error message
-    let errorMessage = currentLang === 'ar' 
-      ? '❌ حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.' 
+    let errorMessage = currentLang === 'ar'
+      ? '❌ حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.'
       : '❌ Error placing order. Please try again.';
 
     if (error.code === 'permission-denied') {
@@ -932,7 +946,7 @@ window.checkoutFlow = async function() {
   // Get saved info - prioritize checkout form data over customer info
   const checkoutFormData = JSON.parse(localStorage.getItem('kc_checkout_form_data') || '{}');
   const savedCustomerInfo = JSON.parse(localStorage.getItem('kc_customer_info') || '{}');
-  
+
   // Merge data, with checkout form data taking priority (more recent)
   const savedInfo = {
     firstName: checkoutFormData.firstName || savedCustomerInfo.firstName || '',
@@ -1025,9 +1039,9 @@ window.checkoutFlow = async function() {
             <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #2C1810;">
               ${isArabic ? 'الاسم الأول' : 'First Name'} <span style="color: #E30613;">*</span>
             </label>
-            <input 
-              type="text" 
-              id="checkout-firstname" 
+            <input
+              type="text"
+              id="checkout-firstname"
               required
               value="${savedInfo.firstName || ''}"
               style="
@@ -1049,9 +1063,9 @@ window.checkoutFlow = async function() {
             <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #2C1810;">
               ${isArabic ? 'اسم العائلة' : 'Last Name'} <span style="color: #E30613;">*</span>
             </label>
-            <input 
-              type="text" 
-              id="checkout-lastname" 
+            <input
+              type="text"
+              id="checkout-lastname"
               required
               value="${savedInfo.lastName || ''}"
               style="
@@ -1073,9 +1087,9 @@ window.checkoutFlow = async function() {
             <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #2C1810;">
               ${isArabic ? 'رقم الهاتف' : 'Phone Number'} <span style="color: #E30613;">*</span>
             </label>
-            <input 
-              type="tel" 
-              id="checkout-phone" 
+            <input
+              type="tel"
+              id="checkout-phone"
               required
               value="${savedInfo.phone || ''}"
               placeholder="${isArabic ? 'مثال: 0555123456' : 'Example: 0555123456'}"
@@ -1101,8 +1115,8 @@ window.checkoutFlow = async function() {
             <p style="font-size: 13px; color: #5C4033; margin-bottom: 8px;">
               ${isArabic ? '📍 انقر على الخريطة أو استخدم موقعي الحالي لتحديد عنوان التوصيل' : '📍 Click on the map or use my current location to set delivery address'}
             </p>
-            <button 
-              type="button" 
+            <button
+              type="button"
               id="use-my-location-btn"
               onclick="useMyLocation()"
               style="
@@ -1141,8 +1155,8 @@ window.checkoutFlow = async function() {
             </div>
             <input type="hidden" id="checkout-lat" value="${savedInfo.lat || ''}" />
             <input type="hidden" id="checkout-lng" value="${savedInfo.lng || ''}" />
-            <textarea 
-              id="checkout-address" 
+            <textarea
+              id="checkout-address"
               required
               rows="2"
               placeholder="${isArabic ? 'تفاصيل إضافية للعنوان (رقم الشقة، علامة مميزة...)' : 'Additional address details (apt number, landmark...)'}"
@@ -1169,8 +1183,8 @@ window.checkoutFlow = async function() {
             <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #2C1810;">
               ${isArabic ? 'ملاحظات (اختياري)' : 'Notes (Optional)'}
             </label>
-            <textarea 
-              id="checkout-notes" 
+            <textarea
+              id="checkout-notes"
               rows="3"
               placeholder="${isArabic ? 'أي تعليمات خاصة...' : 'Any special instructions...'}"
               style="
@@ -1217,13 +1231,13 @@ window.checkoutFlow = async function() {
             </div>
             ${deliveryFee > 0 ? `
               <div style="margin-top: 8px; font-size: 14px; color: #5C4033;">
-                ${isArabic ? `💡 احصل على توصيل مجاني عند الطلب بقيمة 1000 دج أو أكثر` : `💡 Get free delivery on orders of 1000 DZD or more`}
+                ${isArabic ? '💡 احصل على توصيل مجاني عند الطلب بقيمة 1000 دج أو أكثر' : '💡 Get free delivery on orders of 1000 DZD or more'}
               </div>
             ` : ''}
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             id="checkout-submit-btn"
             style="
               width: 100%;
@@ -1266,7 +1280,7 @@ window.checkoutFlow = async function() {
   setTimeout(() => {
     const formInputs = [
       'checkout-firstname',
-      'checkout-lastname', 
+      'checkout-lastname',
       'checkout-phone',
       'checkout-address',
       'checkout-notes',
@@ -1322,12 +1336,12 @@ function showLocationOnCheckout(lat, lng) {
   const latInput = document.getElementById('checkout-lat');
   const lngInput = document.getElementById('checkout-lng');
   const locationDisplay = document.getElementById('location-display');
-  
+
   if (latInput && lngInput) {
     latInput.value = lat;
     lngInput.value = lng;
   }
-  
+
   if (locationDisplay) {
     const coordText = document.getElementById('location-coords');
     if (coordText) {
@@ -1335,7 +1349,7 @@ function showLocationOnCheckout(lat, lng) {
     }
     locationDisplay.style.display = 'block';
   }
-  
+
   console.log('✅ Location displayed on checkout:', lat, lng);
 }
 
@@ -1487,14 +1501,14 @@ window.useMyLocation = function() {
     // Get location from hidden inputs (set by geolocation)
     const latInput = document.getElementById('checkout-lat');
     const lngInput = document.getElementById('checkout-lng');
-    
+
     if (latInput && lngInput && latInput.value && lngInput.value) {
       const lat = parseFloat(latInput.value);
       const lng = parseFloat(lngInput.value);
-      
+
       console.log('✅ Location confirmed:', lat, lng);
       saveCheckoutFormData();
-      
+
       // Show location on checkout modal
       showLocationOnCheckout(lat, lng);
 
@@ -1515,7 +1529,7 @@ function initLocationPickerMap() {
   if (!mapContainer) return;
 
   const isArabic = currentLang === 'ar';
-  
+
   // Get current location
   if (!navigator.geolocation) {
     alert(isArabic ? 'المتصفح لا يدعم تحديد الموقع' : 'Geolocation not supported');
@@ -1553,10 +1567,10 @@ function initLocationPickerMap() {
         const query = `${lat},${lng}`;
         const embedUrl = `https://www.google.com/maps?q=${query}&output=embed`;
         mapContainer.innerHTML = `
-          <iframe 
-            width="100%" 
+          <iframe
+            width="100%"
             height="100%"
-            style="border:none;border-radius:8px;" 
+            style="border:none;border-radius:8px;"
             src="${embedUrl}">
           </iframe>
         `;
@@ -1587,7 +1601,7 @@ function initLocationPickerMap() {
       google.maps.event.addListener(locationPickerMapMarker, 'dragend', function(event) {
         const newLat = event.latLng.lat();
         const newLng = event.latLng.lng();
-        
+
         updateLocationCoordinates(newLat, newLng);
       });
 
@@ -1595,13 +1609,13 @@ function initLocationPickerMap() {
       google.maps.event.addListener(locationPickerMapInstance, 'click', function(event) {
         const newLat = event.latLng.lat();
         const newLng = event.latLng.lng();
-        
+
         // Move marker to clicked location
         locationPickerMapMarker.setPosition({ lat: newLat, lng: newLng });
-        
+
         updateLocationCoordinates(newLat, newLng);
       });
-      
+
       console.log('✅ Interactive location picker map initialized');
     },
     (error) => {
@@ -1617,7 +1631,7 @@ function initLocationPickerMap() {
 function updateLocationCoordinates(lat, lng) {
   const latInput = document.getElementById('checkout-lat');
   const lngInput = document.getElementById('checkout-lng');
-  
+
   if (latInput && lngInput) {
     latInput.value = lat;
     lngInput.value = lng;
@@ -1626,7 +1640,7 @@ function updateLocationCoordinates(lat, lng) {
   // Update the display
   const locationDisplay = document.getElementById('location-display');
   const coordText = document.getElementById('location-coords');
-  
+
   if (locationDisplay && coordText) {
     coordText.textContent = `📍 ${currentLang === 'ar' ? 'الموقع' : 'Location'}: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     locationDisplay.style.display = 'block';
@@ -1653,8 +1667,8 @@ window.toggleLanguage = function() {
     renderMenu();
   }
 
-  const isHomePage = window.location.pathname === '/' || 
-                     window.location.pathname === '/index.html' || 
+  const isHomePage = window.location.pathname === '/' ||
+                     window.location.pathname === '/index.html' ||
                      window.location.pathname.endsWith('/');
   if (isHomePage) {
     renderHomeMenuPreview();
@@ -1830,8 +1844,8 @@ async function loadMenuItemsFromFirebase() {
     listenToMenuUpdates((updatedMenu) => {
       menuItems = updatedMenu;
       const isMenuPage = window.location.pathname.includes('menu.html');
-      const isHomePage = window.location.pathname === '/' || 
-                         window.location.pathname === '/index.html' || 
+      const isHomePage = window.location.pathname === '/' ||
+                         window.location.pathname === '/index.html' ||
                          window.location.pathname.endsWith('/');
 
       if (isMenuPage) {
@@ -1850,7 +1864,7 @@ async function loadMenuItemsFromFirebase() {
 // Initialize menu (for menu.html)
 async function initMenu() {
   await loadMenuItemsFromFirebase();
-  renderMenu(null);  // Display all categories with their items
+  renderMenu(null, '');  // Display all categories with their items, no search query initially
   setupSearch();
 }
 
@@ -1928,8 +1942,8 @@ function renderMenu(filterCategory = null, searchQuery = '') {
 
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
-    filtered = filtered.filter(item => 
-      item.name.toLowerCase().includes(query) || 
+    filtered = filtered.filter(item =>
+      item.name.toLowerCase().includes(query) ||
       (item.desc && item.desc.toLowerCase().includes(query))
     );
   }
@@ -1997,16 +2011,16 @@ window.filterByCategory = function(category) {
 
   // Re-render menu with filter - null shows all categories
   if (category === 'all') {
-    renderMenu(null);  // Show all categories with their items
+    renderMenu(null, document.getElementById('menu-search')?.value || '');  // Show all categories with their items
   } else {
-    renderMenu(category);  // Show only selected category
+    renderMenu(category, document.getElementById('menu-search')?.value || '');  // Show only selected category
   }
 }
 
 // Alias for compatibility
 window.switchTab = window.filterByCategory;
 
-// Mark active footer navigation link based on current page
+// Mark active footer link based on current page
 function markActiveFooterLink() {
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   const footerLinks = document.querySelectorAll('.footer-links a');
@@ -2062,7 +2076,7 @@ function setupSearch() {
 
   // Debounce search to reduce re-renders
   const debouncedSearch = debounce((query) => {
-    renderMenu(null, query);
+    renderMenu(null, query); // Pass null for category to render all, and the query
   }, 300);
 
   searchInput.addEventListener('input', (e) => {
@@ -2096,7 +2110,7 @@ function renderHomeMenuPreview() {
   const featured = [];
   const categoryKeys = Object.keys(itemsByCategory);
   let categoryIndex = 0;
-  
+
   while (featured.length < 9 && categoryKeys.length > 0) {
     const category = categoryKeys[categoryIndex % categoryKeys.length];
     if (itemsByCategory[category] && itemsByCategory[category].length > 0) {
@@ -2221,8 +2235,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Determine page type and initialize accordingly
   const isMenuPage = window.location.pathname.includes('menu.html');
-  const isHomePage = window.location.pathname === '/' || 
-                     window.location.pathname === '/index.html' || 
+  const isHomePage = window.location.pathname === '/' ||
+                     window.location.pathname === '/index.html' ||
                      window.location.pathname.endsWith('/');
 
   if (isMenuPage) {
@@ -2479,7 +2493,14 @@ const originalTranslations = {
     adminPassword: 'Password:',
     adminLoginBtn: 'Login',
     adminPanelTitle: 'Orders Dashboard',
-    adminLogoutBtn: 'Logout'
+    adminLogoutBtn: 'Logout',
+    gettingLocation: 'Getting your location...',
+    locationError: 'Unable to get your location. Please enable location services.',
+    locationNotSupported: 'Geolocation is not supported by your browser',
+    coordinates: 'Coordinates',
+    dragToAdjust: 'Drag to adjust location',
+    mapLoadError: 'Map could not load',
+    coordinatesSaved: 'Your coordinates have been saved',
   }
 };
 
@@ -2794,7 +2815,7 @@ function checkoutFlowOriginal(){
 
     try {
       const orderId = await placeOrderToFirebase(order); // Use original function call
-      
+
       // Notify admins of new order
       fetch('/api/notify-admin-new-order', {
         method: 'POST',
@@ -2806,7 +2827,7 @@ function checkoutFlowOriginal(){
           itemCount: cartItems.length
         })
       }).catch(e => console.warn('Admin notification failed (non-blocking):', e));
-      
+
       cart = []; // Clear cart using original cart variable
       saveCart(); // Use original saveCart function
       window.closeCheckoutModal();
