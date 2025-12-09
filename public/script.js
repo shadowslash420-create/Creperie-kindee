@@ -829,13 +829,66 @@ window.submitCheckoutForm = async function(event) {
     // Close modal only after success
     closeCheckoutModal();
 
-    // Show beautiful thank you popup
-    showThankYouPopup(fullName, orderId);
+    // Clear modal first
+    closeCheckoutModal();
 
-    // Redirect to orders page after successful order (after popup closes)
+    // Show beautiful thank you popup with call waiting message
+    const isArabic = currentLang === 'ar';
+    const confirmModal = document.createElement('div');
+    confirmModal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    
+    confirmModal.innerHTML = `
+      <div style="background:white;border-radius:16px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+        <div style="background:linear-gradient(135deg,#52C41A 0%,#389E0D 100%);padding:40px 24px;text-align:center;">
+          <div style="width:80px;height:80px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:48px;">✓</div>
+          <h2 style="margin:0;color:white;font-size:28px;font-weight:700;">${isArabic ? 'تم إرسال طلبك!' : 'Order Sent!'}</h2>
+        </div>
+        <div style="padding:32px 24px;">
+          <div style="background:#E8F5E9;padding:20px;border-radius:12px;margin-bottom:24px;border-left:4px solid #52C41A;">
+            <div style="font-size:18px;color:#1B5E20;font-weight:700;margin-bottom:8px;">
+              ${isArabic ? '📞 سنتصل بك قريباً' : '📞 We will call you soon'}
+            </div>
+            <div style="color:#2E7D32;font-size:14px;line-height:1.6;">
+              ${isArabic 
+                ? 'انتظر مكالمتنا لتأكيد طلبك وتفاصيل التوصيل'
+                : 'Wait for our call to confirm your order and delivery details'}
+            </div>
+          </div>
+          <div style="background:#FFF3E0;padding:16px;border-radius:8px;margin-bottom:24px;">
+            <div style="font-size:14px;color:#E65100;font-weight:600;margin-bottom:8px;">
+              ${isArabic ? 'رقم الطلب' : 'Order Number'}:
+            </div>
+            <div style="font-size:20px;color:#FF6B35;font-weight:700;font-family:monospace;">
+              #${orderId.substring(0, 8).toUpperCase()}
+            </div>
+          </div>
+          <div style="display:grid;gap:12px;margin-bottom:24px;">
+            <div style="display:flex;justify-content:space-between;padding:12px;background:#f7fafc;border-radius:8px;">
+              <span style="color:#666;">${isArabic ? 'الاسم' : 'Name'}:</span>
+              <strong style="color:#2d3748;">${fullName}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:12px;background:#f7fafc;border-radius:8px;">
+              <span style="color:#666;">${isArabic ? 'المجموع' : 'Total'}:</span>
+              <strong style="color:#E30613;font-size:18px;">${total.toFixed(2)} DZD</strong>
+            </div>
+          </div>
+          <button onclick="window.location.href='my-orders.html?order=${orderId}'" style="width:100%;padding:16px;background:linear-gradient(135deg,#E30613 0%,#B30510 100%);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:16px;margin-bottom:12px;">
+            ${isArabic ? '📋 عرض الطلب' : '📋 View Order'}
+          </button>
+          <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:14px;background:#f7fafc;color:#2d3748;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;font-weight:600;">
+            ${isArabic ? 'إغلاق' : 'Close'}
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(confirmModal);
+    
+    // Auto redirect after 5 seconds
     setTimeout(() => {
+      confirmModal.remove();
       window.location.href = 'my-orders.html?order=' + orderId;
-    }, 3500);
+    }, 5000);
   } catch (error) {
     console.error('Error placing order:', error);
 
@@ -1536,7 +1589,7 @@ window.useMyLocation = function() {
   });
 }
 
-// Initialize map in location picker popup using Google Maps with click support
+// Initialize map in location picker popup using OpenStreetMap (no API key needed)
 let locationPickerMapInstance = null;
 let locationPickerMapMarker = null;
 
@@ -1589,85 +1642,22 @@ function initLocationPickerMap() {
       // Update location display
       updateLocationCoordinates(lat, lng);
 
-      // Wait for Google Maps to be available
-      const initMap = () => {
-        // Clear container
-        mapContainer.innerHTML = '';
-
-        // Check if Google Maps is loaded
-        if (typeof google === 'undefined' || !google.maps) {
-          console.warn('⚠️ Google Maps not loaded, showing static map');
-          const query = `${lat},${lng}`;
-          const embedUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyDqWxGLlWUBDv5QaUIxEhxH8Xz8M5KdKWs&q=${lat},${lng}&zoom=15`;
-          mapContainer.innerHTML = `
-            <iframe
-              width="100%"
-              height="100%"
-              style="border:none;"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-              src="${embedUrl}">
-            </iframe>
-          `;
-          return;
-        }
-
-        try {
-          // Initialize interactive Google Map
-          const mapOptions = {
-            center: { lat, lng },
-            zoom: 15,
-            mapTypeControl: false,
-            fullscreenControl: false,
-            streetViewControl: false,
-            zoomControl: true,
-            gestureHandling: 'greedy'
-          };
-
-          locationPickerMapInstance = new google.maps.Map(mapContainer, mapOptions);
-
-          // Add marker at current location
-          locationPickerMapMarker = new google.maps.Marker({
-            position: { lat, lng },
-            map: locationPickerMapInstance,
-            draggable: true,
-            animation: google.maps.Animation.DROP,
-            title: isArabic ? 'موقعك' : 'Your Location'
-          });
-
-          // Update coordinates when marker is dragged
-          google.maps.event.addListener(locationPickerMapMarker, 'dragend', function(event) {
-            const newLat = event.latLng.lat();
-            const newLng = event.latLng.lng();
-            updateLocationCoordinates(newLat, newLng);
-          });
-
-          // Update coordinates when map is clicked
-          google.maps.event.addListener(locationPickerMapInstance, 'click', function(event) {
-            const newLat = event.latLng.lat();
-            const newLng = event.latLng.lng();
-            locationPickerMapMarker.setPosition({ lat: newLat, lng: newLng });
-            updateLocationCoordinates(newLat, newLng);
-          });
-
-          console.log('✅ Interactive Google Map initialized');
-        } catch (error) {
-          console.error('❌ Error initializing map:', error);
-          mapContainer.innerHTML = `
-            <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#E30613;padding:20px;text-align:center;">
-              <div>خطأ في تحميل الخريطة</div>
-            </div>
-          `;
-        }
-      };
-
-      // Initialize map immediately or wait for Google Maps
-      if (typeof google !== 'undefined' && google.maps) {
-        initMap();
-      } else {
-        console.log('⏳ Waiting for Google Maps API...');
-        setTimeout(initMap, 1000);
-      }
+      // Use OpenStreetMap embed (no API key needed)
+      mapContainer.innerHTML = `
+        <div style="position:relative;width:100%;height:100%;">
+          <iframe
+            width="100%"
+            height="100%"
+            style="border:none;border-radius:8px;"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}"
+            loading="lazy">
+          </iframe>
+          <div style="position:absolute;bottom:8px;right:8px;background:white;padding:8px 12px;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.2);font-size:12px;color:#666;">
+            📍 ${isArabic ? 'موقعك الحالي' : 'Your current location'}
+          </div>
+        </div>
+      `;
+      console.log('✅ Map loaded using OpenStreetMap');
     },
     (error) => {
       console.error('❌ Geolocation error:', error.code, error.message);
@@ -1685,7 +1675,7 @@ function initLocationPickerMap() {
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;">
           <div style="font-size:48px;margin-bottom:12px;">❌</div>
           <div style="color:#E30613;font-weight:600;margin-bottom:8px;">${errorMsg}</div>
-          <div style="font-size:12px;color:#666;">${isArabic ? 'يمكنك النقر على الخريطة لتحديد الموقع يدوياً' : 'You can click on the map to set location manually'}</div>
+          <div style="font-size:12px;color:#666;">${isArabic ? 'الرجاء تفعيل خدمات الموقع' : 'Please enable location services'}</div>
         </div>
       `;
     },
