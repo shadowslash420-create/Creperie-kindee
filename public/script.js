@@ -1507,14 +1507,23 @@ window.useMyLocation = function() {
       const lng = parseFloat(lngInput.value);
 
       console.log('✅ Location confirmed:', lat, lng);
-      saveCheckoutFormData();
-
+      
       // Show location on checkout modal
       showLocationOnCheckout(lat, lng);
+      
+      // Save form data
+      saveCheckoutFormData();
+
+      // Show success message
+      const selectedLocationText = document.getElementById('selected-location-text');
+      if (selectedLocationText) {
+        selectedLocationText.style.display = 'block';
+      }
 
       // Close popup
       popupModal.remove();
     } else {
+      alert(isArabic ? 'الرجاء تحديد موقعك على الخريطة' : 'Please select your location on the map');
       console.error('❌ Location not set');
     }
   });
@@ -1635,6 +1644,7 @@ function updateLocationCoordinates(lat, lng) {
   if (latInput && lngInput) {
     latInput.value = lat;
     lngInput.value = lng;
+    console.log('✅ Coordinates saved to form inputs:', lat, lng);
   }
 
   // Update the display
@@ -1646,7 +1656,7 @@ function updateLocationCoordinates(lat, lng) {
     locationDisplay.style.display = 'block';
   }
 
-  console.log('✅ Location updated to:', lat, lng);
+  console.log('✅ Location coordinates updated:', lat, lng);
 }
 
 // Toggle language
