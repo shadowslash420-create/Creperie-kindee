@@ -169,7 +169,7 @@ app.get('/api/admin-status', async (req, res) => {
 // Serve Firebase config from environment variables
 app.get('/api/firebase-config', (req, res) => {
   res.json({
-    apiKey: process.env.FIREBASE_API_KEY,
+    apiKey: process.env.FIREBASE_API_KEY || process.env.FIREBASE_APIKEY,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN,
     projectId: process.env.FIREBASE_PROJECT_ID,
     storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
