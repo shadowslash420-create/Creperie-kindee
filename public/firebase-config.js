@@ -12,33 +12,42 @@ let db = null;
 let storage = null;
 let initPromise = null;
 
-// Firebase configuration object - will be loaded from backend
+// Firebase configuration - hardcoded for static deployments (Vercel, Render, etc.)
+const FIREBASE_CONFIG_FALLBACK = {
+  apiKey: "AIzaSyApo_-Y96wRPfJ3zdDWmzOuj3E66c1hFxk",
+  authDomain: "kinder-87e7e.firebaseapp.com",
+  projectId: "kinder-87e7e",
+  storageBucket: "kinder-87e7e.firebasestorage.app",
+  messagingSenderId: "447252216729",
+  appId: "1:447252216729:web:371d0ec1dce02b52db7108"
+};
+
 let firebaseConfig = null;
 
-// Load Firebase config from environment variables
+// Load Firebase config - uses hardcoded fallback for static deployments
 async function loadFirebaseConfig() {
   if (firebaseConfig) {
     return firebaseConfig;
   }
   
   try {
-    // Load from environment variables (set via Replit secrets)
+    // Try to load from API first (for Replit with environment variables)
     const response = await fetch('/api/firebase-config');
-    if (!response.ok) {
-      throw new Error('Failed to load Firebase config from API');
+    if (response.ok) {
+      const config = await response.json();
+      // Check if config has valid values (not undefined)
+      if (config.apiKey && config.projectId) {
+        firebaseConfig = config;
+        console.log('Firebase config loaded successfully from API');
+        return firebaseConfig;
+      }
     }
-    firebaseConfig = await response.json();
-    console.log('Firebase config loaded successfully from API');
-    return firebaseConfig;
+    throw new Error('API config incomplete');
   } catch (error) {
-    console.warn('API endpoint failed, checking window environment:', error.message);
-    // Fallback: try to get from window object (populated by server)
-    if (window.FIREBASE_CONFIG) {
-      firebaseConfig = window.FIREBASE_CONFIG;
-      console.log('Firebase config loaded from window object');
-      return firebaseConfig;
-    }
-    throw new Error('Firebase configuration not available');
+    console.log('Using hardcoded Firebase config (static deployment)');
+    // Use hardcoded fallback for static deployments (Vercel, Render, etc.)
+    firebaseConfig = FIREBASE_CONFIG_FALLBACK;
+    return firebaseConfig;
   }
 }
 
