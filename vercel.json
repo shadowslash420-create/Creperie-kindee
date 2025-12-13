@@ -1,5 +1,7 @@
 {
-  "version": 2,
+  "framework": null,
+  "buildCommand": null,
+  "installCommand": "npm install",
   "functions": {
     "api/*.js": {
       "memory": 128,
@@ -12,7 +14,7 @@
       "destination": "/api/:path*"
     },
     {
-      "source": "/((?!public/).*)",
+      "source": "/(.*)",
       "destination": "/public/$1"
     }
   ],
@@ -23,19 +25,6 @@
         {
           "key": "Cache-Control",
           "value": "no-cache, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/public/firebase-messaging-sw.js",
-      "headers": [
-        {
-          "key": "Service-Worker-Allowed",
-          "value": "/"
-        },
-        {
-          "key": "Content-Type",
-          "value": "application/javascript"
         }
       ]
     }
